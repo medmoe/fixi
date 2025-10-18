@@ -43,8 +43,8 @@ services:
     # -------- replace with comment to run migrations with docker --------
     expose:
       - "5432"
-    # ports:
-    #  - 5432:5432
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:alpine
@@ -52,6 +52,8 @@ services:
       - redis-data:/data
     expose:
       - "6379"
+    ports:
+      - "6379:6379"
 
   #-------- uncomment to run with pgadmin --------
   # pgadmin:

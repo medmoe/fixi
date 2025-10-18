@@ -127,6 +127,20 @@ class EnvironmentSettings(BaseSettings):
     ENVIRONMENT: EnvironmentOption = config("ENVIRONMENT", default=EnvironmentOption.LOCAL)
 
 
+class DevSettings(BaseSettings):
+    debug: bool = True
+    allowed_origins: list[str] = ["*"]
+
+
+class StagingSettings(BaseSettings):
+    debug: bool = False
+
+
+class ProdSettings(BaseSettings):
+    debug: bool = False
+    allowed_origins: list[str] = []
+
+
 class Settings(
     AppSettings,
     SQLiteSettings,
@@ -141,6 +155,9 @@ class Settings(
     DefaultRateLimitSettings,
     CRUDAdminSettings,
     EnvironmentSettings,
+    DevSettings,
+    StagingSettings,
+    ProdSettings,
 ):
     pass
 

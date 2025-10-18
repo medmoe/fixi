@@ -1,9 +1,9 @@
 import uuid as uuid_pkg
 from datetime import UTC, datetime
-from uuid6 import uuid7
 
-from sqlalchemy import DateTime, ForeignKey, String, UUID
+from sqlalchemy import UUID, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
+from uuid6 import uuid7
 
 from ..core.db.database import Base
 
