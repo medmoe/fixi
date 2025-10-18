@@ -19,7 +19,6 @@ DATABASE_PREFIX = settings.POSTGRES_SYNC_PREFIX
 sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
 local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
-
 fake = Faker()
 
 
