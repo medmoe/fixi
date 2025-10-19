@@ -55,6 +55,80 @@ services:
     ports:
       - "6379:6379"
 
+  opensearch:
+    image: opensearchproject/opensearch:3
+    container_name: opensearch
+    env_file:
+      - ./src/.env
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - plugins.security.disabled=true # dev only; enable in production
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q0- http://localhost:9200 >/dev/null 2>&1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3
+    container_name: opensearch-dashboards
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    env_file:
+      - ./src/.env
+    ports:
+      - "5601:5601" # UI
+
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q0- http://localhost:5601 >/dev/null 2>&1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    env_file:
+      - ./src/.env
+    volumes:
+      - minio_data:/data
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+
+  # One-shot container to ensure the uploads bucket exists on startup
+  minio-setup:
+    image: minio/mc:latest
+    container_name: minio-setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb -p local/uploads || true &&
+      mc anonymous set download local/uploads || true
+      "
+    restart: "no"
+
+
   #-------- uncomment to run with pgadmin --------
   # pgadmin:
   #   container_name: pgadmin4
@@ -110,4 +184,5 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  minio_data:
   #pgadmin-data:
