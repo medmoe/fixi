@@ -1,5 +1,5 @@
 from collections.abc import Callable, Generator
-from typing import Any
+from typing import Any, List, Dict
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -99,3 +99,37 @@ def current_user_dict():
         "name": fake.name(),
         "is_superuser": False,
     }
+
+
+@pytest.fixture
+def sample_file_data(current_user_dict: dict[str, Any] = None):
+    """Generate sample file data for tests."""
+    return {
+        "file_key": "uploads/123e4567-e89b-12d3-a456-426614174000_myphoto.png",
+        "original_filename": "myphoto.png",
+        "mime_type": "image/png",
+        "file_size": 1000,
+    }
+
+
+@pytest.fixture
+def sample_file_data_list() -> List[Dict[str, Any]]:
+    """Generate a list of sample file metadata dictionaries for tests."""
+    return [
+        {
+            "file_key": f"uploads/{fake.uuid4()}_{fake.file_name(extension='png')}",
+            "original_filename": fake.file_name(extension="png"),
+            "mime_type": "image/png",
+            "file_size": fake.random_int(min=100, max=5_000_000),
+            "uploaded_at": fake.date_time(),
+            "public_url": f"https://cdn.example.com/{fake.file_name(extension='png')}",
+        },
+        {
+            "file_key": f"uploads/{fake.uuid4()}_{fake.file_name(extension='jpg')}",
+            "original_filename": fake.file_name(extension="jpg"),
+            "mime_type": "image/jpeg",
+            "file_size": fake.random_int(min=100, max=5_000_000),
+            "uploaded_at": fake.date_time(),
+            "public_url": f"https://cdn.example.com/{fake.file_name(extension='jpg')}",
+        }
+    ]
