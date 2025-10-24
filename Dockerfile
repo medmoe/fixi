@@ -23,6 +23,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --------- Final Stage ---------
 FROM python:3.11-slim-bookworm
 
+# Install OS-level library for python-magic
+RUN apt-get update && \
+    apt-get install -y libmagic1 && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user for security
 RUN groupadd --gid 1000 app \
     && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
