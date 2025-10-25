@@ -1,8 +1,11 @@
+from io import BytesIO
 from typing import AsyncGenerator
 
+import pytest
 import pytest_asyncio
+from PIL import Image
 from faker import Faker
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -36,21 +39,26 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         finally:
-            session.close()
+            await session.close()
     # Cleanup engine
     await test_engine.dispose()
 
 
 @pytest_asyncio.fixture
 async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """ Create an async HTTP client for testing """
+    """Create an async HTTP client for testing."""
 
+    # Override dependency to use test DB
     def get_test_db():
         return async_session
 
     app.dependency_overrides[async_get_db] = get_test_db
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    # Use ASGI transport so it uses the app in-memory
+    async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test"
+    ) as client:
         yield client
 
     app.dependency_overrides.clear()
@@ -58,6 +66,40 @@ async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClien
 
 @pytest_asyncio.fixture
 async def test_user(async_session: AsyncSession) -> User:
+    return await create_test_user(async_session)
+
+
+@pytest_asyncio.fixture
+async def other_user(async_session: AsyncSession) -> User:
+    return await create_test_user(async_session)
+
+
+@pytest_asyncio.fixture
+async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
+    """ Get authentication headers for a test user."""
+    login_data = {
+        "username": test_user.username,
+        "password": "testpassword123"
+    }
+    response = await async_client.post("/api/v1/login", data=login_data)
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+@pytest.fixture
+def sample_image_bytes(width: int = 100, height: int = 100, image_format: str = "PNG") -> bytes:
+    """ Generate a sample image in bytes. """
+    # Create a simple image
+    image = Image.new('RGB', (width, height), color='red')
+
+    # Save to bytes buffer
+    buffer = BytesIO()
+    image.save(buffer, format=image_format)
+    buffer.seek(0)
+
+    return buffer.getvalue()
+
+
+async def create_test_user(async_session: AsyncSession) -> User:
     """Create a test user."""
     user = User(
         name=fake.name(),
@@ -70,17 +112,6 @@ async def test_user(async_session: AsyncSession) -> User:
     await async_session.commit()
     await async_session.refresh(user)
     return user
-
-
-@pytest_asyncio.fixture
-async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
-    """ Get authentication headers for a test user."""
-    login_data = {
-        "username": test_user.username,
-        "password": "testpassword123"
-    }
-    response = await async_client.post("/api/v1/auth/login", data=login_data)
-    return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 # from collections.abc import Callable, Generator
 # from typing import Any, List, Dict

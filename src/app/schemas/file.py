@@ -23,6 +23,9 @@ class FileCreate(FileBase):
     """
     pass
 
+class FileCreateInternal(FileCreate):
+    belongs_to_user_id: Annotated[int, Field(examples=[42])]
+
 
 class FileRead(FileBase):
     """ Fields returned by the API when reading a File includes DB-generated fields """

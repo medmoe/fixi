@@ -46,5 +46,19 @@ class MinioClient:
                 Policy=json.dumps(policy)
             )
 
+    def upload_file(self, bucket: str, key: str, data: bytes, content_type: str = None):
+        """ Upload raw bytes to the given bucket and key """
+        extra_args = {}
+        if content_type:
+            extra_args["ContentType"] = content_type
+
+        # Use put_object since we have bytes
+        self.client.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=data,
+            **extra_args
+        )
+
 
 minio_client = MinioClient()
