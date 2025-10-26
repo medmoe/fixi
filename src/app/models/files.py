@@ -1,10 +1,11 @@
 from datetime import datetime, UTC
 
+from pydantic import computed_field
 from sqlalchemy import String, DateTime, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db.database import Base
-from ..services.minio_client import MinioClient
+from ..services.minio_client import minio_client
 
 
 class File(Base):
@@ -21,8 +22,4 @@ class File(Base):
     is_safe: Mapped[bool] = mapped_column("is_safe", Boolean, default=False)
     exif_stripped: Mapped[bool] = mapped_column("exif_stripped", Boolean, default=False)
 
-    # @property
-    # def public_url(self):
-    #     """ Generic public url for the file """
-    #     minio_client = MinioClient()
-    #     return f"https://{minio_client.endpoint}/{minio_client.bucket_uploads}/{self.file_key}"
+

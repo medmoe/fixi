@@ -11,7 +11,7 @@ from ...api.dependencies import get_current_user
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import NotFoundException
 from ...core.security import validate_mime_type
-from ...crud.crud_files import FileCreate, FileRead, FileUpdate, crud_files, FileCreateInternal, FileUpdateInternal
+from ...crud.crud_files import FileRead, crud_files, FileCreateInternal, FileUpdateInternal, FileCreate, FileReadInternal
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["files"])
@@ -48,7 +48,8 @@ async def upload_file_content(
         db: Annotated[AsyncSession, Depends(async_get_db)],
         upload_file: Annotated[UploadFile, File(...)]
 ):
-    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False)
+    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileReadInternal, return_as_model=True)
+    print(file_record)
     if file_record is None:
         raise NotFoundException("File not found")
 
@@ -59,18 +60,17 @@ async def upload_file_content(
         detected_mime = validate_mime_type(contents, filename)
         minio_client.upload_file(
             bucket=minio_client.bucket_uploads,
-            key=file_record['file_key'],
+            key=file_record.file_key,
             data=contents,
             content_type=detected_mime,
         )
 
-
         file_update_internal = FileUpdateInternal(is_processed=True, is_safe=True)
-        await crud_files.update(db=db, object=file_update_internal, id=file_record['id'])
+        await crud_files.update(db=db, object=file_update_internal, id=file_record.id)
 
-        return {"url": f"http://localhost:9000/{minio_client.bucket_uploads}/{file_record['file_key']}"}
+        return {"url": file_record.file_url}
 
-    except HTTPException: # Preserve exceptions raised when calling validate_mime_type() if any.
+    except HTTPException:  # Preserve exceptions raised when calling validate_mime_type() if any.
         raise
 
     except Exception as e:
@@ -78,23 +78,3 @@ async def upload_file_content(
             status_code=500,
             detail=f"Failed to upload file: {e}"
         )
-
-
-@router.patch("/files/{file_id}", response_model=FileRead)
-async def update_file(
-        file_id: int,
-        file_in: FileUpdate,
-        current_user: Annotated[dict, Depends(get_current_user)],
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-):
-    """
-    Update file metadata (e.g., mark is_processed, is_safe, etc.).
-    Only superusers may perform this.
-    """
-    try:
-        file_out = await crud_files.update(file_id=file_id, file_update=file_in, db_session=db)
-
-    except NotFoundException as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    return file_out
