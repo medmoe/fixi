@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -32,6 +33,7 @@ async def write_file(
 
     file_internal_dict = file.model_dump()
     file_internal_dict["belongs_to_user_id"] = db_user.id
+    file_internal_dict['file_key'] = f"{uuid.uuid1()}/{file_internal_dict['original_file_name']}"
     file_internal = FileCreateInternal(**file_internal_dict)
 
     if await crud_files.exists(db=db, file_key=file_internal.file_key):
@@ -40,66 +42,42 @@ async def write_file(
     return await crud_files.create(db=db, object=file_internal)
 
 
-@router.post("/{username}/{file_id}/upload", status_code=200)
+@router.post("/{file_id}/upload", status_code=200)
 async def upload_file_content(
-        username: str,
         file_id: int,
-        current_user: Annotated[dict, Depends(get_current_user)],
         db: Annotated[AsyncSession, Depends(async_get_db)],
         upload_file: Annotated[UploadFile, File(...)]
 ):
-    db_user = await lookup_user_by_username(db=db, username=username, current_user=current_user)
+    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False)
+    if file_record is None:
+        raise NotFoundException("File not found")
 
     # Read the file metadata from upload_file
     filename = upload_file.filename
-    key = f"{db_user.id}/{filename}"
     try:
         contents = await upload_file.read()
         detected_mime = validate_mime_type(contents, filename)
         minio_client.upload_file(
             bucket=minio_client.bucket_uploads,
-            key=key,
+            key=file_record['file_key'],
             data=contents,
             content_type=detected_mime,
         )
-        file_record = await crud_files.get(db=db, id=file_id, is_deleted=False)
-        if file_record is None:
-            raise NotFoundException("File not found")
 
-        file_update_internal = FileUpdateInternal(is_processed=True, is_safe=True, file_key=key)
+
+        file_update_internal = FileUpdateInternal(is_processed=True, is_safe=True)
         await crud_files.update(db=db, object=file_update_internal, id=file_record['id'])
 
-        return {"url": f"http://localhost:9000/{minio_client.bucket_uploads}/{key}"}
+        return {"url": f"http://localhost:9000/{minio_client.bucket_uploads}/{file_record['file_key']}"}
+
+    except HTTPException: # Preserve exceptions raised when calling validate_mime_type() if any.
+        raise
 
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to upload file: {e}"
         )
-
-
-# @router.get("/files", response_model=PaginatedListResponse[FileRead], status_code=200)
-# async def get_user_files(request: Request,
-#                          current_user: Annotated[dict, Depends(get_current_user)],
-#                          db: Annotated[AsyncSession, Depends(async_get_db)],
-#                          page: Annotated[int, Query(ge=1)] = 1,
-#                          items_per_page: Annotated[int, Query(ge=1, le=100)] = 10
-#                          ):
-#     user_id = current_user["id"]
-#
-#     # Fetch paginated list via crud
-#     crud_data = await crud_files.get_multi(
-#         db=db,
-#         offset=compute_offset(page, items_per_page),
-#         limit=items_per_page,
-#         belongs_to_user_id=user_id,
-#         is_deleted=False,
-#     )
-#     return paginated_response(
-#         crud_data=crud_data,
-#         page=page,
-#         items_per_page=items_per_page,
-#     )
 
 
 @router.patch("/files/{file_id}", response_model=FileRead)

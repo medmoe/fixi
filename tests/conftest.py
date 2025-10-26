@@ -99,6 +99,19 @@ def sample_image_bytes(width: int = 100, height: int = 100, image_format: str = 
     return buffer.getvalue()
 
 
+@pytest.fixture
+def sample_invalid_image_bytes():
+    # Create a valid small image first
+    img = Image.new('RGB', (100, 100), color='red')
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    data = bytearray(buffer.getvalue())
+
+    # Keep header intact, but corrupt middle content (e.g., in IDAT chunk)
+    mid = len(data) // 2
+    data[mid:mid+20] = b"\x00" * 20 # zero out 20 bytes in the middle
+    return bytes(data)
+
 async def create_test_user(async_session: AsyncSession) -> User:
     """Create a test user."""
     user = User(

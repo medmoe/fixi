@@ -6,14 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class FileBase(BaseModel):
     """ Shared fields for File (excludes internal/DB-only fields) """
-    file_key: Annotated[str, Field(max_length=255, examples=["uploads/123e4567-e89b-12d3-a456-426614174000_myphoto.jpg"])]
     original_file_name: Annotated[str, Field(max_length=255, examples=["myphoto.jpg"])]
     mime_type: Annotated[str, Field(max_length=255, examples=["image/jpeg"])]
     file_size: Annotated[int, Field(gt=0, examples=[1234])]
-    is_processed: Optional[bool] = Field(default=False)
-    is_safe: Optional[bool] = Field(default=False)
-    exif_stripped: Optional[bool] = Field(default=False)
-
     model_config = ConfigDict(extra="forbid")
 
 
@@ -26,6 +21,7 @@ class FileCreate(FileBase):
 
 class FileCreateInternal(FileCreate):
     belongs_to_user_id: Annotated[int, Field(examples=[42])]
+    file_key: Annotated[str, Field(max_length=255, examples=["(uuid)/file_name.png"])]
 
 
 class FileRead(FileBase):
@@ -39,7 +35,6 @@ class FileRead(FileBase):
 class FileUpdate(BaseModel):
     """ Fields allowed to be updated by the user """
     model_config = ConfigDict(extra="forbid")
-    file_key: Annotated[str | None, Field(max_length=255, examples=["uploads/123e4567-e89b-12d3-a456-426614174000_myphoto.jpg"], default=None)] = None
     original_file_name: Annotated[str | None, Field(max_length=255, examples=["myphoto.jpg"], default=None)] = None
     mime_type: Annotated[str | None, Field(max_length=255, examples=["image/jpeg"], default=None)] = None
     file_size: Annotated[int | None, Field(gt=0, examples=[1234], default=None)] = None

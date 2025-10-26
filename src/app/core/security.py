@@ -165,7 +165,6 @@ def validate_mime_type(file_content: bytes, filename: str) -> str:
 
     if detected_mime not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail=f'MIME type {detected_mime} is not allowed')
-
     # Additionally, security checks for images
     if detected_mime.startswith('image/'):
         from PIL import Image

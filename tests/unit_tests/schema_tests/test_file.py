@@ -11,13 +11,11 @@ class TestFileSchema:
     def test_file_create_valid(self):
         """ Test a valid file creation schema. """
         file_data = {
-            "file_key": "uploads/test.png",
             "original_file_name": "test.png",
             "mime_type": "image/png",
             "file_size": 1000,
         }
         file = FileCreate(**file_data)
-        assert file.file_key == file_data["file_key"]
         assert file.original_file_name == file_data["original_file_name"]
         assert file.mime_type == file_data["mime_type"]
         assert file.file_size == file_data["file_size"]
@@ -25,7 +23,6 @@ class TestFileSchema:
     def test_file_create_invalid_size(self):
         """ Test invalid file creation schema. """
         file_data = {
-            "file_key": "uploads/test.png",
             "original_file_name": "test.png",
             "mime_type": "image/png",
             "file_size": -1,
@@ -46,4 +43,3 @@ class TestFileSchema:
         assert file.original_file_name == file_data["original_file_name"]
         assert file.mime_type == file_data["mime_type"]
         assert file.file_size is None
-        assert file.file_key is None
