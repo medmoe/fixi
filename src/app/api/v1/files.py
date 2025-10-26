@@ -40,9 +40,10 @@ async def write_file(
     return await crud_files.create(db=db, object=file_internal)
 
 
-@router.post("/{username}/file/upload", status_code=200)
+@router.post("/{username}/{file_id}/upload", status_code=200)
 async def upload_file_content(
         username: str,
+        file_id: int,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: Annotated[AsyncSession, Depends(async_get_db)],
         upload_file: Annotated[UploadFile, File(...)]
@@ -51,19 +52,24 @@ async def upload_file_content(
 
     # Read the file metadata from upload_file
     filename = upload_file.filename
+    key = f"{db_user.id}/{filename}"
     try:
         contents = await upload_file.read()
         detected_mime = validate_mime_type(contents, filename)
         minio_client.upload_file(
             bucket=minio_client.bucket_uploads,
-            key=f"{db_user.id}/{filename}",
+            key=key,
             data=contents,
             content_type=detected_mime,
         )
+        file_record = await crud_files.get(db=db, id=file_id, is_deleted=False)
+        if file_record is None:
+            raise NotFoundException("File not found")
 
+        file_update_internal = FileUpdateInternal(is_processed=True, is_safe=True, file_key=key)
+        await crud_files.update(db=db, object=file_update_internal, id=file_record['id'])
 
-
-
+        return {"url": f"http://localhost:9000/{minio_client.bucket_uploads}/{key}"}
 
     except Exception as e:
         raise HTTPException(

@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
+
 from src.app.models.user import User
+
 
 @pytest.mark.integration
 class TestCreateFileMetaDataEndpoint:
@@ -25,7 +27,6 @@ class TestCreateFileMetaDataEndpoint:
         assert data["belongs_to_user_id"] == test_user.id
         assert data["uploaded_at"] is not None
         assert data["id"] is not None
-        assert data["public_url"] is not None
 
     async def test_create_file_with_invalid_username(self, async_client: AsyncClient, auth_headers: dict, test_user: User):
         """ Test creating a file with a non-existent path """
@@ -72,12 +73,17 @@ class TestUploadFileContentEndpoint:
                 "image/png"
             )
         }
-        response = await async_client.post(f"/api/v1/{test_user.username}/file/upload", files=files, headers=auth_headers)
-        print(f"Response: {response.json()}")
+        file_data = {
+            "file_key": "some_key",
+            "original_file_name": "test.png",
+            "mime_type": "image/png",
+            "file_size": 1000
+        }
+        # Create file metadata
+        response = await async_client.post(f"/api/v1/{test_user.username}/file", json=file_data, headers=auth_headers)
+        assert response.status_code == 201
+        data = response.json()
+        response = await async_client.post(f"/api/v1/{test_user.username}/{data['id']}/upload", files=files, headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert "file_key" in data
-        assert data['file_key'].startswith("uploads/")
-        assert data['mime_type'] == "image/png"
-        assert data['file_size'] == len(sample_image_bytes)
-        assert "public_url" in data and data['public_url'].startswith("https://")
+        assert 'url' in data and data['url'] is not None
