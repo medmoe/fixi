@@ -15,6 +15,7 @@ from src.app.core.db.database import Base, async_get_db
 from src.app.core.security import get_password_hash
 from src.app.main import app
 from src.app.models.user import User
+from src.app.services.minio_client import minio_client
 
 fake = Faker()
 
@@ -85,6 +86,17 @@ async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
+@pytest_asyncio.fixture
+async def other_auth_headers(async_client: AsyncClient, other_user: User) -> dict:
+    """ Get authentication headers for a test user."""
+    login_data = {
+        "username": other_user.username,
+        "password": "testpassword123"
+    }
+    response = await async_client.post("/api/v1/login", data=login_data)
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
 @pytest.fixture
 def sample_image_bytes(width: int = 100, height: int = 100, image_format: str = "PNG") -> bytes:
     """ Generate a sample image in bytes. """
@@ -109,8 +121,34 @@ def sample_invalid_image_bytes():
 
     # Keep header intact, but corrupt middle content (e.g., in IDAT chunk)
     mid = len(data) // 2
-    data[mid:mid+20] = b"\x00" * 20 # zero out 20 bytes in the middle
+    data[mid:mid + 20] = b"\x00" * 20  # zero out 20 bytes in the middle
     return bytes(data)
+
+
+@pytest.fixture
+async def cleanup_minio_bucket():
+    """
+    Test-scoped fixture
+    - yields to the test
+    - after the test finishes, deletes all objects in the uploads bucket
+    """
+    # run the test
+    yield
+
+    # teardown phase:
+    bucket = minio_client.bucket_uploads
+    resp = minio_client.client.list_objects_v2(Bucket=bucket)
+
+    contents = resp.get("Contents", [])
+    if not contents:
+        return
+
+    objects_to_delete = [{"Key": obj["Key"]} for obj in contents]
+    minio_client.client.delete_objects(
+        Bucket=bucket,
+        Delete={"Objects": objects_to_delete}
+    )
+
 
 async def create_test_user(async_session: AsyncSession) -> User:
     """Create a test user."""

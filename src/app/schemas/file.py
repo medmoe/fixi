@@ -32,9 +32,6 @@ class FileRead(FileBase):
     belongs_to_user_id: Annotated[int, Field(examples=[42])]
     uploaded_at: Annotated[datetime, Field(examples=["2023-01-01T00:00:00+00:00"])]
     model_config = ConfigDict(extra="forbid", from_attributes=True)
-
-
-class FileReadInternal(FileRead):
     file_key: Annotated[str, Field(max_length=255, examples=["(uuid)/file_name.png"])]
 
     @computed_field

@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastcrud.exceptions.http_exceptions import DuplicateValueException
+from fastcrud.paginated import PaginatedListResponse, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..utils import lookup_user_by_username
@@ -11,7 +12,8 @@ from ...api.dependencies import get_current_user
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import NotFoundException
 from ...core.security import validate_mime_type
-from ...crud.crud_files import FileRead, crud_files, FileCreateInternal, FileUpdateInternal, FileCreate, FileReadInternal
+from ...crud.crud_files import FileRead, crud_files, FileCreateInternal, FileCreate
+from ...schemas.file import FileUpdateInternal
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["files"])
@@ -48,8 +50,7 @@ async def upload_file_content(
         db: Annotated[AsyncSession, Depends(async_get_db)],
         upload_file: Annotated[UploadFile, File(...)]
 ):
-    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileReadInternal, return_as_model=True)
-    print(file_record)
+    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileRead, return_as_model=True)
     if file_record is None:
         raise NotFoundException("File not found")
 
@@ -65,8 +66,8 @@ async def upload_file_content(
             content_type=detected_mime,
         )
 
-        file_update_internal = FileUpdateInternal(is_processed=True, is_safe=True)
-        await crud_files.update(db=db, object=file_update_internal, id=file_record.id)
+        updated_file = FileUpdateInternal(is_processed=True, is_safe=True)
+        await crud_files.update(db=db, object=updated_file, id=file_record.id)
 
         return {"url": file_record.file_url}
 
@@ -78,3 +79,17 @@ async def upload_file_content(
             status_code=500,
             detail=f"Failed to upload file: {e}"
         )
+
+
+@router.get("/files", response_model=PaginatedListResponse[FileRead], status_code=200)
+async def get_files(current_user: Annotated[dict, Depends(get_current_user)], db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, files_per_page: int = 10):
+    files = await crud_files.get_multi(db=db,
+                                       belongs_to_user_id=current_user['id'],
+                                       offset=(page - 1) * files_per_page,
+                                       limit=files_per_page,
+                                       schema_to_select=FileRead,
+                                       return_as_model=True
+                                       )
+    return paginated_response(files, page, files_per_page)
+
+
