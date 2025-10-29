@@ -60,5 +60,12 @@ class MinioClient:
             **extra_args
         )
 
+    def delete_file(self, bucket: str, key: str):
+        """ Delete a file from the bucket """
+        self.client.delete_object(
+            Bucket=bucket,
+            Key=key
+        )
+
 
 minio_client = MinioClient()
