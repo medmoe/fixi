@@ -1,7 +1,7 @@
 from typing import Annotated, cast
 
 from fastapi import Depends
-from fastcrud.exceptions.http_exceptions import NotFoundException, ForbiddenException
+from fastcrud.exceptions.http_exceptions import ForbiddenException, NotFoundException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies import get_current_user
@@ -15,7 +15,11 @@ async def lookup_user_by_username(
         username: str,
         current_user: Annotated[dict, Depends(get_current_user)]
 ):
-    db_user = await crud_users.get(db=db, username=username, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
+    db_user = await crud_users.get(db=db,
+                                   username=username,
+                                   is_deleted=False,
+                                   schema_to_select=UserRead,
+                                   return_as_model=True)
     if db_user is None:
         raise NotFoundException("User not found")
 

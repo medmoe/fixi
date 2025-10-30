@@ -26,7 +26,7 @@ class MinioClient:
         """ Create a bucket if it doesn't exist """
         try:
             self.client.head_bucket(Bucket=self.bucket_uploads)
-        except Exception as e:
+        except Exception:
             self.client.create_bucket(Bucket=self.bucket_uploads)
 
             # Set bucket policy for public read ( adjust for production )
@@ -46,7 +46,7 @@ class MinioClient:
                 Policy=json.dumps(policy)
             )
 
-    def upload_file(self, bucket: str, key: str, data: bytes, content_type: str = None):
+    def upload_file(self, bucket: str, key: str, data: bytes, content_type: str | None = None):
         """ Upload raw bytes to the given bucket and key """
         extra_args = {}
         if content_type:

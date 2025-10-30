@@ -54,11 +54,5 @@ class FileUpdateInternal(FileUpdate):
     is_safe: Annotated[bool | None, Field(default=None)]
     is_processed: Annotated[bool | None, Field(default=None)]
     model_config = ConfigDict(extra="forbid")
-
-
-class FileDelete(BaseModel):
-    """ Soft-delete schema """
-    is_deleted: bool
-    deleted_at: datetime
-
-    model_config = ConfigDict(extra="forbid")
+    is_deleted: Annotated[bool, Field(default=False)] = False
+    deleted_at: Annotated[datetime | None, Field(examples=["2023-01-01T00:00:00+00:00"], default=None)] = None

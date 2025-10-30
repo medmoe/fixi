@@ -1,9 +1,9 @@
 import datetime
 import logging
 import uuid
-from typing import Annotated
+from typing import Annotated, cast
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastcrud.exceptions.http_exceptions import DuplicateValueException, ForbiddenException
 from fastcrud.paginated import PaginatedListResponse, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,8 +12,8 @@ from ...api.dependencies import get_current_user
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import NotFoundException
 from ...core.security import validate_mime_type
-from ...crud.crud_files import FileRead, crud_files, FileCreateInternal, FileCreate, FileDelete, FileUpdate
-from ...schemas.file import FileUpdateInternal
+from ...crud.crud_files import crud_files
+from ...schemas.file import FileCreate, FileCreateInternal, FileRead, FileUpdateInternal
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["files"])
@@ -49,15 +49,13 @@ async def upload_file_content(
         upload_file: Annotated[UploadFile, File(...)],
         current_user: Annotated[dict, Depends(get_current_user)]
 ):
-    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileRead, return_as_model=True)
-    if file_record is None:
-        raise NotFoundException("File not found")
+    file_record = await get_file_by_id(file_id, db)
 
     if file_record.belongs_to_user_id != current_user['id']:
         raise ForbiddenException()
 
     # Read the file metadata from upload_file
-    filename = upload_file.filename
+    filename = upload_file.filename or "unknown"
     try:
         contents = await upload_file.read()
         detected_mime = validate_mime_type(contents, filename)
@@ -84,7 +82,10 @@ async def upload_file_content(
 
 
 @router.get("/files", response_model=PaginatedListResponse[FileRead], status_code=200)
-async def get_files(current_user: Annotated[dict, Depends(get_current_user)], db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, files_per_page: int = 10):
+async def get_files(current_user: Annotated[dict, Depends(get_current_user)],
+                    db: Annotated[AsyncSession, Depends(async_get_db)],
+                    page: int = 1,
+                    files_per_page: int = 10):
     files = await crud_files.get_multi(db=db,
                                        belongs_to_user_id=current_user['id'],
                                        is_deleted=False,
@@ -107,17 +108,14 @@ async def update_file_content(
     Replace the binary content of an existing file (e.g. user wants to change their photo).
     Keeps the same DB record / same file_id, just overwrites storage and updates metadata.
     """
-    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileRead, return_as_model=True)
-    if file_record is None:
-        raise NotFoundException("File not found")
-
+    file_record = await get_file_by_id(file_id, db)
     if file_record.belongs_to_user_id != current_user['id']:
         raise ForbiddenException()
 
     # Read new file bytes
     try:
         contents = await upload_file.read()
-        detected_mime = validate_mime_type(contents, upload_file.filename)
+        detected_mime = validate_mime_type(contents, upload_file.filename or "unknown")
         minio_client.upload_file(
             bucket=minio_client.bucket_uploads,
             key=file_record.file_key,
@@ -153,10 +151,7 @@ async def delete_file(
     Marks the DB record as deleted but does not delete the actual file from storage.
     Returns 204 no Content.
     """
-    file_record = await crud_files.get(db=db, id=file_id, is_deleted=False, schema_to_select=FileRead, return_as_model=True)
-    if file_record is None:
-        raise NotFoundException("File not found")
-
+    file_record = await get_file_by_id(file_id, db)
     if file_record.belongs_to_user_id != current_user['id']:
         raise ForbiddenException()
 
@@ -168,6 +163,21 @@ async def delete_file(
             detail=f"Failed to delete file: {e}"
         )
 
-    deleted_file = FileDelete(is_deleted=True, deleted_at=datetime.datetime.now())
+    deleted_file = FileUpdateInternal(is_deleted=True,
+                                      deleted_at=datetime.datetime.now(),
+                                      is_processed=True,
+                                      is_safe=True)
     await crud_files.update(db=db, object=deleted_file, id=file_record.id)
     return
+
+
+async def get_file_by_id(file_id: int, db: AsyncSession) -> FileRead:
+    file_record = await crud_files.get(db=db,
+                                       id=file_id,
+                                       is_deleted=False,
+                                       schema_to_select=FileRead,
+                                       return_as_model=True)
+    if file_record is None:
+        raise NotFoundException("File not found")
+
+    return cast(FileRead, file_record)

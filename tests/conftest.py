@@ -164,6 +164,7 @@ async def create_test_user(async_session: AsyncSession) -> User:
     await async_session.refresh(user)
     return user
 
+
 # from collections.abc import Callable, Generator
 # from typing import Any, List, Dict
 # from unittest.mock import AsyncMock, Mock
@@ -223,48 +224,51 @@ async def create_test_user(async_session: AsyncSession) -> User:
 #     return mock_redis
 #
 #
-# @pytest.fixture
-# def sample_user_data():
-#     """Generate sample user data for tests."""
-#     return {
-#         "name": fake.name(),
-#         "username": fake.user_name(),
-#         "email": fake.email(),
-#         "password": fake.password(),
-#     }
+@pytest.fixture
+def sample_user_data():
+    """Generate sample user data for tests."""
+    return {
+        "name": fake.name(),
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "password": fake.password(),
+    }
+
+
+#
+@pytest.fixture
+def sample_user_read():
+    """Generate a sample UserRead object."""
+    from uuid6 import uuid7
+
+    from src.app.schemas.user import UserRead
+
+    return UserRead(
+        id=1,
+        uuid=uuid7(),
+        name=fake.name(),
+        username=fake.user_name(),
+        email=fake.email(),
+        profile_image_url=fake.image_url(),
+        is_superuser=False,
+        created_at=fake.date_time(),
+        updated_at=fake.date_time(),
+        tier_id=None,
+    )
+
+
 #
 #
-# @pytest.fixture
-# def sample_user_read():
-#     """Generate a sample UserRead object."""
-#     from uuid6 import uuid7
-#
-#     from src.app.schemas.user import UserRead
-#
-#     return UserRead(
-#         id=1,
-#         uuid=uuid7(),
-#         name=fake.name(),
-#         username=fake.user_name(),
-#         email=fake.email(),
-#         profile_image_url=fake.image_url(),
-#         is_superuser=False,
-#         created_at=fake.date_time(),
-#         updated_at=fake.date_time(),
-#         tier_id=None,
-#     )
-#
-#
-# @pytest.fixture
-# def current_user_dict():
-#     """Mock current user from auth dependency."""
-#     return {
-#         "id": 1,
-#         "username": fake.user_name(),
-#         "email": fake.email(),
-#         "name": fake.name(),
-#         "is_superuser": False,
-#     }
+@pytest.fixture
+def current_user_dict():
+    """Mock current user from auth dependency."""
+    return {
+        "id": 1,
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "name": fake.name(),
+        "is_superuser": False,
+    }
 #
 #
 # @pytest.fixture
