@@ -28,5 +28,5 @@ jobs:
       env:
         ENVIRONMENT: local
         SECRET_KEY: test-secret-key-for-testing-only
-        APP_S3_ENDPOINT: "http://localhost:9000"
+        APP_S3_ENDPOINT: "http://minio:9000"
         APP_S3_BUCKET_UPLOADS: "uploads"
