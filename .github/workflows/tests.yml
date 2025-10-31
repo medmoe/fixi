@@ -53,8 +53,11 @@ jobs:
         run: |
           docker run --rm --network host \
             -e MC_HOST_local="http://minioadmin:minioadmin@localhost:9000" \
-            minio/mc:latest \
-            sh -c 'mc mb -p local/uploads || true && mc ls local'
+            minio/mc:latest mb -p local/uploads || true
+
+          docker run --rm --network host \
+            -e MC_HOST_local="http://minioadmin:minioadmin@localhost:9000" \
+            minio/mc:latest ls local
 
       - name: Run tests (uv)
         env:
