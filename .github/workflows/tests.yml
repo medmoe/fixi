@@ -7,10 +7,7 @@ jobs:
 
     services:
       minio:
-        # Option A (recommended): CI-friendly MinIO image
         image: minio/minio:edge-cicd
-        # Option B: your own wrapper image that runs `server /data` as CMD
-        # image: ghcr.io/your-org/minio-ci:latest
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
@@ -19,6 +16,18 @@ jobs:
         options: >-
           --health-cmd="curl -f http://localhost:9000/minio/health/ready || exit 1"
           --health-interval=5s --health-timeout=3s --health-retries=120
+
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -h localhost -p 5432"
+          --health-interval=5s --health-timeout=3s --health-retries=60
 
     steps:
       - uses: actions/checkout@v4
@@ -37,17 +46,17 @@ jobs:
       - name: Install package with dev dependencies
         run: uv pip install -e ".[dev]"
 
-      # extra safety wait (service healthcheck should already gate this)
-      - name: Wait for MinIO readiness
+      # (Optional) run DB migrations if your app expects schema
+      - name: Run migrations
+        env:
+          # Use 127.0.0.1 to avoid IPv6 localhost pitfalls in some stacks
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/testdb
         run: |
-          for i in {1..120}; do
-            if curl -sf http://localhost:9000/minio/health/ready >/dev/null; then
-              echo "✅ MinIO is ready"; exit 0
-            fi
-            sleep 2
-          done
-          echo "MinIO did not become ready in time" >&2
-          exit 1
+          if [ -f alembic.ini ]; then
+            uv run alembic upgrade head
+          else
+            echo "No alembic.ini; skipping migrations."
+          fi
 
       - name: Create uploads bucket
         run: |
@@ -55,17 +64,24 @@ jobs:
             -e MC_HOST_local="http://minioadmin:minioadmin@localhost:9000" \
             minio/mc:latest mb -p local/uploads || true
 
-          docker run --rm --network host \
-            -e MC_HOST_local="http://minioadmin:minioadmin@localhost:9000" \
-            minio/mc:latest ls local
-
       - name: Run tests (uv)
         env:
           ENVIRONMENT: local
           SECRET_KEY: test-secret-key-for-testing-only
-          # IMPORTANT: full URL (scheme included) for botocore
+
+          # S3/MinIO
           APP_S3_ENDPOINT: http://localhost:9000
           APP_S3_ACCESS_KEY: minioadmin
           APP_S3_SECRET_KEY: minioadmin
           APP_S3_BUCKET_UPLOADS: uploads
+
+          # Postgres — pick the driver your app uses:
+          # If SQLAlchemy sync + psycopg3:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/testdb
+          # If async + asyncpg, instead use:
+          # DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/testdb
+
+          # If your app reads a different env var (e.g., APP_DATABASE_URL),
+          # export that too, pointing to the same value.
+          # APP_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: uv run pytest
