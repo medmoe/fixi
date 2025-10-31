@@ -18,7 +18,6 @@ jobs:
         options: >-
           --health-cmd="curl -f http://localhost:9000/minio/health/ready || exit 1"
           --health-interval=5s --health-timeout=3s --health-retries=60
-        command: server /data --console-address ":9001"
 
     steps:
       - uses: actions/checkout@v4
