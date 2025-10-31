@@ -23,27 +23,8 @@ jobs:
       - name: Install package with dev dependencies
         run: uv pip install -e ".[dev]"
 
-      # --- Start services defined in docker-compose.yml ---
-      - name: Start services
-        run: docker compose up -d minio
-
       - name: Run tests
-        run: docker compose run --rm tests
+        run: uv run pytest
         env:
           ENVIRONMENT: local
           SECRET_KEY: test-secret-key-for-testing-only
-          APP_S3_ENDPOINT: http://minio:9000
-          APP_S3_ACCESS_KEY: minioadmin
-          APP_S3_SECRET_KEY: minioadmin
-          APP_S3_BUCKET_UPLOADS: uploads
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_SERVER: db
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: fixiDB
-
-      - name: Stop services
-        if: always()
-        run: docker compose down -v
