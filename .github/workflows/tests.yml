@@ -10,21 +10,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── Create src/.env for Compose ───────────────────────────────────────────
-      # Option A: generate from GitHub Secrets (recommended)
-      - name: Materialize src/.env from secrets
+      # ----- Compose-level env (used for ${...} in docker-compose.yml) -----
+      - name: Create project .env for Docker Compose interpolation
+        run: |
+          cat > .env <<'ENV'
+          # Used by docker-compose.yml at parse time (healthchecks, etc.)
+          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'testdb' }}
+          ENV
+        shell: bash
+
+      # ----- Container-level env passed via env_file: src/.env -----
+      - name: Create src/.env for services
         run: |
           mkdir -p src
           cat > src/.env <<'ENV'
-          # --- Postgres ---
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          # --- Postgres (inside compose network) ---
+          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'testdb' }}
+          # SQLAlchemy URL(s) your app uses:
+          DATABASE_URL=${{ secrets.DATABASE_URL || 'postgresql+psycopg://postgres:postgres@db:5432/testdb' }}
+          # ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@db:5432/testdb' }}
 
-          # SQLAlchemy URLs your app/alembic use (inside Compose network)
-          DATABASE_URL=${{ secrets.DATABASE_URL }}   # e.g. postgresql+psycopg://postgres:postgres@db:5432/testdb
-          # If you use an async URL too, include it:
-          # ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL }}
+          # --- Redis (inside compose) ---
+          REDIS_URL=redis://redis:6379/0
 
           # --- MinIO / S3 ---
           MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
@@ -34,32 +45,25 @@ jobs:
           APP_S3_SECRET_KEY=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
           APP_S3_BUCKET_UPLOADS=uploads
 
-          # --- Redis (inside Compose) ---
-          REDIS_URL=redis://redis:6379/0
-
           # --- App misc ---
           ENVIRONMENT=test
           SECRET_KEY=${{ secrets.SECRET_KEY || 'test-secret-key-for-testing-only' }}
           ENV
         shell: bash
 
-      # Option B: If you prefer to commit a template (src/.env.example), copy it:
-      # - name: Use committed env template
-      #   if: ${{ !hashFiles('src/.env') && hashFiles('src/.env.example') }}
-      #   run: cp src/.env.example src/.env
+      # (Optional) pull to speed up
+      - name: Pull images (best effort)
+        run: docker compose pull || true
 
-      # ── Pull images & start ONLY required services ────────────────────────────
-      - name: Pull images
-        run: docker compose pull db redis minio minio-setup || true
-
-      - name: Start core services (db, redis, minio)
+      # Start only what tests need
+      - name: Start core services
         run: docker compose up -d db redis minio
 
-      # ── Wait for health ──────────────────────────────────────────────────────
+      # Wait for health (Compose now has POSTGRES_* from ./.env)
       - name: Wait for Postgres
         run: |
           for i in {1..60}; do
-            if docker compose exec -T db pg_isready -U "$(grep -E '^POSTGRES_USER=' src/.env | cut -d= -f2)" >/dev/null 2>&1; then
+            if docker compose exec -T db pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-testdb}" >/dev/null 2>&1; then
               echo "✅ Postgres is ready"; exit 0; fi
             echo "Waiting for Postgres... ($i/60)"; sleep 2
           done
@@ -74,19 +78,18 @@ jobs:
           done
           echo "MinIO not ready in time"; docker compose logs minio; exit 1
 
-      # ── Ensure uploads bucket exists (runs the one-shot mc container) ────────
+      # Ensure the uploads bucket exists (runs your one-shot mc container)
       - name: Prepare MinIO bucket
         run: docker compose run --rm minio-setup
 
-      # ── Run Alembic migrations (your 'migration' service uses entrypoint: alembic) ──
+      # Run migrations via your 'migration' service (entrypoint: alembic)
       - name: Run DB migrations
         run: docker compose run --rm migration upgrade head
 
-      # ── Run tests service (mounts /src, /tests, uses env_file) ───────────────
+      # Run tests service (entrypoint: pytest)
       - name: Run tests
         run: docker compose run --rm tests
 
-      # ── Cleanup ──────────────────────────────────────────────────────────────
       - name: Teardown
         if: always()
         run: docker compose down -v --remove-orphans
