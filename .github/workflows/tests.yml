@@ -46,7 +46,7 @@ jobs:
           APP_S3_BUCKET_UPLOADS=uploads
 
           # --- App misc ---
-          ENVIRONMENT=test
+          ENVIRONMENT=TEST
           SECRET_KEY=${{ secrets.SECRET_KEY || 'test-secret-key-for-testing-only' }}
           ENV
         shell: bash
