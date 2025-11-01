@@ -84,11 +84,11 @@ jobs:
 
       # Run migrations via your 'migration' service (entrypoint: alembic)
       - name: Run DB migrations
-        run: docker compose run --rm migration upgrade head
+        run: docker compose run --rm -e ENVIRONMENT=local migration upgrade head
 
       # Run tests service (entrypoint: pytest)
       - name: Run tests
-        run: docker compose run --rm tests
+        run: docker compose run --rm -e ENVIRONMENT=local tests
 
       - name: Teardown
         if: always()
