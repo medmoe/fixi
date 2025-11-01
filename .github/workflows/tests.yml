@@ -1,87 +1,92 @@
-name: Tests
+name: CI - Compose Tests
+
 on: [push, pull_request]
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
-    services:
-      minio:
-        image: minio/minio:edge-cicd
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="curl -f http://localhost:9000/minio/health/ready || exit 1"
-          --health-interval=5s --health-timeout=3s --health-retries=120
-
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -h localhost -p 5432"
-          --health-interval=5s --health-timeout=3s --health-retries=60
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Create venv
-        run: uv venv
-
-      - name: Install package with dev dependencies
-        run: uv pip install -e ".[dev]"
-
-      # (Optional) run DB migrations if your app expects schema
-      - name: Run migrations
-        env:
-          # Use 127.0.0.1 to avoid IPv6 localhost pitfalls in some stacks
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/testdb
+      # ── Create src/.env for Compose ───────────────────────────────────────────
+      # Option A: generate from GitHub Secrets (recommended)
+      - name: Materialize src/.env from secrets
         run: |
-          if [ -f alembic.ini ]; then
-            uv run alembic upgrade head
-          else
-            echo "No alembic.ini; skipping migrations."
-          fi
+          mkdir -p src
+          cat > src/.env <<'ENV'
+          # --- Postgres ---
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
 
-      - name: Create uploads bucket
+          # SQLAlchemy URLs your app/alembic use (inside Compose network)
+          DATABASE_URL=${{ secrets.DATABASE_URL }}   # e.g. postgresql+psycopg://postgres:postgres@db:5432/testdb
+          # If you use an async URL too, include it:
+          # ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL }}
+
+          # --- MinIO / S3 ---
+          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+          APP_S3_ENDPOINT=http://minio:9000
+          APP_S3_ACCESS_KEY=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
+          APP_S3_SECRET_KEY=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+          APP_S3_BUCKET_UPLOADS=uploads
+
+          # --- Redis (inside Compose) ---
+          REDIS_URL=redis://redis:6379/0
+
+          # --- App misc ---
+          ENVIRONMENT=test
+          SECRET_KEY=${{ secrets.SECRET_KEY || 'test-secret-key-for-testing-only' }}
+          ENV
+        shell: bash
+
+      # Option B: If you prefer to commit a template (src/.env.example), copy it:
+      # - name: Use committed env template
+      #   if: ${{ !hashFiles('src/.env') && hashFiles('src/.env.example') }}
+      #   run: cp src/.env.example src/.env
+
+      # ── Pull images & start ONLY required services ────────────────────────────
+      - name: Pull images
+        run: docker compose pull db redis minio minio-setup || true
+
+      - name: Start core services (db, redis, minio)
+        run: docker compose up -d db redis minio
+
+      # ── Wait for health ──────────────────────────────────────────────────────
+      - name: Wait for Postgres
         run: |
-          docker run --rm --network host \
-            -e MC_HOST_local="http://minioadmin:minioadmin@localhost:9000" \
-            minio/mc:latest mb -p local/uploads || true
+          for i in {1..60}; do
+            if docker compose exec -T db pg_isready -U "$(grep -E '^POSTGRES_USER=' src/.env | cut -d= -f2)" >/dev/null 2>&1; then
+              echo "✅ Postgres is ready"; exit 0; fi
+            echo "Waiting for Postgres... ($i/60)"; sleep 2
+          done
+          echo "Postgres not ready in time"; docker compose logs db; exit 1
 
-      - name: Run tests (uv)
-        env:
-          ENVIRONMENT: local
-          SECRET_KEY: test-secret-key-for-testing-only
+      - name: Wait for MinIO
+        run: |
+          for i in {1..60}; do
+            if docker compose exec -T minio curl -sf http://localhost:9000/minio/health/ready >/dev/null; then
+              echo "✅ MinIO is ready"; exit 0; fi
+            echo "Waiting for MinIO... ($i/60)"; sleep 2
+          done
+          echo "MinIO not ready in time"; docker compose logs minio; exit 1
 
-          # S3/MinIO
-          APP_S3_ENDPOINT: http://localhost:9000
-          APP_S3_ACCESS_KEY: minioadmin
-          APP_S3_SECRET_KEY: minioadmin
-          APP_S3_BUCKET_UPLOADS: uploads
+      # ── Ensure uploads bucket exists (runs the one-shot mc container) ────────
+      - name: Prepare MinIO bucket
+        run: docker compose run --rm minio-setup
 
-          # Postgres — pick the driver your app uses:
-          # If SQLAlchemy sync + psycopg3:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/testdb
-          # If async + asyncpg, instead use:
-          # DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/testdb
+      # ── Run Alembic migrations (your 'migration' service uses entrypoint: alembic) ──
+      - name: Run DB migrations
+        run: docker compose run --rm migration upgrade head
 
-          # If your app reads a different env var (e.g., APP_DATABASE_URL),
-          # export that too, pointing to the same value.
-          # APP_DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: uv run pytest
+      # ── Run tests service (mounts /src, /tests, uses env_file) ───────────────
+      - name: Run tests
+        run: docker compose run --rm tests
+
+      # ── Cleanup ──────────────────────────────────────────────────────────────
+      - name: Teardown
+        if: always()
+        run: docker compose down -v --remove-orphans
