@@ -1,8 +1,11 @@
+import io
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, Literal, cast
 
 import bcrypt
+import magic
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import SecretStr
@@ -12,6 +15,17 @@ from ..crud.crud_users import crud_users
 from .config import settings
 from .db.crud_token_blacklist import crud_token_blacklist
 from .schemas import TokenBlacklistCreate, TokenData
+
+ALLOWED_MIME_TYPES = {
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+    'text/plain',
+    'video/mp4',
+    'video/mpeg'
+}
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.mp4', '.mpeg', }
 
 SECRET_KEY: SecretStr = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
@@ -135,3 +149,28 @@ async def blacklist_token(token: str, db: AsyncSession) -> None:
     if exp_timestamp is not None:
         expires_at = datetime.fromtimestamp(exp_timestamp)
         await crud_token_blacklist.create(db, object=TokenBlacklistCreate(token=token, expires_at=expires_at))
+
+
+def validate_mime_type(file_content: bytes, filename: str) -> str:
+    """ Validate MIME type using both magic and extension. """
+
+    # Check file extension
+    file_ext = '.' + filename.split('.')[-1].lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f'File extension {file_ext} is not allowed')
+
+    # Check actual content type
+    mime = magic.Magic(mime=True)
+    detected_mime = mime.from_buffer(file_content[:1024])  # First 1KB
+
+    if detected_mime not in ALLOWED_MIME_TYPES:
+        raise HTTPException(status_code=400, detail=f'MIME type {detected_mime} is not allowed')
+    # Additionally, security checks for images
+    if detected_mime.startswith('image/'):
+        from PIL import Image
+        try:
+            Image.open(io.BytesIO(file_content)).verify()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f'Invalid image file {e}')
+
+    return detected_mime

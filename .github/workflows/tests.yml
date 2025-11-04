@@ -1,30 +1,99 @@
-name: Tests
+name: CI - Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["**"]
+  pull_request:
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+      # ----- Compose-level env (used for ${...} in docker-compose.yml) -----
+      - name: Create project .env for Docker Compose interpolation
+        run: |
+          cat > .env <<'ENV'
+          # Used by docker-compose.yml at parse time (healthchecks, etc.)
+          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'testdb' }}
+          ENV
+        shell: bash
 
-    - name: Install uv
-      run: pip install uv
+      # ----- Container-level env passed via env_file: src/.env -----
+      - name: Create src/.env for services
+        run: |
+          mkdir -p src
+          cat > src/.env <<'ENV'
+          # --- Postgres (inside compose network) ---
+          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'testdb' }}
+          POSTGRES_SERVER=db
+          # SQLAlchemy URL(s) your app uses:
+          DATABASE_URL=${{ secrets.DATABASE_URL || 'postgresql+psycopg://postgres:postgres@db:5432/testdb' }}
+          # ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@db:5432/testdb' }}
 
-    - name: Create venv
-      run: uv venv
+          # --- Redis (inside compose) ---
+          REDIS_URL=redis://redis:6379/0
 
-    - name: Install package with dev dependencies
-      run: uv pip install -e ".[dev]"
+          # --- MinIO / S3 ---
+          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+          APP_S3_ENDPOINT=http://minio:9000
+          APP_S3_ACCESS_KEY=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
+          APP_S3_SECRET_KEY=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+          APP_S3_BUCKET_UPLOADS=uploads
 
-    - name: Run tests
-      run: uv run pytest
-      env:
-        ENVIRONMENT: local
-        SECRET_KEY: test-secret-key-for-testing-only
+          # --- App misc ---
+          ENVIRONMENT=local
+          SECRET_KEY=${{ secrets.SECRET_KEY || 'test-secret-key-for-testing-only' }}
+          ENV
+        shell: bash
+
+      # (Optional) pull to speed up
+      - name: Pull images (best effort)
+        run: docker compose pull || true
+
+      # Start only what tests need
+      - name: Start core services
+        run: docker compose up -d db redis minio
+
+      # Wait for health (Compose now has POSTGRES_* from ./.env)
+      - name: Wait for Postgres
+        run: |
+          for i in {1..60}; do
+            if docker compose exec -T db pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-testdb}" >/dev/null 2>&1; then
+              echo "✅ Postgres is ready"; exit 0; fi
+            echo "Waiting for Postgres... ($i/60)"; sleep 2
+          done
+          echo "Postgres not ready in time"; docker compose logs db; exit 1
+
+      - name: Wait for MinIO
+        run: |
+          for i in {1..60}; do
+            if docker compose exec -T minio curl -sf http://localhost:9000/minio/health/ready >/dev/null; then
+              echo "✅ MinIO is ready"; exit 0; fi
+            echo "Waiting for MinIO... ($i/60)"; sleep 2
+          done
+          echo "MinIO not ready in time"; docker compose logs minio; exit 1
+
+      # Ensure the uploads bucket exists (runs your one-shot mc container)
+      - name: Prepare MinIO bucket
+        run: docker compose run --rm minio-setup
+
+      # Run migrations via your 'migration' service (entrypoint: alembic)
+      - name: Run DB migrations
+        run: docker compose run --rm -e ENVIRONMENT=local migration upgrade head
+
+      # Run tests service (entrypoint: pytest)
+      - name: Run tests (pytest via tests service)
+        run: docker compose run --rm -e ENVIRONMENT=local tests
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v --remove-orphans

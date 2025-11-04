@@ -11,6 +11,7 @@ Run linting, tests and type-checking in sequence:
 import subprocess
 import sys
 
+
 def run(cmd, name):
     print(f"\n=== Running {name} ===")
     print("Command:", " ".join(cmd))
@@ -23,17 +24,19 @@ def run(cmd, name):
     else:
         print(f"✅ {name} succeeded")
 
+
 def main():
     # Step 1: lint
     run(["uv", "run", "ruff", "check", "src"], "Linting (ruff)")
 
     # Step 2: tests
-    run(["uv", "run", "pytest"], "Running tests (pytest)")
+    run(["docker", "compose", "run", "--rm", "tests"], "Running tests (pytest)")
 
     # Step 3: type-checking
     run(["uv", "run", "mypy", "src", "--config-file", "pyproject.toml"], "Type-checking (mypy)")
 
     print("\n🎉 All checks passed.")
+
 
 if __name__ == "__main__":
     main()

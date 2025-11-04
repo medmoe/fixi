@@ -4,7 +4,12 @@ from logging.handlers import RotatingFileHandler
 
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
 if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+    try:
+        os.makedirs(LOG_DIR)
+    except PermissionError:
+        # Fallback to /tmp for logs in restricted environments
+        LOG_DIR = "/tmp"
+        os.makedirs(LOG_DIR, exist_ok=True)
 
 LOG_FILE_PATH = os.path.join(LOG_DIR, "app.log")
 

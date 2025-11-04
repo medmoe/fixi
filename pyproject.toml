@@ -33,6 +33,11 @@ dependencies = [
     "gunicorn>=23.0.0",
     "ruff>=0.11.13",
     "mypy>=1.16.0",
+    "boto3>=1.40.55",
+    "python-magic>=0.4.27",
+    "pillow>=12.0.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=7.0.0",
 ]
 
 [project.optional-dependencies]
@@ -114,9 +119,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-mypy_path = "src"
-explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = "src.app.*"
+module = "app.*"
 disallow_untyped_defs = true

@@ -75,6 +75,11 @@ class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
     REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
 
+class MinIOSettings(BaseSettings):
+    APP_S3_ENDPOINT: str = config("APP_S3_ENDPOINT", default="localhost:9000")
+    APP_S3_ACCESS_KEY: str = config("APP_S3_ACCESS_KEY", default="minioadmin")
+    APP_S3_SECRET_KEY: str = config("APP_S3_SECRET_KEY", default="minioadmin")
+    APP_S3_BUCKET_UPLOADS: str = config("APP_S3_BUCKET_UPLOADS", default="app-bucket")
 
 class ClientSideCacheSettings(BaseSettings):
     CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)
@@ -121,6 +126,7 @@ class EnvironmentOption(Enum):
     LOCAL = "local"
     STAGING = "staging"
     PRODUCTION = "production"
+    TEST = "test"
 
 
 class EnvironmentSettings(BaseSettings):
@@ -143,21 +149,22 @@ class ProdSettings(BaseSettings):
 
 class Settings(
     AppSettings,
-    SQLiteSettings,
-    PostgresSettings,
-    CryptSettings,
-    FirstUserSettings,
-    TestSettings,
-    RedisCacheSettings,
+    CRUDAdminSettings,
     ClientSideCacheSettings,
+    CryptSettings,
+    DefaultRateLimitSettings,
+    DevSettings,
+    EnvironmentSettings,
+    FirstUserSettings,
+    MinIOSettings,
+    PostgresSettings,
+    ProdSettings,
+    RedisCacheSettings,
     RedisQueueSettings,
     RedisRateLimiterSettings,
-    DefaultRateLimitSettings,
-    CRUDAdminSettings,
-    EnvironmentSettings,
-    DevSettings,
+    SQLiteSettings,
     StagingSettings,
-    ProdSettings,
+    TestSettings,
 ):
     pass
 
