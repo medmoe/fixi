@@ -13,11 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
-
       # ----- Compose-level env (used for ${...} in docker-compose.yml) -----
       - name: Create project .env for Docker Compose interpolation
         run: |
