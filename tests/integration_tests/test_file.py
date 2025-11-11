@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 
 from src.app.models.user import User
-from tests.conftest import sample_image_bytes
 
 
 @pytest.mark.integration

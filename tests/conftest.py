@@ -1,5 +1,6 @@
 from io import BytesIO
 from typing import AsyncGenerator
+from unittest.mock import Mock, AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -13,8 +14,10 @@ from sqlalchemy.pool import NullPool
 from src.app.core.config import settings
 from src.app.core.db.database import Base, async_get_db
 from src.app.core.security import get_password_hash
+from src.app.core.utils import cache as cache_module
 from src.app.main import app
 from src.app.models.user import User
+from src.app.models.worker import Worker
 from src.app.services.minio_client import minio_client
 
 fake = Faker()
@@ -69,10 +72,18 @@ async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClien
 async def test_user(async_session: AsyncSession) -> User:
     return await create_test_user(async_session)
 
+@pytest_asyncio.fixture
+async def test_admin_user(async_session: AsyncSession) -> User:
+    return await create_test_user(async_session, is_superuser=True)
 
 @pytest_asyncio.fixture
 async def other_user(async_session: AsyncSession) -> User:
     return await create_test_user(async_session)
+
+
+@pytest_asyncio.fixture
+async def test_worker(async_session: AsyncSession) -> Worker:
+    return await create_test_worker(async_session)
 
 
 @pytest_asyncio.fixture
@@ -95,6 +106,19 @@ async def other_auth_headers(async_client: AsyncClient, other_user: User) -> dic
     }
     response = await async_client.post("/api/v1/login", data=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+@pytest_asyncio.fixture
+async def admin_auth_headers(async_client: AsyncClient, test_admin_user: User) -> dict:
+    """ Get authentication headers for a test user."""
+    login_data = {
+        "username": test_admin_user.username,
+        "password": "testpassword123"
+    }
+
+    response = await async_client.post("/api/v1/login", data=login_data)
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
 
 
 @pytest.fixture
@@ -150,19 +174,32 @@ async def cleanup_minio_bucket():
     )
 
 
-async def create_test_user(async_session: AsyncSession) -> User:
+async def create_test_user(async_session: AsyncSession, is_superuser: bool=False) -> User:
     """Create a test user."""
     user = User(
         name=fake.name(),
         username=fake.user_name(),
         email=fake.email(),
         hashed_password=get_password_hash("testpassword123"),
-        is_superuser=False
+        is_superuser=is_superuser,
     )
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
     return user
+
+
+async def create_test_worker(async_session: AsyncSession) -> Worker:
+    """ Create a test worker """
+    user = User(name=fake.name(), username=fake.user_name(), email=fake.email(), hashed_password=get_password_hash("testpassword123"), is_superuser=False)
+    async_session.add(user)
+    await async_session.commit()
+    await async_session.refresh(user)
+    worker = Worker(user_id=user.id, profession="Electrician", hourly_rate=85.0)
+    async_session.add(worker)
+    await async_session.commit()
+    await async_session.refresh(worker)
+    return worker
 
 
 # from collections.abc import Callable, Generator
@@ -214,14 +251,28 @@ async def create_test_user(async_session: AsyncSession) -> User:
 #     return Mock(spec=AsyncSession)
 #
 #
-# @pytest.fixture
-# def mock_redis():
-#     """Mock Redis connection for unit tests."""
-#     mock_redis = Mock()
-#     mock_redis.get = AsyncMock(return_value=None)
-#     mock_redis.set = AsyncMock(return_value=True)
-#     mock_redis.delete = AsyncMock(return_value=True)
-#     return mock_redis
+@pytest.fixture
+def mock_redis():
+    """Mock Redis connection for unit tests."""
+    mock_redis = Mock()
+    mock_redis.get = AsyncMock(return_value=None)
+    mock_redis.set = AsyncMock(return_value=True)
+    mock_redis.delete = AsyncMock(return_value=True)
+    mock_redis.expire = AsyncMock(return_value=True)
+    mock_redis.scan = AsyncMock(return_value=(0, []))
+    return mock_redis
+
+
+@pytest.fixture(autouse=True)
+def setup_mock_redis(mock_redis, monkeypatch):
+    """ Automatically setup mock Redis for all tests. """
+    monkeypatch.setattr(cache_module, "client", mock_redis)
+    yield
+
+    # Cleanup
+    monkeypatch.setattr(cache_module, "client", None)
+
+
 #
 #
 @pytest.fixture
@@ -235,7 +286,6 @@ def sample_user_data():
     }
 
 
-#
 @pytest.fixture
 def sample_user_read():
     """Generate a sample UserRead object."""
@@ -257,8 +307,6 @@ def sample_user_read():
     )
 
 
-#
-#
 @pytest.fixture
 def current_user_dict():
     """Mock current user from auth dependency."""
@@ -269,37 +317,3 @@ def current_user_dict():
         "name": fake.name(),
         "is_superuser": False,
     }
-#
-#
-# @pytest.fixture
-# def sample_file_data(current_user_dict: dict[str, Any] = None):
-#     """Generate sample file data for tests."""
-#     return {
-#         "file_key": "uploads/123e4567-e89b-12d3-a456-426614174000_myphoto.png",
-#         "original_filename": "myphoto.png",
-#         "mime_type": "image/png",
-#         "file_size": 1000,
-#     }
-#
-#
-# @pytest.fixture
-# def sample_file_data_list() -> List[Dict[str, Any]]:
-#     """Generate a list of sample file metadata dictionaries for tests."""
-#     return [
-#         {
-#             "file_key": f"uploads/{fake.uuid4()}_{fake.file_name(extension='png')}",
-#             "original_filename": fake.file_name(extension="png"),
-#             "mime_type": "image/png",
-#             "file_size": fake.random_int(min=100, max=5_000_000),
-#             "uploaded_at": fake.date_time(),
-#             "public_url": f"https://cdn.example.com/{fake.file_name(extension='png')}",
-#         },
-#         {
-#             "file_key": f"uploads/{fake.uuid4()}_{fake.file_name(extension='jpg')}",
-#             "original_filename": fake.file_name(extension="jpg"),
-#             "mime_type": "image/jpeg",
-#             "file_size": fake.random_int(min=100, max=5_000_000),
-#             "uploaded_at": fake.date_time(),
-#             "public_url": f"https://cdn.example.com/{fake.file_name(extension='jpg')}",
-#         }
-#     ]
