@@ -22,6 +22,7 @@ from ...schemas.geo import NearbyJobRead, WorkerNearbyRead
 from ...schemas.job import JobAssign, JobCreate, JobRead, JobStatusUpdate
 from ...schemas.review import ReviewCreate, ReviewRead
 from ...schemas.service_category import ServiceCategoryCreate, ServiceCategoryRead
+from ...services.notification_service import notify_user_status_change
 
 router = APIRouter(tags=["marketplace"])
 
@@ -199,6 +200,79 @@ async def update_job_status(
     job.status = payload.status
     await db.commit()
     await db.refresh(job)
+    return _to_job_read(job)
+
+
+@router.post(
+    "/jobs/{job_id:int}/accept",
+    response_model=JobRead,
+    dependencies=[Depends(require_role(UserRole.HANDYMAN.value))],
+)
+async def accept_job(
+    request: Request,
+    job_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> JobRead:
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+    if job is None:
+        raise NotFoundException("Job not found")
+
+    if job.status != JobStatus.OPEN:
+        raise BadRequestException("Only pending/open jobs can be accepted.")
+
+    if job.worker_id is not None and job.worker_id != current_user["id"]:
+        raise ForbiddenException("This job is already assigned to another worker.")
+
+    job.worker_id = current_user["id"]
+    job.status = JobStatus.ASSIGNED
+    await db.commit()
+    await db.refresh(job)
+
+    notify_user_status_change(
+        user_id=job.customer_id,
+        title="Job accepted",
+        body=f"Your job '{job.title}' was accepted by a worker.",
+        data={"job_id": job.id, "status": job.status.value},
+    )
+
+    return _to_job_read(job)
+
+
+@router.post(
+    "/jobs/{job_id:int}/complete",
+    response_model=JobRead,
+    dependencies=[Depends(require_role(UserRole.HANDYMAN.value))],
+)
+async def complete_job(
+    request: Request,
+    job_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> JobRead:
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+    if job is None:
+        raise NotFoundException("Job not found")
+
+    if job.worker_id != current_user["id"]:
+        raise ForbiddenException("Only the assigned worker can complete this job.")
+
+    if job.status not in {JobStatus.ASSIGNED, JobStatus.IN_PROGRESS}:
+        raise BadRequestException("Only accepted/in-progress jobs can be completed.")
+
+    job.status = JobStatus.COMPLETED
+    await db.commit()
+    await db.refresh(job)
+
+    notify_user_status_change(
+        user_id=job.customer_id,
+        title="Job completed",
+        body=f"Your job '{job.title}' was marked as completed. Please leave a review.",
+        data={"job_id": job.id, "status": job.status.value, "action": "leave_review"},
+    )
+
     return _to_job_read(job)
 
 

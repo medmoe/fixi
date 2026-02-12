@@ -96,6 +96,12 @@ class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
 
 
+class NotificationSettings(BaseSettings):
+    FCM_ENABLED: bool = config("FCM_ENABLED", default=False)
+    FCM_TOPIC_PREFIX: str = config("FCM_TOPIC_PREFIX", default="user-")
+    FCM_SERVICE_ACCOUNT_JSON: str | None = config("FCM_SERVICE_ACCOUNT_JSON", default=None)
+
+
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
@@ -157,6 +163,7 @@ class Settings(
     EnvironmentSettings,
     FirstUserSettings,
     MinIOSettings,
+    NotificationSettings,
     PostgresSettings,
     ProdSettings,
     RedisCacheSettings,
