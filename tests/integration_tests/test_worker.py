@@ -3,8 +3,11 @@ from faker import Faker
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.app.models.service_category import ServiceCategory
 from src.app.models.user import User
+from src.app.models.user import UserRole
 from src.app.models.worker import Worker
+from src.app.core.security import get_password_hash
 
 faker = Faker()
 
@@ -188,6 +191,101 @@ class TestWorkerEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert len(data["data"]) <= 5
+
+    async def test_get_categories(self, async_client: AsyncClient, admin_auth_headers: dict, async_session: AsyncSession):
+        category = ServiceCategory(name="Electrical", description="Electrical repairs")
+        async_session.add(category)
+        await async_session.commit()
+
+        response = await async_client.get("/api/v1/categories", headers=admin_auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert any(item["name"] == "Electrical" for item in data)
+
+    async def test_put_worker_profile(self, async_client: AsyncClient, async_session: AsyncSession):
+        worker_user = User(
+            name="Worker Profile User",
+            username="workerprofileuser",
+            email="worker.profile@example.com",
+            hashed_password=get_password_hash("testpassword123"),
+            role_type=UserRole.HANDYMAN,
+        )
+        category = ServiceCategory(name="Painting", description="Painting services")
+        async_session.add(worker_user)
+        async_session.add(category)
+        await async_session.commit()
+        await async_session.refresh(worker_user)
+        await async_session.refresh(category)
+
+        login_data = {"username": worker_user.username, "password": "testpassword123"}
+        login_response = await async_client.post("/api/v1/login", data=login_data)
+        headers = {"Authorization": f"Bearer {login_response.json()['access_token']}"}
+
+        response = await async_client.put(
+            "/api/v1/worker/profile",
+            json={
+                "service_category_id": category.id,
+                "profession": "Painter",
+                "hourly_rate": 55.0,
+                "skills": ["interior", "exterior"],
+                "portfolio_image_urls": ["https://cdn.example.com/portfolio/1.jpg"],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["service_category_id"] == category.id
+        assert data["hourly_rate"] == 55.0
+        assert "interior" in data["skills"]
+
+    async def test_get_workers_by_category_and_proximity(self, async_client: AsyncClient, async_session: AsyncSession):
+        category = ServiceCategory(name="PlumbingX", description="Plumbing")
+        async_session.add(category)
+        await async_session.commit()
+        await async_session.refresh(category)
+
+        near_user = User(
+            name="Near Worker",
+            username="nearworker1",
+            email="near.worker1@example.com",
+            hashed_password="hashed",
+            role_type=UserRole.HANDYMAN,
+            location="POINT(13.4050 52.5200)",
+        )
+        far_user = User(
+            name="Far Worker",
+            username="farworker1",
+            email="far.worker1@example.com",
+            hashed_password="hashed",
+            role_type=UserRole.HANDYMAN,
+            location="POINT(2.3522 48.8566)",
+        )
+        async_session.add(near_user)
+        async_session.add(far_user)
+        await async_session.commit()
+        await async_session.refresh(near_user)
+        await async_session.refresh(far_user)
+
+        async_session.add(
+            Worker(user_id=near_user.id, profession="Plumber", hourly_rate=80.0, service_category_id=category.id)
+        )
+        async_session.add(
+            Worker(user_id=far_user.id, profession="Plumber", hourly_rate=80.0, service_category_id=category.id)
+        )
+        await async_session.commit()
+
+        response = await async_client.get(
+            "/api/v1/workers",
+            params={"category": category.id, "lat": 52.5200, "long": 13.4050, "radius_km": 20},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert any(item["id"] for item in data["data"])
+        usernames_nearby = []
+        for item in data["data"]:
+            if item.get("distance_km") is not None and item["distance_km"] <= 20:
+                usernames_nearby.append(item["id"])
+        assert len(usernames_nearby) >= 1
 
     async def test_get_worker_by_id(
             self,

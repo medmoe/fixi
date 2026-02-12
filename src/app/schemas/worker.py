@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkerBase(BaseModel):
+    service_category_id: int | None = None
     profession: Annotated[
         str,
         Field(
@@ -21,6 +22,8 @@ class WorkerBase(BaseModel):
             description="Hourly rate in your currency"
         )
     ]
+    skills: list[str] = Field(default_factory=list)
+    portfolio_image_urls: list[str] = Field(default_factory=list)
     years_of_experience: Annotated[
         int | None,
         Field(
@@ -57,8 +60,11 @@ class Worker(WorkerBase):
 class WorkerRead(BaseModel):
     id: int
     user_id: int
+    service_category_id: int | None
     profession: str
     hourly_rate: float
+    skills: list[str]
+    portfolio_image_urls: list[str]
     years_of_experience: int | None
     is_verified: bool
     bio: str | None
@@ -152,11 +158,25 @@ class WorkerRatingUpdate(BaseModel):
 class WorkerPublicRead(BaseModel):
     """Public-facing worker profile (hides sensitive info)."""
     id: int
+    service_category_id: int | None
     profession: str
     hourly_rate: float
+    skills: list[str]
+    portfolio_image_urls: list[str]
     years_of_experience: int | None
     is_verified: bool
     bio: str | None
     availability_status: str
     average_rating: float | None
     total_rating: int
+    distance_km: float | None = None
+
+
+class WorkerProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    service_category_id: int | None = None
+    profession: Annotated[str | None, Field(min_length=2, max_length=255, default=None)]
+    hourly_rate: Annotated[float | None, Field(gt=0, le=10000, default=None)]
+    skills: list[str] | None = None
+    portfolio_image_urls: list[str] | None = None
