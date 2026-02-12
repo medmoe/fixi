@@ -33,7 +33,7 @@ services:
       - ./src/.env:/code/.env
 
   db:
-    image: postgres:13
+    image: postgis/postgis:13-3.4
     env_file:
       - ./src/.env
     volumes:

@@ -11,6 +11,8 @@ class UserBase(BaseModel):
     name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
+    bio: Annotated[str | None, Field(max_length=500, default=None)]
+    location: Annotated[str | None, Field(max_length=100, default=None)]
 
 
 class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
@@ -29,6 +31,8 @@ class UserRead(BaseModel):
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
     profile_image_url: str
+    bio: str | None = None
+    location: str | None = None
     role_type: UserRole = UserRole.CUSTOMER
     tier_id: int | None
 
@@ -58,6 +62,8 @@ class UserUpdate(BaseModel):
             pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.profileimageurl.com"], default=None
         ),
     ]
+    bio: Annotated[str | None, Field(max_length=500, default=None)]
+    location: Annotated[str | None, Field(max_length=100, default=None)]
 
 
 class UserUpdateInternal(UserUpdate):
