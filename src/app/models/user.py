@@ -1,9 +1,9 @@
 import uuid as uuid_pkg
-from enum import Enum
 from datetime import UTC, datetime
+from enum import Enum
 
-from sqlalchemy import DateTime, Enum as SQLEnum
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
@@ -36,7 +36,7 @@ class User(Base):
     role_type: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole, name="user_role_type"),
         default=UserRole.CUSTOMER,
-        server_default=UserRole.CUSTOMER.value,
+        server_default=UserRole.CUSTOMER.name,
         index=True,
     )
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
@@ -14,8 +14,8 @@ from ...core.security import (
     TokenType,
     authenticate_user,
     create_access_token,
-    create_token_payload,
     create_refresh_token,
+    create_token_payload,
     verify_token,
 )
 from ...crud.crud_users import crud_users
@@ -65,5 +65,10 @@ async def refresh_access_token(request: Request, db: AsyncSession = Depends(asyn
     if not db_user:
         raise UnauthorizedException("Invalid refresh token.")
 
-    new_access_token = await create_access_token(data=create_token_payload(db_user))
+    if hasattr(db_user, "model_dump"):
+        user_payload_source = cast(dict[str, Any], db_user.model_dump())
+    else:
+        user_payload_source = cast(dict[str, Any], db_user)
+
+    new_access_token = await create_access_token(data=create_token_payload(user_payload_source))
     return {"access_token": new_access_token, "token_type": "bearer"}
