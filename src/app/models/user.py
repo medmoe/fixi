@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
 
 from ..core.db.database import Base
+from ..core.db.types import PostGISPoint
 
 
 class UserRole(str, Enum):
@@ -27,6 +28,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String)
 
     profile_image_url: Mapped[str] = mapped_column(String, default="https://profileimageurl.com")
+    bio: Mapped[str | None] = mapped_column(String(500), default=None)
+    # Stored as geometry(Point, 4326). Reads are exposed as WKT text.
+    location: Mapped[str | None] = mapped_column(PostGISPoint(), default=None)
     uuid: Mapped[uuid_pkg.UUID] = mapped_column(UUID(as_uuid=True), default_factory=uuid7, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
