@@ -18,9 +18,10 @@ from ...models.job import Job, JobStatus
 from ...models.review import Review
 from ...models.service_category import ServiceCategory
 from ...models.user import User, UserRole
+from ...models.worker import Worker
 from ...schemas.geo import NearbyJobRead, WorkerNearbyRead
 from ...schemas.job import JobAssign, JobCreate, JobRead, JobStatusUpdate
-from ...schemas.review import ReviewCreate, ReviewRead
+from ...schemas.review import ReviewCreate, ReviewRead, ReviewUpdate, WorkerRatingSummary
 from ...schemas.service_category import ServiceCategoryCreate, ServiceCategoryRead
 from ...services.notification_service import notify_user_status_change
 
@@ -52,6 +53,26 @@ def _to_review_read(model: Review) -> ReviewRead:
 async def _get_active_user_by_id(db: AsyncSession, user_id: int) -> User | None:
     result = await db.execute(select(User).where(User.id == user_id, User.is_deleted.is_(False)))
     return result.scalar_one_or_none()
+
+
+async def _recalculate_worker_rating(db: AsyncSession, worker_user_id: int | None) -> None:
+    if worker_user_id is None:
+        return
+
+    aggregate_query = (
+        select(func.avg(Review.rating), func.count(Review.id))
+        .join(Job, Job.id == Review.job_id)
+        .where(Job.worker_id == worker_user_id)
+    )
+    avg_rating, total_reviews = (await db.execute(aggregate_query)).one()
+
+    worker_result = await db.execute(select(Worker).where(Worker.user_id == worker_user_id))
+    worker = worker_result.scalar_one_or_none()
+    if worker is None:
+        return
+
+    worker.average_rating = float(avg_rating) if avg_rating is not None else None
+    worker.total_rating = int(total_reviews or 0)
 
 
 @router.post("/service-categories", response_model=ServiceCategoryRead, status_code=201)
@@ -301,6 +322,8 @@ async def create_job_review(
     review = Review(job_id=job.id, rating=payload.rating, comment=payload.comment)
     db.add(review)
     try:
+        await db.flush()
+        await _recalculate_worker_rating(db, job.worker_id)
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
@@ -330,6 +353,97 @@ async def get_job_review(
     if review is None:
         raise NotFoundException("Review not found")
     return _to_review_read(review)
+
+
+@router.patch("/jobs/{job_id:int}/review", response_model=ReviewRead)
+async def update_job_review(
+    request: Request,
+    job_id: int,
+    payload: ReviewUpdate,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> ReviewRead:
+    job_result = await db.execute(select(Job).where(Job.id == job_id))
+    job = job_result.scalar_one_or_none()
+    if job is None:
+        raise NotFoundException("Job not found")
+    if job.customer_id != current_user["id"] and not current_user.get("is_superuser"):
+        raise ForbiddenException("Only the customer who owns the job can update the review")
+
+    review_result = await db.execute(select(Review).where(Review.job_id == job_id))
+    review = review_result.scalar_one_or_none()
+    if review is None:
+        raise NotFoundException("Review not found")
+
+    if payload.rating is not None:
+        review.rating = payload.rating
+    if payload.comment is not None:
+        review.comment = payload.comment
+
+    await _recalculate_worker_rating(db, job.worker_id)
+    await db.commit()
+    await db.refresh(review)
+    return _to_review_read(review)
+
+
+@router.delete("/jobs/{job_id:int}/review")
+async def delete_job_review(
+    request: Request,
+    job_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> dict[str, str]:
+    job_result = await db.execute(select(Job).where(Job.id == job_id))
+    job = job_result.scalar_one_or_none()
+    if job is None:
+        raise NotFoundException("Job not found")
+    if job.customer_id != current_user["id"] and not current_user.get("is_superuser"):
+        raise ForbiddenException("Only the customer who owns the job can delete the review")
+
+    review_result = await db.execute(select(Review).where(Review.job_id == job_id))
+    review = review_result.scalar_one_or_none()
+    if review is None:
+        raise NotFoundException("Review not found")
+
+    await db.delete(review)
+    await _recalculate_worker_rating(db, job.worker_id)
+    await db.commit()
+    return {"message": "Review deleted"}
+
+
+@router.get("/workers/{worker_user_id:int}/reviews", response_model=list[ReviewRead])
+async def list_worker_reviews(
+    request: Request,
+    worker_user_id: int,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> list[ReviewRead]:
+    query = (
+        select(Review)
+        .join(Job, Job.id == Review.job_id)
+        .where(Job.worker_id == worker_user_id)
+        .order_by(Review.created_at.desc())
+    )
+    rows = (await db.execute(query)).scalars().all()
+    return [_to_review_read(item) for item in rows]
+
+
+@router.get("/workers/{worker_user_id:int}/rating", response_model=WorkerRatingSummary)
+async def get_worker_rating_summary(
+    request: Request,
+    worker_user_id: int,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> WorkerRatingSummary:
+    query = (
+        select(func.avg(Review.rating), func.count(Review.id))
+        .join(Job, Job.id == Review.job_id)
+        .where(Job.worker_id == worker_user_id)
+    )
+    avg_rating, total_reviews = (await db.execute(query)).one()
+    return WorkerRatingSummary(
+        worker_user_id=worker_user_id,
+        average_rating=float(avg_rating) if avg_rating is not None else None,
+        total_reviews=int(total_reviews or 0),
+    )
 
 
 @router.get("/workers/nearby", response_model=list[WorkerNearbyRead])
