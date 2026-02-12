@@ -10,6 +10,7 @@ from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import text
 
 from ..api.dependencies import get_current_superuser
 from ..core.utils.rate_limit import rate_limiter
@@ -34,6 +35,20 @@ from .utils import cache, queue
 # -------------- database --------------
 async def create_tables() -> None:
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+        await conn.execute(
+            text(
+                """
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_status_type') THEN
+                        CREATE TYPE job_status_type AS ENUM ('OPEN', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+                    END IF;
+                END
+                $$;
+                """
+            )
+        )
         await conn.run_sync(Base.metadata.create_all)
 
 
