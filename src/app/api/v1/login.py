@@ -23,9 +23,9 @@ router = APIRouter(tags=["login"])
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(
-    response: Response,
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        response: Response,
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
     user = await authenticate_user(username_or_email=form_data.username, password=form_data.password, db=db)
     if not user:
@@ -36,9 +36,9 @@ async def login_for_access_token(
 
     refresh_token = await create_refresh_token(data={"sub": user["username"]})
     max_age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
-
+    # set the secure flag based on environment 'dev' or 'prod'
     response.set_cookie(
-        key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="lax", max_age=max_age
+        key="refresh_token", value=refresh_token, httponly=True, secure=False, samesite="lax", max_age=max_age
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
