@@ -161,8 +161,11 @@ class TestWorkerSchemas:
         worker = WorkerRead(
             id=1,
             user_id=1,
+            service_category_id=None,
             profession="Plumber",
             hourly_rate=75.0,
+            skills=["pipes"],
+            portfolio_image_urls=["https://cdn.example.com/portfolio/1.jpg"],
             years_of_experience=10,
             is_verified=True,
             bio="Experienced",
@@ -179,8 +182,11 @@ class TestWorkerSchemas:
         """Test WorkerPublicRead schema structure."""
         worker = WorkerPublicRead(
             id=1,
+            service_category_id=None,
             profession="Plumber",
             hourly_rate=75.0,
+            skills=["pipes"],
+            portfolio_image_urls=["https://cdn.example.com/portfolio/1.jpg"],
             years_of_experience=10,
             is_verified=True,
             bio="Experienced",

@@ -1,4 +1,4 @@
-from sqlalchemy import Float, ForeignKey, Integer, String
+from sqlalchemy import JSON, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db.database import Base
@@ -13,6 +13,9 @@ class Worker(Base):
     # Worker-specific fields
     profession: Mapped[str] = mapped_column(String(255))  # e.g. "Plumber", "Carpenter", "Engineer"
     hourly_rate: Mapped[float] = mapped_column(Float)
+    service_category_id: Mapped[int | None] = mapped_column(ForeignKey("service_category.id"), index=True, default=None)
+    skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
+    portfolio_image_urls: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
     years_of_experience: Mapped[int | None] = mapped_column(default=None)
     is_verified: Mapped[bool] = mapped_column(default=False)
     bio: Mapped[str | None] = mapped_column(String(500), default=None)
