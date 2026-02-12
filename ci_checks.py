@@ -10,6 +10,8 @@ Run linting, tests and type-checking in sequence:
 
 import subprocess
 import sys
+from pathlib import Path
+from shutil import which
 
 
 def run(cmd, name):
@@ -25,15 +27,31 @@ def run(cmd, name):
         print(f"✅ {name} succeeded")
 
 
+def build_tool_cmd(tool: str, *args: str) -> list[str]:
+    uv = which("uv")
+    if uv:
+        return [uv, "run", tool, *args]
+
+    venv_tool = Path(".venv") / "bin" / tool
+    if venv_tool.exists():
+        return [str(venv_tool), *args]
+
+    path_tool = which(tool)
+    if path_tool:
+        return [path_tool, *args]
+
+    return [sys.executable, "-m", tool, *args]
+
+
 def main():
     # Step 1: lint
-    run(["uv", "run", "ruff", "check", "src"], "Linting (ruff)")
+    run(build_tool_cmd("ruff", "check", "src"), "Linting (ruff)")
 
     # Step 2: tests
     run(["docker", "compose", "run", "--rm", "tests"], "Running tests (pytest)")
 
     # Step 3: type-checking
-    run(["uv", "run", "mypy", "src", "--config-file", "pyproject.toml"], "Type-checking (mypy)")
+    run(build_tool_cmd("mypy", "src", "--config-file", "pyproject.toml"), "Type-checking (mypy)")
 
     print("\n🎉 All checks passed.")
 

@@ -1,12 +1,19 @@
 import uuid as uuid_pkg
 from datetime import UTC, datetime
+from enum import Enum
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
 
 from ..core.db.database import Base
+
+
+class UserRole(str, Enum):
+    CUSTOMER = "customer"
+    HANDYMAN = "handyman"
 
 
 class User(Base):
@@ -26,5 +33,12 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    role_type: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole, name="user_role_type"),
+        default=UserRole.CUSTOMER,
+        server_default=UserRole.CUSTOMER.name,
+        index=True,
+    )
+    token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
     tier_id: Mapped[int | None] = mapped_column(ForeignKey("tier.id"), index=True, default=None, init=False)

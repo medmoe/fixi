@@ -75,6 +75,30 @@ async def get_current_superuser(current_user: Annotated[dict, Depends(get_curren
     return current_user
 
 
+def require_role(*roles: str) -> Any:
+    allowed = set(roles)
+
+    async def role_guard(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)],
+    ) -> dict:
+        token_data = await verify_token(token, TokenType.ACCESS, db)
+        if token_data is None or token_data.role is None:
+            raise UnauthorizedException("User not authenticated.")
+
+        if token_data.role not in allowed:
+            raise ForbiddenException("Insufficient role permissions.")
+
+        return current_user
+
+    return role_guard
+
+
+def authorize_role(*roles: str) -> Any:
+    return require_role(*roles)
+
+
 async def rate_limiter_dependency(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], user: dict | None = Depends(get_optional_user)
 ) -> None:

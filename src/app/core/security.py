@@ -12,6 +12,7 @@ from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..crud.crud_users import crud_users
+from ..models.user import UserRole
 from .config import settings
 from .db.crud_token_blacklist import crud_token_blacklist
 from .schemas import TokenBlacklistCreate, TokenData
@@ -66,6 +67,23 @@ async def authenticate_user(username_or_email: str, password: str, db: AsyncSess
     return db_user
 
 
+def _normalize_user_role(value: Any) -> UserRole:
+    if isinstance(value, UserRole):
+        return value
+    return UserRole(str(value))
+
+
+def create_token_payload(user: dict[str, Any]) -> dict[str, Any]:
+    role = _normalize_user_role(user.get("role_type", UserRole.CUSTOMER))
+    token_version = int(user.get("token_version", 1))
+    return {
+        "sub": user["username"],
+        "role": role.value,
+        "email": user["email"],
+        "tv": token_version,
+    }
+
+
 async def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
@@ -113,11 +131,28 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
         payload = jwt.decode(token, SECRET_KEY.get_secret_value(), algorithms=[ALGORITHM])
         username_or_email: str | None = payload.get("sub")
         token_type: str | None = payload.get("token_type")
+        role: str | None = payload.get("role")
+        token_version: int | None = payload.get("tv")
 
-        if username_or_email is None or token_type != expected_token_type:
+        if username_or_email is None or token_type != expected_token_type or role is None or token_version is None:
             return None
 
-        return TokenData(username_or_email=username_or_email)
+        if "@" in username_or_email:
+            db_user = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
+        else:
+            db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+
+        if not db_user:
+            return None
+
+        db_user = cast(dict[str, Any], db_user)
+        db_role = _normalize_user_role(db_user.get("role_type", UserRole.CUSTOMER)).value
+        db_token_version = int(db_user.get("token_version", 1))
+
+        if role != db_role or int(token_version) != db_token_version:
+            return None
+
+        return TokenData(username_or_email=username_or_email, role=role, token_version=db_token_version)
 
     except JWTError:
         return None
