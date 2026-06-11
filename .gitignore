@@ -133,3 +133,9 @@ cython_debug/
 .ruff_cache
 
 .idea
+
+# Frontend
+frontend/node_modules/
+
+
+DOCKER_NOTES.md
