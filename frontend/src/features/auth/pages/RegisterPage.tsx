@@ -166,17 +166,7 @@ export const RegisterPage = () => {
                         required
                     />
 
-                    {role === 'customer' ? (
-                        <>
-                            <input
-                                name="saved_addresses"
-                                placeholder="Saved addresses (comma separated)"
-                                value={formState.saved_addresses}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                            />
-                        </>
-                    ) : (
+                    {role === "handyman" && (
                         <>
                             <input
                                 name="skill_category"
