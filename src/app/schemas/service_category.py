@@ -14,3 +14,15 @@ class ServiceCategoryCreate(ServiceCategoryBase):
 
 class ServiceCategoryRead(ServiceCategoryBase):
     id: int
+
+
+class ServiceCategoryUpdate(ServiceCategoryBase):
+    model_config = ConfigDict(extra="forbid")
+
+
+class ServiceCategoryUpdateInternal(ServiceCategoryUpdate):
+    pass
+
+
+class ServiceCategoryDelete(BaseModel):
+    pass
