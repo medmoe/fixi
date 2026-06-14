@@ -19,7 +19,6 @@ from src.app.core.utils import cache as cache_module
 from src.app.main import app
 from src.app.models.user import User
 from src.app.models.worker import Worker
-from src.app.services.minio_client import minio_client
 
 fake = Faker()
 
@@ -87,9 +86,11 @@ async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClien
 async def test_user(async_session: AsyncSession) -> User:
     return await create_test_user(async_session)
 
+
 @pytest_asyncio.fixture
 async def test_admin_user(async_session: AsyncSession) -> User:
     return await create_test_user(async_session, is_superuser=True)
+
 
 @pytest_asyncio.fixture
 async def other_user(async_session: AsyncSession) -> User:
@@ -122,6 +123,7 @@ async def other_auth_headers(async_client: AsyncClient, other_user: User) -> dic
     response = await async_client.post("/api/v1/login", data=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
+
 @pytest_asyncio.fixture
 async def admin_auth_headers(async_client: AsyncClient, test_admin_user: User) -> dict:
     """ Get authentication headers for a test user."""
@@ -132,8 +134,6 @@ async def admin_auth_headers(async_client: AsyncClient, test_admin_user: User) -
 
     response = await async_client.post("/api/v1/login", data=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
-
-
 
 
 @pytest.fixture
@@ -173,6 +173,7 @@ async def cleanup_minio_bucket():
     """
     # run the test
     yield
+    from src.app.services.minio_client import minio_client
 
     # teardown phase:
     bucket = minio_client.bucket_uploads
@@ -189,7 +190,7 @@ async def cleanup_minio_bucket():
     )
 
 
-async def create_test_user(async_session: AsyncSession, is_superuser: bool=False) -> User:
+async def create_test_user(async_session: AsyncSession, is_superuser: bool = False) -> User:
     """Create a test user."""
     user = User(
         name=fake.name(),
@@ -206,7 +207,8 @@ async def create_test_user(async_session: AsyncSession, is_superuser: bool=False
 
 async def create_test_worker(async_session: AsyncSession) -> Worker:
     """ Create a test worker """
-    user = User(name=fake.name(), username=fake.user_name(), email=fake.email(), hashed_password=get_password_hash("testpassword123"), is_superuser=False)
+    user = User(name=fake.name(), username=fake.user_name(), email=fake.email(),
+                hashed_password=get_password_hash("testpassword123"), is_superuser=False)
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)

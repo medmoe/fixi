@@ -19,6 +19,9 @@ class ServiceCategoryRead(ServiceCategoryBase):
 class ServiceCategoryUpdate(ServiceCategoryBase):
     model_config = ConfigDict(extra="forbid")
 
+    name: Annotated[str | None, Field(min_length=2, max_length=120, default=None, examples=['Plumbing'])]
+    description: Annotated[str | None, Field(max_length=500, default=None)]
+
 
 class ServiceCategoryUpdateInternal(ServiceCategoryUpdate):
     pass

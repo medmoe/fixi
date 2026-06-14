@@ -20,7 +20,14 @@ class MinioClient:
             config=Config(signature_version="s3v4"),
             verify=False
         )
+        self._bucket_checked = False
+
+    def ensure_bucket_exists(self):
+        if self._bucket_checked:
+            return
+
         self._ensure_bucket_exists()
+        self._bucket_checked = True
 
     def _ensure_bucket_exists(self):
         """ Create a bucket if it doesn't exist """
@@ -48,6 +55,8 @@ class MinioClient:
 
     def upload_file(self, bucket: str, key: str, data: bytes, content_type: str | None = None):
         """ Upload raw bytes to the given bucket and key """
+        self.ensure_bucket_exists()
+
         extra_args = {}
         if content_type:
             extra_args["ContentType"] = content_type
