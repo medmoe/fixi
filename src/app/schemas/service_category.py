@@ -1,11 +1,16 @@
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ServiceCategoryBase(BaseModel):
     name: Annotated[str, Field(min_length=2, max_length=120, examples=["Plumbing"])]
     description: Annotated[str | None, Field(max_length=500, default=None)]
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def sanitize_name(cls, value: str) -> str:
+        return " ".join(value.strip().split())
 
 
 class ServiceCategoryCreate(ServiceCategoryBase):

@@ -66,3 +66,8 @@ def test_service_category_read_valid():
 def test_service_category_read_requires_id():
     with pytest.raises(ValidationError):
         ServiceCategoryRead(name="Plumbing", description="Pipe installation and repairs")
+
+
+def test_service_category_sanitized_name():
+    payload = ServiceCategoryCreate(name="    Plumbing       Category       ")
+    assert payload.name == "Plumbing Category"
