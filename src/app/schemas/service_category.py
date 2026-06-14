@@ -21,7 +21,7 @@ class ServiceCategoryRead(ServiceCategoryBase):
     id: int
 
 
-class ServiceCategoryUpdate(ServiceCategoryBase):
+class ServiceCategoryUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Annotated[str | None, Field(min_length=2, max_length=120, default=None, examples=['Plumbing'])]

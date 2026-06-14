@@ -1,15 +1,16 @@
-from typing import Annotated, cast, Sequence
+from collections.abc import Sequence
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends
 from fastcrud.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_current_superuser
 from ...core.db.database import async_get_db
 from ...crud.crud_service_category import crud_service_category
 from ...models.service_category import ServiceCategory
-from ...schemas.service_category import ServiceCategoryRead, ServiceCategoryCreate
+from ...schemas.service_category import ServiceCategoryCreate, ServiceCategoryRead
+from ..dependencies import get_current_superuser
 
 router = APIRouter(tags=["Service Categories"], prefix="/service-categories")
 
@@ -47,7 +48,7 @@ async def bulk_create_service_categories(
         db: Annotated[AsyncSession, Depends(async_get_db)],
         _: Annotated[dict, Depends(get_current_superuser)]
 ) -> list[ServiceCategoryRead]:
-    names = set([category.name for category in payload])
+    names = {category.name for category in payload}
     existing_result = await db.execute(select(ServiceCategory.name).where(ServiceCategory.name.in_(names)))
     existing_names = set(existing_result.scalars().all())
 

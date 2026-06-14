@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from fastcrud import FastCRUD
 from sqlalchemy import insert
