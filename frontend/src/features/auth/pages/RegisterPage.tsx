@@ -1,8 +1,9 @@
-import {useState} from 'react';
+import React, {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {AuthLayout} from '../components/AuthLayout';
 import {useRegisterMutation} from '../api/authApi';
 import type {RegisterCustomer, RegisterHandyman, UserRole} from '../types';
+import {useServiceCategoriesQuery} from '../queries';
 
 const defaultAvailability = {
     weekday: '9-5'
@@ -26,8 +27,13 @@ export const RegisterPage = () => {
     });
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const {
+        data: serviceCategories = [],
+        isLoading: isLoadingServiceCategories,
+        isError: isServiceCategoriesError,
+    } = useServiceCategoriesQuery();
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormState((prev) => ({...prev, [event.target.name]: event.target.value}));
     };
 
@@ -168,14 +174,24 @@ export const RegisterPage = () => {
 
                     {role === "handyman" && (
                         <>
-                            <input
+                            <select
                                 name="skill_category"
-                                placeholder="Skill category"
                                 value={formState.skill_category}
                                 onChange={handleChange}
                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
                                 required
-                            />
+                            >
+                                <option value={""}>
+                                    {isLoadingServiceCategories ? "Loading skill categories..." : "Select skill category"}
+                                </option>
+                                {serviceCategories.map((category) => {
+                                    return <option key={category.id} value={category.name}>{category.name}</option>
+                                })}
+                            </select>
+                            {isServiceCategoriesError && (
+                                <p className="text-sm text-rose-300">Could not load skill categories. Please refresh and
+                                    try again.</p>
+                            )}
                             <input
                                 name="skills"
                                 placeholder="Skills (comma separated)"
@@ -207,7 +223,7 @@ export const RegisterPage = () => {
 
                     <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || (role === 'handyman' && isLoadingServiceCategories)}
                         className="w-full rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
                     >
                         {isLoading ? 'Creating...' : 'Create account'}
