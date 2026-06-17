@@ -7,7 +7,10 @@ from starlette.config import Config
 
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(current_file_dir, "..", "..", ".env")
+test_env_path = os.path.join(current_file_dir, "..", "..", ".env.test")
+
 config = Config(env_path)
+test_config = Config(test_env_path)
 
 
 class AppSettings(BaseSettings):
@@ -67,7 +70,16 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
 
 
-class TestSettings(BaseSettings): ...
+class TestSettings(BaseSettings):
+    TEST_POSTGRES_USER: str = test_config("TEST_POSTGRES_USER", default="postgres")
+    TEST_POSTGRES_PASSWORD: str = test_config("TEST_POSTGRES_PASSWORD", default="postgres")
+    TEST_POSTGRES_SERVER: str = test_config("TEST_POSTGRES_SERVER", default="localhost")
+    TEST_POSTGRES_PORT: int = test_config("TEST_POSTGRES_PORT", default=5432)
+    TEST_POSTGRES_DB: str = test_config("TEST_POSTGRES_DB", default="test_db")
+    TEST_POSTGRES_SYNC_PREFIX: str = test_config("TEST_POSTGRES_SYNC_PREFIX", default="postgresql://")
+    TEST_POSTGRES_ASYNC_PREFIX: str = test_config("TEST_POSTGRES_ASYNC_PREFIX", default="postgresql+asyncpg://")
+    TEST_POSTGRES_ASYNC_URI: str = f"{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}@{TEST_POSTGRES_SERVER}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
+    TEST_POSTGRES_URL: str | None = test_config("TEST_POSTGRES_URL", default=None)
 
 
 class RedisCacheSettings(BaseSettings):
@@ -75,11 +87,13 @@ class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
     REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
 
+
 class MinIOSettings(BaseSettings):
     APP_S3_ENDPOINT: str = config("APP_S3_ENDPOINT", default="localhost:9000")
     APP_S3_ACCESS_KEY: str = config("APP_S3_ACCESS_KEY", default="minioadmin")
     APP_S3_SECRET_KEY: str = config("APP_S3_SECRET_KEY", default="minioadmin")
     APP_S3_BUCKET_UPLOADS: str = config("APP_S3_BUCKET_UPLOADS", default="app-bucket")
+
 
 class ClientSideCacheSettings(BaseSettings):
     CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)

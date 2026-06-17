@@ -22,11 +22,12 @@ from src.app.models.worker import Worker
 
 fake = Faker()
 
-DATABASE_URI = settings.POSTGRES_URI
-DATABASE_PREFIX = settings.POSTGRES_ASYNC_PREFIX
+DATABASE_URI = settings.TEST_POSTGRES_ASYNC_URI
+DATABASE_PREFIX = settings.TEST_POSTGRES_ASYNC_PREFIX
+DATABASE_URL = settings.TEST_POSTGRES_URL or f"{DATABASE_PREFIX}{DATABASE_URI}"
 
 # Create test engine and session
-test_engine = create_async_engine(DATABASE_PREFIX + DATABASE_URI, echo=False, poolclass=NullPool, future=True)
+test_engine = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool, future=True)
 testSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
