@@ -13,7 +13,7 @@
     "test:watch": "jest --watch",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "add:pkg": "docker run --rm -v $(pwd):/app node:22-alpine npm install"
+    "add:pkg": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm install"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
