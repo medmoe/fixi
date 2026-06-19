@@ -18,6 +18,30 @@ services:
       - ./src/app:/code/app
       - ./src/.env:/code/.env
 
+  frontend:
+    # Recommended workflow:
+    # start everything: docker compose up --build
+    # install frontend packages: docker compose exec frontend npm install package-name
+    # if you changed the Dockerfile: docker compose --build frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    #      - "5173:80" For production
+
+    depends_on:
+      - web
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+  #      why use VITE_API_BASE_URL=http://localhost:8000?
+  #      For browser-based frontend code, API calls are made by the browser, not by the frontend container.
+  #      So if your React app calls the backend, it usually needs http://localhost:8000
+
   worker:
     build:
       context: .
@@ -206,4 +230,5 @@ volumes:
   postgres-data:
   redis-data:
   minio_data:
+  frontend-node-modules:
   #pgadmin-data:

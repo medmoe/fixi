@@ -198,7 +198,6 @@ export const RegisterPage = () => {
                                 value={formState.skills}
                                 onChange={handleChange}
                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                                required
                             />
                             <input
                                 name="certification_urls"
@@ -213,7 +212,6 @@ export const RegisterPage = () => {
                                 value={formState.hourly_rate}
                                 onChange={handleChange}
                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                                required
                             />
                         </>
                     )}
