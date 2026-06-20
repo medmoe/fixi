@@ -91,6 +91,9 @@ ignore = [
     # "UP035", # deprecated-assertion
 ]
 
+[tool.ruff]
+line-length = 300
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
     "F401", # unused import
