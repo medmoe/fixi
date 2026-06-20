@@ -56,8 +56,8 @@ jobs:
         shell: bash
 
       # (Optional) pull to speed up
-#      - name: Pull images (best effort)
-#        run: docker compose pull || true
+      #      - name: Pull images (best effort)
+      #        run: docker compose pull || true
 
       #      # Run migrations via your 'migration' service (entrypoint: alembic)
       #      - name: Run DB migrations
@@ -70,3 +70,4 @@ jobs:
       - name: Teardown
         if: always()
         run: docker compose -f docker-compose.test.yml down -v --remove-orphans
+

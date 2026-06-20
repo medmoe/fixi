@@ -61,7 +61,18 @@ services:
       - ./pytest.ini:/code/pytest.ini
       - ./src/alembic.ini:/code/src/alembic.ini
       - ./src/migrations:/code/src/migrations
-    entrypoint: [ "sh", "-c", "cd src && alembic upgrade head && cd .. && pytest tests/ -v" ]
+
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "$DATABASE_URL"
+        echo "$ASYNC_DATABASE_URL"
+        cat /code/src/.env.test
+        cd src && alembic upgrade head
+        cd ..
+        pytest tests/ -v
+#    entrypoint: [ "sh", "-c", "cd src && alembic upgrade head && cd .. && pytest tests/ -v" ]
 
 
 # Recommended workflow for running tests:
