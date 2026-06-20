@@ -27,7 +27,8 @@ export const authApi = apiSlice.injectEndpoints({
       query: () => ({
         url: '/logout',
         method: 'POST'
-      })
+      }),
+      invalidatesTags: ['User', 'Jobs', 'System'],
     }),
     getMe: builder.query<UserRead, void>({
       query: () => ({

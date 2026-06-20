@@ -1,40 +1,64 @@
-import { configureStore, createListenerMiddleware, isRejectedWithValue } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query';
-import { apiSlice } from './apiSlice';
-import { notificationsReducer, pushToast } from '../features/notifications/notificationsSlice';
-import { systemReducer } from '../features/system/slice';
-import { authReducer } from '../features/auth/authSlice';
+import type {UnknownAction} from '@reduxjs/toolkit';
+import {configureStore, createListenerMiddleware, isRejectedWithValue} from '@reduxjs/toolkit';
+import {setupListeners} from '@reduxjs/toolkit/query';
+import {apiSlice} from './apiSlice';
+import {notificationsReducer, pushToast} from '../features/notifications/notificationsSlice';
+import {systemReducer} from '../features/system/slice';
+import {authReducer} from '../features/auth/authSlice';
 
+// Define the shape of a rejected RTK query action
+interface RejectedAction extends UnknownAction {
+    payload: {
+        status: number | string;
+        data?: {
+            detail?: string;
+        };
+    };
+    meta: {
+        arg: {
+            endpointName: string;
+        };
+        requestStatus: 'rejected';
+    };
+}
+
+// Type guard -- narrows the action to RejectedAction
+function isRejectedActionWithPayload(action: UnknownAction): action is RejectedAction {
+    return isRejectedWithValue(action);
+}
+
+
+// Use the type guard in the listner
 const listenerMiddleware = createListenerMiddleware();
 
 listenerMiddleware.startListening({
-  predicate: (action) => isRejectedWithValue(action),
-  effect: (action, listenerApi) => {
-    const status = action.payload?.status ?? 'error';
-    const endpointName = action.meta?.arg?.endpointName as string | undefined;
-    if (status === 404 && endpointName === 'getJobReview') {
-      return;
-    }
-    const message = action.payload?.data?.detail ?? 'Request failed. Please try again.';
+    predicate: (action) => isRejectedActionWithPayload(action),
+    effect: (action, listenerApi) => {
+        const status = action.payload?.status ?? 'error';
+        const endpointName = action.meta?.arg?.endpointName as string | undefined;
+        if (status === 404 && endpointName === 'getJobReview') {
+            return;
+        }
+        const message = action.payload?.data?.detail ?? 'Request failed. Please try again.';
 
-    listenerApi.dispatch(
-      pushToast({
-        message: `${status}: ${message}`,
-        tone: 'error'
-      })
-    );
-  }
+        listenerApi.dispatch(
+            pushToast({
+                message: `${status}: ${message}`,
+                tone: 'error'
+            })
+        );
+    }
 });
 
 export const store = configureStore({
-  reducer: {
-    [apiSlice.reducerPath]: apiSlice.reducer,
-    auth: authReducer,
-    notifications: notificationsReducer,
-    system: systemReducer
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(apiSlice.middleware, listenerMiddleware.middleware)
+    reducer: {
+        [apiSlice.reducerPath]: apiSlice.reducer,
+        auth: authReducer,
+        notifications: notificationsReducer,
+        system: systemReducer
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(apiSlice.middleware, listenerMiddleware.middleware)
 });
 
 setupListeners(store.dispatch);

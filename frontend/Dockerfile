@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci  # clean install
+RUN npm ci
 
 COPY . .
 
