@@ -16,7 +16,8 @@ jobs:
       # ----- Compose-level env (used for ${...} in docker-compose.yml) -----
       - name: Create project .env for Docker Compose interpolation
         run: |
-          cat > .env.test <<'ENV'
+          mkdir -p src
+          cat > src/.env.test <<'ENV'
           # Used by docker-compose.test.yml at parse time (healthchecks, etc.)
           POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
@@ -27,7 +28,6 @@ jobs:
       # ----- Container-level env passed via env_file: src/.env -----
       - name: Create src/.env.test for services
         run: |
-          mkdir -p src
           cat > src/.env.test <<'ENV'
           # --- Postgres (inside compose network) ---
           POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
