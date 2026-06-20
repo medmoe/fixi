@@ -35,8 +35,8 @@ jobs:
           POSTGRES_DB=${{ secrets.POSTGRES_DB || 'test_db' }}
           POSTGRES_SERVER=test-db
           # SQLAlchemy URL(s) your app uses:
-          DATABASE_URL=${{ secrets.DATABASE_URL || 'postgresql+psycopg://postgres:postgres@db:5432/test_db' }}
-          ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@db:5432/test_db' }}
+          DATABASE_URL=${{ secrets.DATABASE_URL || 'postgresql+psycopg://postgres:postgres@test-db:5432/test_db' }}
+          ASYNC_DATABASE_URL=${{ secrets.ASYNC_DATABASE_URL || 'postgresql+asyncpg://postgres:postgres@test-db:5432/test_db' }}
 
           # --- Redis (inside compose) ---
           REDIS_URL=redis://redis:6379/0

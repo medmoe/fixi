@@ -120,7 +120,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-exclude = '^src/migrations/'
+exclude = ['src/migrations/']
 
 [[tool.mypy.overrides]]
 module = "app.*"
