@@ -63,8 +63,9 @@ packages = ["src"]
 
 [tool.ruff]
 target-version = "py311"
-line-length = 500
+line-length = 150
 fix = true
+exclude = ['src/migrations/']
 
 [tool.ruff.lint]
 select = [
@@ -119,6 +120,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+exclude = '^src/migrations/'
 
 [[tool.mypy.overrides]]
 module = "app.*"
