@@ -7,13 +7,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm run vitest",
+    "vitest": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:watch": "jest --watch",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "add:pkg": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm install"
+    "add:pkg": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm install",
+    "clean": "docker run --rm -v $(pwd):/app -w /app node:22-alpine sh -c 'rm -rf node_modules package-lock.json'",
+    "fresh": "docker run --rm -v $(pwd):/app -w /app node:22-alpine sh -c 'rm -rf node_modules package-lock.json && npm install'",
+    "docker:fresh": "docker compose down -v && docker compose up --build frontend"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -38,7 +42,7 @@
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.12",
-    "@types/node": "^22.19.21",
+    "@types/node": "^22.20.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

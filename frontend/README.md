@@ -12,6 +12,7 @@
 - start everything: docker compose up --build
 - if you changed the Dockerfile: docker compose --build frontend
 - To install new packages: npm run add:pkg -- package-name
+- In case a there is a dependency conflict and want to start fresh: npm run fresh
 
 ## Docker compose frontend service
 
