@@ -13,27 +13,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ----- Compose-level env (used for ${...} in docker-compose.yml) -----
-      - name: Create project .env for Docker Compose interpolation
-        run: |
-          mkdir -p src
-          cat > src/.env.test <<'ENV'
-          # Used by docker-compose.test.yml at parse time (healthchecks, etc.)
-          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'test_db' }}
-          ENV
-        shell: bash
+      # ----- Compose-level env.test (used for ${...} in docker-compose.test.yml) -----
+#      - name: Create project .env.test for Docker Compose interpolation
+#        run: |
+#          mkdir -p src
+#          cat > src/.env.test <<'ENV'
+#          # Used by docker-compose.test.yml at parse time (healthchecks, etc.)
+#          POSTGRES_USER=${{ 'postgres' }}
+#          POSTGRES_PASSWORD=${{ 'postgres' }}
+#          POSTGRES_DB=${{ 'test_db' }}
+#          ENV
+#        shell: bash
 
-      # ----- Container-level env passed via env_file: src/.env -----
+      # ----- Container-level env passed via env_file: src/.env.test -----
       - name: Create src/.env.test for services
         run: |
           cat > src/.env.test <<'ENV'
           # --- Postgres (inside compose network) ---
-          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'test_db' }}
-          POSTGRES_SERVER=test-db
+          POSTGRES_USER=${{ 'postgres' }}
+          POSTGRES_PASSWORD=${{ 'postgres' }}
+          POSTGRES_DB=${{ 'test_db' }}
+          POSTGRES_SERVER=${{ 'test-db' }}
           # SQLAlchemy URL(s) your app uses:
           DATABASE_URL=${{ 'postgresql+psycopg://postgres:postgres@test-db:5432/test_db' }}
           ASYNC_DATABASE_URL=${{ 'postgresql+asyncpg://postgres:postgres@test-db:5432/test_db' }}
@@ -42,16 +42,16 @@ jobs:
           REDIS_URL=redis://redis:6379/0
 
           # --- MinIO / S3 ---
-          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
-          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
-          APP_S3_ENDPOINT=http://test-minio:9000
-          APP_S3_ACCESS_KEY=${{ secrets.MINIO_ROOT_USER || 'minioadmin' }}
-          APP_S3_SECRET_KEY=${{ secrets.MINIO_ROOT_PASSWORD || 'minioadmin' }}
+          MINIO_ROOT_USER=${{ 'minioadmin' }}
+          MINIO_ROOT_PASSWORD=${{ 'minioadmin' }}
+          APP_S3_ENDPOINT=${{ 'http://test-minio:9000' }}
+          APP_S3_ACCESS_KEY=${{ 'minioadmin' }}
+          APP_S3_SECRET_KEY=${{ 'minioadmin' }}
           APP_S3_BUCKET_UPLOADS=uploads
 
           # --- App misc ---
           ENVIRONMENT=local
-          SECRET_KEY=${{ secrets.SECRET_KEY || 'test-secret-key-for-testing-only' }}
+          SECRET_KEY=${{ 'test-secret-key-for-testing-only' }}
           ENV
         shell: bash
 
