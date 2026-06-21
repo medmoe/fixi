@@ -18,6 +18,24 @@ services:
       - ./src/app:/code/app
       - ./src/.env:/code/.env
 
+  frontend:
+
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    #      - "5173:80" For production
+
+    depends_on:
+      - web
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+
   worker:
     build:
       context: .
@@ -43,13 +61,17 @@ services:
       - "5432:5432"
 
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 40s
 
   migration:
+    # Run migration when needed: docker compose --profile tools run --rm migration upgrade head
+    profiles:
+      - tools
+
     build:
       context: .
       dockerfile: Dockerfile
@@ -62,7 +84,8 @@ services:
     volumes:
       - ./src:/app/src
     entrypoint: [ "alembic" ]
-
+    command: [ "upgrade", "head" ]
+    restart: "no"
 
   redis:
     image: redis:alpine
@@ -145,23 +168,6 @@ services:
       mc anonymous set download local/uploads || true
       "
     restart: "no"
-
-  tests:
-    build: .
-    depends_on:
-      - db
-
-    env_file:
-      - src/.env
-
-    working_dir: /code
-    volumes:
-      - ./src:/code/src
-      - ./tests:/code/tests
-      - ./pytest.ini:/code/pytest.ini
-
-    entrypoint: [ "pytest" ]
-
   #-------- uncomment to run with pgadmin --------
   # pgadmin:
   #   container_name: pgadmin4
@@ -218,4 +224,5 @@ volumes:
   postgres-data:
   redis-data:
   minio_data:
+  frontend-node-modules:
   #pgadmin-data:

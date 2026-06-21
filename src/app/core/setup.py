@@ -8,6 +8,7 @@ import redis.asyncio as redis
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy import text
@@ -15,7 +16,6 @@ from sqlalchemy import text
 from ..api.dependencies import get_current_superuser
 from ..core.utils.rate_limit import rate_limiter
 from ..middleware.client_cache_middleware import ClientCacheMiddleware
-from ..models import *  # noqa: F403
 from .config import (
     AppSettings,
     ClientSideCacheSettings,
@@ -90,16 +90,16 @@ async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
 
 
 def lifespan_factory(
-    settings: (
-        DatabaseSettings
-        | RedisCacheSettings
-        | AppSettings
-        | ClientSideCacheSettings
-        | RedisQueueSettings
-        | RedisRateLimiterSettings
-        | EnvironmentSettings
-    ),
-    create_tables_on_start: bool = True,
+        settings: (
+                DatabaseSettings
+                | RedisCacheSettings
+                | AppSettings
+                | ClientSideCacheSettings
+                | RedisQueueSettings
+                | RedisRateLimiterSettings
+                | EnvironmentSettings
+        ),
+        create_tables_on_start: bool = True,
 ) -> Callable[[FastAPI], _AsyncGeneratorContextManager[Any]]:
     """Factory to create a lifespan async context manager for a FastAPI app."""
 
@@ -144,19 +144,19 @@ def lifespan_factory(
 
 # -------------- application --------------
 def create_application(
-    router: APIRouter,
-    settings: (
-        DatabaseSettings
-        | RedisCacheSettings
-        | AppSettings
-        | ClientSideCacheSettings
-        | RedisQueueSettings
-        | RedisRateLimiterSettings
-        | EnvironmentSettings
-    ),
-    create_tables_on_start: bool = True,
-    lifespan: Callable[[FastAPI], _AsyncGeneratorContextManager[Any]] | None = None,
-    **kwargs: Any,
+        router: APIRouter,
+        settings: (
+                DatabaseSettings
+                | RedisCacheSettings
+                | AppSettings
+                | ClientSideCacheSettings
+                | RedisQueueSettings
+                | RedisRateLimiterSettings
+                | EnvironmentSettings
+        ),
+        create_tables_on_start: bool = True,
+        lifespan: Callable[[FastAPI], _AsyncGeneratorContextManager[Any]] | None = None,
+        **kwargs: Any,
 ) -> FastAPI:
     """Creates and configures a FastAPI application based on the provided settings.
 
@@ -217,6 +217,15 @@ def create_application(
 
     application = FastAPI(lifespan=lifespan, **kwargs)
     application.include_router(router)
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173"],  # for local dev, "*" allows everything
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+
+    )
 
     if isinstance(settings, ClientSideCacheSettings):
         application.add_middleware(ClientCacheMiddleware, max_age=settings.CLIENT_CACHE_MAX_AGE)

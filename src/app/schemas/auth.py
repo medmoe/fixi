@@ -25,7 +25,7 @@ class RegisterHandyman(RegisterBase):
     skill_category: Annotated[str, Field(min_length=2, max_length=120)]
     skills: list[str] = Field(default_factory=list)
     certification_urls: list[str] = Field(default_factory=list)
-    hourly_rate: Annotated[float, Field(gt=0, le=10000)]
+    hourly_rate: Annotated[float, Field(ge=0, le=10000)] = 0
     availability: dict[str, Any] = Field(default_factory=dict)
 
 

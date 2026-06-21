@@ -24,13 +24,13 @@ from ...models.handyman_profile import HandymanProfile
 from ...models.user import User, UserRole
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterHandyman, RegisterRequest, RegisterResponse
 
-router = APIRouter(tags=["auth-v2"])
+router = APIRouter(tags=["auth-v2"], prefix="/auth")
 
 
-@router.post("/auth/register", response_model=RegisterResponse, status_code=201)
+@router.post("/register", response_model=RegisterResponse, status_code=201)
 async def register_v2(
-    payload: RegisterRequest,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        payload: RegisterRequest,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> RegisterResponse:
     user = User(
         name=payload.name,
@@ -79,13 +79,14 @@ async def register_v2(
     return RegisterResponse(id=user.id, username=user.username, email=user.email, role=user.role_type)
 
 
-@router.post("/auth/login", response_model=Token)
+@router.post("/login", response_model=Token)
 async def login_v2(
-    response: Response,
-    credentials: LoginRequest,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        response: Response,
+        credentials: LoginRequest,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
-    user = await authenticate_user(username_or_email=credentials.username_or_email, password=credentials.password, db=db)
+    user = await authenticate_user(username_or_email=credentials.username_or_email, password=credentials.password,
+                                   db=db)
     if not user:
         raise UnauthorizedException("Wrong username, email or password.")
 
@@ -107,6 +108,6 @@ async def login_v2(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/auth/handyman-area", dependencies=[Depends(require_role(UserRole.HANDYMAN.value))])
+@router.get("/handyman-area", dependencies=[Depends(require_role(UserRole.HANDYMAN.value))])
 async def handyman_only_example() -> dict[str, str]:
     return {"message": "Handyman access granted"}
