@@ -27,7 +27,9 @@ jobs:
         run: npm ci
 
       - name: Debug lib file
-        run: ls -al ./src/lib/
+        run: |
+          pwd
+          ls -al
 
       - name: Run tests
         run: npm run test
