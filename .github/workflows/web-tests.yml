@@ -1,7 +1,7 @@
 name: CI - Frontend/Web tests
 on:
   push:
-    branches: ['**']
+    branches: [ '**' ]
   pull_request:
 
 jobs:
@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug lib file
+        run: ls -al ./src/lib/
+
       - name: Run tests
         run: npm run test
-  
+
