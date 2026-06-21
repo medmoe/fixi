@@ -47,6 +47,9 @@ jobs:
       - name: Debug env file
         run: cat src/.env.test
 
+      - name: Debug current working directory
+        run: ls -al
+
       - name: Run tests (pytest via tests service)
         run: docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --remove-orphans tests
 
