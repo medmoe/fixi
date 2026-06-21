@@ -28,7 +28,7 @@ jobs:
 
       - name: Debug lib file
         run: |
-          pwd
+          cd src
           ls -al
 
       - name: Run tests
