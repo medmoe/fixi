@@ -26,11 +26,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Debug lib file
-        run: |
-          cd src
-          ls -al
-
       - name: Run tests
         run: npm run test
 
