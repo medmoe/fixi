@@ -23,7 +23,7 @@ class TestAuthV2:
         assert response.status_code == 201
         body = response.json()
         assert body["username"] == payload["username"]
-        assert body["role"] == UserRole.CUSTOMER.value
+        assert body["role"] == UserRole.customer.value
 
     @pytest.mark.asyncio
     async def test_register_handyman_requires_skill_category(self, async_client):
@@ -63,7 +63,7 @@ class TestAuthV2:
         assert response.status_code == 200
         token = response.json()["access_token"]
         payload = jwt.decode(token, settings.SECRET_KEY.get_secret_value(), algorithms=[settings.ALGORITHM])
-        assert payload["role"] == UserRole.HANDYMAN.value
+        assert payload["role"] == UserRole.worker.value
         assert payload["sub"] == "handymantwo"
         assert payload["email"] == "handyman.two@example.com"
 
@@ -144,7 +144,7 @@ class TestAuthV2:
 
         user_result = await async_session.execute(select(User).where(User.username == "handymanfour"))
         user = user_result.scalar_one()
-        user.role_type = UserRole.CUSTOMER
+        user.role_type = UserRole.customer
         user.token_version += 1
         await async_session.commit()
 

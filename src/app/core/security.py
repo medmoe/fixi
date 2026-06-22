@@ -74,7 +74,7 @@ def _normalize_user_role(value: Any) -> UserRole:
 
 
 def create_token_payload(user: dict[str, Any]) -> dict[str, Any]:
-    role = _normalize_user_role(user.get("role_type", UserRole.CUSTOMER))
+    role = _normalize_user_role(user.get("role_type", UserRole.customer))
     token_version = int(user.get("token_version", 1))
     return {
         "sub": user["username"],
@@ -146,7 +146,7 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
             return None
 
         db_user = cast(dict[str, Any], db_user)
-        db_role = _normalize_user_role(db_user.get("role_type", UserRole.CUSTOMER)).value
+        db_role = _normalize_user_role(db_user.get("role_type", UserRole.customer)).value
         db_token_version = int(db_user.get("token_version", 1))
 
         if role != db_role or int(token_version) != db_token_version:

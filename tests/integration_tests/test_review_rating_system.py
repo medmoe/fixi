@@ -24,14 +24,14 @@ class TestReviewRatingSystem:
             username="reviewcustomer",
             email="review.customer@example.com",
             hashed_password=get_password_hash("testpassword123"),
-            role_type=UserRole.CUSTOMER,
+            role_type=UserRole.customer,
         )
         worker_user = User(
             name="Review Worker",
             username="reviewworker",
             email="review.worker@example.com",
             hashed_password=get_password_hash("testpassword123"),
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
         )
         async_session.add(customer)
         async_session.add(worker_user)

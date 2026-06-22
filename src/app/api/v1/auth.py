@@ -108,6 +108,6 @@ async def login_v2(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/handyman-area", dependencies=[Depends(require_role(UserRole.HANDYMAN.value))])
+@router.get("/handyman-area", dependencies=[Depends(require_role(UserRole.worker.value))])
 async def handyman_only_example() -> dict[str, str]:
     return {"message": "Handyman access granted"}

@@ -35,10 +35,10 @@ class TestJobStateMachine:
     @pytest.mark.asyncio
     async def test_worker_can_accept_pending_open_job(self, async_client: AsyncClient, async_session: AsyncSession):
         customer, _ = await self._create_user_and_login(
-            async_client, async_session, "customeraccept", "customer.accept@example.com", UserRole.CUSTOMER
+            async_client, async_session, "customeraccept", "customer.accept@example.com", UserRole.customer
         )
         worker, worker_headers = await self._create_user_and_login(
-            async_client, async_session, "workeraccept", "worker.accept@example.com", UserRole.HANDYMAN
+            async_client, async_session, "workeraccept", "worker.accept@example.com", UserRole.worker
         )
 
         job = Job(
@@ -60,10 +60,10 @@ class TestJobStateMachine:
     @pytest.mark.asyncio
     async def test_worker_can_complete_assigned_job(self, async_client: AsyncClient, async_session: AsyncSession):
         customer, _ = await self._create_user_and_login(
-            async_client, async_session, "customercomplete", "customer.complete@example.com", UserRole.CUSTOMER
+            async_client, async_session, "customercomplete", "customer.complete@example.com", UserRole.customer
         )
         worker, worker_headers = await self._create_user_and_login(
-            async_client, async_session, "workercomplete", "worker.complete@example.com", UserRole.HANDYMAN
+            async_client, async_session, "workercomplete", "worker.complete@example.com", UserRole.worker
         )
 
         job = Job(
@@ -85,7 +85,7 @@ class TestJobStateMachine:
     @pytest.mark.asyncio
     async def test_customer_cannot_accept_or_complete_job(self, async_client: AsyncClient, async_session: AsyncSession):
         customer, customer_headers = await self._create_user_and_login(
-            async_client, async_session, "customerforbidden", "customer.forbidden@example.com", UserRole.CUSTOMER
+            async_client, async_session, "customerforbidden", "customer.forbidden@example.com", UserRole.customer
         )
 
         job = Job(

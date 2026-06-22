@@ -12,7 +12,7 @@ class TestGeospatialEndpoints:
             username="nearhandyman",
             email="near.handyman@example.com",
             hashed_password="hashed_password",
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
             location="POINT(13.4050 52.5200)",
         )
         handyman_far = User(
@@ -20,7 +20,7 @@ class TestGeospatialEndpoints:
             username="farhandyman",
             email="far.handyman@example.com",
             hashed_password="hashed_password",
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
             location="POINT(2.3522 48.8566)",
         )
         async_session.add(handyman_near)
@@ -44,7 +44,7 @@ class TestGeospatialEndpoints:
             username="geocustomer",
             email="geo.customer@example.com",
             hashed_password="hashed_password",
-            role_type=UserRole.CUSTOMER,
+            role_type=UserRole.customer,
             location="POINT(13.4050 52.5200)",
         )
         worker = User(
@@ -52,7 +52,7 @@ class TestGeospatialEndpoints:
             username="geoworker",
             email="geo.worker@example.com",
             hashed_password="hashed_password",
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
             location="POINT(13.4100 52.5200)",
         )
         async_session.add(customer)

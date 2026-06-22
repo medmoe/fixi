@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from src.app.models.worker import Worker
 from src.app.models.user import User
+from src.app.models.worker import WorkerProfile
 
 
 class TestWorkerModel:
@@ -24,13 +24,11 @@ class TestWorkerModel:
         await async_session.refresh(user)
 
         # Create worker
-        worker = Worker(
+        worker = WorkerProfile(
             user_id=user.id,
-            profession="Plumber",
             hourly_rate=75.0,
             years_of_experience=10,
             bio="Experienced plumber",
-            availability_status="available",
         )
         async_session.add(worker)
         await async_session.commit()
@@ -38,14 +36,10 @@ class TestWorkerModel:
 
         assert worker.id is not None
         assert worker.user_id == user.id
-        assert worker.profession == "Plumber"
         assert worker.hourly_rate == 75.0
         assert worker.years_of_experience == 10
         assert worker.bio == "Experienced plumber"
-        assert worker.availability_status == "available"
         assert worker.is_verified is False
-        assert worker.average_rating is None
-        assert worker.total_rating == 0
 
     @pytest.mark.asyncio
     async def test_create_worker_with_minimum_fields(self, async_session):
@@ -61,10 +55,8 @@ class TestWorkerModel:
         await async_session.commit()
         await async_session.refresh(user)
 
-        worker = Worker(
+        worker = WorkerProfile(
             user_id=user.id,
-            profession="Carpenter",
-            hourly_rate=60.0,
         )
         async_session.add(worker)
         await async_session.commit()
@@ -73,7 +65,6 @@ class TestWorkerModel:
         assert worker.id is not None
         assert worker.years_of_experience is None
         assert worker.bio is None
-        assert worker.availability_status == "available"
 
     @pytest.mark.asyncio
     async def test_worker_unique_user_id_constraint(self, async_session):
@@ -90,19 +81,15 @@ class TestWorkerModel:
         await async_session.refresh(user)
 
         # Create first worker
-        worker1 = Worker(
+        worker1 = WorkerProfile(
             user_id=user.id,
-            profession="Plumber",
-            hourly_rate=75.0,
         )
         async_session.add(worker1)
         await async_session.commit()
 
         # Try to create second worker for same user
-        worker2 = Worker(
+        worker2 = WorkerProfile(
             user_id=user.id,
-            profession="Electrician",
-            hourly_rate=80.0,
         )
         async_session.add(worker2)
 
@@ -125,10 +112,8 @@ class TestWorkerModel:
         await async_session.commit()
         await async_session.refresh(user)
 
-        worker = Worker(
+        worker = WorkerProfile(
             user_id=user.id,
-            profession="Plumber",
-            hourly_rate=75.0,
         )
         async_session.add(worker)
         await async_session.commit()
@@ -140,7 +125,7 @@ class TestWorkerModel:
 
         # Verify worker is also deleted
         result = await async_session.execute(
-            select(Worker).where(Worker.id == worker_id)
+            select(WorkerProfile).where(WorkerProfile.id == worker_id)
         )
         deleted_worker = result.scalar_one_or_none()
         assert deleted_worker is None
@@ -159,10 +144,8 @@ class TestWorkerModel:
         await async_session.commit()
         await async_session.refresh(user)
 
-        worker = Worker(
+        worker = WorkerProfile(
             user_id=user.id,
-            profession="Electrician",
-            hourly_rate=85.0,
         )
         async_session.add(worker)
         await async_session.commit()

@@ -1,6 +1,6 @@
 from fastcrud import FastCRUD
 
-from ..models.worker import Worker
+from ..models.worker import WorkerProfile
 from ..schemas.worker import (
     WorkerCreate,
     WorkerCreateInternal,
@@ -12,7 +12,7 @@ from ..schemas.worker import (
 )
 
 CRUDWorker = FastCRUD[
-    Worker,
+    WorkerProfile,
     WorkerCreate,
     WorkerUpdate | WorkerVerificationUpdate,
     WorkerUpdateInternal,
@@ -20,4 +20,4 @@ CRUDWorker = FastCRUD[
     WorkerRead | WorkerPublicRead,
 ]
 
-crud_workers = CRUDWorker(Worker)
+crud_workers = CRUDWorker(WorkerProfile)

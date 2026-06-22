@@ -208,7 +208,7 @@ class TestWorkerEndpoints:
             username="workerprofileuser",
             email="worker.profile@example.com",
             hashed_password=get_password_hash("testpassword123"),
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
         )
         category = ServiceCategory(name="Painting", description="Painting services")
         async_session.add(worker_user)
@@ -249,7 +249,7 @@ class TestWorkerEndpoints:
             username="nearworker1",
             email="near.worker1@example.com",
             hashed_password="hashed",
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
             location="POINT(13.4050 52.5200)",
         )
         far_user = User(
@@ -257,7 +257,7 @@ class TestWorkerEndpoints:
             username="farworker1",
             email="far.worker1@example.com",
             hashed_password="hashed",
-            role_type=UserRole.HANDYMAN,
+            role_type=UserRole.worker,
             location="POINT(2.3522 48.8566)",
         )
         async_session.add(near_user)

@@ -5,7 +5,8 @@ from .job import Job, JobStatus
 from .post import Post
 from .rate_limit import RateLimit
 from .review import Review
-from .service_category import ServiceCategory
 from .tier import Tier
+from .trade_category import TradeCategory
 from .user import User, UserRole
-from .worker import Worker
+from .worker import WorkerProfile
+from .worker_trade import WorkerTrade, SkillLevel

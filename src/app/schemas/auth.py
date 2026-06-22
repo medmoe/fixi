@@ -15,13 +15,13 @@ class RegisterBase(BaseModel):
 
 
 class RegisterCustomer(RegisterBase):
-    role: Literal[UserRole.CUSTOMER]
+    role: Literal[UserRole.customer]
     saved_addresses: list[str] = Field(default_factory=list)
     loyalty_points: Annotated[int, Field(ge=0)] = 0
 
 
 class RegisterHandyman(RegisterBase):
-    role: Literal[UserRole.HANDYMAN]
+    role: Literal[UserRole.worker]
     skill_category: Annotated[str, Field(min_length=2, max_length=120)]
     skills: list[str] = Field(default_factory=list)
     certification_urls: list[str] = Field(default_factory=list)

@@ -14,22 +14,18 @@ from ...core.exceptions.http_exceptions import (
     ForbiddenException,
     NotFoundException,
 )
-from ...models.job import Job, JobStatus
-from ...models.review import Review
-from ...models.service_category import ServiceCategory
-from ...models.user import User, UserRole
-from ...models.worker import Worker
+from ...models import Review, User, UserRole, Job, JobStatus, TradeCategory, WorkerProfile
 from ...schemas.geo import NearbyJobRead, WorkerNearbyRead
 from ...schemas.job import JobAssign, JobCreate, JobRead, JobStatusUpdate
 from ...schemas.review import ReviewCreate, ReviewRead, ReviewUpdate, WorkerRatingSummary
-from ...schemas.service_category import ServiceCategoryCreate, ServiceCategoryRead
+from ...schemas.trade_category import TradeCategoryRead, TradeCategoryCreate
 from ...services.notification_service import notify_user_status_change
 
 router = APIRouter(tags=["marketplace"])
 
 
-def _to_service_category_read(model: ServiceCategory) -> ServiceCategoryRead:
-    return ServiceCategoryRead(id=model.id, name=model.name, description=model.description)
+def _to_service_category_read(model: TradeCategory) -> TradeCategoryRead:
+    return TradeCategoryRead(id=model.id, name=model.name, description=model.description)
 
 
 def _to_job_read(model: Job) -> JobRead:
@@ -66,7 +62,7 @@ async def _recalculate_worker_rating(db: AsyncSession, worker_user_id: int | Non
     )
     avg_rating, total_reviews = (await db.execute(aggregate_query)).one()
 
-    worker_result = await db.execute(select(Worker).where(Worker.user_id == worker_user_id))
+    worker_result = await db.execute(select(WorkerProfile).where(WorkerProfile.user_id == worker_user_id))
     worker = worker_result.scalar_one_or_none()
     if worker is None:
         return
@@ -75,42 +71,42 @@ async def _recalculate_worker_rating(db: AsyncSession, worker_user_id: int | Non
     worker.total_rating = int(total_reviews or 0)
 
 
-@router.post("/service-categories", response_model=ServiceCategoryRead, status_code=201)
+@router.post("/service-categories", response_model=TradeCategoryRead, status_code=201)
 async def create_service_category(
-    request: Request,
-    payload: ServiceCategoryCreate,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-    _: Annotated[dict, Depends(get_current_superuser)],
-) -> ServiceCategoryRead:
-    exists_result = await db.execute(select(ServiceCategory).where(ServiceCategory.name == payload.name))
+        request: Request,
+        payload: TradeCategoryCreate,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        _: Annotated[dict, Depends(get_current_superuser)],
+) -> TradeCategoryRead:
+    exists_result = await db.execute(select(TradeCategory).where(TradeCategory.name == payload.name))
     if exists_result.scalar_one_or_none() is not None:
         raise DuplicateValueException("Service category name already exists")
 
-    category = ServiceCategory(name=payload.name, description=payload.description)
+    category = TradeCategory(name=payload.name, description=payload.description)
     db.add(category)
     await db.commit()
     await db.refresh(category)
     return _to_service_category_read(category)
 
 
-@router.get("/service-categories", response_model=list[ServiceCategoryRead])
+@router.get("/service-categories", response_model=list[TradeCategoryRead])
 async def list_service_categories(
-    request: Request,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-) -> list[ServiceCategoryRead]:
-    result = await db.execute(select(ServiceCategory).order_by(ServiceCategory.name))
+        request: Request,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> list[TradeCategoryRead]:
+    result = await db.execute(select(TradeCategory).order_by(TradeCategory.name))
     return [_to_service_category_read(row) for row in result.scalars().all()]
 
 
-@router.post("/jobs", response_model=JobRead, status_code=201, dependencies=[Depends(require_role(UserRole.CUSTOMER.value))])
+@router.post("/jobs", response_model=JobRead, status_code=201, dependencies=[Depends(require_role(UserRole.customer.value))])
 async def create_job(
-    request: Request,
-    payload: JobCreate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        payload: JobCreate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     if payload.service_category_id is not None:
-        category_result = await db.execute(select(ServiceCategory).where(ServiceCategory.id == payload.service_category_id))
+        category_result = await db.execute(select(TradeCategory).where(TradeCategory.id == payload.service_category_id))
         if category_result.scalar_one_or_none() is None:
             raise NotFoundException("Service category not found")
 
@@ -118,7 +114,7 @@ async def create_job(
         worker_user = await _get_active_user_by_id(db, payload.worker_id)
         if worker_user is None:
             raise NotFoundException("Worker user not found")
-        if worker_user.role_type != UserRole.HANDYMAN:
+        if worker_user.role_type != UserRole.worker:
             raise BadRequestException("Selected worker_id does not belong to a worker/handyman account")
 
     job = Job(
@@ -137,9 +133,9 @@ async def create_job(
 
 @router.get("/jobs/me", response_model=list[JobRead])
 async def list_my_jobs(
-    request: Request,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> list[JobRead]:
     if current_user.get("is_superuser"):
         result = await db.execute(select(Job).order_by(Job.id.desc()))
@@ -154,10 +150,10 @@ async def list_my_jobs(
 
 @router.get("/jobs/{job_id:int}", response_model=JobRead)
 async def get_job(
-    request: Request,
-    job_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -172,11 +168,11 @@ async def get_job(
 
 @router.patch("/jobs/{job_id:int}/assign", response_model=JobRead)
 async def assign_job(
-    request: Request,
-    job_id: int,
-    payload: JobAssign,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        payload: JobAssign,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -189,7 +185,7 @@ async def assign_job(
     worker_user = await _get_active_user_by_id(db, payload.worker_id)
     if worker_user is None:
         raise NotFoundException("Worker user not found")
-    if worker_user.role_type != UserRole.HANDYMAN:
+    if worker_user.role_type != UserRole.worker:
         raise BadRequestException("Selected worker_id does not belong to a worker/handyman account")
 
     job.worker_id = payload.worker_id
@@ -203,11 +199,11 @@ async def assign_job(
 
 @router.patch("/jobs/{job_id:int}/status", response_model=JobRead)
 async def update_job_status(
-    request: Request,
-    job_id: int,
-    payload: JobStatusUpdate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        payload: JobStatusUpdate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -227,13 +223,13 @@ async def update_job_status(
 @router.post(
     "/jobs/{job_id:int}/accept",
     response_model=JobRead,
-    dependencies=[Depends(require_role(UserRole.HANDYMAN.value))],
+    dependencies=[Depends(require_role(UserRole.worker.value))],
 )
 async def accept_job(
-    request: Request,
-    job_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -264,13 +260,13 @@ async def accept_job(
 @router.post(
     "/jobs/{job_id:int}/complete",
     response_model=JobRead,
-    dependencies=[Depends(require_role(UserRole.HANDYMAN.value))],
+    dependencies=[Depends(require_role(UserRole.worker.value))],
 )
 async def complete_job(
-    request: Request,
-    job_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> JobRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -299,11 +295,11 @@ async def complete_job(
 
 @router.post("/jobs/{job_id:int}/review", response_model=ReviewRead, status_code=201)
 async def create_job_review(
-    request: Request,
-    job_id: int,
-    payload: ReviewCreate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        payload: ReviewCreate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> ReviewRead:
     result = await db.execute(select(Job).where(Job.id == job_id))
     job = result.scalar_one_or_none()
@@ -335,10 +331,10 @@ async def create_job_review(
 
 @router.get("/jobs/{job_id:int}/review", response_model=ReviewRead)
 async def get_job_review(
-    request: Request,
-    job_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> ReviewRead:
     job_result = await db.execute(select(Job).where(Job.id == job_id))
     job = job_result.scalar_one_or_none()
@@ -357,11 +353,11 @@ async def get_job_review(
 
 @router.patch("/jobs/{job_id:int}/review", response_model=ReviewRead)
 async def update_job_review(
-    request: Request,
-    job_id: int,
-    payload: ReviewUpdate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        payload: ReviewUpdate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> ReviewRead:
     job_result = await db.execute(select(Job).where(Job.id == job_id))
     job = job_result.scalar_one_or_none()
@@ -388,10 +384,10 @@ async def update_job_review(
 
 @router.delete("/jobs/{job_id:int}/review")
 async def delete_job_review(
-    request: Request,
-    job_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
     job_result = await db.execute(select(Job).where(Job.id == job_id))
     job = job_result.scalar_one_or_none()
@@ -413,9 +409,9 @@ async def delete_job_review(
 
 @router.get("/workers/{worker_user_id:int}/reviews", response_model=list[ReviewRead])
 async def list_worker_reviews(
-    request: Request,
-    worker_user_id: int,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        worker_user_id: int,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> list[ReviewRead]:
     query = (
         select(Review)
@@ -429,9 +425,9 @@ async def list_worker_reviews(
 
 @router.get("/workers/{worker_user_id:int}/rating", response_model=WorkerRatingSummary)
 async def get_worker_rating_summary(
-    request: Request,
-    worker_user_id: int,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        request: Request,
+        worker_user_id: int,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> WorkerRatingSummary:
     query = (
         select(func.avg(Review.rating), func.count(Review.id))
@@ -448,12 +444,12 @@ async def get_worker_rating_summary(
 
 @router.get("/workers/nearby", response_model=list[WorkerNearbyRead])
 async def get_nearby_workers(
-    request: Request,
-    latitude: Annotated[float, Query(ge=-90, le=90)],
-    longitude: Annotated[float, Query(ge=-180, le=180)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-    radius_km: Annotated[float, Query(gt=0, le=200)] = 10,
-    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+        request: Request,
+        latitude: Annotated[float, Query(ge=-90, le=90)],
+        longitude: Annotated[float, Query(ge=-180, le=180)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        radius_km: Annotated[float, Query(gt=0, le=200)] = 10,
+        limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> list[WorkerNearbyRead]:
     reference_point = func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326)
     distance_m = func.ST_DistanceSphere(User.location, reference_point)
@@ -468,7 +464,7 @@ async def get_nearby_workers(
         )
         .where(
             User.is_deleted.is_(False),
-            User.role_type == UserRole.HANDYMAN,
+            User.role_type == UserRole.worker,
             User.location.is_not(None),
             distance_m <= radius_km * 1000.0,
         )
@@ -492,16 +488,16 @@ async def get_nearby_workers(
 @router.get(
     "/jobs/nearby",
     response_model=list[NearbyJobRead],
-    dependencies=[Depends(require_role(UserRole.HANDYMAN.value, UserRole.CUSTOMER.value))],
+    dependencies=[Depends(require_role(UserRole.worker.value, UserRole.customer.value))],
 )
 async def get_nearby_jobs(
-    request: Request,
-    latitude: Annotated[float, Query(ge=-90, le=90)],
-    longitude: Annotated[float, Query(ge=-180, le=180)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-    radius_km: Annotated[float, Query(gt=0, le=200)] = 10,
-    limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    status: JobStatus = JobStatus.OPEN,
+        request: Request,
+        latitude: Annotated[float, Query(ge=-90, le=90)],
+        longitude: Annotated[float, Query(ge=-180, le=180)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        radius_km: Annotated[float, Query(gt=0, le=200)] = 10,
+        limit: Annotated[int, Query(ge=1, le=100)] = 20,
+        status: JobStatus = JobStatus.OPEN,
 ) -> list[NearbyJobRead]:
     customer = aliased(User)
     reference_point = func.ST_SetSRID(func.ST_MakePoint(longitude, latitude), 4326)
