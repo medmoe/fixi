@@ -2,6 +2,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from src.app.schemas.auth import RegisterCustomer, RegisterHandyman, RegisterRequest
+from src.app.models import UserRole
 
 
 class TestAuthSchemas:
@@ -11,11 +12,11 @@ class TestAuthSchemas:
             username="customerone",
             email="customer.one@example.com",
             password="StrongPass123!",
-            role="customer",
+            role=UserRole.customer,
             saved_addresses=["123 Main St"],
             loyalty_points=5,
         )
-        assert payload.role.value == "customer"
+        assert payload.role.value == UserRole.customer.value
         assert payload.loyalty_points == 5
 
     def test_register_handyman_schema_requires_skill_category(self):
@@ -28,7 +29,7 @@ class TestAuthSchemas:
                     "username": "handymanone",
                     "email": "handyman.one@example.com",
                     "password": "StrongPass123!",
-                    "role": "handyman",
+                    "role": UserRole.worker,
                     "hourly_rate": 80.0,
                 }
             )
@@ -39,10 +40,10 @@ class TestAuthSchemas:
             username="handymantwo",
             email="handyman.two@example.com",
             password="StrongPass123!",
-            role="handyman",
+            role=UserRole.worker,
             skill_category="Electrical",
             skills=["wiring"],
             hourly_rate=95.0,
         )
-        assert payload.role.value == "handyman"
+        assert payload.role.value == "worker"
         assert payload.skill_category == "Electrical"

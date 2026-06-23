@@ -19,9 +19,7 @@ from ...core.security import (
     get_password_hash,
 )
 from ...crud.crud_users import crud_users
-from ...models.customer_profile import CustomerProfile
-from ...models.handyman_profile import HandymanProfile
-from ...models.user import User, UserRole
+from ...models import CustomerProfile, HandymanProfile, User, UserRole
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterHandyman, RegisterRequest, RegisterResponse
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")

@@ -15,6 +15,6 @@ class TradeCategory(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)  # slug e.g. "electrical"
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)  # human label e.g. "Electrical"
     icon_name: Mapped[str | None] = mapped_column(String(120), nullable=True, default=None)  # e.g. "bolt", "wrench"
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey("trade_categories.id"), nullable=True, default=None, init=False)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("trade_categories.id"), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), init=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now(), init=False)

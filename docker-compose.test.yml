@@ -62,17 +62,8 @@ services:
       - ./src/alembic.ini:/code/src/alembic.ini
       - ./src/migrations:/code/src/migrations
 
-    entrypoint:
-      - sh
-      - -c
-      - |
-        echo "$DATABASE_URL"
-        echo "$ASYNC_DATABASE_URL"
-        cat /code/src/.env.test
-        cd src && alembic upgrade head
-        cd ..
-        pytest tests/ -v
-#    entrypoint: [ "sh", "-c", "cd src && alembic upgrade head && cd .. && pytest tests/ -v" ]
+    entrypoint: [ "sh", "-c", "cd src && alembic upgrade head && cd .. && exec \"$@\"", "--" ] # exec replaces the current shell process with the command that follows it.
+    command: [ "pytest", "tests/", "-v" ]
 
 
 # Recommended workflow for running tests:
@@ -87,4 +78,4 @@ services:
 # For tests, this is useful because the tests service exits after pytest finishes.
 #  Then Docker Compose stops the database container too.
 
-# run specific test file: `docker compose -f docker-compose.test.yml run --rm --remove-orphans tests sh -c "cd src && alembic upgrade head && cd .. && pytest tests/unit_tests/model_tests/test_service_category.py -v"`
+# run specific test file: docker compose -f docker-compose.test.yml run tests pytest tests/unit_tests/model_tests --no-cov
