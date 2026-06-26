@@ -2,10 +2,9 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...api.dependencies import require_role
+from ...core.config import EnvironmentOption
 from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import DuplicateValueException, UnauthorizedException
@@ -16,11 +15,11 @@ from ...core.security import (
     create_access_token,
     create_refresh_token,
     create_token_payload,
-    get_password_hash,
+    get_password_hash, verify_password,
 )
 from ...crud.crud_users import crud_users
-from ...models import CustomerProfile, HandymanProfile, User, UserRole
-from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterHandyman, RegisterRequest, RegisterResponse
+from ...models import CustomerProfile, WorkerProfile, User
+from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterWorker, RegisterRequest, RegisterResponse
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
 
@@ -30,62 +29,36 @@ async def register_v2(
         payload: RegisterRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> RegisterResponse:
-    user = User(
-        name=payload.name,
-        username=payload.username,
-        email=payload.email,
-        hashed_password=get_password_hash(payload.password),
-        role_type=payload.role,
-    )
+    async with db.begin():
+        existing = await crud_users.get_by_email_or_username(db=db, email=payload.email, username=payload.username)
+        if existing:
+            raise DuplicateValueException("Username or email already registered")
 
-    try:
-        async with db.begin():
-            email_exists = await crud_users.exists(db=db, email=payload.email)
-            if email_exists:
-                raise DuplicateValueException("Email is already registered")
+        user = User(hashed_password=get_password_hash(payload.password), username=payload.username, email=payload.email, name=payload.name)
+        db.add(user)
+        await db.flush()
 
-            username_exists = await crud_users.exists(db=db, username=payload.username)
-            if username_exists:
-                raise DuplicateValueException("Username not available")
+        if isinstance(payload, RegisterCustomer):
+            db.add(CustomerProfile(user_id=user.id))
+        elif isinstance(payload, RegisterWorker):
+            db.add(WorkerProfile(user_id=user.id))
 
-            db.add(user)
-            await db.flush()
-
-            if isinstance(payload, RegisterCustomer):
-                db.add(
-                    CustomerProfile(
-                        user_id=user.id,
-                        saved_addresses=payload.saved_addresses,
-                        loyalty_points=payload.loyalty_points,
-                    )
-                )
-            elif isinstance(payload, RegisterHandyman):
-                db.add(
-                    HandymanProfile(
-                        user_id=user.id,
-                        skill_category=payload.skill_category,
-                        skills=payload.skills,
-                        certification_urls=payload.certification_urls,
-                        hourly_rate=payload.hourly_rate,
-                        availability=payload.availability,
-                    )
-                )
-    except IntegrityError as exc:
-        raise DuplicateValueException("Username or email not available") from exc
-
-    await db.refresh(user)
+        await db.refresh(user)
     return RegisterResponse(id=user.id, username=user.username, email=user.email, role=user.role_type)
 
 
+# rate limiter should be implemented here
 @router.post("/login", response_model=Token)
 async def login_v2(
         response: Response,
         credentials: LoginRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
-    user = await authenticate_user(username_or_email=credentials.username_or_email, password=credentials.password,
-                                   db=db)
+    user = await authenticate_user(username_or_email=credentials.username_or_email, password=credentials.password, db=db)
     if not user:
+        # Dummy hash compare to equalize response time
+        dummy_hash = get_password_hash("dummy")
+        await verify_password("dummy", dummy_hash)
         raise UnauthorizedException("Wrong username, email or password.")
 
     token_payload = create_token_payload(user)
@@ -98,14 +71,9 @@ async def login_v2(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
+        secure=settings.ENVIRONMENT == EnvironmentOption.PRODUCTION,
         samesite="lax",
         max_age=max_age,
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-@router.get("/handyman-area", dependencies=[Depends(require_role(UserRole.worker.value))])
-async def handyman_only_example() -> dict[str, str]:
-    return {"message": "Handyman access granted"}

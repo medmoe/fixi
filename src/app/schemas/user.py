@@ -19,7 +19,7 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
     profile_image_url: Annotated[str, Field(default="https://www.profileimageurl.com")]
     hashed_password: str
     is_superuser: bool = False
-    role_type: UserRole = UserRole.customer
+    role_type: UserRole = UserRole.CUSTOMER
     token_version: int = 1
     tier_id: int | None = None
 
@@ -33,7 +33,7 @@ class UserRead(BaseModel):
     profile_image_url: str
     bio: str | None = None
     location: str | None = None
-    role_type: UserRole = UserRole.customer
+    role_type: UserRole = UserRole.CUSTOMER
     tier_id: int | None
 
 
@@ -45,7 +45,7 @@ class UserCreate(UserBase):
 
 class UserCreateInternal(UserBase):
     hashed_password: str
-    role_type: UserRole = UserRole.customer
+    role_type: UserRole = UserRole.CUSTOMER
 
 
 class UserUpdate(BaseModel):

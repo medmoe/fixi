@@ -62,7 +62,7 @@ services:
       - ./src/alembic.ini:/code/src/alembic.ini
       - ./src/migrations:/code/src/migrations
 
-    entrypoint: [ "sh", "-c", "cd src && alembic upgrade head && cd .. && exec \"$@\"", "--" ] # exec replaces the current shell process with the command that follows it.
+    entrypoint: [ "sh", "-c", "exec \"$@\"", "--" ] # exec replaces the current shell process with the command that follows it.
     command: [ "pytest", "tests/", "-v" ]
 
 

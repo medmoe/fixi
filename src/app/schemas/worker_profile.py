@@ -1,0 +1,53 @@
+from decimal import Decimal
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, AnyHttpUrl
+
+
+class WorkerProfileBase(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    bio: Annotated[str | None, Field(max_length=500, examples=["Experienced plumber with 10 years in residential and commercial work."], default=None)]
+    years_of_experience: Annotated[int | None, Field(ge=0, le=100, examples=[5, 10, 15], default=None)]
+    hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, examples=[50.00, 75.50, 100.00], default=None)]
+    service_radius_km: Annotated[int | None, Field(ge=0, examples=[5, 10, 15], default=None)]
+    avatar_url: Annotated[AnyHttpUrl | None, Field(max_length=255, examples=["https://example.com/avatar.jpg"], default=None)]
+    is_available: Annotated[bool, Field(default=True)]
+    skills: Annotated[list[str], Field(examples=[["roofing repair", "electrical engines"]], default_factory=list)]
+    portfolio_image_urls: Annotated[list[AnyHttpUrl], Field(default_factory=list, examples=[["https://example.com/portfolio1.jpg", "https://example.com/portfolio2.jpg"]])]
+
+
+class WorkerProfileRead(WorkerProfileBase):
+    """Returned to clients -- include read-only fields."""
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+    id: int
+    user_id: int
+    is_verified: bool
+
+
+class WorkerProfileCreate(WorkerProfileBase):
+    """Used by workers to create their profile"""
+    pass
+
+
+class WorkerProfileUpdate(BaseModel):
+    """PATCH semantics -- All fields optional, only send what changed"""
+    model_config = ConfigDict(extra="forbid")
+    bio: Annotated[str | None, Field(max_length=500, default=None)]
+    years_of_experience: Annotated[int | None, Field(ge=0, le=100, default=None)]
+    hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, default=None)]
+    service_radius_km: Annotated[int | None, Field(ge=0, default=None)]
+    avatar_url: Annotated[AnyHttpUrl | None, Field(default=None)]
+    is_available: Annotated[bool | None, Field(default=None)]
+    skills: Annotated[list[str] | None, Field(default=None)]
+    portfolio_image_urls: Annotated[list[AnyHttpUrl] | None, Field(default=None)]
+
+
+class WorkerProfileUpdateInternal(WorkerProfileBase):
+    """Used internally by admin -- can set is_verified"""
+    is_verified: Annotated[bool, Field(default=False)]
+
+
+class WorkerProfileDelete(BaseModel):
+    """Deactivate a worker profile"""
+    model_config = ConfigDict(extra="forbid")
+    id: int

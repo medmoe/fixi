@@ -18,7 +18,7 @@ from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.main import app
 from src.app.models.user import User
-from src.app.models.worker import WorkerProfile
+from src.app.models.worker_profile import WorkerProfile
 
 fake = Faker()
 
@@ -51,6 +51,7 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
                 """
             )
         )
+
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
@@ -99,8 +100,8 @@ async def other_user(async_session: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
-async def test_worker(async_session: AsyncSession) -> WorkerProfile:
-    return await create_test_worker(async_session)
+async def test_worker_profile(async_session: AsyncSession) -> WorkerProfile:
+    return await create_test_worker_profile(async_session)
 
 
 @pytest_asyncio.fixture
@@ -191,14 +192,14 @@ async def cleanup_minio_bucket():
     )
 
 
-async def create_test_user(async_session: AsyncSession, is_superuser: bool = False) -> User:
+async def create_test_user(async_session: AsyncSession, **kwargs) -> User:
     """Create a test user."""
     user = User(
         name=fake.name(),
         username=fake.user_name(),
         email=fake.email(),
         hashed_password=get_password_hash("testpassword123"),
-        is_superuser=is_superuser,
+        **kwargs
     )
     async_session.add(user)
     await async_session.commit()
@@ -206,14 +207,14 @@ async def create_test_user(async_session: AsyncSession, is_superuser: bool = Fal
     return user
 
 
-async def create_test_worker(async_session: AsyncSession) -> WorkerProfile:
+async def create_test_worker_profile(async_session: AsyncSession, **kwargs) -> WorkerProfile:
     """ Create a test worker """
     user = User(name=fake.name(), username=fake.user_name(), email=fake.email(),
                 hashed_password=get_password_hash("testpassword123"), is_superuser=False)
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
-    worker = WorkerProfile(user_id=user.id)
+    worker = WorkerProfile(user_id=user.id, **kwargs)
     async_session.add(worker)
     await async_session.commit()
     await async_session.refresh(worker)

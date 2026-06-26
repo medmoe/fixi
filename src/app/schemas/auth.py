@@ -1,6 +1,6 @@
-from typing import Annotated, Any, Literal, Union
+from typing import Annotated, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from ..models.user import UserRole
 
@@ -8,28 +8,30 @@ from ..models.user import UserRole
 class RegisterBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: Annotated[str, Field(min_length=2, max_length=30)]
-    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$")]
+    name: Annotated[str, Field(min_length=2, max_length=30, pattern=r"^[a-zA-Z\s]+$")]
+    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9][a-z0-9_]*[a-z0-9]$")]
     email: EmailStr
-    password: Annotated[str, Field(min_length=8)]
+    password: Annotated[str, Field(min_length=8, max_length=128)]
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
 
 
 class RegisterCustomer(RegisterBase):
-    role: Literal[UserRole.customer]
-    saved_addresses: list[str] = Field(default_factory=list)
-    loyalty_points: Annotated[int, Field(ge=0)] = 0
+    role_type: Literal['customer']
 
 
-class RegisterHandyman(RegisterBase):
-    role: Literal[UserRole.worker]
-    skill_category: Annotated[str, Field(min_length=2, max_length=120)]
-    skills: list[str] = Field(default_factory=list)
-    certification_urls: list[str] = Field(default_factory=list)
-    hourly_rate: Annotated[float, Field(ge=0, le=10000)] = 0
-    availability: dict[str, Any] = Field(default_factory=dict)
+class RegisterWorker(RegisterBase):
+    role_type: Literal['worker']
 
 
-RegisterRequest = Annotated[Union[RegisterCustomer, RegisterHandyman], Field(discriminator="role")]
+RegisterRequest = Annotated[Union[RegisterCustomer, RegisterWorker], Field(discriminator="role_type")]
 
 
 class RegisterResponse(BaseModel):

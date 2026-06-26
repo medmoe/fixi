@@ -12,8 +12,8 @@ from ..core.db.types import PostGISPoint
 
 
 class UserRole(Enum):
-    customer = "customer"
-    worker = "worker"
+    CUSTOMER = "customer"
+    WORKER = "worker"
 
 
 class User(Base):
@@ -35,7 +35,7 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
-    role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole), nullable=False, default=UserRole.customer)
+    role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole), nullable=False, default=UserRole.CUSTOMER)
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
     # tier_id: Mapped[int | None] = mapped_column(ForeignKey("tier.id"), index=True, default=None, init=False)

@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from src.app.models.user import User
-from src.app.models.worker import WorkerProfile
+from src.app.models.worker_profile import WorkerProfile
 
 
 class TestWorkerModel:
