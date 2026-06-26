@@ -1,13 +1,11 @@
 from decimal import Decimal
 
-from sqlalchemy import JSON, Float, ForeignKey, Integer, String, Numeric
+from sqlalchemy import ForeignKey, String
+from sqlalchemy import Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db.database import Base
 
-
-from decimal import Decimal
-from sqlalchemy import Numeric, DateTime, func
 
 class WorkerProfile(Base):
     __tablename__ = "worker_profiles"
@@ -28,9 +26,8 @@ class WorkerProfile(Base):
     is_available: Mapped[bool] = mapped_column(default=True)
 
     # Portfolio
-    skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
-    portfolio_image_urls: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
+    # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
+    # portfolio_image_urls: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
 
     # Trust & ratings
     is_verified: Mapped[bool] = mapped_column(default=False)
-

@@ -12,8 +12,6 @@ class WorkerProfileBase(BaseModel):
     service_radius_km: Annotated[int | None, Field(ge=0, examples=[5, 10, 15], default=None)]
     avatar_url: Annotated[AnyHttpUrl | None, Field(max_length=255, examples=["https://example.com/avatar.jpg"], default=None)]
     is_available: Annotated[bool, Field(default=True)]
-    skills: Annotated[list[str], Field(examples=[["roofing repair", "electrical engines"]], default_factory=list)]
-    portfolio_image_urls: Annotated[list[AnyHttpUrl], Field(default_factory=list, examples=[["https://example.com/portfolio1.jpg", "https://example.com/portfolio2.jpg"]])]
 
 
 class WorkerProfileRead(WorkerProfileBase):
@@ -26,8 +24,8 @@ class WorkerProfileRead(WorkerProfileBase):
 
 class WorkerProfileCreate(WorkerProfileBase):
     """Used by workers to create their profile"""
-    pass
-
+    model_config = ConfigDict(extra="forbid", from_attributes=True) # tells pydantic to read data from object attributes instead of only from dictionaries
+    user_id: int
 
 class WorkerProfileUpdate(BaseModel):
     """PATCH semantics -- All fields optional, only send what changed"""
@@ -38,8 +36,6 @@ class WorkerProfileUpdate(BaseModel):
     service_radius_km: Annotated[int | None, Field(ge=0, default=None)]
     avatar_url: Annotated[AnyHttpUrl | None, Field(default=None)]
     is_available: Annotated[bool | None, Field(default=None)]
-    skills: Annotated[list[str] | None, Field(default=None)]
-    portfolio_image_urls: Annotated[list[AnyHttpUrl] | None, Field(default=None)]
 
 
 class WorkerProfileUpdateInternal(WorkerProfileBase):

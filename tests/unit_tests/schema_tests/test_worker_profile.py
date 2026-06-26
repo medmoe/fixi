@@ -32,8 +32,6 @@ def create_payload(**overrides) -> dict:
         "service_radius_km": 20,
         "avatar_url": "https://example.com/avatar.jpg",
         "is_available": True,
-        "skills": ["plumbing", "pipe repair"],
-        "portfolio_image_urls": ["https://example.com/portfolio1.jpg"],
         **overrides,
     }
 
@@ -85,20 +83,11 @@ class TestWorkerProfileCreate:
             """Only required fields — all optional fields should fall back to defaults."""
             schema = WorkerProfileCreate()
             assert schema.bio is None
-            assert schema.skills == []
             assert schema.is_available is True
 
         def test_is_available_defaults_to_true(self):
             schema = WorkerProfileCreate()
             assert schema.is_available is True
-
-        def test_skills_defaults_to_empty_list(self):
-            schema = WorkerProfileCreate()
-            assert schema.skills == []
-
-        def test_portfolio_image_urls_defaults_to_empty_list(self):
-            schema = WorkerProfileCreate()
-            assert schema.portfolio_image_urls == []
 
     # ── Field: bio ───────────────────────────────────────────────────────────
 
@@ -177,22 +166,6 @@ class TestWorkerProfileCreate:
             schema = WorkerProfileCreate(**create_payload(avatar_url=None))
             assert schema.avatar_url is None
 
-    # ── Field: skills ────────────────────────────────────────────────────────
-
-    class TestSkillsField:
-
-        def test_valid_skills_list_passes(self):
-            schema = WorkerProfileCreate(**create_payload(skills=["plumbing", "welding"]))
-            assert schema.skills == ["plumbing", "welding"]
-
-        def test_empty_skills_list_passes(self):
-            schema = WorkerProfileCreate(**create_payload(skills=[]))
-            assert schema.skills == []
-
-        def test_skills_not_a_list_fails(self):
-            with pytest.raises(ValidationError):
-                WorkerProfileCreate(**create_payload(skills="plumbing"))
-
     # ── Security ─────────────────────────────────────────────────────────────
 
     class TestSecurityConstraints:
@@ -228,7 +201,6 @@ class TestWorkerProfileUpdate:
             """PATCH with no fields is valid — nothing changes."""
             schema = WorkerProfileUpdate()
             assert schema.bio is None
-            assert schema.skills is None
 
         def test_partial_update_passes(self):
             schema = WorkerProfileUpdate(**update_payload(bio="Updated bio"))
@@ -291,8 +263,6 @@ class TestWorkerProfileRead:
                 service_radius_km = 20
                 avatar_url = "https://example.com/avatar.jpg"
                 is_available = True
-                skills = ["plumbing"]
-                portfolio_image_urls = []
                 is_verified = False
 
             schema = WorkerProfileRead.model_validate(FakeORMProfile())
