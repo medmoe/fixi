@@ -1,3 +1,4 @@
+from datetime import datetime, UTC
 from io import BytesIO
 from typing import AsyncGenerator
 from unittest.mock import Mock, AsyncMock
@@ -7,18 +8,18 @@ import pytest_asyncio
 from PIL import Image
 from faker import Faker
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy import text
+from sqlalchemy import text, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+from uuid6 import uuid7
 
 from src.app.core.config import settings
 from src.app.core.db.database import Base, async_get_db
 from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.main import app
-from src.app.models.user import User
-from src.app.models.worker_profile import WorkerProfile
+from src.app.models import User, UserRole, WorkerProfile
 
 fake = Faker()
 
@@ -31,11 +32,8 @@ test_engine = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool, 
 testSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function")
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
-    """ Create a fresh database session for each test. """
-
-    # Create fresh engine for each test - this is crucial!
     async with test_engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.execute(
@@ -59,8 +57,9 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         finally:
+            await session.rollback()
             await session.close()
-    # Cleanup engine
+
     await test_engine.dispose()
 
 
@@ -221,28 +220,50 @@ async def create_test_worker_profile(async_session: AsyncSession, **kwargs) -> W
     return worker
 
 
-# from collections.abc import Callable, Generator
-# from typing import Any, List, Dict
-# from unittest.mock import AsyncMock, Mock
-#
-# import pytest
-# from faker import Faker
-# from fastapi.testclient import TestClient
-# from sqlalchemy import create_engine
-# from sqlalchemy.ext.asyncio import AsyncSession
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.orm.session import Session
-#
-# from src.app.core.config import settings
-# from src.app.main import app
-#
-# DATABASE_URI = settings.POSTGRES_URI
-# DATABASE_PREFIX = settings.POSTGRES_SYNC_PREFIX
-#
-# sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
-# local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine, expire_on_commit=False)
-#
-# fake = Faker()
+async def create_bulk_test_worker_profiles(async_session: AsyncSession, parameters: list[dict]) -> list[WorkerProfile]:
+    size = len(parameters)
+
+    # create users
+    user_rows = [
+        {
+            "name": fake.name(),
+            "username": fake.user_name(),
+            "email": fake.email(),
+            "hashed_password": get_password_hash("testpassword123"),
+            "is_superuser": False,
+            "uuid": uuid7(),
+            "created_at": datetime.now(UTC),
+            "role_type": UserRole.WORKER,
+        }
+        for _ in range(size)
+    ]
+    await async_session.execute(insert(User), user_rows)
+    await async_session.flush()  # flush so IDs are assigned, no commit yet
+
+    # fetch only the users we just created
+    emails = [row["email"] for row in user_rows]
+    result = await async_session.execute(
+        select(User).where(User.email.in_(emails))
+    )
+    users: list[User] = result.scalars().all()
+
+    # create worker profiles
+    worker_rows = [
+        {"user_id": user.id, **param}
+        for param, user in zip(parameters, users)
+    ]
+    await async_session.execute(insert(WorkerProfile), worker_rows)
+    await async_session.commit()  # single commit for everything ✅
+
+    # fetch only the worker profiles we just created
+    user_ids = [user.id for user in users]
+    result = await async_session.execute(
+        select(WorkerProfile).where(WorkerProfile.user_id.in_(user_ids))
+    )
+    workers: list[WorkerProfile] = result.scalars().all()
+    return workers
+
+
 #
 #
 # @pytest.fixture(scope="session")

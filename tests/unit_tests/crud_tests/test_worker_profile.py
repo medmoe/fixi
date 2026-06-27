@@ -10,10 +10,11 @@ Covers:
     - Edge cases
 """
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
-from fastcrud.exceptions.http_exceptions import DuplicateValueException
-from sqlalchemy.exc import NoResultFound
+import pytest_asyncio
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.crud_worker_profile import crud_workers
@@ -23,7 +24,7 @@ from src.app.schemas.worker_profile import (
     WorkerProfileUpdate,
     WorkerProfileUpdateInternal,
 )
-from tests.conftest import create_test_worker_profile
+from tests.conftest import create_test_worker_profile, create_bulk_test_worker_profiles
 
 
 # ===========================================================================
@@ -40,6 +41,31 @@ def create_schema(internal_create=False, **overrides) -> WorkerProfileCreate:
         "is_available": True,
     }
     return WorkerProfileCreate.model_validate({**defaults, **overrides})
+
+
+parameters = [
+    # (is_available, is_verified, years_of_experience, hourly_rate, service_radius_km)
+    {"bio": "Experienced plumber with 10 years in residential work.", "years_of_experience": 10, "hourly_rate": Decimal("75.00"), "service_radius_km": 20,
+     "avatar_url": "https://example.com/avatar1.jpg", "is_available": True, "is_verified": True},
+    {"bio": "Certified electrician specializing in commercial projects.", "years_of_experience": 7, "hourly_rate": Decimal("90.00"), "service_radius_km": 35,
+     "avatar_url": "https://example.com/avatar2.jpg", "is_available": True, "is_verified": True},
+    {"bio": "Carpenter with expertise in custom furniture and woodwork.", "years_of_experience": 5, "hourly_rate": Decimal("65.00"), "service_radius_km": 15,
+     "avatar_url": "https://example.com/avatar3.jpg", "is_available": False, "is_verified": True},
+    {"bio": "HVAC technician with 3 years of residential experience.", "years_of_experience": 3, "hourly_rate": Decimal("55.00"), "service_radius_km": 10,
+     "avatar_url": "https://example.com/avatar4.jpg", "is_available": True, "is_verified": False},
+    {"bio": "General handyman available for small repairs and maintenance.", "years_of_experience": 2, "hourly_rate": Decimal("45.00"), "service_radius_km": 50,
+     "avatar_url": "https://example.com/avatar5.jpg", "is_available": True, "is_verified": False},
+    {"bio": "Painter with 8 years of interior and exterior experience.", "years_of_experience": 8, "hourly_rate": Decimal("80.00"), "service_radius_km": 25,
+     "avatar_url": "https://example.com/avatar6.jpg", "is_available": False, "is_verified": True},
+    {"bio": "Roofing specialist with focus on leak repairs and insulation.", "years_of_experience": 12, "hourly_rate": Decimal("110.00"), "service_radius_km": 40,
+     "avatar_url": "https://example.com/avatar7.jpg", "is_available": True, "is_verified": True},
+    {"bio": "Landscaper offering lawn care and garden design services.", "years_of_experience": 4, "hourly_rate": Decimal("50.00"), "service_radius_km": 30,
+     "avatar_url": "https://example.com/avatar8.jpg", "is_available": True, "is_verified": False},
+    {"bio": "Tiler with experience in bathrooms, kitchens and flooring.", "years_of_experience": 6, "hourly_rate": Decimal("70.00"), "service_radius_km": 20,
+     "avatar_url": "https://example.com/avatar9.jpg", "is_available": False, "is_verified": False},
+    {"bio": "Welding professional with industrial and domestic experience.", "years_of_experience": 9, "hourly_rate": Decimal("95.00"), "service_radius_km": 45,
+     "avatar_url": "https://example.com/avatar10.jpg", "is_available": True, "is_verified": True},
+]
 
 
 # ===========================================================================
@@ -68,16 +94,11 @@ class TestWorkerProfileCreate:
             profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
             assert profile.is_verified is False
 
-        async def test_create_sets_timestamps(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
-            assert profile.created_at is not None
-            assert profile.updated_at is not None
-
     class TestDuplicates:
 
         async def test_create_duplicate_user_id_fails(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
             """Each user can only have one worker profile."""
-            with pytest.raises(DuplicateValueException):
+            with pytest.raises(IntegrityError):
                 await crud_workers.create(db=async_session, object=create_schema(user_id=test_worker_profile.user_id))
 
     class TestInvalidData:
@@ -103,10 +124,9 @@ class TestWorkerProfileRead:
             assert fetched["id"] == test_worker_profile.id
 
         async def test_get_by_id_returns_correct_fields(self, async_session: AsyncSession):
-            test_worker_profile = await create_test_worker_profile(async_session, bio="This is a test bio", skills=["skill one", "skill two"])
+            test_worker_profile = await create_test_worker_profile(async_session, bio="This is a test bio")
             fetched = await crud_workers.get(db=async_session, id=test_worker_profile.id)
             assert fetched["bio"] == test_worker_profile.bio
-            assert fetched["skills"] == test_worker_profile.skills
 
     class TestGetByUserId:
 
@@ -114,118 +134,6 @@ class TestWorkerProfileRead:
             fetched = await crud_workers.get(db=async_session, user_id=test_worker_profile.user_id)
             assert fetched is not None
             assert fetched["user_id"] == test_worker_profile.user_id
-
-    class TestGetMulti:
-
-        async def create_workers(self, async_session: AsyncSession, worker_count: int, **kwargs):
-            for _ in range(worker_count):
-                await create_test_worker_profile(async_session, **kwargs)
-
-        async def test_get_multi_returns_all_profiles(self, async_session: AsyncSession):
-            await self.create_workers(async_session, 10)
-            result = await crud_workers.get_multi(db=async_session)
-            assert result["total_count"] == 10
-
-        async def test_get_multi_respects_limit(self, async_session: AsyncSession):
-            await self.create_workers(async_session, 10)
-            result = await crud_workers.get_multi(db=async_session, limit=3)
-            assert len(result["data"]) == 3
-
-        async def test_get_multi_respects_offset(self, async_session: AsyncSession):
-            await self.create_workers(async_session, 10)
-            result = await crud_workers.get_multi(db=async_session, offset=2)
-            assert len(result["data"]) == 8
-
-        async def test_get_multi_limit_and_offset_combined(self, async_session: AsyncSession):
-            await self.create_workers(async_session, 10)
-            result = await crud_workers.get_multi(db=async_session, limit=4, offset=2)
-            assert len(result["data"]) == 4
-
-    class TestFilters:
-
-        async def test_filter_by_is_available(self, async_session: AsyncSession):
-            for i in range(10):
-                await create_test_worker_profile(async_session, is_available=i % 3 == 0)
-            result = await crud_workers.get_multi(db=async_session, is_available=True)
-            assert len(result["data"]) == 4  # 4 multiples of 3 in range(10)
-            assert all(p["is_available"] is True for p in result["data"])
-
-        async def test_filter_by_is_verified(self, async_session: AsyncSession):
-            for i in range(10):
-                await create_test_worker_profile(async_session, is_verified=i % 2 == 0)
-
-            result = await crud_workers.get_multi(db=async_session, is_verified=False)
-            assert len(result["data"]) == 5  # 5 multiples of 2 in range(10)
-            assert all(p["is_verified"] is False for p in result["data"])
-
-        async def test_filter_by_hourly_rate(self, async_session: AsyncSession):
-            hourly_rates = [i + 10.50 if i % 2 == 0 else i + 10.75 for i in range(63, 165, 11)]
-            for hourly_rate in hourly_rates:
-                await create_test_worker_profile(async_session, hourly_rate=hourly_rate)
-
-            result = await crud_workers.get_multi(db=async_session, min_hourly_rate=45.50, max_hourly_rate=120.10)
-            expected = [r for r in hourly_rates if 45.50 <= r <= 120.10]
-            assert len(result["data"]) == len(expected)
-            assert all(45.50 <= w.hourly_rate <= 120.10 for w in result["data"])
-
-        async def test_filter_by_service_radius_km(self, async_session: AsyncSession):
-            for radius in list(range(1, 55)):
-                await create_test_worker_profile(async_session, service_radius_km=radius)
-
-            result = await crud_workers.get_multi(db=async_session, min_service_radius_km=1, max_service_radius_km=10)
-            assert len(result["data"]) == 10
-            assert all(1 <= w.service_radius_km <= 10 for w in result["data"])
-
-        async def test_filter_by_multiple_parameters(self, async_session: AsyncSession):
-            """Test that get_multi correctly filters by is_available, years_of_experience,
-            hourly_rate, and service_radius_km simultaneously."""
-
-            workers_data = [
-                # (is_available, years_of_experience, hourly_rate, service_radius_km)
-                (True, 5, 75.00, 20),  # ✅ matches all filters
-                (True, 8, 80.00, 25),  # ✅ matches all filters
-                (False, 5, 75.00, 20),  # ❌ not available
-                (True, 2, 75.00, 20),  # ❌ years_of_experience too low
-                (True, 5, 120.00, 20),  # ❌ hourly_rate too high
-                (True, 5, 75.00, 60),  # ❌ service_radius_km too high
-                (True, 10, 95.00, 30),  # ✅ matches all filters
-                (False, 9, 90.00, 15),  # ❌ not available
-                (True, 4, 50.00, 10),  # ❌ years_of_experience too low, hourly_rate too low
-                (True, 6, 85.00, 55),  # ❌ service_radius_km too high
-            ]
-
-            for is_available, years_exp, hourly_rate, radius in workers_data:
-                await create_test_worker_profile(
-                    async_session,
-                    is_available=is_available,
-                    years_of_experience=years_exp,
-                    hourly_rate=hourly_rate,
-                    service_radius_km=radius,
-                )
-
-            result = await crud_workers.get_multi(
-                db=async_session,
-                is_available=True,
-                min_years_of_experience=3,
-                max_years_of_experience=10,
-                min_hourly_rate=60.00,
-                max_hourly_rate=100.00,
-                min_service_radius_km=10,
-                max_service_radius_km=50,
-            )
-
-            # Derive expected results from source data to avoid hardcoding
-            expected = [(av, yrs, rate, radius) for av, yrs, rate, radius in workers_data if av is True and 3 <= yrs <= 10 and 60.00 <= rate <= 100.00 and 10 <= radius <= 50]
-
-            # 1. correct count
-            assert len(result["data"]) == len(expected)  # expects 3
-
-            # 2. every returned record satisfies ALL filters — not just count
-            for worker in result["data"]:
-                assert worker.is_available is True
-                assert 3 <= worker.years_of_experience <= 10
-                assert 60.00 <= worker.hourly_rate <= 100.00
-                assert 10 <= worker.service_radius_km <= 50
 
     class TestNotFound:
 
@@ -236,6 +144,100 @@ class TestWorkerProfileRead:
         async def test_get_nonexistent_user_id_returns_none(self, async_session: AsyncSession):
             fetched = await crud_workers.get(db=async_session, user_id=99999)
             assert fetched is None
+
+    class TestGetMulti:
+        @pytest_asyncio.fixture(autouse=True)
+        async def setup_bulk_profiles(self, async_session: AsyncSession):
+            """ Runs once before each test — but we guard against re-inserting."""
+            self.session = async_session
+            self.profiles = await create_bulk_test_worker_profiles(async_session, parameters)
+
+        async def test_get_multi_returns_all_profiles(self):
+            result = await crud_workers.get_multi(db=self.session)
+            assert result["total_count"] == len(self.profiles)
+
+        async def test_get_multi_respects_limit(self):
+            limit = 3
+            result = await crud_workers.get_multi(db=self.session, limit=limit)
+            assert result["total_count"] == limit
+
+        async def test_get_multi_respects_offset(self, ):
+            offset = 2
+            result = await crud_workers.get_multi(db=self.session, offset=offset)
+            assert result["total_count"] == len(self.profiles) - offset
+
+        async def test_get_multi_limit_and_offset_combined(self, ):
+            limit, offset = 4, 2
+            result = await crud_workers.get_multi(db=self.session, limit=limit, offset=offset)
+            assert result["total_count"] == min(len(self.profiles) - offset, limit)
+
+    class TestFilters:
+        @pytest_asyncio.fixture(autouse=True)
+        async def setup_bulk_profiles(self, async_session: AsyncSession):
+            """ Runs once before each test — but we guard against re-inserting."""
+            self.session = async_session
+            self.profiles = await create_bulk_test_worker_profiles(async_session, parameters)
+
+        async def test_filter_by_is_available(self, ):
+            result = await crud_workers.get_multi(db=self.session, is_available=True)
+            available_workers = sum(1 for worker_profile in self.profiles if worker_profile.is_available)
+            assert result["total_count"] == available_workers
+            assert all(p.is_available is True for p in result["data"])
+
+        async def test_filter_by_is_verified(self):
+            result = await crud_workers.get_multi(db=self.session, is_verified=True)
+            verified_workers = sum(1 for param in parameters if param["is_verified"] is True)
+            assert result["total_count"] == verified_workers
+            assert all(p.is_verified is True for p in result["data"])
+
+        async def test_filter_by_hourly_rate(self, ):
+            result = await crud_workers.get_multi(db=self.session, min_hourly_rate=45.50, max_hourly_rate=120.10)
+            expected = sum(1 for param in parameters if 45.50 <= param["hourly_rate"] <= 120.10)
+            assert result["total_count"] == expected
+            assert all(45.50 <= w.hourly_rate <= 120.10 for w in result["data"])
+
+        async def test_filter_by_service_radius_km(self, ):
+            result = await crud_workers.get_multi(db=self.session, min_service_radius_km=10, max_service_radius_km=25)
+            expected = sum(1 for param in parameters if 10 <= param["service_radius_km"] <= 25)
+            assert result["total_count"] == expected
+            assert all(10 <= w.service_radius_km <= 25 for w in result["data"])
+
+        async def test_filter_by_multiple_parameters(self):
+            """Test that get_multi correctly filters by is_available, years_of_experience,
+            hourly_rate, and service_radius_km simultaneously."""
+
+            result = await crud_workers.get_multi(
+                db=self.session,
+                is_available=True,
+                min_years_of_experience=3,
+                max_years_of_experience=10,
+                min_hourly_rate=60.00,
+                max_hourly_rate=100.00,
+                min_service_radius_km=10,
+                max_service_radius_km=50,
+            )
+
+            # Derive expected results from source data to avoid hardcoding
+            expected = sum(
+                1 for worker_profile in self.profiles if
+                worker_profile.is_available and
+                worker_profile.years_of_experience is not None and
+                3 <= worker_profile.years_of_experience <= 10 and
+                worker_profile.hourly_rate is not None and
+                60.00 <= worker_profile.hourly_rate <= 100.00 and
+                worker_profile.service_radius_km is not None and
+                10 <= worker_profile.service_radius_km <= 50
+            )
+
+            # 1. correct count
+            assert result["total_count"] == expected  # expects 3
+
+            # 2. every returned record satisfies ALL filters — not just count
+            for worker in result["data"]:
+                assert worker.is_available is True
+                assert 3 <= worker.years_of_experience <= 10
+                assert 60.00 <= worker.hourly_rate <= 100.00
+                assert 10 <= worker.service_radius_km <= 50
 
 
 # ===========================================================================

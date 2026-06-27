@@ -2,7 +2,7 @@ import uuid as uuid_pkg
 from datetime import UTC, datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Enum as SAEnum
+from sqlalchemy import DateTime, Integer, String, Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7
@@ -29,6 +29,9 @@ class User(Base):
     profile_image_url: Mapped[str] = mapped_column(String, default="https://profileimageurl.com")
     # Stored as geometry(Point, 4326). Reads are exposed as WKT text.
     location: Mapped[str | None] = mapped_column(PostGISPoint(), default=None)
+
+    # uuid: universally unique identifier exposed to the outside world. That's what we put in URLs, API responses, and tokens.
+    # id: used internally only.
     uuid: Mapped[uuid_pkg.UUID] = mapped_column(UUID(as_uuid=True), default_factory=uuid7, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
