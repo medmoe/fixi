@@ -25,7 +25,6 @@ class WorkerProfileRead(WorkerProfileBase):
 class WorkerProfileCreate(WorkerProfileBase):
     """Used by workers to create their profile"""
     model_config = ConfigDict(extra="forbid", from_attributes=True) # tells pydantic to read data from object attributes instead of only from dictionaries
-    user_id: int
 
 class WorkerProfileUpdate(BaseModel):
     """PATCH semantics -- All fields optional, only send what changed"""

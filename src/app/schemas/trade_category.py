@@ -1,28 +1,42 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
 
 class TradeCategoryBase(BaseModel):
-    pass
-
-class TradeCategory(TradeCategoryBase):
-    pass
+    model_config = ConfigDict(extra='forbid')
+    name: Annotated[str, Field(max_length=50)]
+    display_name: Annotated[str, Field(max_length=50)]
+    icon_name: Annotated[str | None, Field(max_length=50, default=None)]
+    parent_id: Annotated[int | None, Field(default=None)]
 
 class TradeCategoryCreate(TradeCategoryBase):
     pass
 
-class TradeCategoryUpdate(TradeCategoryBase):
-    pass
+class TradeCategoryUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    name: Annotated[str | None, Field(max_length=50, default=None)]
+    display_name: Annotated[str | None, Field(max_length=50, default=None)]
+    icon_name: Annotated[str | None, Field(max_length=50, default=None)]
+    parent_id: Annotated[int | None, Field(default=None)]
 
-class TradeCategoryInternal(TradeCategoryBase):
-    pass
+class TradeCategoryUpdateInternal(TradeCategoryBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime | None = None
 
 
 class TradeCategoryRead(TradeCategoryBase):
-    pass
+    model_config = ConfigDict(extra='forbid', from_attributes=True)
+    id : int
+    parent_id: int | None = None
+    created_at: datetime | None = None
 
-class TradeCategoryDelete(TradeCategoryBase):
-    pass
+class TradeCategoryDelete(BaseModel):
+    """Soft delete schema."""
+    model_config = ConfigDict(extra='forbid')
+    is_deleted: bool = True
+    deleted_at: datetime | None = None
 
 
