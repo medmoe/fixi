@@ -1,10 +1,12 @@
 from datetime import datetime, UTC
 
 from fastcrud import FastCRUD
+from fastcrud.exceptions.http_exceptions import DuplicateValueException
 from sqlalchemy import and_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .crud_users import crud_users
 from ..models import WorkerProfile, User
 from ..schemas.worker_profile import (
     WorkerProfileCreate,
@@ -23,6 +25,30 @@ class CRUDWorker(FastCRUD[
                      WorkerProfileDelete,
                      WorkerProfileRead
                  ]):
+    async def create(
+            self,
+            db: AsyncSession,
+            object: WorkerProfileCreate,
+            **kwargs,
+    ) -> WorkerProfile:
+        user_id = kwargs.get("user_id")
+        if not isinstance(user_id, int):
+            raise ValueError("user_id must be a valid integer.")
+
+        user_exists = await crud_users.exists(db=db, id=user_id)
+        if not user_exists:
+            raise ValueError("User does not exist.")
+
+        existing = await self.exists(db=db, user_id=user_id)
+        if existing:
+            raise DuplicateValueException("Each user can only have one worker profile.")
+
+        db_obj = WorkerProfile(**object.model_dump(mode="json"), user_id=user_id)
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
+
     async def delete(self, db: AsyncSession, user_id: int, hard: bool = False):
         user = await db.get(User, user_id)
         if not user:
@@ -61,7 +87,7 @@ class CRUDWorker(FastCRUD[
             min_service_radius_km: int | None = None,
             max_service_radius_km: int | None = None,
     ) -> dict:
-        filters = [] # BinaryExpression objects created by SQLAlchemy when comparing columns
+        filters = []  # BinaryExpression objects created by SQLAlchemy when comparing columns
         if is_verified is not None:
             filters.append(WorkerProfile.is_verified == is_verified)
         if is_available is not None:
@@ -85,13 +111,12 @@ class CRUDWorker(FastCRUD[
 
         query = query.offset(offset).limit(limit)
         result = await db.execute(query)
-        data = result.scalars().all() # scalars() is needed to convert the result into a list of WorkerProfile instances.
+        data = result.scalars().all()  # scalars() is needed to convert the result into a list of WorkerProfile instances.
 
         return {"data": data, "total_count": len(data)}
 
+
 crud_workers = CRUDWorker(WorkerProfile)
-
-
 
 # from sqlalchemy.dialects.postgresql import insert  # or sqlite, depending on your DB
 #

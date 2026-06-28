@@ -14,7 +14,8 @@ from decimal import Decimal
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from fastcrud.exceptions.http_exceptions import DuplicateValueException
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.crud_worker_profile import crud_workers
@@ -78,28 +79,28 @@ class TestWorkerProfileCreate:
     class TestSuccess:
 
         async def test_create_returns_profile(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
+            profile = await crud_workers.create(db=async_session, object=create_schema(), user_id=test_user.id)
             assert profile is not None
             assert profile.user_id == test_user.id
 
         async def test_create_persists_bio(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_workers.create(db=async_session, object=create_schema(bio="Expert welder", user_id=test_user.id))
+            profile = await crud_workers.create(db=async_session, object=create_schema(bio="Expert welder"), user_id=test_user.id)
             assert profile.bio == "Expert welder"
 
         async def test_create_sets_is_available_default(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
+            profile = await crud_workers.create(db=async_session, object=create_schema(), user_id=test_user.id)
             assert profile.is_available is True
 
         async def test_create_sets_is_verified_false_by_default(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
+            profile = await crud_workers.create(db=async_session, object=create_schema(), user_id=test_user.id)
             assert profile.is_verified is False
 
     class TestDuplicates:
 
         async def test_create_duplicate_user_id_fails(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
             """Each user can only have one worker profile."""
-            with pytest.raises(IntegrityError):
-                await crud_workers.create(db=async_session, object=create_schema(user_id=test_worker_profile.user_id))
+            with pytest.raises(DuplicateValueException):
+                await crud_workers.create(db=async_session, object=create_schema(), user_id=test_worker_profile.user_id)
 
     class TestInvalidData:
 
@@ -263,7 +264,7 @@ class TestWorkerProfileUpdate:
     class TestFullUpdate:
 
         async def test_update_all_fields(self, async_session: AsyncSession, test_user: User):
-            worker_profile = await crud_workers.create(db=async_session, object=create_schema(user_id=test_user.id))
+            worker_profile = await crud_workers.create(db=async_session, object=create_schema(), user_id=test_user.id)
             await crud_workers.update(
                 db=async_session,
                 object=WorkerProfileUpdate(
@@ -360,13 +361,13 @@ class TestWorkerProfileDelete:
 class TestWorkerProfileEdgeCases:
 
     async def test_none_bio_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_workers.create(db=async_session, object=create_schema(bio=None, user_id=test_user.id))
+        profile = await crud_workers.create(db=async_session, object=create_schema(bio=None), user_id=test_user.id)
         assert profile.bio is None
 
     async def test_zero_hourly_rate_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_workers.create(db=async_session, object=create_schema(hourly_rate=0.00, user_id=test_user.id))
+        profile = await crud_workers.create(db=async_session, object=create_schema(hourly_rate=0.00), user_id=test_user.id)
         assert profile.hourly_rate == 0.00
 
     async def test_zero_years_experience_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_workers.create(db=async_session, object=create_schema(years_of_experience=0, user_id=test_user.id))
+        profile = await crud_workers.create(db=async_session, object=create_schema(years_of_experience=0), user_id=test_user.id)
         assert profile.years_of_experience == 0

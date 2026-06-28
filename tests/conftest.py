@@ -357,3 +357,4 @@ def current_user_dict():
         "name": fake.name(),
         "is_superuser": False,
     }
+
