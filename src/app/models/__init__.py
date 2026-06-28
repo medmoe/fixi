@@ -3,4 +3,4 @@ from .files import File
 from .trade_category import TradeCategory
 from .user import User, UserRole
 from .worker_profile import WorkerProfile
-from .worker_trade import WorkerTrade, SkillLevel
+from .worker_trade import SkillLevel, WorkerTrade

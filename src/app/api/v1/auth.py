@@ -4,8 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...core.config import EnvironmentOption
-from ...core.config import settings
+from ...core.config import EnvironmentOption, settings
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import DuplicateValueException, UnauthorizedException
 from ...core.schemas import Token
@@ -15,11 +14,12 @@ from ...core.security import (
     create_access_token,
     create_refresh_token,
     create_token_payload,
-    get_password_hash, verify_password,
+    get_password_hash,
+    verify_password,
 )
 from ...crud.crud_users import crud_users
-from ...models import CustomerProfile, WorkerProfile, User
-from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterWorker, RegisterRequest, RegisterResponse
+from ...models import CustomerProfile, User, WorkerProfile
+from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
 

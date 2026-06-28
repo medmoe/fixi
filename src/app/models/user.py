@@ -2,7 +2,8 @@ import uuid as uuid_pkg
 from datetime import UTC, datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, Integer, String, Enum as SAEnum
+from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from uuid6 import uuid7

@@ -1,12 +1,7 @@
 from typing import Annotated
 
 from crudadmin import CRUDAdmin
-from crudadmin.admin_interface.model_view import PasswordTransformer
 from pydantic import BaseModel, Field
-
-from ..core.security import get_password_hash
-from ..models.user import User
-from ..schemas.user import UserCreate, UserCreateInternal, UserUpdate
 
 
 class PostCreateAdmin(BaseModel):

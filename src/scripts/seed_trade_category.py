@@ -2,14 +2,18 @@
 Seed script: trade_categories table
 Populates 10 parent trade categories + sub-trades for each.
 Run with: python seed_trade_categories.py
+
+IMPORTANT:
+if database is running on a docker container.
+run the seed script inside Docker " docker compose exec web python -m src.scripts.seed_trade_category.py
 """
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.models import TradeCategory
-from core.config import settings
-from core.db.database import Base
+from src.app.core.config import settings
+from src.app.core.db.database import Base
+from src.app.models import TradeCategory
 
 # ────────────────────────────────────────────────────────────────────────────
 DATABASE_URI = settings.POSTGRES_URI

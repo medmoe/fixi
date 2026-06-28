@@ -19,7 +19,7 @@ from src.app.core.db.database import Base, async_get_db
 from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.main import app
-from src.app.models import User, UserRole, WorkerProfile
+from src.app.models import User, UserRole, WorkerProfile, TradeCategory
 
 fake = Faker()
 
@@ -357,4 +357,18 @@ def current_user_dict():
         "name": fake.name(),
         "is_superuser": False,
     }
+
+
+@pytest_asyncio.fixture
+async def test_trade_category(async_session: AsyncSession) -> TradeCategory:
+    return await create_test_trade_category(async_session)
+
+
+async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> TradeCategory:
+    trade_category = TradeCategory(name=fake.word(), display_name=fake.word(), icon_name=fake.word(), **kwargs)
+    async_session.add(trade_category)
+    await async_session.commit()
+    return trade_category
+
+
 

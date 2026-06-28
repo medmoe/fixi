@@ -15,8 +15,9 @@ services:
       - db
       - redis
     volumes:
-      - ./src/app:/code/app
-      - ./src/.env:/code/.env
+      - ./src/app:/src/app
+      - ./src/.env:/src/.env
+      - ./src/scripts:/src/scripts
 
   frontend:
 

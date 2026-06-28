@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.trade_category import TradeCategory
 from ..schemas.trade_category import (
     TradeCategoryCreate,
-    TradeCategoryUpdate,
-    TradeCategoryUpdateInternal,
     TradeCategoryDelete,
     TradeCategoryRead,
+    TradeCategoryUpdate,
+    TradeCategoryUpdateInternal,
 )
 
 
@@ -21,12 +21,7 @@ class CRUDTradeCategory(FastCRUD[
                             TradeCategoryDelete,
                             TradeCategoryRead,
                         ]):
-    async def create(
-            self,
-            db: AsyncSession,
-            object: TradeCategoryCreate,
-            **kwargs,
-    ) -> TradeCategory:
+    async def create(self, db: AsyncSession, object: TradeCategoryCreate, **kwargs) -> TradeCategory:
         # prevent duplicate names
         existing = await self.exists(db=db, name=object.name)
         if existing:

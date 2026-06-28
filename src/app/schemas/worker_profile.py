@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, AnyHttpUrl
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 
 class WorkerProfileBase(BaseModel):

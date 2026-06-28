@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from fastcrud import FastCRUD
 from fastcrud.exceptions.http_exceptions import DuplicateValueException
@@ -6,15 +6,9 @@ from sqlalchemy import and_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..models import User, WorkerProfile
+from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
 from .crud_users import crud_users
-from ..models import WorkerProfile, User
-from ..schemas.worker_profile import (
-    WorkerProfileCreate,
-    WorkerProfileRead,
-    WorkerProfileUpdate,
-    WorkerProfileUpdateInternal,
-    WorkerProfileDelete
-)
 
 
 class CRUDWorker(FastCRUD[
@@ -25,12 +19,7 @@ class CRUDWorker(FastCRUD[
                      WorkerProfileDelete,
                      WorkerProfileRead
                  ]):
-    async def create(
-            self,
-            db: AsyncSession,
-            object: WorkerProfileCreate,
-            **kwargs,
-    ) -> WorkerProfile:
+    async def create(self, db: AsyncSession, object: WorkerProfileCreate, **kwargs) -> WorkerProfile:
         user_id = kwargs.get("user_id")
         if not isinstance(user_id, int):
             raise ValueError("user_id must be a valid integer.")
@@ -54,11 +43,14 @@ class CRUDWorker(FastCRUD[
         if not user:
             raise NoResultFound("The user does not exist")
 
+        existing = await self.exists(db=db, user_id=user_id)
+        if not existing:
+            raise NoResultFound("The worker profile does not exist.")
+
         if hard:
             await db.delete(user)
         else:
             user.is_deleted = True
-
         await db.commit()
 
     async def update(self, db: AsyncSession, object: WorkerProfileUpdate, user_id: int, id: int) -> WorkerProfile:
