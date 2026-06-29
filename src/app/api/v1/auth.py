@@ -1,55 +1,58 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, Any, Optional, cast
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Cookie, Depends, Request, Response
+from fastcrud.exceptions.http_exceptions import DuplicateValueException
+from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import EnvironmentOption, settings
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import DuplicateValueException, UnauthorizedException
+from ...core.exceptions.http_exceptions import UnauthorizedException
 from ...core.schemas import Token
 from ...core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    TokenType,
     authenticate_user,
+    blacklist_tokens,
     create_access_token,
     create_refresh_token,
     create_token_payload,
     get_password_hash,
+    oauth2_scheme,
     verify_password,
+    verify_token,
 )
 from ...crud.crud_users import crud_users
-from ...models import CustomerProfile, User, WorkerProfile
+from ...models import CustomerProfile, User, UserRole, WorkerProfile
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
-async def register_v2(
-        payload: RegisterRequest,
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-) -> RegisterResponse:
+async def register(payload: RegisterRequest, db: Annotated[AsyncSession, Depends(async_get_db)]) -> RegisterResponse:
     async with db.begin():
-        existing = await crud_users.get_by_email_or_username(db=db, email=payload.email, username=payload.username)
-        if existing:
-            raise DuplicateValueException("Username or email already registered")
-
-        user = User(hashed_password=get_password_hash(payload.password), username=payload.username, email=payload.email, name=payload.name)
+        email_exists = await crud_users.exists(db=db, email=payload.email)
+        if email_exists:
+            raise DuplicateValueException("Email already registered")
+        username_exists = await crud_users.exists(db=db, username=payload.username)
+        if username_exists:
+            raise DuplicateValueException("Username already registered")
+        user = User(hashed_password=get_password_hash(payload.password), username=payload.username, email=payload.email, name=payload.name, role_type=UserRole(payload.role_type))
         db.add(user)
         await db.flush()
-
         if isinstance(payload, RegisterCustomer):
             db.add(CustomerProfile(user_id=user.id))
         elif isinstance(payload, RegisterWorker):
             db.add(WorkerProfile(user_id=user.id))
-
         await db.refresh(user)
     return RegisterResponse(id=user.id, username=user.username, email=user.email, role=user.role_type)
 
 
 # rate limiter should be implemented here
 @router.post("/login", response_model=Token)
-async def login_v2(
+async def login(
         response: Response,
         credentials: LoginRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
@@ -77,3 +80,50 @@ async def login_v2(
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout")
+async def logout(
+        response: Response,
+        access_token: str = Depends(oauth2_scheme),
+        refresh_token: Optional[str] = Cookie(None, alias="refresh_token"),
+        db: AsyncSession = Depends(async_get_db),
+) -> dict[str, str]:
+    try:
+        if not refresh_token:
+            raise UnauthorizedException("Refresh token not found")
+
+        await blacklist_tokens(access_token=access_token, refresh_token=refresh_token, db=db)
+        response.delete_cookie(key="refresh_token")
+
+        return {"message": "Logged out successfully"}
+
+    except JWTError:
+        raise UnauthorizedException("Invalid token.")
+
+
+@router.post("/refresh")
+async def refresh_access_token(request: Request, db: AsyncSession = Depends(async_get_db)) -> dict[str, str]:
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise UnauthorizedException("Refresh token missing.")
+
+    user_data = await verify_token(refresh_token, TokenType.REFRESH, db)
+    if not user_data:
+        raise UnauthorizedException("Invalid refresh token.")
+
+    if "@" in user_data.username_or_email:
+        db_user = await crud_users.get(db=db, email=user_data.username_or_email, is_deleted=False)
+    else:
+        db_user = await crud_users.get(db=db, username=user_data.username_or_email, is_deleted=False)
+
+    if not db_user:
+        raise UnauthorizedException("Invalid refresh token.")
+
+    if hasattr(db_user, "model_dump"):
+        user_payload_source = cast(dict[str, Any], db_user.model_dump())
+    else:
+        user_payload_source = cast(dict[str, Any], db_user)
+
+    new_access_token = await create_access_token(data=create_token_payload(user_payload_source))
+    return {"access_token": new_access_token, "token_type": "bearer"}

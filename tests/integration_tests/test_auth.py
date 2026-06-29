@@ -1,7 +1,9 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 
-from src.app.models import CustomerProfile, WorkerProfile
+from src.app.crud.crud_worker_profile import crud_workers
+from src.app.models import CustomerProfile
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +50,7 @@ class TestRegisterEndpoint:
     # ── Happy path ──────────────────────────────────────────────────────────
 
     async def test_register_customer_success(self, async_client: AsyncClient):
-        response = await async_client.post("/api/v2/auth/register", json=customer_payload())
+        response = await async_client.post("/api/v1/auth/register", json=customer_payload())
 
         assert response.status_code == 201
         data = response.json()
@@ -60,7 +62,7 @@ class TestRegisterEndpoint:
         assert "hashed_password" not in data  # never leak hash
 
     async def test_register_worker_success(self, async_client: AsyncClient):
-        response = await async_client.post("/api/v2/auth/register", json=worker_payload())
+        response = await async_client.post("/api/v1/auth/register", json=worker_payload())
 
         assert response.status_code == 201
         data = response.json()
@@ -70,49 +72,41 @@ class TestRegisterEndpoint:
     # ── Duplicate detection ─────────────────────────────────────────────────
 
     async def test_register_duplicate_email_fails(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
-
-        response = await async_client.post(
-            "/api/v2/auth/register",
-            json=customer_payload(username="different_user"),  # different username, same email
-        )
-        assert response.status_code == 409
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
+        response = await async_client.post("/api/v1/auth/register", json=customer_payload(username="different_user"), )  # different username, same email
+        assert response.status_code == 422
         assert "email" in response.json()["detail"].lower() or "registered" in response.json()["detail"].lower()
 
     async def test_register_duplicate_username_fails(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
-
-        response = await async_client.post(
-            "/api/v2/auth/register",
-            json=customer_payload(email="different@example.com"),  # different email, same username
-        )
-        assert response.status_code == 409
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
+        response = await async_client.post("/api/v1/auth/register", json=customer_payload(email="different@example.com"), )  # different email, same username
+        print(response)
+        assert response.status_code == 422
 
     async def test_register_duplicate_email_and_username_fails(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
-
-        response = await async_client.post("/api/v2/auth/register", json=customer_payload())
-        assert response.status_code == 409
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
+        response = await async_client.post("/api/v1/auth/register", json=customer_payload())
+        assert response.status_code == 422
 
     # ── Validation errors ───────────────────────────────────────────────────
 
     async def test_register_invalid_email_fails(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/register",
+            "/api/v1/auth/register",
             json=customer_payload(email="not-an-email"),
         )
         assert response.status_code == 422
 
     async def test_register_weak_password_fails(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/register",
+            "/api/v1/auth/register",
             json=customer_payload(password="weakpass"),  # no uppercase, no digit
         )
         assert response.status_code == 422
 
     async def test_register_invalid_role_fails(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/register",
+            "/api/v1/auth/register",
             json=customer_payload(role_type="admin"),  # not in discriminated union
         )
         assert response.status_code == 422
@@ -120,37 +114,35 @@ class TestRegisterEndpoint:
     async def test_register_missing_required_field_fails(self, async_client: AsyncClient):
         payload = customer_payload()
         del payload["email"]
-        response = await async_client.post("/api/v2/auth/register", json=payload)
+        response = await async_client.post("/api/v1/auth/register", json=payload)
         assert response.status_code == 422
 
     async def test_register_extra_fields_forbidden(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/register",
+            "/api/v1/auth/register",
             json=customer_payload(extra_field="hacked"),
         )
         assert response.status_code == 422
 
     # ── DB side effects ─────────────────────────────────────────────────────
 
-    async def test_register_customer_creates_customer_profile(
-            self, async_client: AsyncClient, async_session
-    ):
-        response = await async_client.post("/api/v2/auth/register", json=customer_payload())
+    async def test_register_customer_creates_customer_profile(self, async_client: AsyncClient, async_session):
+        response = await async_client.post("/api/v1/auth/register", json=customer_payload())
+        print(response.json())
         user_id = response.json()["id"]
 
-        profile = await async_session.get(CustomerProfile, {"user_id": user_id})
+        result = await async_session.execute(select(CustomerProfile).where(CustomerProfile.user_id == user_id))
+        profile: CustomerProfile | None = result.scalars().first()
         assert profile is not None
         assert profile.user_id == user_id
 
-    async def test_register_worker_creates_worker_profile(
-            self, async_client: AsyncClient, async_session
-    ):
-        response = await async_client.post("/api/v2/auth/register", json=worker_payload())
+    async def test_register_worker_creates_worker_profile(self, async_client: AsyncClient, async_session):
+        response = await async_client.post("/api/v1/auth/register", json=worker_payload())
         user_id = response.json()["id"]
 
-        profile = await async_session.get(WorkerProfile, {"user_id": user_id})
+        profile = await crud_workers.get(async_session, user_id=user_id)
         assert profile is not None
-        assert profile.user_id == user_id
+        assert profile["user_id"] == user_id
 
 
 # ---------------------------------------------------------------------------
@@ -163,10 +155,10 @@ class TestLoginEndpoint:
     # ── Happy path ──────────────────────────────────────────────────────────
 
     async def test_login_with_username_success(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
 
         response = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(username_or_email="johndoe"),
         )
         assert response.status_code == 200
@@ -175,10 +167,10 @@ class TestLoginEndpoint:
         assert data["token_type"] == "bearer"
 
     async def test_login_with_email_success(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
 
         response = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(username_or_email="john@example.com"),
         )
         assert response.status_code == 200
@@ -187,9 +179,9 @@ class TestLoginEndpoint:
     # ── Cookie ──────────────────────────────────────────────────────────────
 
     async def test_login_sets_refresh_token_cookie(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
 
-        response = await async_client.post("/api/v2/auth/login", json=login_payload())
+        response = await async_client.post("/api/v1/auth/login", json=login_payload())
 
         assert "refresh_token" in response.cookies
         cookie = response.headers.get("set-cookie", "")
@@ -198,8 +190,8 @@ class TestLoginEndpoint:
 
     async def test_login_cookie_not_secure_in_test_env(self, async_client: AsyncClient):
         """secure=False expected in non-production environments"""
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
-        response = await async_client.post("/api/v2/auth/login", json=login_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
+        response = await async_client.post("/api/v1/auth/login", json=login_payload())
 
         cookie = response.headers.get("set-cookie", "")
         assert "Secure" not in cookie  # test env should not set Secure flag
@@ -207,10 +199,10 @@ class TestLoginEndpoint:
     # ── Auth failures ───────────────────────────────────────────────────────
 
     async def test_login_wrong_password_fails(self, async_client: AsyncClient):
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
 
         response = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(password="WrongPass1"),
         )
         assert response.status_code == 401
@@ -218,21 +210,21 @@ class TestLoginEndpoint:
 
     async def test_login_nonexistent_user_fails(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(username_or_email="ghost@example.com"),
         )
         assert response.status_code == 401
 
     async def test_login_wrong_and_nonexistent_same_response(self, async_client: AsyncClient):
         """Both wrong password and unknown user should return identical response — no user enumeration"""
-        await async_client.post("/api/v2/auth/register", json=customer_payload())
+        await async_client.post("/api/v1/auth/register", json=customer_payload())
 
         wrong_password = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(password="WrongPass1"),
         )
         unknown_user = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json=login_payload(username_or_email="ghost@example.com"),
         )
         assert wrong_password.status_code == unknown_user.status_code
@@ -242,14 +234,11 @@ class TestLoginEndpoint:
 
     async def test_login_missing_password_fails(self, async_client: AsyncClient):
         response = await async_client.post(
-            "/api/v2/auth/login",
+            "/api/v1/auth/login",
             json={"username_or_email": "johndoe"},
         )
         assert response.status_code == 422
 
     async def test_login_empty_credentials_fails(self, async_client: AsyncClient):
-        response = await async_client.post(
-            "/api/v2/auth/login",
-            json={"username_or_email": "", "password": ""},
-        )
+        response = await async_client.post("/api/v1/auth/login", json={"username_or_email": "", "password": ""})
         assert response.status_code == 422

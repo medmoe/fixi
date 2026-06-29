@@ -74,7 +74,8 @@ async def close_redis_queue_pool() -> None:
 
 # -------------- rate limit --------------
 async def create_redis_rate_limit_pool() -> None:
-    rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
+    # rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
+    pass
 
 
 # async def close_redis_rate_limit_pool() -> None:

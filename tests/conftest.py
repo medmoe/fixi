@@ -107,10 +107,11 @@ async def test_worker_profile(async_session: AsyncSession) -> WorkerProfile:
 async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
     """ Get authentication headers for a test user."""
     login_data = {
-        "username": test_user.username,
+        "username_or_email": test_user.username,
         "password": "testpassword123"
     }
-    response = await async_client.post("/api/v1/login", data=login_data)
+    response = await async_client.post("/api/v1/auth/login", json=login_data)
+    print(response.json())
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
@@ -118,10 +119,10 @@ async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
 async def other_auth_headers(async_client: AsyncClient, other_user: User) -> dict:
     """ Get authentication headers for a test user."""
     login_data = {
-        "username": other_user.username,
+        "username_or_email": other_user.username,
         "password": "testpassword123"
     }
-    response = await async_client.post("/api/v1/login", data=login_data)
+    response = await async_client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
@@ -133,7 +134,7 @@ async def admin_auth_headers(async_client: AsyncClient, test_admin_user: User) -
         "password": "testpassword123"
     }
 
-    response = await async_client.post("/api/v1/login", data=login_data)
+    response = await async_client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
@@ -369,6 +370,3 @@ async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> T
     async_session.add(trade_category)
     await async_session.commit()
     return trade_category
-
-
-

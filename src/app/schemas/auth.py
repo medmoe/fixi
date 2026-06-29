@@ -44,5 +44,5 @@ class RegisterResponse(BaseModel):
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    username_or_email: str
-    password: str
+    username_or_email: Annotated[str, Field(min_length=3, max_length=255)]
+    password: Annotated[str, Field(min_length=8, max_length=128)]
