@@ -4,16 +4,15 @@ import uuid
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from fastcrud.exceptions.http_exceptions import DuplicateValueException, ForbiddenException
-from fastcrud.paginated import PaginatedListResponse, paginated_response
+from fastcrud import PaginatedListResponse, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_user
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import NotFoundException
+from ...core.exceptions.http_exceptions import DuplicateValueException, ForbiddenException, NotFoundException
 from ...core.security import validate_mime_type
 from ...crud.crud_files import crud_files
-from ...schemas.file import FileCreate, FileCreateInternal, FileRead, FileUpdateInternal
+from ...schemas.file import FileBase, FileCreate, FileRead, FileUpdateInternal
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["files"])
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/files", response_model=FileRead, status_code=201)
 async def write_file_metadata(
-        file: FileCreate,
+        file: FileBase,
         current_user: Annotated[dict, Depends(get_current_user)],
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ):
@@ -34,12 +33,12 @@ async def write_file_metadata(
     file_internal_dict = file.model_dump()
     file_internal_dict["belongs_to_user_id"] = current_user['id']
     file_internal_dict['file_key'] = f"{uuid.uuid1()}/{file_internal_dict['original_file_name']}"
-    file_internal = FileCreateInternal(**file_internal_dict)
+    file_internal = FileCreate(**file_internal_dict)
 
     if await crud_files.exists(db=db, file_key=file_internal.file_key):
         raise DuplicateValueException("File already exists")
 
-    return await crud_files.create(db=db, object=file_internal)
+    return await crud_files.create(db=db, object=file_internal, schema_to_select=FileRead, return_as_model=True)
 
 
 @router.post("/files/{file_id}", status_code=200)
@@ -92,7 +91,7 @@ async def get_files(current_user: Annotated[dict, Depends(get_current_user)],
                                        offset=(page - 1) * files_per_page,
                                        limit=files_per_page,
                                        schema_to_select=FileRead,
-                                       return_as_model=True
+                                       return_as_model=False
                                        )
     return paginated_response(files, page, files_per_page)
 

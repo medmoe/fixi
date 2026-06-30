@@ -48,7 +48,7 @@ def main():
     run(build_tool_cmd("ruff", "check", "src"), "Linting (ruff)")
 
     # Step 2: tests
-    run(["docker", "compose", "run", "--rm", "tests"], "Running tests (pytest)")
+    run(["docker", "compose", "-f", "docker-compose.test.yml", "run", "--rm", "tests", "pytest", "-x", "-v", "--no-cov"], "Running tests (pytest)")
 
     # Step 3: type-checking
     run(build_tool_cmd("mypy", "src", "--config-file", "pyproject.toml"), "Type-checking (mypy)")

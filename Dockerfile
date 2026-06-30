@@ -42,7 +42,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 USER app
 
 # Set the working directory
-WORKDIR /code
+WORKDIR /app
 
 # -------- replace with comment to run with gunicorn --------
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -465,7 +465,7 @@ dev = [
 
 [[package]]
 name = "fastcrud"
-version = "0.15.12"
+version = "0.22.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi" },
@@ -473,9 +473,9 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlalchemy-utils" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/53/f75ee9b3661761dd9dcd27bcf5cd95ba8b0f1df67b43c4953e34deab5a26/fastcrud-0.15.12.tar.gz", hash = "sha256:8fe76abd176e8f506e4cf6193f350a291e1932a3a1c3606c2f8bc26b992c4ca4", size = 41216, upload-time = "2025-06-09T00:47:13.79Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/06/5ef9131152b98d1d914067389a3334cebe21b1db4505e232cc6f2a6392cb/fastcrud-0.22.3.tar.gz", hash = "sha256:d8ebe74bf07352c5260698fec7bd40f0a1c09b8f189c6d57d157f04ef86bc09a", size = 103271, upload-time = "2026-06-21T03:53:59.231Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/5c/3be53d780d58b99e94cc5c0f4e2a9b8573aac2713e62c9aade02176b9aec/fastcrud-0.15.12-py3-none-any.whl", hash = "sha256:8a828a2f838f437cd7fec8bde639b45b4e63d5482bd725c5e2214a9c9d2493df", size = 55747, upload-time = "2025-06-09T00:47:12.465Z" },
+    { url = "https://files.pythonhosted.org/packages/36/ac/23eed29a3ff360e5f07f84fe61f409360341e839e15838e2aa823a782846/fastcrud-0.22.3-py3-none-any.whl", hash = "sha256:8ea2cb20ab111ae37793cfc0c88592dbed4700ef6ebebfcb6ef161582df780da", size = 136899, upload-time = "2026-06-21T03:53:57.911Z" },
 ]
 
 [[package]]
@@ -1084,14 +1084,14 @@ wheels = [
 
 [[package]]
 name = "starlette"
-version = "0.40.0"
+version = "0.46.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/cb/244daf0d7be4508099ad5bca3cdfe8b8b5538acd719c5f397f614e569fff/starlette-0.40.0.tar.gz", hash = "sha256:1a3139688fb298ce5e2d661d37046a66ad996ce94be4d4983be019a23a04ea35", size = 2573611, upload-time = "2024-10-15T06:52:34.481Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/20/08dfcd9c983f6a6f4a1000d934b9e6d626cff8d2eeb77a89a68eef20a2b7/starlette-0.46.2.tar.gz", hash = "sha256:7f7361f34eed179294600af672f565727419830b54b7b084efe44bb82d2fccd5", size = 2580846, upload-time = "2025-04-13T13:56:17.942Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/0f/64baf7a06492e8c12f5c4b49db286787a7255195df496fc21f5fd9eecffa/starlette-0.40.0-py3-none-any.whl", hash = "sha256:c494a22fae73805376ea6bf88439783ecfba9aac88a43911b48c653437e784c4", size = 73303, upload-time = "2024-10-15T06:52:32.486Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/0c/9d30a4ebeb6db2b25a841afbb80f6ef9a854fc3b41be131d249a977b4959/starlette-0.46.2-py3-none-any.whl", hash = "sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35", size = 72037, upload-time = "2025-04-13T13:56:16.21Z" },
 ]
 
 [[package]]
