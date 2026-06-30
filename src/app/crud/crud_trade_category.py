@@ -29,7 +29,7 @@ class CRUDTradeCategory(FastCRUD[
                      object: TradeCategoryCreate,
                      *,
                      commit: bool = True,
-                     schema_to_select: type[TradeCategoryRead] | None = None,
+                     schema_to_select: type[Any] | None = None,
                      return_as_model: bool = False,
                      **kwargs: Any) -> Any:
         # prevent duplicate names
@@ -52,9 +52,17 @@ class CRUDTradeCategory(FastCRUD[
     async def update(
             self,
             db: AsyncSession,
-            object: TradeCategoryUpdate,
-            **kwargs,
-    ) -> dict[str, Any] | None:
+            object: TradeCategoryUpdate | dict[str, Any],
+            *,
+            allow_multiple: bool = False,
+            commit: bool = True,
+            return_columns: list[str] | None = None,
+            schema_to_select: type[Any] | None = None,
+            return_as_model: bool = False,
+            one_or_none: bool = False,
+            **kwargs: Any,
+    ) -> Any:
+        update_data = object if isinstance(object, TradeCategoryUpdate) else TradeCategoryUpdate(**object)
         category_id = kwargs.get("id")
         if not isinstance(category_id, int):
             raise ValueError("id must be a valid integer.")
@@ -65,20 +73,20 @@ class CRUDTradeCategory(FastCRUD[
             raise NoResultFound(f"Trade category with id {category_id} does not exist.")
 
         # validate parent exists if provided
-        if object.parent_id is not None:
-            if object.parent_id == category_id:
+        if update_data.parent_id is not None:
+            if update_data.parent_id == category_id:
                 raise ValueError("A category cannot be its own parent.")
-            parent = await db.get(TradeCategory, object.parent_id)
+            parent = await db.get(TradeCategory, update_data.parent_id)
             if parent is None:
-                raise NoResultFound(f"Parent category with id {object.parent_id} does not exist.")
+                raise NoResultFound(f"Parent category with id {update_data.parent_id} does not exist.")
 
         # prevent duplicate name if name is being changed
-        if object.name is not None and object.name != category.name:
-            existing = await self.exists(db=db, name=object.name)
+        if update_data.name is not None and update_data.name != category.name:
+            existing = await self.exists(db=db, name=update_data.name)
             if existing:
-                raise ValueError(f"Trade category '{object.name}' already exists.")
+                raise ValueError(f"Trade category '{update_data.name}' already exists.")
 
-        return await super().update(db=db, object=object, id=category_id)
+        return await super().update(db=db, object=update_data, id=category_id)
 
     async def delete(
             self,

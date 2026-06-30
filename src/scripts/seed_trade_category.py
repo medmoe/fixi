@@ -7,6 +7,7 @@ IMPORTANT:
 if database is running on a docker container.
 run the seed script inside Docker " docker compose exec web python -m src.scripts.seed_trade_category.py
 """
+from typing import TypedDict
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -14,6 +15,20 @@ from sqlalchemy.orm import Session
 from src.app.core.config import settings
 from src.app.core.db.database import Base
 from src.app.models import TradeCategory
+
+
+class SubTradeData(TypedDict):
+    name: str
+    display_name: str
+    icon_name: str
+
+
+class TradeCategoryData(TypedDict):
+    name: str
+    display_name: str
+    icon_name: str
+    parent_id: None
+    sub_trades: list[SubTradeData]
 
 # ────────────────────────────────────────────────────────────────────────────
 DATABASE_URI = settings.POSTGRES_URI
@@ -24,7 +39,7 @@ DATABASE_URL = f"{DATABASE_PREFIX}{DATABASE_URI}"
 # Seed data
 # ---------------------------------------------------------------------------
 
-TRADE_CATEGORIES = [
+TRADE_CATEGORIES: list[TradeCategoryData] = [
     # ── Parent trades ───────────────────────────────────────────────────────
     {
         "name": "electrician",
@@ -165,7 +180,7 @@ def seed_trade_categories(session: Session) -> None:
         created_count += 1
 
         # Insert sub-trades
-        for sub in trade.get("sub_trades", []):
+        for sub in trade["sub_trades"]:
             child = TradeCategory(
                 name=sub["name"],
                 display_name=sub["display_name"],

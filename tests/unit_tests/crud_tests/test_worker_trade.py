@@ -14,7 +14,7 @@ from src.app.crud.crud_worker_trade import crud_worker_trade
 from src.app.models import User, TradeCategory, WorkerProfile, WorkerTrade, SkillLevel
 from src.app.schemas.trade_category import TradeCategoryCreate
 from src.app.schemas.worker_profile import WorkerProfileCreate
-from src.app.schemas.worker_trade import WorkerTradeCreate, WorkerTradeUpdate
+from src.app.schemas.worker_trade import WorkerTradeCreate, WorkerTradeUpdate, WorkerTradeRead
 
 
 # ─── Factories ────────────────────────────────────────────────────────────────
@@ -35,6 +35,8 @@ async def create_test_worker_trade(db: AsyncSession, worker_id: int, trade_id: i
             trade_id=trade_id,
             skill_level=skill_level,
         ),
+        schema_to_select=WorkerTradeRead,
+        return_as_model=True,
     )
 
 

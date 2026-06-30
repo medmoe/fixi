@@ -6,10 +6,10 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .crud_users import crud_users
 from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..models import User, WorkerProfile
 from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
+from .crud_users import crud_users
 
 
 class CRUDWorker(FastCRUD[
@@ -26,10 +26,10 @@ class CRUDWorker(FastCRUD[
             object: WorkerProfileCreate,
             *,
             commit: bool = True,
-            schema_to_select: type[WorkerProfileRead] | None = WorkerProfileRead,
+            schema_to_select: type[Any] | None = WorkerProfileRead,
             return_as_model: bool = True,
-            **kwargs,
-    ):
+            **kwargs: Any,
+    ) -> Any:
         if not await crud_users.exists(db=db, id=object.user_id):
             raise NoResultFound("User does not exist.")
 

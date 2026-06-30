@@ -20,8 +20,7 @@ class WorkerTrade(Base):
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True, init=False)
     worker_id: Mapped[int] = mapped_column(ForeignKey("worker_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
     trade_id: Mapped[int] = mapped_column(ForeignKey("trade_categories.id", ondelete="CASCADE"), nullable=False, index=True)
-    # ✅ relationships needed for selectinload
-    worker: Mapped["WorkerProfile"] = relationship("WorkerProfile", lazy="noload")  # lazy="noload" means relationships are never loaded unless explicitly requested via
+    worker: Mapped["WorkerProfile"] = relationship("WorkerProfile", lazy="noload")
     trade: Mapped["TradeCategory"] = relationship("TradeCategory", lazy="noload")
 
     skill_level: Mapped[SkillLevel] = mapped_column(SAEnum(SkillLevel), nullable=False, default=SkillLevel.junior)

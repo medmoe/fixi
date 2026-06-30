@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp
 

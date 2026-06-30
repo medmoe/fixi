@@ -1,6 +1,9 @@
 # src/app/crud/crud_worker_trade.py
+from typing import Any
+
 from fastcrud import FastCRUD
 from sqlalchemy import select
+from sqlalchemy.engine import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -19,18 +22,24 @@ from ..schemas.worker_trade import (
 
 
 class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate, WorkerTradeUpdateInternal, WorkerTradeDelete, WorkerTradeRead]):
-    async def create(self, db: AsyncSession, object: WorkerTradeCreate, **kwargs) -> WorkerTrade:
-        # verify worker exists
+    async def create(
+        self,
+        db: AsyncSession,
+        object: WorkerTradeCreate,
+        *,
+        commit: bool = True,
+        schema_to_select: type[Any] | None = None,
+        return_as_model: bool = False,
+        **kwargs: Any,
+    ) -> Any:
         worker = await db.get(WorkerProfile, object.worker_id)
         if worker is None:
             raise NoResultFound(f"Worker profile with id {object.worker_id} does not exist.")
 
-        # verify trade exists
         trade = await db.get(TradeCategory, object.trade_id)
         if trade is None:
             raise NoResultFound(f"Trade category with id {object.trade_id} does not exist.")
 
-        # prevent duplicate worker-trade assignment
         existing = await self.exists(db=db, worker_id=object.worker_id, trade_id=object.trade_id)
         if existing:
             raise DuplicateValueException(f"Worker {object.worker_id} is already assigned to trade {object.trade_id}.")
@@ -41,7 +50,19 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         await db.refresh(db_obj)
         return db_obj
 
-    async def update(self, db: AsyncSession, object: WorkerTradeUpdate, **kwargs) -> WorkerTrade:
+    async def update(
+        self,
+        db: AsyncSession,
+        object: WorkerTradeUpdate | dict[str, Any],
+        *,
+        allow_multiple: bool = False,
+        commit: bool = True,
+        return_columns: list[str] | None = None,
+        schema_to_select: type[Any] | None = None,
+        return_as_model: bool = False,
+        one_or_none: bool = False,
+        **kwargs: Any,
+    ) -> Any:
         worker_trade_id = kwargs.get("id")
         if not isinstance(worker_trade_id, int):
             raise ValueError("id must be a valid integer.")
@@ -52,14 +73,25 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
 
         return await super().update(db=db, object=object, id=worker_trade_id)
 
-    async def delete(self, db: AsyncSession, id: int, **kwargs) -> None:
+    async def delete(
+        self,
+        db: AsyncSession,
+        db_row: Row[Any] | None = None,
+        allow_multiple: bool = False,
+        commit: bool = True,
+        filters: WorkerTradeDelete | None = None,
+        **kwargs: Any,
+    ) -> None:
+        id = kwargs.get("id")
+        if not isinstance(id, int):
+            raise ValueError("id must be provided as a keyword argument.")
         worker_trade = await db.get(WorkerTrade, id)
         if worker_trade is None:
             raise NoResultFound(f"WorkerTrade with id {id} does not exist.")
         await db.delete(worker_trade)
         await db.commit()
 
-    async def _get_worker_trades(self, db: AsyncSession, *, filter_column, filter_value: int, load_relationship, entity_class, entity_name: str) -> list[WorkerTrade]:
+    async def _get_worker_trades(self, db: AsyncSession, *, filter_column: Any, filter_value: int, load_relationship: Any, entity_class: Any, entity_name: str) -> list[WorkerTrade]:
         """Private helper — validates entity exists then fetches related worker trades."""
         entity = await db.get(entity_class, filter_value)
         if entity is None:
@@ -70,7 +102,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             .where(filter_column == filter_value)
             .options(selectinload(load_relationship))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_trades_for_worker(self, db: AsyncSession, worker_id: int) -> list[WorkerTrade]:
         """Get all trades assigned to a worker, with nested trade details."""
