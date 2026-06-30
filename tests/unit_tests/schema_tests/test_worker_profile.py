@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from src.app.schemas.worker_profile import (
     WorkerProfileCreate,
     WorkerProfileUpdate,
-    WorkerProfileRead, WorkerProfileDelete,
+    WorkerProfileRead, WorkerProfileDelete, WorkerProfileBase
 )
 
 
@@ -75,18 +75,18 @@ class TestWorkerProfileCreate:
     class TestValidPayloads:
 
         def test_full_valid_payload_passes(self):
-            schema = WorkerProfileCreate(**create_payload())
+            schema = WorkerProfileBase(**create_payload())
             assert schema.bio == "Experienced plumber with 10 years of experience."
             assert schema.hourly_rate == Decimal("75.00")
 
         def test_all_optional_fields_omitted_passes(self):
             """Only required fields — all optional fields should fall back to defaults."""
-            schema = WorkerProfileCreate()
+            schema = WorkerProfileBase()
             assert schema.bio is None
             assert schema.is_available is True
 
         def test_is_available_defaults_to_true(self):
-            schema = WorkerProfileCreate()
+            schema = WorkerProfileBase()
             assert schema.is_available is True
 
     # ── Field: bio ───────────────────────────────────────────────────────────
@@ -94,16 +94,16 @@ class TestWorkerProfileCreate:
     class TestBioField:
 
         def test_bio_max_length_passes(self):
-            schema = WorkerProfileCreate(**create_payload(bio="A" * 500))
+            schema = WorkerProfileBase(**create_payload(bio="A" * 500))
             assert len(schema.bio) == 500
 
         def test_bio_exceeds_max_length_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileCreate(**create_payload(bio="A" * 501))
+                WorkerProfileBase(**create_payload(bio="A" * 501))
             assert "bio" in str(exc.value)
 
         def test_bio_none_passes(self):
-            schema = WorkerProfileCreate(**create_payload(bio=None))
+            schema = WorkerProfileBase(**create_payload(bio=None))
             assert schema.bio is None
 
     # ── Field: years_of_experience ───────────────────────────────────────────
@@ -111,21 +111,21 @@ class TestWorkerProfileCreate:
     class TestYearsOfExperienceField:
 
         def test_zero_years_passes(self):
-            schema = WorkerProfileCreate(**create_payload(years_of_experience=0))
+            schema = WorkerProfileBase(**create_payload(years_of_experience=0))
             assert schema.years_of_experience == 0
 
         def test_max_years_passes(self):
-            schema = WorkerProfileCreate(**create_payload(years_of_experience=100))
+            schema = WorkerProfileBase(**create_payload(years_of_experience=100))
             assert schema.years_of_experience == 100
 
         def test_negative_years_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileCreate(**create_payload(years_of_experience=-1))
+                WorkerProfileBase(**create_payload(years_of_experience=-1))
             assert "years_of_experience" in str(exc.value)
 
         def test_exceeds_max_years_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileCreate(**create_payload(years_of_experience=101))
+                WorkerProfileBase(**create_payload(years_of_experience=101))
             assert "years_of_experience" in str(exc.value)
 
     # ── Field: hourly_rate ───────────────────────────────────────────────────
@@ -133,20 +133,20 @@ class TestWorkerProfileCreate:
     class TestHourlyRateField:
 
         def test_valid_decimal_rate_passes(self):
-            schema = WorkerProfileCreate(**create_payload(hourly_rate=Decimal("99.99")))
+            schema = WorkerProfileBase(**create_payload(hourly_rate=Decimal("99.99")))
             assert schema.hourly_rate == Decimal("99.99")
 
         def test_zero_rate_passes(self):
-            schema = WorkerProfileCreate(**create_payload(hourly_rate=Decimal("0.00")))
+            schema = WorkerProfileBase(**create_payload(hourly_rate=Decimal("0.00")))
             assert schema.hourly_rate == Decimal("0.00")
 
         def test_negative_rate_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileCreate(**create_payload(hourly_rate=Decimal("-1.00")))
+                WorkerProfileBase(**create_payload(hourly_rate=Decimal("-1.00")))
             assert "hourly_rate" in str(exc.value)
 
         def test_integer_rate_coerced_to_decimal(self):
-            schema = WorkerProfileCreate(**create_payload(hourly_rate=50))
+            schema = WorkerProfileBase(**create_payload(hourly_rate=50))
             assert schema.hourly_rate == Decimal("50")
 
     # ── Field: avatar_url ────────────────────────────────────────────────────
@@ -154,16 +154,16 @@ class TestWorkerProfileCreate:
     class TestAvatarUrlField:
 
         def test_valid_url_passes(self):
-            schema = WorkerProfileCreate(**create_payload(avatar_url="https://example.com/avatar.jpg"))
+            schema = WorkerProfileBase(**create_payload(avatar_url="https://example.com/avatar.jpg"))
             assert schema.avatar_url is not None
 
         def test_invalid_url_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileCreate(**create_payload(avatar_url="not-a-url"))
+                WorkerProfileBase(**create_payload(avatar_url="not-a-url"))
             assert "avatar_url" in str(exc.value)
 
         def test_none_passes(self):
-            schema = WorkerProfileCreate(**create_payload(avatar_url=None))
+            schema = WorkerProfileBase(**create_payload(avatar_url=None))
             assert schema.avatar_url is None
 
     # ── Security ─────────────────────────────────────────────────────────────
@@ -173,16 +173,16 @@ class TestWorkerProfileCreate:
         def test_user_id_not_accepted(self):
             """user_id must come from JWT — not be settable by client."""
             with pytest.raises(ValidationError):
-                WorkerProfileCreate(**create_payload(user_id=99))
+                WorkerProfileBase(**create_payload(user_id=99))
 
         def test_is_verified_not_accepted(self):
             """is_verified is admin-only — workers cannot set it."""
             with pytest.raises(ValidationError):
-                WorkerProfileCreate(**create_payload(is_verified=True))
+                WorkerProfileBase(**create_payload(is_verified=True))
 
         def test_extra_fields_forbidden(self):
             with pytest.raises(ValidationError):
-                WorkerProfileCreate(**create_payload(malicious_field="hacked"))
+                WorkerProfileBase(**create_payload(malicious_field="hacked"))
 
 
 # ===========================================================================

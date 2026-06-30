@@ -16,6 +16,7 @@ class TestCreateFileMetaDataEndpoint:
     async def test_create_file(self, async_client: AsyncClient, auth_headers: dict, test_user: User):
         """ Test creating a file """
         response = await async_client.post(f"/api/v1/files", json=self.file_data, headers=auth_headers)
+        print(response.json())
         assert response.status_code == 201
 
         data = response.json()

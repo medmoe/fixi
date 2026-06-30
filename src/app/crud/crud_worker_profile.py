@@ -1,14 +1,15 @@
 from datetime import UTC, datetime
+from typing import Any
 
 from fastcrud import FastCRUD
-from fastcrud.exceptions.http_exceptions import DuplicateValueException
-from sqlalchemy import and_, select
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .crud_users import crud_users
+from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..models import User, WorkerProfile
 from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
-from .crud_users import crud_users
 
 
 class CRUDWorker(FastCRUD[
@@ -19,93 +20,80 @@ class CRUDWorker(FastCRUD[
                      WorkerProfileDelete,
                      WorkerProfileRead
                  ]):
-    async def create(self, db: AsyncSession, object: WorkerProfileCreate, **kwargs) -> WorkerProfile:
+    async def create(
+            self,
+            db: AsyncSession,
+            object: WorkerProfileCreate,
+            *,
+            commit: bool = True,
+            schema_to_select: type[WorkerProfileRead] | None = WorkerProfileRead,
+            return_as_model: bool = True,
+            **kwargs,
+    ):
+        if not await crud_users.exists(db=db, id=object.user_id):
+            raise NoResultFound("User does not exist.")
+
+        if await self.exists(db=db, user_id=object.user_id):
+            raise DuplicateValueException(
+                "Each user can only have one worker profile."
+            )
+        db_object = WorkerProfile(**object.model_dump(mode="json"))
+        db.add(db_object)
+        if commit:
+            await db.commit()
+            await db.refresh(db_object)
+
+        if not return_as_model:
+            return db_object
+        return schema_to_select.model_validate(db_object) if schema_to_select else db_object
+
+    async def delete(
+            self,
+            db: AsyncSession,
+            db_row: Row | None = None,
+            allow_multiple: bool = False,
+            commit: bool = True,
+            filters: WorkerProfileDelete | None = None,
+            **kwargs: Any,
+    ) -> None:
         user_id = kwargs.get("user_id")
+        hard = kwargs.get("hard", False)
         if not isinstance(user_id, int):
-            raise ValueError("user_id must be a valid integer.")
-
-        user_exists = await crud_users.exists(db=db, id=user_id)
-        if not user_exists:
-            raise ValueError("User does not exist.")
-
-        existing = await self.exists(db=db, user_id=user_id)
-        if existing:
-            raise DuplicateValueException("Each user can only have one worker profile.")
-
-        db_obj = WorkerProfile(**object.model_dump(mode="json"), user_id=user_id)
-        db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
-        return db_obj
-
-    async def delete(self, db: AsyncSession, user_id: int, hard: bool = False):
-        user = await db.get(User, user_id)
-        if not user:
-            raise NoResultFound("The user does not exist")
-
-        existing = await self.exists(db=db, user_id=user_id)
-        if not existing:
-            raise NoResultFound("The worker profile does not exist.")
-
-        if hard:
-            await db.delete(user)
-        else:
-            user.is_deleted = True
-        await db.commit()
-
-    async def update(self, db: AsyncSession, object: WorkerProfileUpdate, user_id: int, id: int) -> WorkerProfile:
+            raise ValueError("user_id must be provided as a keyword argument.")
 
         user = await db.get(User, user_id)
         if not user:
             raise NoResultFound("User does not exist.")
 
-        # manually update User.updated_at
+        if not await self.exists(db=db, user_id=user_id):
+            raise NoResultFound("Worker profile does not exist.")
+
+        if hard:
+            await db.delete(user)
+        else:
+            user.is_deleted = True
+            user.deleted_at = datetime.now(UTC)
+
+        await db.commit()
+
+    async def update(
+            self,
+            db: AsyncSession,
+            object: WorkerProfileUpdate | dict[str, Any],
+            **kwargs: Any,
+    ) -> Any:
+        user_id = kwargs.get("user_id")
+        if not isinstance(user_id, int):
+            raise ValueError("user_id must be provided as a keyword argument.")
+
+        user = await db.get(User, user_id)
+        if not user:
+            raise NoResultFound("User does not exist.")
+
         user.updated_at = datetime.now(UTC)
         await db.flush()
 
-        return await super().update(db=db, object=object, id=id)
-
-    async def get_multi(
-            self,
-            db: AsyncSession,
-            offset: int = 0,
-            limit: int = 100,
-            is_verified: bool | None = None,
-            is_available: bool | None = None,
-            min_years_of_experience: int | None = None,
-            max_years_of_experience: int | None = None,
-            min_hourly_rate: int | None = None,
-            max_hourly_rate: int | None = None,
-            min_service_radius_km: int | None = None,
-            max_service_radius_km: int | None = None,
-    ) -> dict:
-        filters = []  # BinaryExpression objects created by SQLAlchemy when comparing columns
-        if is_verified is not None:
-            filters.append(WorkerProfile.is_verified == is_verified)
-        if is_available is not None:
-            filters.append(WorkerProfile.is_available == is_available)
-        if min_years_of_experience is not None:
-            filters.append(WorkerProfile.years_of_experience >= min_years_of_experience)
-        if max_years_of_experience is not None:
-            filters.append(WorkerProfile.years_of_experience <= max_years_of_experience)
-        if min_hourly_rate is not None:
-            filters.append(WorkerProfile.hourly_rate >= min_hourly_rate)
-        if max_hourly_rate is not None:
-            filters.append(WorkerProfile.hourly_rate <= max_hourly_rate)
-        if min_service_radius_km is not None:
-            filters.append(WorkerProfile.service_radius_km >= min_service_radius_km)
-        if max_service_radius_km is not None:
-            filters.append(WorkerProfile.service_radius_km <= max_service_radius_km)
-
-        query = select(WorkerProfile)
-        if filters:
-            query = query.where(and_(*filters))
-
-        query = query.offset(offset).limit(limit)
-        result = await db.execute(query)
-        data = result.scalars().all()  # scalars() is needed to convert the result into a list of WorkerProfile instances.
-
-        return {"data": data, "total_count": len(data)}
+        return await super().update(db=db, object=object, **kwargs)
 
 
 crud_workers = CRUDWorker(WorkerProfile)

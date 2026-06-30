@@ -1,5 +1,4 @@
-from typing import Annotated, Any
-
+from typing import Annotated, Any, cast
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,9 +29,9 @@ async def get_current_user(
 
     if user:
         if hasattr(user, 'model_dump'):
-            return user.model_dump()
+            return cast(dict[str, Any], user.model_dump())
         else:
-            return user
+            return cast(dict[str, Any], user)
 
     raise UnauthorizedException("User not authenticated.")
 

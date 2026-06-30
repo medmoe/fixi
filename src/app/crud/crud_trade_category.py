@@ -1,5 +1,8 @@
+from typing import Any
+
 from fastcrud import FastCRUD
 from sqlalchemy import select
+from sqlalchemy.engine import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,7 +24,14 @@ class CRUDTradeCategory(FastCRUD[
                             TradeCategoryDelete,
                             TradeCategoryRead,
                         ]):
-    async def create(self, db: AsyncSession, object: TradeCategoryCreate, **kwargs) -> TradeCategory:
+    async def create(self,
+                     db: AsyncSession,
+                     object: TradeCategoryCreate,
+                     *,
+                     commit: bool = True,
+                     schema_to_select: type[TradeCategoryRead] | None = None,
+                     return_as_model: bool = False,
+                     **kwargs: Any) -> Any:
         # prevent duplicate names
         existing = await self.exists(db=db, name=object.name)
         if existing:
@@ -44,7 +54,7 @@ class CRUDTradeCategory(FastCRUD[
             db: AsyncSession,
             object: TradeCategoryUpdate,
             **kwargs,
-    ) -> TradeCategory:
+    ) -> dict[str, Any] | None:
         category_id = kwargs.get("id")
         if not isinstance(category_id, int):
             raise ValueError("id must be a valid integer.")
@@ -73,18 +83,25 @@ class CRUDTradeCategory(FastCRUD[
     async def delete(
             self,
             db: AsyncSession,
-            id: int,
-            hard: bool = False,
+            db_row: Row[Any] | None = None,
+            allow_multiple: bool = False,
+            commit: bool = True,
+            filters: TradeCategoryDelete | None = None,
+            **kwargs: Any,
     ) -> None:
-        category = await db.get(TradeCategory, id)
-        if category is None:
-            raise NoResultFound(f"Trade category with id {id} does not exist.")
+        id_value = kwargs.get("id")
+        hard = kwargs.get("hard", False)
+        if not isinstance(id_value, int):
+            raise ValueError("id must be provided as a keyword argument.")
 
-        # check if category has children
-        has_children = await self.exists(db=db, parent_id=id)
+        category = await db.get(TradeCategory, id_value)
+        if category is None:
+            raise NoResultFound(f"Trade category with id {id_value} does not exist.")
+
+        has_children = await self.exists(db=db, parent_id=id_value)
         if has_children:
             raise ValueError(
-                f"Cannot delete category {id} — it has subcategories. "
+                f"Cannot delete category {id_value} — it has subcategories. "
                 "Delete or reassign them first."
             )
 
@@ -92,7 +109,6 @@ class CRUDTradeCategory(FastCRUD[
             await db.delete(category)
             await db.commit()
         else:
-            # TradeCategory has no is_deleted — hard delete only
             raise NotImplementedError(
                 "TradeCategory does not support soft delete. Use hard=True."
             )
@@ -110,7 +126,7 @@ class CRUDTradeCategory(FastCRUD[
         result = await db.execute(
             select(TradeCategory).where(TradeCategory.parent_id == id)
         )
-        children: list[TradeCategory] = result.scalars().all()
+        children: list[TradeCategory] = list(result.scalars().all())
 
         return {
             "category": category,
@@ -122,7 +138,7 @@ class CRUDTradeCategory(FastCRUD[
         result = await db.execute(
             select(TradeCategory).where(TradeCategory.parent_id.is_(None))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 crud_trade_category = CRUDTradeCategory(TradeCategory)

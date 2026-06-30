@@ -2,13 +2,12 @@ from datetime import timedelta
 from typing import Annotated, Any, Optional, cast
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
-from fastcrud.exceptions.http_exceptions import DuplicateValueException
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import EnvironmentOption, settings
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import UnauthorizedException
+from ...core.exceptions.http_exceptions import DuplicateValueException, UnauthorizedException
 from ...core.schemas import Token
 from ...core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,

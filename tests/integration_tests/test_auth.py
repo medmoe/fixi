@@ -74,19 +74,19 @@ class TestRegisterEndpoint:
     async def test_register_duplicate_email_fails(self, async_client: AsyncClient):
         await async_client.post("/api/v1/auth/register", json=customer_payload())
         response = await async_client.post("/api/v1/auth/register", json=customer_payload(username="different_user"), )  # different username, same email
-        assert response.status_code == 422
+        assert response.status_code == 409
         assert "email" in response.json()["detail"].lower() or "registered" in response.json()["detail"].lower()
 
     async def test_register_duplicate_username_fails(self, async_client: AsyncClient):
         await async_client.post("/api/v1/auth/register", json=customer_payload())
         response = await async_client.post("/api/v1/auth/register", json=customer_payload(email="different@example.com"), )  # different email, same username
         print(response)
-        assert response.status_code == 422
+        assert response.status_code == 409
 
     async def test_register_duplicate_email_and_username_fails(self, async_client: AsyncClient):
         await async_client.post("/api/v1/auth/register", json=customer_payload())
         response = await async_client.post("/api/v1/auth/register", json=customer_payload())
-        assert response.status_code == 422
+        assert response.status_code == 409
 
     # ── Validation errors ───────────────────────────────────────────────────
 

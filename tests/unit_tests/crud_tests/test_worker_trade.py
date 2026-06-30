@@ -3,11 +3,11 @@ from decimal import Decimal
 
 import pytest
 import pytest_asyncio
-from fastcrud.exceptions.http_exceptions import DuplicateValueException
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.app.core.exceptions.http_exceptions import DuplicateValueException
 from src.app.crud.crud_trade_category import crud_trade_category
 from src.app.crud.crud_worker_profile import crud_workers
 from src.app.crud.crud_worker_trade import crud_worker_trade
@@ -38,8 +38,8 @@ async def create_test_worker_trade(db: AsyncSession, worker_id: int, trade_id: i
     )
 
 
-def worker_create_schema(**overrides) -> dict:
-    return {
+def worker_create_schema(**overrides) -> WorkerProfileCreate:
+    defaults = {
         "bio": "Experienced plumber with 10 years of experience.",
         "years_of_experience": 10,
         "hourly_rate": Decimal("75.00"),
@@ -48,6 +48,7 @@ def worker_create_schema(**overrides) -> dict:
         "is_available": True,
         **overrides,
     }
+    return WorkerProfileCreate.model_validate({**defaults, **overrides})
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -157,8 +158,8 @@ class TestCreate:
         assert wt1.trade_id != wt2.trade_id
 
     async def test_same_trade_can_have_multiple_workers(self, async_session: AsyncSession, test_trade_category: TradeCategory, test_user: User, other_user: User):
-        worker1 = await crud_workers.create(db=async_session, object=WorkerProfileCreate(**worker_create_schema()), user_id=test_user.id)
-        worker2 = await crud_workers.create(db=async_session, object=WorkerProfileCreate(**worker_create_schema()), user_id=other_user.id)
+        worker1 = await crud_workers.create(db=async_session, object=worker_create_schema(user_id=test_user.id))
+        worker2 = await crud_workers.create(db=async_session, object=worker_create_schema(user_id=other_user.id))
         wt1 = await create_test_worker_trade(async_session, worker1.id, test_trade_category.id)
         wt2 = await create_test_worker_trade(async_session, worker2.id, test_trade_category.id)
         assert wt1.worker_id != wt2.worker_id
@@ -359,7 +360,7 @@ class TestDelete:
 
 
 class TestEdgeCases:
-    @pytest.mark.parametrize("parent_model, parent_attr", [(WorkerProfile, "worker_id"), (TradeCategory, "trade_id"),])
+    @pytest.mark.parametrize("parent_model, parent_attr", [(WorkerProfile, "worker_id"), (TradeCategory, "trade_id"), ])
     async def test_worker_trade_cascade_delete(self, async_session: AsyncSession, test_worker_trade: WorkerTrade, parent_model, parent_attr):
         parent = await async_session.get(parent_model, getattr(test_worker_trade, parent_attr))
         await async_session.delete(parent)

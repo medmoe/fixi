@@ -18,10 +18,6 @@ class FileCreate(FileBase):
     """ Fields required when creating a File entry (upload metadata)
     Should not include `id`, `uploaded_at`, `belongs_to_user_id` (handled internally)
     """
-    pass
-
-
-class FileCreateInternal(FileCreate):
     belongs_to_user_id: Annotated[int, Field(examples=[42])]
     file_key: Annotated[str, Field(max_length=255, examples=["(uuid)/file_name.png"])]
 
@@ -34,6 +30,9 @@ class FileRead(FileBase):
     file_key: Annotated[str, Field(max_length=255, examples=["(uuid)/file_name.png"])]
     is_deleted: Annotated[bool, Field(examples=[False])]
     deleted_at: Annotated[datetime | None, Field(examples=["2023-01-01T00:00:00+00:00"], default=None)]
+    is_safe: Annotated[bool | None, Field(default=None)]
+    is_processed: Annotated[bool | None, Field(default=None)]
+    exif_stripped: Annotated[bool | None, Field(default=None)]
     model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     @computed_field
@@ -53,6 +52,10 @@ class FileUpdate(BaseModel):
 class FileUpdateInternal(FileUpdate):
     is_safe: Annotated[bool | None, Field(default=None)]
     is_processed: Annotated[bool | None, Field(default=None)]
-    model_config = ConfigDict(extra="forbid")
     is_deleted: Annotated[bool, Field(default=False)] = False
     deleted_at: Annotated[datetime | None, Field(examples=["2023-01-01T00:00:00+00:00"], default=None)] = None
+    model_config = ConfigDict(extra="forbid")
+
+
+class FileDelete(BaseModel):
+    pass

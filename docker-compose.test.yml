@@ -54,13 +54,15 @@ services:
         condition: service_completed_successfully
     env_file:
       - src/.env.test
-    working_dir: /code
+    working_dir: /app
+    environment:
+      - PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin
     volumes:
-      - ./src:/code/src
-      - ./tests:/code/tests
-      - ./pytest.ini:/code/pytest.ini
-      - ./src/alembic.ini:/code/src/alembic.ini
-      - ./src/migrations:/code/src/migrations
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+      - ./src/alembic.ini:/app/src/alembic.ini
+      - ./src/migrations:/app/src/migrations
 
     entrypoint: [ "sh", "-c", "exec \"$@\"", "--" ] # exec replaces the current shell process with the command that follows it.
     command: [ "pytest", "tests/", "-v" ]

@@ -1,11 +1,11 @@
 # src/app/crud/crud_worker_trade.py
 from fastcrud import FastCRUD
-from fastcrud.exceptions.http_exceptions import DuplicateValueException
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..models.trade_category import TradeCategory
 from ..models.worker_profile import WorkerProfile
 from ..models.worker_trade import WorkerTrade
