@@ -7,13 +7,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.trade_category import TradeCategory
-from ..schemas.trade_category import (
-    TradeCategoryCreate,
-    TradeCategoryDelete,
-    TradeCategoryRead,
-    TradeCategoryUpdate,
-    TradeCategoryUpdateInternal,
-)
+from ..schemas.trade_category import TradeCategoryCreate, TradeCategoryDelete, TradeCategoryRead, TradeCategoryUpdate, TradeCategoryUpdateInternal, TradeCategoryWithChildren
 
 
 class CRUDTradeCategory(FastCRUD[
@@ -147,6 +141,33 @@ class CRUDTradeCategory(FastCRUD[
             select(TradeCategory).where(TradeCategory.parent_id.is_(None))
         )
         return list(result.scalars().all())
+
+    # crud/crud_trade_category.py
+
+    async def get_nested(self, db: AsyncSession) -> list[TradeCategoryWithChildren]:
+        """Returns all root categories with their children nested inside."""
+
+        # fetch all categories in one query
+        result = await db.execute(select(TradeCategory))
+        all_categories: list[TradeCategory] = list(result.scalars().all())
+
+        # build a lookup map by id
+        category_map: dict[int, TradeCategoryWithChildren] = {
+            cat.id: TradeCategoryWithChildren.model_validate(cat)
+            for cat in all_categories
+        }
+
+        # nest children under their parents
+        roots: list[TradeCategoryWithChildren] = []
+        for category in category_map.values():
+            if category.parent_id is None:
+                roots.append(category)  # root category
+            else:
+                parent = category_map.get(category.parent_id)
+                if parent is not None:
+                    parent.children.append(category)  # nest under parent
+
+        return roots
 
 
 crud_trade_category = CRUDTradeCategory(TradeCategory)

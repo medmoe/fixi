@@ -39,4 +39,12 @@ class TradeCategoryDelete(BaseModel):
     is_deleted: bool = True
     deleted_at: datetime | None = None
 
+class TradeCategoryWithChildren(TradeCategoryRead):
+    """TradeCategoryRead with nested children."""
+    children: list["TradeCategoryWithChildren"] = []  # recursive — children can have children
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+
+TradeCategoryWithChildren.model_rebuild()  # ✅ required for self-referential schemas
+
 
