@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.crud_trade_category import crud_trade_category
 from src.app.models.trade_category import TradeCategory
-from src.app.schemas.trade_category import TradeCategoryCreate, TradeCategoryUpdate
+from src.app.schemas.trade_category import TradeCategoryCreate, TradeCategoryUpdate, TradeCategoryWithChildren
 
 
 # ─── Factories ───────────────────────────────────────────────────────────────
@@ -481,6 +481,30 @@ class TestEdgeCases:
         )
         assert len(result["children"]) == 2
 
+    async def test_nested_deeply_returns_grandchildren(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+    ):
+        child = await create_test_category(
+            async_session,
+            name="drain-cleaning",
+            display_name="Drain Cleaning",
+            parent_id=test_parent_category.id,
+        )
+        grandchild = await create_test_category(
+            async_session,
+            name="snake-drain",
+            display_name="Snake Drain",
+            parent_id=child.id,
+        )
+        with_children = await crud_trade_category.get_with_children(
+            db=async_session,
+            id=test_parent_category.id,
+        )
+        # get_with_children is one level deep; grandchild is not a direct child of parent
+        assert all(c.id != grandchild.id for c in with_children["children"])
+
     async def test_delete_only_child_allows_parent_deletion(
             self,
             async_session: AsyncSession,
@@ -501,3 +525,91 @@ class TestEdgeCases:
         )
         result = await crud_trade_category.get(db=async_session, id=test_parent_category.id)
         assert result is None
+
+
+# ─── TestGetNested ────────────────────────────────────────────────────────────
+
+class TestGetNested:
+    async def test_returns_empty_list_when_no_categories(self, async_session: AsyncSession):
+        result = await crud_trade_category.get_nested(db=async_session)
+        assert result == []
+
+    async def test_returns_tradecategorywithchildren_instances(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+    ):
+        result = await crud_trade_category.get_nested(db=async_session)
+        assert all(isinstance(r, TradeCategoryWithChildren) for r in result)
+
+    async def test_only_root_categories_at_top_level(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+            test_child_category: TradeCategory,
+    ):
+        result = await crud_trade_category.get_nested(db=async_session)
+        root_ids = [r.id for r in result]
+        assert test_parent_category.id in root_ids
+        assert test_child_category.id not in root_ids
+
+    async def test_children_nested_under_parent(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+            test_child_category: TradeCategory,
+    ):
+        result = await crud_trade_category.get_nested(db=async_session)
+        parent = next(r for r in result if r.id == test_parent_category.id)
+        assert any(c.id == test_child_category.id for c in parent.children)
+
+    async def test_leaf_categories_have_empty_children(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+            test_child_category: TradeCategory,
+    ):
+        result = await crud_trade_category.get_nested(db=async_session)
+        parent = next(r for r in result if r.id == test_parent_category.id)
+        leaf = next(c for c in parent.children if c.id == test_child_category.id)
+        assert leaf.children == []
+
+    async def test_multiple_children_under_same_parent(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+    ):
+        await create_test_category(async_session, name="drain-cleaning", display_name="Drain Cleaning", parent_id=test_parent_category.id)
+        await create_test_category(async_session, name="pipe-repair", display_name="Pipe Repair", parent_id=test_parent_category.id)
+        result = await crud_trade_category.get_nested(db=async_session)
+        parent = next(r for r in result if r.id == test_parent_category.id)
+        assert len(parent.children) == 2
+
+    async def test_multiple_root_categories(self, async_session: AsyncSession):
+        await create_test_category(async_session, name="home-services", display_name="Home Services")
+        await create_test_category(async_session, name="commercial", display_name="Commercial")
+        result = await crud_trade_category.get_nested(db=async_session)
+        assert len(result) == 2
+        assert all(r.parent_id is None for r in result)
+
+    async def test_grandchildren_nested_correctly(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+    ):
+        child = await create_test_category(async_session, name="drain-cleaning", display_name="Drain Cleaning", parent_id=test_parent_category.id)
+        grandchild = await create_test_category(async_session, name="snake-drain", display_name="Snake Drain", parent_id=child.id)
+
+        result = await crud_trade_category.get_nested(db=async_session)
+        parent_node = next(r for r in result if r.id == test_parent_category.id)
+        child_node = next(c for c in parent_node.children if c.id == child.id)
+        assert any(gc.id == grandchild.id for gc in child_node.children)
+
+    async def test_orphaned_child_excluded_from_roots(
+            self,
+            async_session: AsyncSession,
+            test_parent_category: TradeCategory,
+            test_child_category: TradeCategory,
+    ):
+        result = await crud_trade_category.get_nested(db=async_session)
+        assert len(result) == 1  # only the root, child is nested inside
