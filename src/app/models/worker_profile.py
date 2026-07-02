@@ -17,11 +17,11 @@ class WorkerProfile(Base):
     )
 
     # Profile fields
-    bio: Mapped[str | None] = mapped_column(String(500), default=None)
+    bio: Mapped[str | None] = mapped_column(String(1000), default=None)
     years_of_experience: Mapped[int | None] = mapped_column(default=None)
     hourly_rate: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), default=None)
     service_radius_km: Mapped[int | None] = mapped_column(default=None)
-    avatar_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    avatar_url: Mapped[str | None] = mapped_column(String(255), default=None)
     is_available: Mapped[bool] = mapped_column(default=True)
 
     # Portfolio

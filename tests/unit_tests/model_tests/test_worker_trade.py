@@ -12,12 +12,12 @@ class TestWorkerTrade:
         await async_session.commit()
         await async_session.refresh(trade_category)
 
-        worker_trade = WorkerTrade(worker_id=test_worker_profile.id, trade_id=trade_category.id, worker=test_worker_profile, trade=trade_category)
+        worker_trade = WorkerTrade(worker_profile_id=test_worker_profile.id, trade_id=trade_category.id, worker=test_worker_profile, trade=trade_category)
         async_session.add(worker_trade)
         await async_session.commit()
         await async_session.refresh(worker_trade)
 
         assert worker_trade.id is not None
-        assert worker_trade.worker_id == test_worker_profile.id
+        assert worker_trade.worker_profile_id == test_worker_profile.id
         assert worker_trade.trade_id == trade_category.id
         assert worker_trade.skill_level == SkillLevel.junior

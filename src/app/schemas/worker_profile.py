@@ -9,7 +9,7 @@ from .user import UserRead
 
 class WorkerProfileBase(BaseModel):
     model_config = ConfigDict(extra="forbid", from_attributes=True)
-    bio: Annotated[str | None, Field(max_length=500, examples=["Experienced plumber with 10 years in residential and commercial work."], default=None)]
+    bio: Annotated[str | None, Field(max_length=1000, examples=["Experienced plumber with 10 years in residential and commercial work."], default=None)]
     years_of_experience: Annotated[int | None, Field(ge=0, le=100, examples=[5, 10, 15], default=None)]
     hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, examples=[50.00, 75.50, 100.00], default=None)]
     service_radius_km: Annotated[int | None, Field(ge=0, examples=[5, 10, 15], default=None)]
@@ -48,7 +48,7 @@ class WorkerProfileCreate(WorkerProfileBase):
 class WorkerProfileUpdate(BaseModel):
     """PATCH semantics -- All fields optional, only send what changed"""
     model_config = ConfigDict(extra="forbid")
-    bio: Annotated[str | None, Field(max_length=500, default=None)] = None
+    bio: Annotated[str | None, Field(max_length=1000, default=None)] = None
     years_of_experience: Annotated[int | None, Field(ge=0, le=100, default=None)] = None
     hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, default=None)] = None
     service_radius_km: Annotated[int | None, Field(ge=0, default=None)] = None
@@ -77,7 +77,7 @@ class WorkerProfileDelete(BaseModel):
 class WorkerProfileCreateRequest(BaseModel):
     """POST body — user_id comes from JWT, not the request."""
     model_config = ConfigDict(extra="forbid")
-    bio: Annotated[str | None, Field(max_length=500, default=None)]
+    bio: Annotated[str | None, Field(max_length=1000, default=None)]
     years_of_experience: Annotated[int | None, Field(ge=0, le=100, default=None)]
     hourly_rate: Annotated[Decimal | None, Field(gt=0, decimal_places=2, default=None)]
     service_radius_km: Annotated[int | None, Field(ge=1, le=500, default=None)]
@@ -96,7 +96,7 @@ class WorkerTradeNestedRead(BaseModel):
     """Trade assignment nested in profile response — no circular import from worker_trade.py."""
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
     id: int
-    worker_id: int
+    worker_profile_id: int
     trade_id: int
     skill_level: str
     trade: TradeCategoryRead | None = None

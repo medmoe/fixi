@@ -210,7 +210,7 @@ async def create_test_user(async_session: AsyncSession, **kwargs) -> User:
 async def create_test_worker_profile(async_session: AsyncSession, **kwargs) -> WorkerProfile:
     """ Create a test worker """
     user = User(name=fake.name(), username=fake.user_name(), email=fake.email(),
-                hashed_password=get_password_hash("testpassword123"), is_superuser=False)
+        hashed_password=get_password_hash("testpassword123"), is_superuser=False)
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
@@ -341,16 +341,12 @@ def sample_user_read():
         username=fake.user_name(),
         email=fake.email(),
         profile_image_url=fake.image_url(),
-        is_superuser=False,
-        created_at=fake.date_time(),
-        updated_at=fake.date_time(),
-        tier_id=None,
     )
 
 
 @pytest.fixture
 def current_user_dict():
-    """Mock current user from auth dependency."""
+    """Mock the current user from auth dependency."""
     return {
         "id": 1,
         "username": fake.user_name(),
@@ -366,7 +362,11 @@ async def test_trade_category(async_session: AsyncSession) -> TradeCategory:
 
 
 async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> TradeCategory:
-    trade_category = TradeCategory(name=fake.word(), display_name=fake.word(), icon_name=fake.word(), **kwargs)
+    name = kwargs.get('name', fake.word())
+    display_name = kwargs.get('display_name', fake.word())
+    icon_name = kwargs.get('icon_name', fake.word())
+    parent_id = kwargs.get('parent_id', None)
+    trade_category = TradeCategory(name=name, display_name=display_name, icon_name=icon_name, parent_id=parent_id)
     async_session.add(trade_category)
     await async_session.commit()
     return trade_category
