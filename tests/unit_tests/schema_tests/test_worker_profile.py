@@ -7,15 +7,19 @@ Schemas tested:
     - WorkerProfileRead
 """
 
+import uuid
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from src.app.models import UserRole
 from src.app.schemas.worker_profile import (
-    WorkerProfileCreate,
     WorkerProfileUpdate,
-    WorkerProfileRead, WorkerProfileDelete, WorkerProfileBase
+    WorkerProfileRead,
+    WorkerProfileDelete,
+    WorkerProfileBase,
+    WorkerProfileNestedRead
 )
 
 
@@ -32,6 +36,20 @@ def create_payload(**overrides) -> dict:
         "service_radius_km": 20,
         "avatar_url": "https://example.com/avatar.jpg",
         "is_available": True,
+        **overrides,
+    }
+
+
+def create_user_payload(**overrides) -> dict:
+    """Minimal valid payload for WorkerProfileCreate."""
+    return {
+        "username": "john123",
+        "email": "john@example.com",
+        "id": 42,
+        "name": "John Doe",
+        "uuid": uuid.uuid4(),
+        "profile_image_url": "https://example.com/avatar.jpg",
+        "role_type": UserRole.WORKER,
         **overrides,
     }
 
@@ -56,6 +74,13 @@ def delete_payload(**overrides) -> dict:
     return {
         "id": 1,
         **overrides,
+    }
+
+
+def nested_payload() -> dict:
+    return {
+        **create_payload(id=1, is_verified=True),
+        "user": create_user_payload(),
     }
 
 
@@ -284,6 +309,16 @@ class TestWorkerProfileRead:
             with pytest.raises(ValidationError) as exc:
                 WorkerProfileRead(**payload)
             assert "user_id" in str(exc.value)
+
+    class TestNestedStructure:
+        def test_nested_user_structure(self):
+            payload = nested_payload()
+            schema = WorkerProfileNestedRead(**payload)
+
+            assert schema.user is not None
+            assert schema.user.id is not None
+            assert schema.user.role_type is payload["user"]["role_type"]
+            assert schema.user.uuid == payload["user"]["uuid"]
 
 
 # ===========================================================================
