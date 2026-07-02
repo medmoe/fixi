@@ -8,44 +8,35 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..models import User, WorkerProfile
-from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
+from ..schemas.user import UserRead
+from ..schemas.worker_profile import WorkerProfileBase, WorkerProfileCreate, WorkerProfileDelete, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
 from .crud_users import crud_users
 
 
-class CRUDWorker(FastCRUD[
-                     WorkerProfile,
-                     WorkerProfileCreate,
-                     WorkerProfileUpdate,
-                     WorkerProfileUpdateInternal,
-                     WorkerProfileDelete,
-                     WorkerProfileRead
-                 ]):
-    async def create(
+class CRUDWorker(FastCRUD[WorkerProfile, WorkerProfileCreate, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileDelete, WorkerProfileNestedRead]):
+
+    async def create(  # type: ignore[override] # FastCRUD overloads can't be satisfied by a single implementation.
             self,
             db: AsyncSession,
             object: WorkerProfileCreate,
-            *,
             commit: bool = True,
-            schema_to_select: type[Any] | None = WorkerProfileRead,
-            return_as_model: bool = True,
-            **kwargs: Any,
-    ) -> Any:
-        if not await crud_users.exists(db=db, id=object.user_id):
+            schema_to_select: type[WorkerProfileNestedRead] | None = WorkerProfileNestedRead,
+            return_as_model: bool = True
+    ) -> WorkerProfileNestedRead:
+        user = await crud_users.get(db=db, id=object.user_id, schema_to_select=UserRead, return_as_model=True)
+
+        if user is None:
             raise NoResultFound("User does not exist.")
 
         if await self.exists(db=db, user_id=object.user_id):
-            raise DuplicateValueException(
-                "Each user can only have one worker profile."
-            )
+            raise DuplicateValueException("Each user can only have one worker profile.")
+
         db_object = WorkerProfile(**object.model_dump(mode="json"))
         db.add(db_object)
         if commit:
             await db.commit()
             await db.refresh(db_object)
-
-        if not return_as_model:
-            return db_object
-        return schema_to_select.model_validate(db_object) if schema_to_select else db_object
+        return WorkerProfileNestedRead(**WorkerProfileBase.model_validate(db_object).model_dump(), id=db_object.id, is_verified=db_object.is_verified, user=user)
 
     async def delete(
             self,
@@ -96,7 +87,7 @@ class CRUDWorker(FastCRUD[
         return await super().update(db=db, object=object, **kwargs)
 
 
-crud_workers = CRUDWorker(WorkerProfile)
+crud_worker_profiles = CRUDWorker(WorkerProfile)
 
 # from sqlalchemy.dialects.postgresql import insert  # or sqlite, depending on your DB
 #

@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -26,20 +27,17 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
 
 class UserRead(BaseModel):
     id: int
-
     name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
+    uuid: UUID
     profile_image_url: str
-    bio: str | None = None
     location: str | None = None
     role_type: UserRole = UserRole.CUSTOMER
-    tier_id: int | None
 
 
 class UserCreate(UserBase):
     model_config = ConfigDict(extra="forbid")
-
     password: Annotated[str, Field(pattern=r"^.{8,}|[0-9]+|[A-Z]+|[a-z]+|[^a-zA-Z0-9]+$", examples=["Str1ngst!"])]
 
 

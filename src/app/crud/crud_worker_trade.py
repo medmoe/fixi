@@ -23,14 +23,14 @@ from ..schemas.worker_trade import (
 
 class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate, WorkerTradeUpdateInternal, WorkerTradeDelete, WorkerTradeRead]):
     async def create(
-        self,
-        db: AsyncSession,
-        object: WorkerTradeCreate,
-        *,
-        commit: bool = True,
-        schema_to_select: type[Any] | None = None,
-        return_as_model: bool = False,
-        **kwargs: Any,
+            self,
+            db: AsyncSession,
+            object: WorkerTradeCreate,
+            *,
+            commit: bool = True,
+            schema_to_select: type[Any] | None = None,
+            return_as_model: bool = False,
+            **kwargs: Any,
     ) -> Any:
         worker = await db.get(WorkerProfile, object.worker_id)
         if worker is None:
@@ -51,17 +51,17 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         return db_obj
 
     async def update(
-        self,
-        db: AsyncSession,
-        object: WorkerTradeUpdate | dict[str, Any],
-        *,
-        allow_multiple: bool = False,
-        commit: bool = True,
-        return_columns: list[str] | None = None,
-        schema_to_select: type[Any] | None = None,
-        return_as_model: bool = False,
-        one_or_none: bool = False,
-        **kwargs: Any,
+            self,
+            db: AsyncSession,
+            object: WorkerTradeUpdate | dict[str, Any],
+            *,
+            allow_multiple: bool = False,
+            commit: bool = True,
+            return_columns: list[str] | None = None,
+            schema_to_select: type[Any] | None = None,
+            return_as_model: bool = False,
+            one_or_none: bool = False,
+            **kwargs: Any,
     ) -> Any:
         worker_trade_id = kwargs.get("id")
         if not isinstance(worker_trade_id, int):
@@ -74,13 +74,13 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         return await super().update(db=db, object=object, id=worker_trade_id)
 
     async def delete(
-        self,
-        db: AsyncSession,
-        db_row: Row[Any] | None = None,
-        allow_multiple: bool = False,
-        commit: bool = True,
-        filters: WorkerTradeDelete | None = None,
-        **kwargs: Any,
+            self,
+            db: AsyncSession,
+            db_row: Row[Any] | None = None,
+            allow_multiple: bool = False,
+            commit: bool = True,
+            filters: WorkerTradeDelete | None = None,
+            **kwargs: Any,
     ) -> None:
         id = kwargs.get("id")
         if not isinstance(id, int):
@@ -104,18 +104,18 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         )
         return list(result.scalars().all())
 
-    async def get_trades_for_worker(self, db: AsyncSession, worker_id: int) -> list[WorkerTrade]:
+    async def get_trades_for_worker_profile(self, db: AsyncSession, worker_profile_id: int) -> list[WorkerTrade]:
         """Get all trades assigned to a worker, with nested trade details."""
         return await self._get_worker_trades(
             db=db,
             filter_column=WorkerTrade.worker_id,
-            filter_value=worker_id,
+            filter_value=worker_profile_id,
             load_relationship=WorkerTrade.trade,
             entity_class=WorkerProfile,
             entity_name="Worker profile",
         )
 
-    async def get_workers_for_trade(self, db: AsyncSession, trade_id: int) -> list[WorkerTrade]:
+    async def get_worker_profiles_for_trade(self, db: AsyncSession, trade_id: int) -> list[WorkerTrade]:
         """Get all workers assigned to a trade, with nested worker details."""
         return await self._get_worker_trades(
             db=db,
@@ -127,4 +127,4 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         )
 
 
-crud_worker_trade = CRUDWorkerTrade(WorkerTrade)
+crud_worker_trades = CRUDWorkerTrade(WorkerTrade)

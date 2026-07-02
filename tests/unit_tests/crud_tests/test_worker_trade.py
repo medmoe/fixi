@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.exceptions.http_exceptions import DuplicateValueException
 from src.app.crud.crud_trade_category import crud_trade_category
-from src.app.crud.crud_worker_profile import crud_workers
-from src.app.crud.crud_worker_trade import crud_worker_trade
+from src.app.crud.crud_worker_profile import crud_worker_profiles
+from src.app.crud.crud_worker_trade import crud_worker_trades
 from src.app.models import User, TradeCategory, WorkerProfile, WorkerTrade, SkillLevel
 from src.app.schemas.trade_category import TradeCategoryCreate
 from src.app.schemas.worker_profile import WorkerProfileCreate
@@ -28,7 +28,7 @@ def create_schema(**overrides) -> WorkerTradeCreate:
 
 
 async def create_test_worker_trade(db: AsyncSession, worker_id: int, trade_id: int, skill_level: SkillLevel = SkillLevel.junior) -> WorkerTrade:
-    return await crud_worker_trade.create(
+    return await crud_worker_trades.create(
         db=db,
         object=create_schema(
             worker_id=worker_id,
@@ -160,8 +160,8 @@ class TestCreate:
         assert wt1.trade_id != wt2.trade_id
 
     async def test_same_trade_can_have_multiple_workers(self, async_session: AsyncSession, test_trade_category: TradeCategory, test_user: User, other_user: User):
-        worker1 = await crud_workers.create(db=async_session, object=worker_create_schema(user_id=test_user.id))
-        worker2 = await crud_workers.create(db=async_session, object=worker_create_schema(user_id=other_user.id))
+        worker1 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=test_user.id))
+        worker2 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=other_user.id))
         wt1 = await create_test_worker_trade(async_session, worker1.id, test_trade_category.id)
         wt2 = await create_test_worker_trade(async_session, worker2.id, test_trade_category.id)
         assert wt1.worker_id != wt2.worker_id
@@ -179,9 +179,9 @@ class TestRead:
             worker_id=test_worker_profile.id,
             trade_id=test_trade_category.id,
         )
-        result = await crud_worker_trade.get_trades_for_worker(
+        result = await crud_worker_trades.get_trades_for_worker_profile(
             db=async_session,
-            worker_id=test_worker_profile.id,
+            worker_profile_id=test_worker_profile.id,
         )
         assert len(result) == 1
         assert result[0].trade_id == test_trade_category.id
@@ -191,9 +191,9 @@ class TestRead:
             async_session: AsyncSession,
             test_worker_profile: WorkerProfile,
     ):
-        result = await crud_worker_trade.get_trades_for_worker(
+        result = await crud_worker_trades.get_trades_for_worker_profile(
             db=async_session,
-            worker_id=test_worker_profile.id,
+            worker_profile_id=test_worker_profile.id,
         )
         assert result == []
 
@@ -202,9 +202,9 @@ class TestRead:
             async_session: AsyncSession,
     ):
         with pytest.raises(NoResultFound):
-            await crud_worker_trade.get_trades_for_worker(
+            await crud_worker_trades.get_trades_for_worker_profile(
                 db=async_session,
-                worker_id=99999,
+                worker_profile_id=99999,
             )
 
     async def test_get_workers_for_trade(
@@ -218,7 +218,7 @@ class TestRead:
             worker_id=test_worker_profile.id,
             trade_id=test_trade_category.id,
         )
-        result = await crud_worker_trade.get_workers_for_trade(
+        result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
             trade_id=test_trade_category.id,
         )
@@ -230,7 +230,7 @@ class TestRead:
             async_session: AsyncSession,
             test_trade_category: TradeCategory,
     ):
-        result = await crud_worker_trade.get_workers_for_trade(
+        result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
             trade_id=test_trade_category.id,
         )
@@ -241,7 +241,7 @@ class TestRead:
             async_session: AsyncSession,
     ):
         with pytest.raises(NoResultFound):
-            await crud_worker_trade.get_workers_for_trade(
+            await crud_worker_trades.get_worker_profiles_for_trade(
                 db=async_session,
                 trade_id=99999,
             )
@@ -257,9 +257,9 @@ class TestRead:
             worker_id=test_worker_profile.id,
             trade_id=test_trade_category.id,
         )
-        result = await crud_worker_trade.get_trades_for_worker(
+        result = await crud_worker_trades.get_trades_for_worker_profile(
             db=async_session,
-            worker_id=test_worker_profile.id,
+            worker_profile_id=test_worker_profile.id,
         )
         assert result[0].trade is not None
         assert result[0].trade.id == test_trade_category.id
@@ -275,7 +275,7 @@ class TestRead:
             worker_id=test_worker_profile.id,
             trade_id=test_trade_category.id,
         )
-        result = await crud_worker_trade.get_workers_for_trade(
+        result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
             trade_id=test_trade_category.id,
         )
@@ -289,7 +289,7 @@ class TestUpdate:
             async_session: AsyncSession,
             test_worker_trade: WorkerTrade,
     ):
-        await crud_worker_trade.update(
+        await crud_worker_trades.update(
             db=async_session,
             object=WorkerTradeUpdate(skill_level=SkillLevel.senior),
             id=test_worker_trade.id,
@@ -303,7 +303,7 @@ class TestUpdate:
             test_worker_trade: WorkerTrade,
     ):
         for level in SkillLevel:
-            await crud_worker_trade.update(
+            await crud_worker_trades.update(
                 db=async_session,
                 object=WorkerTradeUpdate(skill_level=level),
                 id=test_worker_trade.id,
@@ -316,7 +316,7 @@ class TestUpdate:
             async_session: AsyncSession,
     ):
         with pytest.raises(NoResultFound):
-            await crud_worker_trade.update(
+            await crud_worker_trades.update(
                 db=async_session,
                 object=WorkerTradeUpdate(skill_level=SkillLevel.senior),
                 id=99999,
@@ -329,7 +329,7 @@ class TestDelete:
             async_session: AsyncSession,
             test_worker_trade: WorkerTrade,
     ):
-        await crud_worker_trade.delete(db=async_session, id=test_worker_trade.id)
+        await crud_worker_trades.delete(db=async_session, id=test_worker_trade.id)
         result = await async_session.get(WorkerTrade, test_worker_trade.id)
         assert result is None
 
@@ -338,7 +338,7 @@ class TestDelete:
             async_session: AsyncSession,
     ):
         with pytest.raises(NoResultFound):
-            await crud_worker_trade.delete(db=async_session, id=99999)
+            await crud_worker_trades.delete(db=async_session, id=99999)
 
     async def test_delete_does_not_cascade_to_worker(
             self,
@@ -346,7 +346,7 @@ class TestDelete:
             test_worker_profile: WorkerProfile,
             test_worker_trade: WorkerTrade,
     ):
-        await crud_worker_trade.delete(db=async_session, id=test_worker_trade.id)
+        await crud_worker_trades.delete(db=async_session, id=test_worker_trade.id)
         worker = await async_session.get(WorkerProfile, test_worker_profile.id)
         assert worker is not None
 
@@ -356,7 +356,7 @@ class TestDelete:
             test_trade_category: TradeCategory,
             test_worker_trade: WorkerTrade,
     ):
-        await crud_worker_trade.delete(db=async_session, id=test_worker_trade.id)
+        await crud_worker_trades.delete(db=async_session, id=test_worker_trade.id)
         trade = await async_session.get(TradeCategory, test_trade_category.id)
         assert trade is not None
 
@@ -378,7 +378,7 @@ class TestEdgeCases:
             test_worker_trade: WorkerTrade,
     ):
         """After deleting a worker trade, the same pair can be reassigned."""
-        await crud_worker_trade.delete(db=async_session, id=test_worker_trade.id)
+        await crud_worker_trades.delete(db=async_session, id=test_worker_trade.id)
         new_trade = await create_test_worker_trade(
             async_session,
             worker_id=test_worker_profile.id,

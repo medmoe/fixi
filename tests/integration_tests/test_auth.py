@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from src.app.crud.crud_worker_profile import crud_workers
+from src.app.crud.crud_worker_profile import crud_worker_profiles
 from src.app.models import CustomerProfile
 
 
@@ -140,7 +140,7 @@ class TestRegisterEndpoint:
         response = await async_client.post("/api/v1/auth/register", json=worker_payload())
         user_id = response.json()["id"]
 
-        profile = await crud_workers.get(async_session, user_id=user_id)
+        profile = await crud_worker_profiles.get(async_session, user_id=user_id)
         assert profile is not None
         assert profile["user_id"] == user_id
 
