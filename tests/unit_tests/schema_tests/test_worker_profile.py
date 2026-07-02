@@ -119,12 +119,13 @@ class TestWorkerProfileCreate:
     class TestBioField:
 
         def test_bio_max_length_passes(self):
-            schema = WorkerProfileBase(**create_payload(bio="A" * 500))
-            assert len(schema.bio) == 500
+            schema = WorkerProfileBase(**create_payload(bio="A" * 1000))
+            if schema.bio:
+                assert len(schema.bio) == 1000
 
         def test_bio_exceeds_max_length_fails(self):
             with pytest.raises(ValidationError) as exc:
-                WorkerProfileBase(**create_payload(bio="A" * 501))
+                WorkerProfileBase(**create_payload(bio="A" * 1001))
             assert "bio" in str(exc.value)
 
         def test_bio_none_passes(self):

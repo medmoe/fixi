@@ -1,16 +1,14 @@
 # src/app/crud/crud_worker_trade.py
-from typing import Any
+from typing import Any, cast
 
 from fastcrud import FastCRUD
 from sqlalchemy import select
 from sqlalchemy.engine import Row
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..core.exceptions.http_exceptions import DuplicateValueException
-from ..models.trade_category import TradeCategory
-from ..models.worker_profile import WorkerProfile
+from ..core.exceptions.http_exceptions import BadRequestException, DuplicateValueException, NotFoundException
+from ..models import SkillLevel, TradeCategory, WorkerProfile
 from ..models.worker_trade import WorkerTrade
 from ..schemas.worker_trade import (
     WorkerTradeCreate,
@@ -19,6 +17,8 @@ from ..schemas.worker_trade import (
     WorkerTradeUpdate,
     WorkerTradeUpdateInternal,
 )
+
+MAX_TRADES_PER_WORKER = 5
 
 
 class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate, WorkerTradeUpdateInternal, WorkerTradeDelete, WorkerTradeRead]):
@@ -32,19 +32,19 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             return_as_model: bool = False,
             **kwargs: Any,
     ) -> Any:
-        worker = await db.get(WorkerProfile, object.worker_id)
+        worker = await db.get(WorkerProfile, object.worker_profile_id)
         if worker is None:
-            raise NoResultFound(f"Worker profile with id {object.worker_id} does not exist.")
+            raise NotFoundException(f"Worker profile with id {object.worker_profile_id} does not exist.")
 
         trade = await db.get(TradeCategory, object.trade_id)
         if trade is None:
-            raise NoResultFound(f"Trade category with id {object.trade_id} does not exist.")
+            raise NotFoundException(f"Trade category with id {object.trade_id} does not exist.")
 
-        existing = await self.exists(db=db, worker_id=object.worker_id, trade_id=object.trade_id)
+        existing = await self.exists(db=db, worker_profile_id=object.worker_profile_id, trade_id=object.trade_id)
         if existing:
-            raise DuplicateValueException(f"Worker {object.worker_id} is already assigned to trade {object.trade_id}.")
+            raise DuplicateValueException(f"Worker {object.worker_profile_id} is already assigned to trade {object.trade_id}.")
 
-        db_obj = WorkerTrade(worker_id=object.worker_id, trade_id=object.trade_id, skill_level=object.skill_level, worker=worker, trade=trade)
+        db_obj = WorkerTrade(worker_profile_id=object.worker_profile_id, trade_id=object.trade_id, skill_level=object.skill_level, worker=worker, trade=trade)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -69,7 +69,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
 
         worker_trade = await db.get(WorkerTrade, worker_trade_id)
         if worker_trade is None:
-            raise NoResultFound(f"WorkerTrade with id {worker_trade_id} does not exist.")
+            raise NotFoundException(f"WorkerTrade with id {worker_trade_id} does not exist.")
 
         return await super().update(db=db, object=object, id=worker_trade_id)
 
@@ -87,7 +87,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             raise ValueError("id must be provided as a keyword argument.")
         worker_trade = await db.get(WorkerTrade, id)
         if worker_trade is None:
-            raise NoResultFound(f"WorkerTrade with id {id} does not exist.")
+            raise NotFoundException(f"WorkerTrade with id {id} does not exist.")
         await db.delete(worker_trade)
         await db.commit()
 
@@ -95,7 +95,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         """Private helper — validates entity exists then fetches related worker trades."""
         entity = await db.get(entity_class, filter_value)
         if entity is None:
-            raise NoResultFound(f"{entity_name} with id {filter_value} does not exist.")
+            raise NotFoundException(f"{entity_name} with id {filter_value} does not exist.")
 
         result = await db.execute(
             select(WorkerTrade)
@@ -108,7 +108,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         """Get all trades assigned to a worker, with nested trade details."""
         return await self._get_worker_trades(
             db=db,
-            filter_column=WorkerTrade.worker_id,
+            filter_column=WorkerTrade.worker_profile_id,
             filter_value=worker_profile_id,
             load_relationship=WorkerTrade.trade,
             entity_class=WorkerProfile,
@@ -125,6 +125,61 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             entity_class=TradeCategory,
             entity_name="Trade category",
         )
+
+    async def assign_trade(self, db: AsyncSession, worker_profile_id: int, trade_id: int, skill_level: SkillLevel = SkillLevel.junior) -> list[WorkerTrade]:
+        """ Assign a trade to a worker — enforces max 5 trades and no duplicates. """
+        # verify worker profile exists
+        worker_profile = cast(WorkerProfile | None, await db.get(WorkerProfile, worker_profile_id))
+        if worker_profile is None:
+            raise NotFoundException(f"Worker profile with ID {worker_profile_id} not found.")
+
+        # verify trade exists
+        trade = cast(TradeCategory | None, await db.get(TradeCategory, trade_id))
+        if trade is None:
+            raise NotFoundException(f"Trade category with ID {trade_id} not found.")
+
+        # check duplicates
+        already_assigned = await self.exists(db=db, worker_profile_id=worker_profile_id, trade_id=trade_id)
+        if already_assigned:
+            raise DuplicateValueException(f"Trade {trade_id} is already assigned to worker {worker_profile_id}.")
+
+        # enforce max 5 trades
+        current_trades = await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
+        if len(current_trades) >= MAX_TRADES_PER_WORKER:
+            raise BadRequestException(f"Worker {worker_profile_id} already has {MAX_TRADES_PER_WORKER} trades assigned.")
+
+        # create the assignment
+        db_obj = WorkerTrade(
+            worker_profile_id=worker_profile_id,
+            trade_id=trade_id,
+            worker=worker_profile,
+            trade=trade,
+            skill_level=skill_level
+        )
+        db.add(db_obj)
+        await db.commit()
+
+        # return full updated trades list
+        return await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
+
+    async def remove_trade(self, db: AsyncSession, worker_profile_id: int, trade_id: int) -> list[WorkerTrade]:
+        """ Remove a trade assignment from a worker """
+        # verify worker exists
+        worker_profile = await db.get(WorkerProfile, worker_profile_id)
+        if worker_profile is None:
+            raise NotFoundException(f"Worker profile with ID {worker_profile_id} not found.")
+
+        # find the assignment
+        result = await db.execute(select(WorkerTrade).where(WorkerTrade.worker_profile_id == worker_profile_id, WorkerTrade.trade_id == trade_id))
+        worker_trade = result.scalar_one_or_none()
+        if worker_trade is None:
+            raise NotFoundException(f"Trade {trade_id} is not assigned to worker {worker_profile_id}.")
+
+        await db.delete(worker_trade)
+        await db.commit()
+
+        # return full updated trades list
+        return await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
 
 
 crud_worker_trades = CRUDWorkerTrade(WorkerTrade)

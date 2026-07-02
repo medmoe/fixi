@@ -179,7 +179,7 @@ class TestGetWorkerProfile:
 
     async def test_trades_nested_with_trade_details(self, async_client: AsyncClient, async_session: AsyncSession, worker_profile: WorkerProfile, test_trade_category: TradeCategory, ):
         # assign a trade to the worker
-        await crud_worker_trades.create(db=async_session, object=WorkerTradeCreate(worker_id=worker_profile.id, trade_id=test_trade_category.id, skill_level=SkillLevel.mid, ))
+        await crud_worker_trades.create(db=async_session, object=WorkerTradeCreate(worker_profile_id=worker_profile.id, trade_id=test_trade_category.id, skill_level=SkillLevel.mid, ))
 
         response = await async_client.get(f"/api/v1/worker-profiles/{worker_profile.id}")
         assert response.status_code == 200

@@ -13,6 +13,7 @@ from ...crud.crud_worker_trade import crud_worker_trades
 from ...models import User, WorkerProfile
 from ...schemas.user import UserRead
 from ...schemas.worker_profile import WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileWithTradesRead, WorkerTradeNestedRead
+from ...schemas.worker_trade import WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["workers"], prefix="/worker-profiles")
@@ -21,7 +22,7 @@ router = APIRouter(tags=["workers"], prefix="/worker-profiles")
 # ————— Private helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 async def _get_worker_profile_or_404(db: AsyncSession, worker_profile_id: int) -> WorkerProfileNestedRead:
-    worker_profile = await crud_worker_profiles.get_joined(db=db, id=worker_profile_id, join_model=User, join_on=WorkerProfile.user_id == User.id, nest_joins=True, schema_to_select=WorkerProfileNestedRead, join_schema_to_select=UserRead, return_as_model=True) # type: ignore[call-overload]
+    worker_profile = await crud_worker_profiles.get_joined(db=db, id=worker_profile_id, join_model=User, join_on=WorkerProfile.user_id == User.id, nest_joins=True, schema_to_select=WorkerProfileNestedRead, join_schema_to_select=UserRead, return_as_model=True)  # type: ignore[call-overload]
     if worker_profile is None:
         raise NotFoundException("Worker profile not found")
     return cast(WorkerProfileNestedRead, worker_profile)
@@ -78,7 +79,7 @@ async def update_worker_profile(
     return await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
 
 
-# ————— POST /workers/{worker_profile_id}/avatar ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— POST /worker-profiles/{worker_profile_id}/avatar ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 @router.post("/{worker_profile_id}/avatar", response_model=dict)
 async def upload_worker_avatar(
@@ -111,3 +112,37 @@ async def upload_worker_avatar(
     # update the profile
     await crud_worker_profiles.update(db=db, object=WorkerProfileUpdate(avatar_url=avatar_url), user_id=worker_profile.user.id, id=worker_profile.id)
     return {"avatar_url": avatar_url}
+
+
+# ————— POST /worker-profiles/{worker_profile_id}/trades ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+@router.post("/{worker_profile_id}/trades", response_model=list[WorkerTradeNestedRead])
+async def assign_trade_to_worker(
+        worker_profile_id: int,
+        body: WorkerTradeAssignmentRequest,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)]
+) -> list[WorkerTradeNestedRead]:
+    """ Assign a trade to a worker profile — owner only."""
+    worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
+    _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
+
+    updated_trades = await crud_worker_trades.assign_trade(db=db, worker_profile_id=worker_profile_id, trade_id=body.trade_id, skill_level=body.skill_level)
+    return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
+
+
+# ————— DELETE /worker-profiles/{worker_profile_id}/trades/{trade_id} ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+@router.delete("/{worker_profile_id}/trades/{trade_id}", response_model=list[WorkerTradeNestedRead])
+async def remove_trade_from_worker(
+        worker_profile_id: int,
+        trade_id: int,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)]
+) -> list[WorkerTradeNestedRead]:
+    """ Remove a trade from a worker profile — owner only."""
+    worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
+    _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
+
+    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile_id, trade_id=trade_id)
+    return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]

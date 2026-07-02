@@ -343,7 +343,7 @@ class TestWorkerProfileDelete:
         async def test_delete_profile_removes_worker_trades(self, async_session: AsyncSession, test_worker_profile):
             """Deleting a profile should cascade to worker_trades rows."""
             # setup: add a worker trade first
-            # trade = WorkerTrade(worker_id=test_worker_profile.id, trade_id=1)
+            # trade = WorkerTrade(worker_profile_id=test_worker_profile.id, trade_id=1)
             # async_session.add(trade)
             # await async_session.commit()
             #
