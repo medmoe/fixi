@@ -25,10 +25,10 @@ class WorkerProfile(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(255), default=None)
     is_available: Mapped[bool] = mapped_column(default=True)
     available_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    is_verified: Mapped[bool] = mapped_column(default=False)
 
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
     # portfolio_image_urls: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
 
     # Trust & ratings
-    is_verified: Mapped[bool] = mapped_column(default=False)
