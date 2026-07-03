@@ -99,9 +99,9 @@ class WorkerTradeNestedRead(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
     id: int
     worker_profile_id: int
-    trade_id: int
+    trade_category_id: int
     skill_level: str
-    trade: TradeCategoryRead | None = None
+    trade_category: TradeCategoryRead | None = None
 
 
 class WorkerProfileWithTradesRead(WorkerProfileNestedRead):

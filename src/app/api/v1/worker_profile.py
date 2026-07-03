@@ -131,7 +131,7 @@ async def assign_trade_to_worker(
     worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
     _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
 
-    updated_trades = await crud_worker_trades.assign_trade(db=db, worker_profile_id=worker_profile_id, trade_id=body.trade_category_id, skill_level=body.skill_level)
+    updated_trades = await crud_worker_trades.assign_trade(db=db, worker_profile_id=worker_profile_id, trade_category_id=body.trade_category_id, skill_level=body.skill_level)
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
 
 
@@ -148,5 +148,5 @@ async def remove_trade_from_worker(
     worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
     _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
 
-    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile_id, trade_id=trade_id)
+    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile_id, trade_category_id=trade_id)
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]

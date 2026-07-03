@@ -219,7 +219,7 @@ class TestRead:
         )
         result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert len(result) == 1
         assert result[0].worker_profile_id == test_worker_profile.id
@@ -231,7 +231,7 @@ class TestRead:
     ):
         result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert result == []
 
@@ -242,7 +242,7 @@ class TestRead:
         with pytest.raises(NotFoundException):
             await crud_worker_trades.get_worker_profiles_for_trade(
                 db=async_session,
-                trade_id=99999,
+                trade_category_id=99999,
             )
 
     async def test_get_trades_for_worker_loads_nested_trade(
@@ -276,7 +276,7 @@ class TestRead:
         )
         result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert result[0].worker_profile is not None
         assert result[0].worker_profile.id == test_worker_profile.id

@@ -40,7 +40,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         if trade is None:
             raise NotFoundException(f"Trade category with id {object.trade_category_id} does not exist.")
 
-        existing = await self.exists(db=db, worker_profile_id=object.worker_profile_id, trade_id=object.trade_category_id)
+        existing = await self.exists(db=db, worker_profile_id=object.worker_profile_id, trade_category_id=object.trade_category_id)
         if existing:
             raise DuplicateValueException(f"Worker {object.worker_profile_id} is already assigned to trade {object.trade_category_id}.")
 
@@ -115,18 +115,18 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             entity_name="Worker profile",
         )
 
-    async def get_worker_profiles_for_trade(self, db: AsyncSession, trade_id: int) -> list[WorkerTrade]:
+    async def get_worker_profiles_for_trade(self, db: AsyncSession, trade_category_id: int) -> list[WorkerTrade]:
         """Get all workers assigned to a trade, with nested worker details."""
         return await self._get_worker_trades(
             db=db,
             filter_column=WorkerTrade.trade_category_id,
-            filter_value=trade_id,
+            filter_value=trade_category_id,
             load_relationship=WorkerTrade.worker_profile,
             entity_class=TradeCategory,
             entity_name="Trade category",
         )
 
-    async def assign_trade(self, db: AsyncSession, worker_profile_id: int, trade_id: int, skill_level: SkillLevel = SkillLevel.junior) -> list[WorkerTrade]:
+    async def assign_trade(self, db: AsyncSession, worker_profile_id: int, trade_category_id: int, skill_level: SkillLevel = SkillLevel.junior) -> list[WorkerTrade]:
         """ Assign a trade to a worker — enforces max 5 trades and no duplicates. """
         # verify worker profile exists
         worker_profile = cast(WorkerProfile | None, await db.get(WorkerProfile, worker_profile_id))
@@ -134,14 +134,14 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             raise NotFoundException(f"Worker profile with ID {worker_profile_id} not found.")
 
         # verify trade exists
-        trade = cast(TradeCategory | None, await db.get(TradeCategory, trade_id))
+        trade = cast(TradeCategory | None, await db.get(TradeCategory, trade_category_id))
         if trade is None:
-            raise NotFoundException(f"Trade category with ID {trade_id} not found.")
+            raise NotFoundException(f"Trade category with ID {trade_category_id} not found.")
 
         # check duplicates
-        already_assigned = await self.exists(db=db, worker_profile_id=worker_profile_id, trade_id=trade_id)
+        already_assigned = await self.exists(db=db, worker_profile_id=worker_profile_id, trade_category_id=trade_category_id)
         if already_assigned:
-            raise DuplicateValueException(f"Trade {trade_id} is already assigned to worker {worker_profile_id}.")
+            raise DuplicateValueException(f"Trade {trade_category_id} is already assigned to worker {worker_profile_id}.")
 
         # enforce max 5 trades
         current_trades = await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
@@ -151,7 +151,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         # create the assignment
         db_obj = WorkerTrade(
             worker_profile_id=worker_profile_id,
-            trade_category_id=trade_id,
+            trade_category_id=trade_category_id,
             worker_profile=worker_profile,
             trade_category=trade,
             skill_level=skill_level
@@ -162,7 +162,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         # return full updated trades list
         return await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
 
-    async def remove_trade(self, db: AsyncSession, worker_profile_id: int, trade_id: int) -> list[WorkerTrade]:
+    async def remove_trade(self, db: AsyncSession, worker_profile_id: int, trade_category_id: int) -> list[WorkerTrade]:
         """ Remove a trade assignment from a worker """
         # verify worker exists
         worker_profile = await db.get(WorkerProfile, worker_profile_id)
@@ -170,10 +170,10 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             raise NotFoundException(f"Worker profile with ID {worker_profile_id} not found.")
 
         # find the assignment
-        result = await db.execute(select(WorkerTrade).where(WorkerTrade.worker_profile_id == worker_profile_id, WorkerTrade.trade_category_id == trade_id))
+        result = await db.execute(select(WorkerTrade).where(WorkerTrade.worker_profile_id == worker_profile_id, WorkerTrade.trade_category_id == trade_category_id))
         worker_trade = result.scalar_one_or_none()
         if worker_trade is None:
-            raise NotFoundException(f"Trade {trade_id} is not assigned to worker {worker_profile_id}.")
+            raise NotFoundException(f"Trade {trade_category_id} is not assigned to worker {worker_profile_id}.")
 
         await db.delete(worker_trade)
         await db.commit()

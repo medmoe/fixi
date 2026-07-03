@@ -48,7 +48,7 @@ async def assigned_trade(
     trades = await crud_worker_trades.assign_trade(
         db=async_session,
         worker_profile_id=worker_profile.id,
-        trade_id=trade.id,
+        trade_category_id=trade.id,
     )
     return trades[0]
 
@@ -65,7 +65,7 @@ class TestAssignTrade:
         result = await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         assert isinstance(result, list)
         assert len(result) == 1
@@ -80,7 +80,7 @@ class TestAssignTrade:
         result = await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         assert result[0].skill_level == SkillLevel.junior
 
@@ -93,7 +93,7 @@ class TestAssignTrade:
         result = await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
             skill_level=SkillLevel.senior,
         )
         assert result[0].skill_level == SkillLevel.senior
@@ -109,7 +109,7 @@ class TestAssignTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=trade.id,
+                trade_category_id=trade.id,
             )
 
     async def test_assign_trade_fails_nonexistent_worker(
@@ -121,7 +121,7 @@ class TestAssignTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=99999,
-                trade_id=trade.id,
+                trade_category_id=trade.id,
             )
 
     async def test_assign_trade_fails_nonexistent_trade(
@@ -133,7 +133,7 @@ class TestAssignTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=99999,
+                trade_category_id=99999,
             )
 
     async def test_assign_trade_enforces_max_limit(
@@ -152,7 +152,7 @@ class TestAssignTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=trade.id,
+                trade_category_id=trade.id,
             )
 
         # one more should fail
@@ -165,7 +165,7 @@ class TestAssignTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=extra_trade.id,
+                trade_category_id=extra_trade.id,
             )
 
     async def test_assign_trade_at_limit_exactly_5(
@@ -183,7 +183,7 @@ class TestAssignTrade:
             result = await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=trade.id,
+                trade_category_id=trade.id,
             )
         assert len(result) == MAX_TRADES_PER_WORKER  # ✅ exactly 5
 
@@ -201,7 +201,7 @@ class TestRemoveTrade:
         result = await crud_worker_trades.remove_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         assert isinstance(result, list)
         assert len(result) == 0  # trade was removed
@@ -222,14 +222,14 @@ class TestRemoveTrade:
         await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=second_trade.id,
+            trade_category_id=second_trade.id,
         )
 
         # remove only the first trade
         result = await crud_worker_trades.remove_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         assert len(result) == 1  # second trade still there
         assert result[0].trade_category_id == second_trade.id  # correct trade remains
@@ -245,7 +245,7 @@ class TestRemoveTrade:
             await crud_worker_trades.remove_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=trade.id,  # never assigned
+                trade_category_id=trade.id,  # never assigned
             )
 
     async def test_remove_trade_fails_nonexistent_worker(
@@ -257,7 +257,7 @@ class TestRemoveTrade:
             await crud_worker_trades.remove_trade(
                 db=async_session,
                 worker_profile_id=99999,
-                trade_id=trade.id,
+                trade_category_id=trade.id,
             )
 
     async def test_remove_trade_allows_reassignment(
@@ -271,12 +271,12 @@ class TestRemoveTrade:
         await crud_worker_trades.remove_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         result = await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trade.id,
+            trade_category_id=trade.id,
         )
         assert len(result) == 1
         assert result[0].trade_category_id == trade.id
@@ -298,14 +298,14 @@ class TestRemoveTrade:
             await crud_worker_trades.assign_trade(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
-                trade_id=t.id,
+                trade_category_id=t.id,
             )
 
         # remove one
         await crud_worker_trades.remove_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=trades[0].id,
+            trade_category_id=trades[0].id,
         )
 
         # now can add a new one
@@ -317,6 +317,6 @@ class TestRemoveTrade:
         result = await crud_worker_trades.assign_trade(
             db=async_session,
             worker_profile_id=worker_profile.id,
-            trade_id=new_trade.id,
+            trade_category_id=new_trade.id,
         )
         assert len(result) == MAX_TRADES_PER_WORKER  # back to 5 ✅

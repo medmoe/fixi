@@ -185,9 +185,9 @@ class TestGetWorkerProfile:
         assert response.status_code == 200
         data = response.json()
         assert len(data["trades"]) == 1
-        assert data["trades"][0]["trade_id"] == test_trade_category.id
-        assert data["trades"][0]["trade"] is not None
-        assert data["trades"][0]["trade"]["name"] == test_trade_category.name
+        assert data["trades"][0]["trade_category_id"] == test_trade_category.id
+        assert data["trades"][0]["trade_category"] is not None
+        assert data["trades"][0]["trade_category"]["name"] == test_trade_category.name
 
 
 # ─── TestUpdateWorkerProfile ──────────────────────────────────────────────────
