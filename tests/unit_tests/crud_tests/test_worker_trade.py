@@ -92,7 +92,7 @@ class TestCreate:
             skill_level=SkillLevel.senior,
         )
         assert worker_trade.worker_profile_id == test_worker_profile.id
-        assert worker_trade.trade_id == test_trade_category.id
+        assert worker_trade.trade_category_id == test_trade_category.id
         assert worker_trade.skill_level == SkillLevel.senior
 
     async def test_create_default_skill_level_is_junior(
@@ -156,7 +156,7 @@ class TestCreate:
         trade2 = await crud_trade_category.create(db=async_session, object=TradeCategoryCreate(name="electrical", display_name="Electrical"))
         wt1 = await create_test_worker_trade(async_session, test_worker_profile.id, trade1.id)
         wt2 = await create_test_worker_trade(async_session, test_worker_profile.id, trade2.id)
-        assert wt1.trade_id != wt2.trade_id
+        assert wt1.trade_category_id != wt2.trade_category_id
 
     async def test_same_trade_can_have_multiple_workers(self, async_session: AsyncSession, test_trade_category: TradeCategory, test_user: User, other_user: User):
         worker1 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=test_user.id))
@@ -183,7 +183,7 @@ class TestRead:
             worker_profile_id=test_worker_profile.id,
         )
         assert len(result) == 1
-        assert result[0].trade_id == test_trade_category.id
+        assert result[0].trade_category_id == test_trade_category.id
 
     async def test_get_trades_for_worker_returns_empty_when_none(
             self,
@@ -260,8 +260,8 @@ class TestRead:
             db=async_session,
             worker_profile_id=test_worker_profile.id,
         )
-        assert result[0].trade is not None
-        assert result[0].trade.id == test_trade_category.id
+        assert result[0].trade_category is not None
+        assert result[0].trade_category.id == test_trade_category.id
 
     async def test_get_workers_for_trade_loads_nested_worker(
             self,
@@ -278,8 +278,8 @@ class TestRead:
             db=async_session,
             trade_id=test_trade_category.id,
         )
-        assert result[0].worker is not None
-        assert result[0].worker.id == test_worker_profile.id
+        assert result[0].worker_profile is not None
+        assert result[0].worker_profile.id == test_worker_profile.id
 
 
 class TestUpdate:
@@ -385,4 +385,4 @@ class TestEdgeCases:
         )
         assert new_trade.id is not None
         assert new_trade.worker_profile_id == test_worker_profile.id
-        assert new_trade.trade_id == test_trade_category.id
+        assert new_trade.trade_category_id == test_trade_category.id

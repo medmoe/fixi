@@ -36,15 +36,15 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         if worker is None:
             raise NotFoundException(f"Worker profile with id {object.worker_profile_id} does not exist.")
 
-        trade = await db.get(TradeCategory, object.trade_id)
+        trade = await db.get(TradeCategory, object.trade_category_id)
         if trade is None:
-            raise NotFoundException(f"Trade category with id {object.trade_id} does not exist.")
+            raise NotFoundException(f"Trade category with id {object.trade_category_id} does not exist.")
 
-        existing = await self.exists(db=db, worker_profile_id=object.worker_profile_id, trade_id=object.trade_id)
+        existing = await self.exists(db=db, worker_profile_id=object.worker_profile_id, trade_id=object.trade_category_id)
         if existing:
-            raise DuplicateValueException(f"Worker {object.worker_profile_id} is already assigned to trade {object.trade_id}.")
+            raise DuplicateValueException(f"Worker {object.worker_profile_id} is already assigned to trade {object.trade_category_id}.")
 
-        db_obj = WorkerTrade(worker_profile_id=object.worker_profile_id, trade_id=object.trade_id, skill_level=object.skill_level, worker=worker, trade=trade)
+        db_obj = WorkerTrade(worker_profile_id=object.worker_profile_id, trade_category_id=object.trade_category_id, skill_level=object.skill_level, worker_profile=worker, trade_category=trade)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -110,7 +110,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             db=db,
             filter_column=WorkerTrade.worker_profile_id,
             filter_value=worker_profile_id,
-            load_relationship=WorkerTrade.trade,
+            load_relationship=WorkerTrade.trade_category,
             entity_class=WorkerProfile,
             entity_name="Worker profile",
         )
@@ -119,9 +119,9 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         """Get all workers assigned to a trade, with nested worker details."""
         return await self._get_worker_trades(
             db=db,
-            filter_column=WorkerTrade.trade_id,
+            filter_column=WorkerTrade.trade_category_id,
             filter_value=trade_id,
-            load_relationship=WorkerTrade.worker,
+            load_relationship=WorkerTrade.worker_profile,
             entity_class=TradeCategory,
             entity_name="Trade category",
         )
@@ -151,9 +151,9 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         # create the assignment
         db_obj = WorkerTrade(
             worker_profile_id=worker_profile_id,
-            trade_id=trade_id,
-            worker=worker_profile,
-            trade=trade,
+            trade_category_id=trade_id,
+            worker_profile=worker_profile,
+            trade_category=trade,
             skill_level=skill_level
         )
         db.add(db_obj)
@@ -170,7 +170,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             raise NotFoundException(f"Worker profile with ID {worker_profile_id} not found.")
 
         # find the assignment
-        result = await db.execute(select(WorkerTrade).where(WorkerTrade.worker_profile_id == worker_profile_id, WorkerTrade.trade_id == trade_id))
+        result = await db.execute(select(WorkerTrade).where(WorkerTrade.worker_profile_id == worker_profile_id, WorkerTrade.trade_category_id == trade_id))
         worker_trade = result.scalar_one_or_none()
         if worker_trade is None:
             raise NotFoundException(f"Trade {trade_id} is not assigned to worker {worker_profile_id}.")

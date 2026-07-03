@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
@@ -64,8 +65,9 @@ class WorkerProfileUpdate(BaseModel):
 
 
 class WorkerProfileUpdateInternal(WorkerProfileBase):
-    """Used internally by admin -- can set is_verified"""
-    is_verified: Annotated[bool, Field(default=False)]
+    """Used internally by admin -- can set is_verified and available_since """
+    is_verified: Annotated[bool, Field(default=False)] = None
+    available_since: Annotated[datetime | None, Field(default=None)] = None
 
 
 class WorkerProfileDelete(BaseModel):
@@ -105,3 +107,16 @@ class WorkerTradeNestedRead(BaseModel):
 class WorkerProfileWithTradesRead(WorkerProfileNestedRead):
     """Profile response with embedded trades list."""
     trades: list[WorkerTradeNestedRead] = []
+
+
+class AvailabilityToggleRequest(BaseModel):
+    """ PATCH body for toggling availability """
+    model_config = ConfigDict(extra="forbid")
+    is_available: bool
+
+
+class AvailabilityToggleResponse(BaseModel):
+    """ Response after toggling availability """
+    model_config = ConfigDict(from_attributes=True)
+    is_available: bool
+    available_since: datetime | None = None

@@ -16,7 +16,7 @@ class WorkerTradeBase(BaseModel):
 class WorkerTradeCreate(WorkerTradeBase):
     """Used to assign a trade to a worker."""
     worker_profile_id: Annotated[int, Field(gt=0)]
-    trade_id: Annotated[int, Field(gt=0)]
+    trade_category_id: Annotated[int, Field(gt=0)]
 
 
 class WorkerTradeUpdate(BaseModel):
@@ -43,14 +43,14 @@ class WorkerTradeRead(BaseModel):
     )
     id: int
     worker_profile_id: int
-    trade_id: int
+    trade_category_id: int
     skill_level: str  # ✅ string after use_enum_values
-    worker: WorkerProfileRead | None = None
-    trade: TradeCategoryRead | None = None
+    worker_profile: WorkerProfileRead | None = None
+    trade_category: TradeCategoryRead | None = None
 
 
 class WorkerTradeAssignmentRequest(BaseModel):
     """ POST body for assigning a trade to a worker."""
     model_config = ConfigDict(extra="forbid")
-    trade_id: Annotated[int, Field(gt=0)]
+    trade_category_id: Annotated[int, Field(gt=0)]
     skill_level: Annotated[SkillLevel, Field(default=SkillLevel.junior)]

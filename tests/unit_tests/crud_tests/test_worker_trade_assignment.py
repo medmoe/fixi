@@ -69,7 +69,7 @@ class TestAssignTrade:
         )
         assert isinstance(result, list)
         assert len(result) == 1
-        assert result[0].trade_id == trade.id
+        assert result[0].trade_category_id == trade.id
 
     async def test_assign_trade_default_skill_level_is_junior(
             self,
@@ -232,7 +232,7 @@ class TestRemoveTrade:
             trade_id=trade.id,
         )
         assert len(result) == 1  # second trade still there
-        assert result[0].trade_id == second_trade.id  # correct trade remains
+        assert result[0].trade_category_id == second_trade.id  # correct trade remains
 
     async def test_remove_trade_fails_not_assigned(
             self,
@@ -279,7 +279,7 @@ class TestRemoveTrade:
             trade_id=trade.id,
         )
         assert len(result) == 1
-        assert result[0].trade_id == trade.id
+        assert result[0].trade_category_id == trade.id
 
     async def test_remove_trade_below_limit_allows_new_assignment(
             self,
