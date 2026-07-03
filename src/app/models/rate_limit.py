@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db.database import Base
-from ..core.db.models import TimestampMixin, SoftDeleteMixin
+from ..core.db.models import SoftDeleteMixin, TimestampMixin
 
 
 class RateLimit(Base, TimestampMixin, SoftDeleteMixin):

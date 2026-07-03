@@ -20,7 +20,7 @@ class TestWorkerTradeSchemas:
             with pytest.raises(Exception):
                 WorkerTradeCreate(worker_profile_id=0, trade_category_id=1)
 
-        def test_trade_id_must_be_positive(self):
+        def test_trade_category_id_must_be_positive(self):
             with pytest.raises(Exception):
                 WorkerTradeCreate(worker_profile_id=1, trade_category_id=0)
 
@@ -61,7 +61,7 @@ class TestWorkerTradeSchemas:
             class FakeORM:
                 id = 1
                 worker_profile_id = 1
-                trade_id = 2
+                trade_category_id = 2
                 skill_level = SkillLevel.mid
                 worker = None
                 trade = None

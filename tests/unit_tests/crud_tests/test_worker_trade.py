@@ -20,18 +20,18 @@ from src.app.schemas.worker_trade import WorkerTradeCreate, WorkerTradeUpdate, W
 def create_schema(**overrides) -> WorkerTradeCreate:
     defaults = {
         "worker_profile_id": 1,  # overridden in tests with real ids
-        "trade_id": 1,
+        "trade_category_id": 1,
         "skill_level": SkillLevel.junior,
     }
     return WorkerTradeCreate.model_validate({**defaults, **overrides})
 
 
-async def create_test_worker_trade(db: AsyncSession, worker_profile_id: int, trade_id: int, skill_level: SkillLevel = SkillLevel.junior) -> WorkerTrade:
+async def create_test_worker_trade(db: AsyncSession, worker_profile_id: int, trade_category_id: int, skill_level: SkillLevel = SkillLevel.junior) -> WorkerTrade:
     return await crud_worker_trades.create(
         db=db,
         object=create_schema(
             worker_profile_id=worker_profile_id,
-            trade_id=trade_id,
+            trade_category_id=trade_category_id,
             skill_level=skill_level,
         ),
         schema_to_select=WorkerTradeRead,
@@ -59,7 +59,7 @@ async def test_worker_trade(async_session: AsyncSession, test_worker_profile: Wo
     return await create_test_worker_trade(
         async_session,
         worker_profile_id=test_worker_profile.id,
-        trade_id=test_trade_category.id,
+        trade_category_id=test_trade_category.id,
     )
 
 
@@ -75,7 +75,7 @@ class TestCreate:
         worker_trade = await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert isinstance(worker_trade, WorkerTrade)
 
@@ -88,7 +88,7 @@ class TestCreate:
         worker_trade = await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
             skill_level=SkillLevel.senior,
         )
         assert worker_trade.worker_profile_id == test_worker_profile.id
@@ -104,7 +104,7 @@ class TestCreate:
         worker_trade = await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert worker_trade.skill_level == SkillLevel.junior
 
@@ -117,7 +117,7 @@ class TestCreate:
         worker_trade = await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert worker_trade.id is not None
         assert isinstance(worker_trade.id, int)
@@ -131,7 +131,7 @@ class TestCreate:
             await create_test_worker_trade(
                 async_session,
                 worker_profile_id=99999,
-                trade_id=test_trade_category.id,
+                trade_category_id=test_trade_category.id,
             )
 
     async def test_create_fails_nonexistent_trade(
@@ -143,13 +143,13 @@ class TestCreate:
             await create_test_worker_trade(
                 async_session,
                 worker_profile_id=test_worker_profile.id,
-                trade_id=99999,
+                trade_category_id=99999,
             )
 
     async def test_create_fails_duplicate_worker_trade(self, async_session: AsyncSession, test_worker_profile: WorkerProfile, test_trade_category: TradeCategory):
-        await create_test_worker_trade(async_session, worker_profile_id=test_worker_profile.id, trade_id=test_trade_category.id)
+        await create_test_worker_trade(async_session, worker_profile_id=test_worker_profile.id, trade_category_id=test_trade_category.id)
         with pytest.raises(DuplicateValueException, match="already assigned"):
-            await create_test_worker_trade(async_session, worker_profile_id=test_worker_profile.id, trade_id=test_trade_category.id)
+            await create_test_worker_trade(async_session, worker_profile_id=test_worker_profile.id, trade_category_id=test_trade_category.id)
 
     async def test_same_worker_can_have_multiple_trades(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
         trade1 = await crud_trade_category.create(db=async_session, object=TradeCategoryCreate(name="plumbing", display_name="Plumbing"))
@@ -176,7 +176,7 @@ class TestRead:
         await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         result = await crud_worker_trades.get_trades_for_worker_profile(
             db=async_session,
@@ -215,7 +215,7 @@ class TestRead:
         await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
@@ -254,7 +254,7 @@ class TestRead:
         await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         result = await crud_worker_trades.get_trades_for_worker_profile(
             db=async_session,
@@ -272,7 +272,7 @@ class TestRead:
         await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         result = await crud_worker_trades.get_worker_profiles_for_trade(
             db=async_session,
@@ -361,7 +361,7 @@ class TestDelete:
 
 
 class TestEdgeCases:
-    @pytest.mark.parametrize("parent_model, parent_attr", [(WorkerProfile, "worker_profile_id"), (TradeCategory, "trade_id"), ])
+    @pytest.mark.parametrize("parent_model, parent_attr", [(WorkerProfile, "worker_profile_id"), (TradeCategory, "trade_category_id"), ])
     async def test_worker_trade_cascade_delete(self, async_session: AsyncSession, test_worker_trade: WorkerTrade, parent_model, parent_attr):
         parent = await async_session.get(parent_model, getattr(test_worker_trade, parent_attr))
         await async_session.delete(parent)
@@ -381,7 +381,7 @@ class TestEdgeCases:
         new_trade = await create_test_worker_trade(
             async_session,
             worker_profile_id=test_worker_profile.id,
-            trade_id=test_trade_category.id,
+            trade_category_id=test_trade_category.id,
         )
         assert new_trade.id is not None
         assert new_trade.worker_profile_id == test_worker_profile.id

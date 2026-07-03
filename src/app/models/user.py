@@ -1,15 +1,19 @@
 import uuid as uuid_pkg
 from datetime import UTC, datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid6 import uuid7
 
 from ..core.db.database import Base
 from ..core.db.types import PostGISPoint
+
+if TYPE_CHECKING:
+    from .tier import Tier
 
 
 class UserRole(Enum):
@@ -42,4 +46,5 @@ class User(Base):
     role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole), nullable=False, default=UserRole.CUSTOMER)
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
-    # tier_id: Mapped[int | None] = mapped_column(ForeignKey("tier.id"), index=True, default=None, init=False)
+    tier_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tiers.id"), index=True, default=None,)
+    tier: Mapped["Tier | None"] = relationship("Tier", back_populates="users", lazy="selectin", init=False)

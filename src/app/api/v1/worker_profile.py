@@ -1,11 +1,11 @@
 import os
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...api.dependencies import get_current_user, require_role, rate_limiter_dependency
+from ...api.dependencies import get_current_user, rate_limiter_dependency, require_role
 from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.events import publish
@@ -14,7 +14,7 @@ from ...crud.crud_worker_profile import crud_worker_profiles
 from ...crud.crud_worker_trade import crud_worker_trades
 from ...models import User, WorkerProfile
 from ...schemas.user import UserRead
-from ...schemas.worker_profile import WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileWithTradesRead, WorkerTradeNestedRead, AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileUpdateInternal
+from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 

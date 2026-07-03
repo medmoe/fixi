@@ -15,13 +15,21 @@ class UUIDMixin:
 
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now(UTC), server_default=text("current_timestamp(0)")
+        DateTime,
+        default=datetime.now(UTC),
+        server_default=text("current_timestamp(0)"),
+        kw_only=True
     )
     updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, onupdate=datetime.now(UTC), server_default=text("current_timestamp(0)")
+        DateTime,
+        nullable=True,
+        default=None,
+        onupdate=datetime.now(UTC),
+        server_default=text("current_timestamp(0)"),
+        kw_only=True
     )
 
 
 class SoftDeleteMixin:
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None, kw_only=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, kw_only=True)
