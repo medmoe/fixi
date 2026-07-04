@@ -66,8 +66,8 @@ class WorkerProfileUpdate(BaseModel):
 
 class WorkerProfileUpdateInternal(BaseModel):
     """Used internally by admin -- can set is_verified, is_available, and available_since """
-    is_verified: Annotated[bool, Field(default=False)]
-    is_available: Annotated[bool | None, Field(default=False)]
+    is_verified: Annotated[bool | None, Field(default=False)] = None
+    is_available: Annotated[bool | None, Field(default=False)] = None
     available_since: Annotated[datetime | None, Field(default=None)] = None
 
 

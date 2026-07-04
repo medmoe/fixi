@@ -13,7 +13,14 @@ from ..schemas.worker_profile import WorkerProfileBase, WorkerProfileCreate, Wor
 from .crud_users import crud_users
 
 
-class CRUDWorker(FastCRUD[WorkerProfile, WorkerProfileCreate, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileDelete, WorkerProfileNestedRead]):
+class CRUDWorker(FastCRUD[
+    WorkerProfile,
+    WorkerProfileCreate,
+    WorkerProfileUpdate | WorkerProfileUpdateInternal,
+    WorkerProfileUpdateInternal,
+    WorkerProfileDelete,
+    WorkerProfileNestedRead
+]):
 
     async def create(  # type: ignore[override] # FastCRUD overloads can't be satisfied by a single implementation.
             self,
@@ -70,7 +77,7 @@ class CRUDWorker(FastCRUD[WorkerProfile, WorkerProfileCreate, WorkerProfileUpdat
     async def update(
             self,
             db: AsyncSession,
-            object: WorkerProfileUpdate | dict[str, Any],
+            object: WorkerProfileUpdate | WorkerProfileUpdateInternal | dict[str, Any],
             **kwargs: Any,
     ) -> Any:
         user_id = kwargs.get("user_id")

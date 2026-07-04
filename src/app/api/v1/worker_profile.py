@@ -24,7 +24,16 @@ router = APIRouter(tags=["workers"], prefix="/worker-profiles")
 # ————— Private helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 async def _get_worker_profile_or_404(db: AsyncSession, worker_profile_id: int) -> WorkerProfileNestedRead:
-    worker_profile = await crud_worker_profiles.get_joined(db=db, id=worker_profile_id, join_model=User, join_on=WorkerProfile.user_id == User.id, nest_joins=True, schema_to_select=WorkerProfileNestedRead, join_schema_to_select=UserRead, return_as_model=True)  # type: ignore[call-overload]
+    worker_profile = await crud_worker_profiles.get_joined( # type: ignore[call-overload]
+        db=db,
+        id=worker_profile_id,
+        join_model=User,
+        join_on=WorkerProfile.user_id == User.id,
+        nest_joins=True,
+        schema_to_select=WorkerProfileNestedRead,
+        join_schema_to_select=UserRead,
+        return_as_model=True
+    )
     if worker_profile is None:
         raise NotFoundException("Worker profile not found")
     return cast(WorkerProfileNestedRead, worker_profile)
@@ -103,7 +112,7 @@ async def toggle_worker_availability(
     await crud_worker_profiles.update(
         db=db,
         object=WorkerProfileUpdateInternal(is_available=body.is_available, available_since=available_since),
-        id=worker_profile_id,
+        user_id=worker_profile.user.id,
     )
     # public event — prep for WebSocket in Week 7
     await publish(

@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, MappedAsDataclass, mapped_column
 from uuid6 import uuid7
 
 
@@ -13,7 +13,7 @@ class UUIDMixin:
     )
 
 
-class TimestampMixin:
+class TimestampMixin(MappedAsDataclass):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.now(UTC),
@@ -30,6 +30,6 @@ class TimestampMixin:
     )
 
 
-class SoftDeleteMixin:
+class SoftDeleteMixin(MappedAsDataclass):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None, kw_only=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, kw_only=True)

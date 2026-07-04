@@ -25,6 +25,7 @@ from ...core.security import (
 from ...crud.crud_users import crud_users
 from ...models import CustomerProfile, User, UserRole, WorkerProfile
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
+from ..dependencies import rate_limiter_dependency
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
 
@@ -49,8 +50,7 @@ async def register(payload: RegisterRequest, db: Annotated[AsyncSession, Depends
     return RegisterResponse(id=user.id, username=user.username, email=user.email, role=user.role_type)
 
 
-# rate limiter should be implemented here
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token, dependencies=[Depends(rate_limiter_dependency)])
 async def login(
         response: Response,
         credentials: LoginRequest,

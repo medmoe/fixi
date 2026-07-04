@@ -80,7 +80,8 @@ class TestSettings(BaseSettings):
     TEST_POSTGRES_ASYNC_PREFIX: str = test_config("TEST_POSTGRES_ASYNC_PREFIX", default="postgresql+asyncpg://")
     TEST_POSTGRES_ASYNC_URI: str = f"{TEST_POSTGRES_USER}:{TEST_POSTGRES_PASSWORD}@{TEST_POSTGRES_SERVER}:{TEST_POSTGRES_PORT}/{TEST_POSTGRES_DB}"
     TEST_POSTGRES_URL: str | None = test_config("TEST_POSTGRES_URL", default=None)
-
+    # REDIS
+    TEST_REDIS_URI: str = test_config("REDIS_URI", default="redis://test-redis:6379")
 
 class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_HOST: str = config("REDIS_CACHE_HOST", default="localhost")

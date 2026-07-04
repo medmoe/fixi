@@ -43,6 +43,17 @@ services:
       "
     restart: "no"
 
+  test-redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
   tests:
     build: .
     depends_on:
@@ -52,6 +63,8 @@ services:
         condition: service_healthy
       test-minio-setup:
         condition: service_completed_successfully
+      test-redis:
+        condition: service_healthy
     env_file:
       - src/.env.test
     working_dir: /app

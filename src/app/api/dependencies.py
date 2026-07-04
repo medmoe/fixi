@@ -100,7 +100,9 @@ def authorize_role(*roles: str) -> Any:
 
 
 async def rate_limiter_dependency(
-        request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], user: dict | None = Depends(get_optional_user)
+        request: Request,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        user: dict[str, Any] | None = Depends(get_optional_user)
 ) -> None:
     if hasattr(request.app.state, "initialization_complete"):
         await request.app.state.initialization_complete.wait()
@@ -110,15 +112,14 @@ async def rate_limiter_dependency(
         user_id = user["id"]
         tier = await crud_tiers.get(db, id=user["tier_id"], schema_to_select=TierRead)
         if tier:
-            tier = cast(TierRead, tier)
-            rate_limit = await crud_rate_limits.get(db=db, tier_id=tier.id, path=path, schema_to_select=RateLimitRead)
+            tier = cast(TierRead, tier) # type: ignore[assignment]
+            rate_limit = await crud_rate_limits.get(db=db, tier_id=tier.id, path=path, schema_to_select=RateLimitRead) # type: ignore[attr-defined]
             if rate_limit:
-                rate_limit = cast(RateLimitRead, rate_limit)
-                limit, period = rate_limit.limit, rate_limit.period
+                rate_limit = cast(RateLimitRead, rate_limit) # type: ignore[assignment]
+                limit, period = rate_limit.limit, rate_limit.period # type: ignore[attr-defined]
             else:
                 logger.warning(
-                    f"User {user_id} with tier '{tier.name}' has no specific rate limit for path '{path}'. \
-                        Applying default rate limit."
+                    f"User {user_id} with tier '{tier.name}' has no specific rate limit for path '{path}'. Applying default rate limit." # type: ignore[attr-defined]
                 )
                 limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
         else:
