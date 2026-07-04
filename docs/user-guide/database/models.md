@@ -267,7 +267,7 @@ class Post(Base):
 ### Tier Model
 
 ```python
-# src/app/models/tier.py
+# src/app/models/crud_tiers.py
 class Tier(Base):
     __tablename__ = "tier"
     
@@ -279,7 +279,7 @@ class Tier(Base):
 ### Rate Limit Model
 
 ```python
-# src/app/models/rate_limit.py
+# src/app/models/crud_rate_limits.py
 class RateLimit(Base):
     __tablename__ = "rate_limit"
     

@@ -19,9 +19,9 @@ class WorkerTrade(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True, init=False)
     worker_profile_id: Mapped[int] = mapped_column(ForeignKey("worker_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
-    trade_id: Mapped[int] = mapped_column(ForeignKey("trade_categories.id", ondelete="CASCADE"), nullable=False, index=True)
-    worker: Mapped["WorkerProfile"] = relationship("WorkerProfile", lazy="noload")
-    trade: Mapped["TradeCategory"] = relationship("TradeCategory", lazy="noload")
+    trade_category_id: Mapped[int] = mapped_column(ForeignKey("trade_categories.id", ondelete="CASCADE"), nullable=False, index=True)
+    worker_profile: Mapped["WorkerProfile"] = relationship("WorkerProfile", lazy="noload")
+    trade_category: Mapped["TradeCategory"] = relationship("TradeCategory", lazy="noload")
 
     skill_level: Mapped[SkillLevel] = mapped_column(SAEnum(SkillLevel), nullable=False, default=SkillLevel.junior)
-    __table_args__ = (UniqueConstraint("worker_profile_id", "trade_id", name="unique_worker_trade"),)  # prevents a worker from being registered to the same trade twice.
+    __table_args__ = (UniqueConstraint("worker_profile_id", "trade_category_id", name="unique_worker_trade"),)  # prevents a worker from being registered to the same trade twice.

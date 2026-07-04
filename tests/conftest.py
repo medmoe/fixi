@@ -1,12 +1,14 @@
 from datetime import datetime, UTC
 from io import BytesIO
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Annotated
 from unittest.mock import Mock, AsyncMock
 
 import pytest
 import pytest_asyncio
 from PIL import Image
+from asgi_lifespan import LifespanManager
 from faker import Faker
+from fastapi import Request, Depends
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -14,21 +16,31 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from uuid6 import uuid7
 
+from src.app.api.dependencies import rate_limiter_dependency, get_optional_user
 from src.app.core.config import settings
 from src.app.core.db.database import Base, async_get_db
+from src.app.core.exceptions.http_exceptions import RateLimitException
 from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
+from src.app.core.utils.rate_limit import RateLimiter
 from src.app.main import app
 from src.app.models import User, UserRole, WorkerProfile, TradeCategory
+from tests.helpers.fakes import FakeRateLimiter
 
 fake = Faker()
 
 DATABASE_URI = settings.TEST_POSTGRES_ASYNC_URI
 DATABASE_PREFIX = settings.TEST_POSTGRES_ASYNC_PREFIX
 DATABASE_URL = settings.TEST_POSTGRES_URL or f"{DATABASE_PREFIX}{DATABASE_URI}"
+REDIS_URI = settings.TEST_REDIS_URI
 
 # Create test engine and session
-test_engine = create_async_engine(DATABASE_URL, echo=False, poolclass=NullPool, future=True)
+test_engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    poolclass=NullPool,
+    future=True
+)
 testSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 
@@ -72,13 +84,89 @@ async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClien
         return async_session
 
     app.dependency_overrides[async_get_db] = get_test_db
-
+    app.dependency_overrides[rate_limiter_dependency] = lambda: None  # disable rate limiter
     # Use ASGI transport so it uses the app in-memory
+    # trigger lifespan so middleware initializes correctly on the right event loop
     async with AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://test"
     ) as client:
         yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def async_client_with_redis(async_session: AsyncSession):
+    def get_test_db():
+        return async_session
+
+    app.dependency_overrides[async_get_db] = get_test_db
+
+    RateLimiter._instance = None
+    RateLimiter.pool = None
+    RateLimiter.client = None
+    RateLimiter.initialize(REDIS_URI)
+    redis_client = RateLimiter.get_client()
+    await redis_client.flushdb()
+
+    async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test"
+    ) as client:
+        yield client
+
+    # teardown — close pool properly before clearing singleton
+    if RateLimiter.pool is not None:
+        await RateLimiter.pool.aclose()  # close all connections in the pool
+
+    RateLimiter._instance = None
+    RateLimiter.pool = None
+    RateLimiter.client = None
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def async_client_with_rate_limit(
+        async_session: AsyncSession
+) -> AsyncGenerator[tuple[AsyncClient, FakeRateLimiter], None]:
+    """ Client with controllable in-memory rate limiter """
+    fake_rate_limiter = FakeRateLimiter()
+
+    def get_test_db():
+        return async_session
+
+    async def fake_rate_limiter_dependency(
+            request: Request,
+            db: Annotated[AsyncSession, Depends(async_get_db)],
+            user: dict | None = Depends(get_optional_user)
+    ) -> None:
+        path = request.url.path
+
+        # mirror real rate_limiter_dependency logic
+        if user:
+            identifier: int | str = user['id']
+        else:
+            identifier = request.client.host if request.client else "unknown"
+
+        # simulate rate limiter check using fake
+        if await fake_rate_limiter.is_rate_limited(
+                db=db,
+                user_id=identifier,
+                path=path,
+                limit=fake_rate_limiter.limit,
+                period=60,
+        ):
+            raise RateLimitException("Rate limit exceeded")
+
+    app.dependency_overrides[async_get_db] = get_test_db
+    app.dependency_overrides[rate_limiter_dependency] = fake_rate_limiter_dependency
+
+    async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+    ) as client:
+        yield client, fake_rate_limiter  # return both client and limiter for test control
 
     app.dependency_overrides.clear()
 
@@ -99,42 +187,42 @@ async def other_user(async_session: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
-async def test_worker_profile(async_session: AsyncSession) -> WorkerProfile:
-    return await create_test_worker_profile(async_session)
+async def test_worker_profile(async_session: AsyncSession, test_user: User) -> WorkerProfile:
+    return await create_test_worker_profile(async_session, test_user)
 
 
 @pytest_asyncio.fixture
-async def auth_headers(async_client: AsyncClient, test_user: User) -> dict:
+async def auth_headers(async_client_with_redis: AsyncClient, test_user: User) -> dict:
     """ Get authentication headers for a test user."""
     login_data = {
         "username_or_email": test_user.username,
         "password": "testpassword123"
     }
-    response = await async_client.post("/api/v1/auth/login", json=login_data)
+    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
     print(response.json())
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
 @pytest_asyncio.fixture
-async def other_auth_headers(async_client: AsyncClient, other_user: User) -> dict:
+async def other_auth_headers(async_client_with_redis: AsyncClient, other_user: User) -> dict:
     """ Get authentication headers for a test user."""
     login_data = {
         "username_or_email": other_user.username,
         "password": "testpassword123"
     }
-    response = await async_client.post("/api/v1/auth/login", json=login_data)
+    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
 @pytest_asyncio.fixture
-async def admin_auth_headers(async_client: AsyncClient, test_admin_user: User) -> dict:
+async def admin_auth_headers(async_client_with_redis: AsyncClient, test_admin_user: User) -> dict:
     """ Get authentication headers for a test user."""
     login_data = {
         "username": test_admin_user.username,
         "password": "testpassword123"
     }
 
-    response = await async_client.post("/api/v1/auth/login", json=login_data)
+    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
@@ -207,13 +295,10 @@ async def create_test_user(async_session: AsyncSession, **kwargs) -> User:
     return user
 
 
-async def create_test_worker_profile(async_session: AsyncSession, **kwargs) -> WorkerProfile:
+async def create_test_worker_profile(async_session: AsyncSession, user: User | None = None, **kwargs) -> WorkerProfile:
     """ Create a test worker """
-    user = User(name=fake.name(), username=fake.user_name(), email=fake.email(),
-        hashed_password=get_password_hash("testpassword123"), is_superuser=False)
-    async_session.add(user)
-    await async_session.commit()
-    await async_session.refresh(user)
+    if user is None:
+        user = await create_test_user(async_session)
     worker = WorkerProfile(user_id=user.id, **kwargs)
     async_session.add(worker)
     await async_session.commit()

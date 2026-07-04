@@ -1,18 +1,20 @@
 import os
+from datetime import UTC, datetime
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...api.dependencies import get_current_user, require_role
+from ...api.dependencies import get_current_user, rate_limiter_dependency, require_role
 from ...core.config import settings
 from ...core.db.database import async_get_db
+from ...core.events import publish
 from ...core.exceptions.http_exceptions import ForbiddenException, HTTPException, NotFoundException
 from ...crud.crud_worker_profile import crud_worker_profiles
 from ...crud.crud_worker_trade import crud_worker_trades
 from ...models import User, WorkerProfile
 from ...schemas.user import UserRead
-from ...schemas.worker_profile import WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileWithTradesRead, WorkerTradeNestedRead
+from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
@@ -22,7 +24,16 @@ router = APIRouter(tags=["workers"], prefix="/worker-profiles")
 # ————— Private helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 async def _get_worker_profile_or_404(db: AsyncSession, worker_profile_id: int) -> WorkerProfileNestedRead:
-    worker_profile = await crud_worker_profiles.get_joined(db=db, id=worker_profile_id, join_model=User, join_on=WorkerProfile.user_id == User.id, nest_joins=True, schema_to_select=WorkerProfileNestedRead, join_schema_to_select=UserRead, return_as_model=True)  # type: ignore[call-overload]
+    worker_profile = await crud_worker_profiles.get_joined( # type: ignore[call-overload]
+        db=db,
+        id=worker_profile_id,
+        join_model=User,
+        join_on=WorkerProfile.user_id == User.id,
+        nest_joins=True,
+        schema_to_select=WorkerProfileNestedRead,
+        join_schema_to_select=UserRead,
+        return_as_model=True
+    )
     if worker_profile is None:
         raise NotFoundException("Worker profile not found")
     return cast(WorkerProfileNestedRead, worker_profile)
@@ -79,7 +90,47 @@ async def update_worker_profile(
     return await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
 
 
-# ————— POST /worker-profiles/{worker_profile_id}/avatar ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— PATCH /worker-profiles/{worker_profile_id}/availability —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+@router.patch("/{worker_profile_id}/availability", response_model=AvailabilityToggleResponse, dependencies=[Depends(rate_limiter_dependency)])
+async def toggle_worker_availability(
+        worker_profile_id: int,
+        body: AvailabilityToggleRequest,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> AvailabilityToggleResponse:
+    """ Toggle worker availability — owner only. Max 10 toggles per minute."""
+    worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
+    _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
+
+    # set available_since only when toggling ON
+    available_since: datetime | None = None
+    if body.is_available:
+        available_since = datetime.now(UTC)
+
+    # update both fields atomically
+    await crud_worker_profiles.update(
+        db=db,
+        object=WorkerProfileUpdateInternal(is_available=body.is_available, available_since=available_since),
+        user_id=worker_profile.user.id,
+    )
+    # public event — prep for WebSocket in Week 7
+    await publish(
+        "worker_profile:availability_changed",
+        {
+            "worker_profile_id": worker_profile_id,
+            "is_available": body.is_available,
+            "available_since": available_since.isoformat() if available_since else None,
+        }
+    )
+
+    return AvailabilityToggleResponse(
+        is_available=body.is_available,
+        available_since=available_since
+    )
+
+
+# ————— POST /worker-profiles/{worker_profile_id}/avatar ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 @router.post("/{worker_profile_id}/avatar", response_model=dict)
 async def upload_worker_avatar(
@@ -127,7 +178,7 @@ async def assign_trade_to_worker(
     worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
     _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
 
-    updated_trades = await crud_worker_trades.assign_trade(db=db, worker_profile_id=worker_profile_id, trade_id=body.trade_id, skill_level=body.skill_level)
+    updated_trades = await crud_worker_trades.assign_trade(db=db, worker_profile_id=worker_profile_id, trade_category_id=body.trade_category_id, skill_level=body.skill_level)
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
 
 
@@ -144,5 +195,5 @@ async def remove_trade_from_worker(
     worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
     _assert_owner_or_admin(db=db, worker_profile_user_id=worker_profile.user.id, current_user=current_user)
 
-    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile_id, trade_id=trade_id)
+    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile_id, trade_category_id=trade_id)
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]

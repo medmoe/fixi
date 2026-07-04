@@ -1,8 +1,31 @@
-from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
 from starlette.types import ASGIApp
 
 
+# class ClientCacheMiddleware:
+#     """ Pure ASGI middleware — no BaseHTTPMiddleware, no event loop binding. """
+#
+#     def __init__(self, app: ASGIApp, max_age: int = 3600) -> None:
+#         self.app = app
+#         self.max_age = max_age
+#
+#     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+#         if scope["type"] != "http":
+#             await self.app(scope, receive, send)
+#             return
+#
+#         async def send_with_cache_header(message):
+#             if message["type"] == "http.response.start":
+#                 headers = MutableHeaders(scope=message)
+#                 headers.append(
+#                     "Cache-Control",
+#                     f"public, max-age={self.max_age}"
+#                 )
+#             await send(message)
+#
+#         await self.app(scope, receive, send_with_cache_header)
 class ClientCacheMiddleware(BaseHTTPMiddleware):
     """Middleware to set the `Cache-Control` header for client-side caching on all responses.
 

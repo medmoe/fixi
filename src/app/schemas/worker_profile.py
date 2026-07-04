@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
@@ -63,9 +64,11 @@ class WorkerProfileUpdate(BaseModel):
         return v
 
 
-class WorkerProfileUpdateInternal(WorkerProfileBase):
-    """Used internally by admin -- can set is_verified"""
-    is_verified: Annotated[bool, Field(default=False)]
+class WorkerProfileUpdateInternal(BaseModel):
+    """Used internally by admin -- can set is_verified, is_available, and available_since """
+    is_verified: Annotated[bool | None, Field(default=False)] = None
+    is_available: Annotated[bool | None, Field(default=False)] = None
+    available_since: Annotated[datetime | None, Field(default=None)] = None
 
 
 class WorkerProfileDelete(BaseModel):
@@ -97,11 +100,24 @@ class WorkerTradeNestedRead(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
     id: int
     worker_profile_id: int
-    trade_id: int
+    trade_category_id: int
     skill_level: str
-    trade: TradeCategoryRead | None = None
+    trade_category: TradeCategoryRead | None = None
 
 
 class WorkerProfileWithTradesRead(WorkerProfileNestedRead):
     """Profile response with embedded trades list."""
     trades: list[WorkerTradeNestedRead] = []
+
+
+class AvailabilityToggleRequest(BaseModel):
+    """ PATCH body for toggling availability """
+    model_config = ConfigDict(extra="forbid")
+    is_available: bool
+
+
+class AvailabilityToggleResponse(BaseModel):
+    """ Response after toggling availability """
+    model_config = ConfigDict(from_attributes=True)
+    is_available: bool
+    available_since: datetime | None = None

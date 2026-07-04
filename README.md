@@ -677,7 +677,7 @@ First, you may want to take a look at the project structure and understand what 
     │   │   │   ├── __init__.py
     │   │   │   ├── cache.py          # Cache-related utilities.
     │   │   │   ├── queue.py          # Utilities for task queue management.
-    │   │   │   └── rate_limit.py     # Rate limiting utilities.
+    │   │   │   └── crud_rate_limits.py     # Rate limiting utilities.
     │   │   │
     │   │   └── worker                # Worker script for background tasks.
     │   │       ├── __init__.py
@@ -688,8 +688,8 @@ First, you may want to take a look at the project structure and understand what 
     │   │   ├── __init__.py
     │   │   ├── crud_base.py          # Base class for CRUD operations.
     │   │   ├── crud_posts.py         # CRUD operations for posts.
-    │   │   ├── crud_rate_limit.py    # CRUD operations for rate limiting.
-    │   │   ├── crud_tier.py          # CRUD operations for user tiers.
+    │   │   ├── crud_rate_limits.py    # CRUD operations for rate limiting.
+    │   │   ├── crud_tiers.py          # CRUD operations for user tiers.
     │   │   ├── crud_users.py         # CRUD operations for users.
     │   │   └── helper.py             # Helper functions for CRUD operations.
     │   │
@@ -702,16 +702,16 @@ First, you may want to take a look at the project structure and understand what 
     │   ├── models                    # ORM models for the application.
     │   │   ├── __init__.py
     │   │   ├── post.py               # ORM model for posts.
-    │   │   ├── rate_limit.py         # ORM model for rate limiting.
-    │   │   ├── tier.py               # ORM model for user tiers.
+    │   │   ├── crud_rate_limits.py         # ORM model for rate limiting.
+    │   │   ├── crud_tiers.py               # ORM model for user tiers.
     │   │   └── user.py               # ORM model for users.
     │   │
     │   └── schemas                   # Pydantic schemas for data validation.
     │       ├── __init__.py
     │       ├── job.py                # Schema for background jobs.
     │       ├── post.py               # Schema for post data.
-    │       ├── rate_limit.py         # Schema for rate limiting data.
-    │       ├── tier.py               # Schema for user tier data.
+    │       ├── crud_rate_limits.py         # Schema for rate limiting data.
+    │       ├── crud_tiers.py               # Schema for user tier data.
     │       └── user.py               # Schema for user data.
     │
     ├── migrations                    # Alembic migration scripts for database changes.

@@ -113,6 +113,7 @@ filterwarnings = [
 dev = [
     "pytest-asyncio>=1.0.0",
     "faker>=26.0.0",
+    "asgi-lifespan>=2.1.0",
 ]
 
 [tool.mypy]
