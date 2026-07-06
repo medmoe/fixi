@@ -15,17 +15,17 @@ class UUIDMixin:
 
 class TimestampMixin(MappedAsDataclass):
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now(UTC),
-        server_default=text("current_timestamp(0)"),
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(UTC),
+        server_default=text("CURRENT_TIMESTAMP(0)"),
         kw_only=True
     )
     updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
         default=None,
-        onupdate=datetime.now(UTC),
-        server_default=text("current_timestamp(0)"),
+        onupdate=lambda: datetime.now(UTC),
+        server_default=text("CURRENT_TIMESTAMP(0)"),
         kw_only=True
     )
 

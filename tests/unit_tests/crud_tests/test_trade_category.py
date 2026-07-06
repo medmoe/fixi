@@ -3,7 +3,7 @@ import pytest_asyncio
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.crud.crud_trade_category import crud_trade_category
+from src.app.crud.crud_trade_categories import crud_trade_category
 from src.app.models.trade_category import TradeCategory
 from src.app.schemas.trade_category import TradeCategoryCreate, TradeCategoryUpdate, TradeCategoryWithChildren
 

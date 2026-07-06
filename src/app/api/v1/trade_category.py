@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.db.database import async_get_db
-from ...crud.crud_trade_category import crud_trade_category
+from ...crud.crud_trade_categories import crud_trade_category
 from ...schemas.trade_category import TradeCategoryRead, TradeCategoryWithChildren
 
 router = APIRouter(tags=["Trade Category"])

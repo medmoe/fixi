@@ -21,11 +21,15 @@ from src.app.schemas.worker_profile import (
     WorkerProfileBase,
     WorkerProfileNestedRead
 )
-
+from tests.conftest import fake
 
 # ===========================================================================
 # Fixtures & Factories
 # ===========================================================================
+
+IMAGE_URL = fake.image_url()
+PORTFOLIO_IMAGES_COUNT = 5
+
 
 def create_payload(**overrides) -> dict:
     """Minimal valid payload for WorkerProfileCreate."""

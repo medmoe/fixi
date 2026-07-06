@@ -6,7 +6,6 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 import pytest_asyncio
 from PIL import Image
-from asgi_lifespan import LifespanManager
 from faker import Faker
 from fastapi import Request, Depends
 from httpx import AsyncClient, ASGITransport
@@ -24,7 +23,7 @@ from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.core.utils.rate_limit import RateLimiter
 from src.app.main import app
-from src.app.models import User, UserRole, WorkerProfile, TradeCategory
+from src.app.models import User, UserRole, WorkerProfile, TradeCategory, PortfolioImage
 from tests.helpers.fakes import FakeRateLimiter
 
 fake = Faker()
@@ -189,6 +188,11 @@ async def other_user(async_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def test_worker_profile(async_session: AsyncSession, test_user: User) -> WorkerProfile:
     return await create_test_worker_profile(async_session, test_user)
+
+
+@pytest_asyncio.fixture
+async def test_other_worker_profile(async_session: AsyncSession, other_user: User) -> WorkerProfile:
+    return await create_test_worker_profile(async_session, other_user)
 
 
 @pytest_asyncio.fixture
@@ -455,3 +459,16 @@ async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> T
     async_session.add(trade_category)
     await async_session.commit()
     return trade_category
+
+
+@pytest_asyncio.fixture
+async def test_portfolio_images(async_session: AsyncSession, test_worker_profile: WorkerProfile, test_other_worker_profile: WorkerProfile) -> list[PortfolioImage]:
+    return await create_test_portfolio_images(async_session, test_worker_profile, test_other_worker_profile)
+
+
+async def create_test_portfolio_images(async_session: AsyncSession, test_worker_profile: WorkerProfile, test_other_worker_profile: WorkerProfile) -> list[PortfolioImage]:
+    portfolio_image_rows = [{"worker_profile_id": test_worker_profile.id, "image_url": fake.image_url()} for _ in range(10)]
+    portfolio_image_rows.extend([{"worker_profile_id": test_other_worker_profile.id, "image_url": fake.image_url()} for _ in range(10)])
+    result = await async_session.execute(insert(PortfolioImage).returning(PortfolioImage), portfolio_image_rows)
+    await async_session.commit()
+    return list(result.scalars().all())

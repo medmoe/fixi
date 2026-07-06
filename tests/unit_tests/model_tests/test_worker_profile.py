@@ -1,14 +1,13 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from src.app.models.user import User
-from src.app.models.worker_profile import WorkerProfile
+from src.app.models import WorkerProfile, User
 
 
 class TestWorkerModel:
     """Test Worker model."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_create_worker_with_all_fields(self, async_session):
         """Test creating a worker with all fields."""
 
@@ -41,7 +40,7 @@ class TestWorkerModel:
         assert worker.bio == "Experienced plumber"
         assert worker.is_verified is False
 
-    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_create_worker_with_minimum_fields(self, async_session):
         """Test creating a worker with only required fields."""
 
@@ -66,7 +65,7 @@ class TestWorkerModel:
         assert worker.years_of_experience is None
         assert worker.bio is None
 
-    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_worker_unique_user_id_constraint(self, async_session):
         """Test that a user can only have one worker profile."""
 
@@ -96,7 +95,7 @@ class TestWorkerModel:
         with pytest.raises(IntegrityError):
             await async_session.commit()
 
-    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_worker_cascade_delete(self, async_session):
         """Test that deleting a user deletes their worker profile."""
         from src.app.models.user import User
@@ -130,7 +129,7 @@ class TestWorkerModel:
         deleted_worker = result.scalar_one_or_none()
         assert deleted_worker is None
 
-    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_worker_rating_fields(self, async_session):
         """Test worker rating fields."""
 

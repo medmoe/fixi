@@ -1,4 +1,4 @@
-# src/app/crud/crud_worker_trade.py
+# src/app/crud/crud_workers_trades.py
 from typing import Any, cast
 
 from fastcrud import FastCRUD

@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from src.app.crud.crud_worker_profile import crud_worker_profiles
+from src.app.crud.crud_worker_profiles import crud_worker_profiles
 from src.app.models import CustomerProfile
 from tests.helpers.fakes import FakeRateLimiter
 
