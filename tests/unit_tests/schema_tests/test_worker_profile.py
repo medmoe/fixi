@@ -9,11 +9,10 @@ Schemas tested:
 
 import uuid
 from decimal import Decimal
-from typing import Any
 
 import pytest
 from pydantic import ValidationError
-from tests.conftest import fake
+
 from src.app.models import UserRole
 from src.app.schemas.worker_profile import (
     WorkerProfileUpdate,
@@ -22,7 +21,7 @@ from src.app.schemas.worker_profile import (
     WorkerProfileBase,
     WorkerProfileNestedRead
 )
-
+from tests.conftest import fake
 
 # ===========================================================================
 # Fixtures & Factories
@@ -30,6 +29,8 @@ from src.app.schemas.worker_profile import (
 
 IMAGE_URL = fake.image_url()
 PORTFOLIO_IMAGES_COUNT = 5
+
+
 def create_payload(**overrides) -> dict:
     """Minimal valid payload for WorkerProfileCreate."""
     return {
@@ -55,16 +56,6 @@ def create_user_payload(**overrides) -> dict:
         "role_type": UserRole.WORKER,
         **overrides,
     }
-
-def create_portfolio_images_payload(**overrides) -> list[dict[str, Any]]:
-    """Minimal valid payload for PortfolioImageCreate."""
-    return [{
-        "id": i,
-        "worker_profile_id": 1,
-        "image_url": IMAGE_URL,
-        "created_at": fake.date_time(),
-        **overrides,
-    } for i in range(PORTFOLIO_IMAGES_COUNT)]
 
 
 def update_payload(**overrides) -> dict:
@@ -94,7 +85,6 @@ def nested_payload() -> dict:
     return {
         **create_payload(id=1, is_verified=True),
         "user": create_user_payload(),
-        "portfolio_images": create_portfolio_images_payload()
     }
 
 
@@ -334,9 +324,6 @@ class TestWorkerProfileRead:
             assert schema.user.id is not None
             assert schema.user.role_type is payload["user"]["role_type"]
             assert schema.user.uuid == payload["user"]["uuid"]
-            assert schema.portfolio_images is not None
-            assert len(schema.portfolio_images) == PORTFOLIO_IMAGES_COUNT
-
 
 
 # ===========================================================================

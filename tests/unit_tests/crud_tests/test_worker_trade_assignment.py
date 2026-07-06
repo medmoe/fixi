@@ -7,7 +7,7 @@ from src.app.core.exceptions.http_exceptions import (
     DuplicateValueException,
     NotFoundException,
 )
-from src.app.crud.crud_worker_trade import crud_worker_trades, MAX_TRADES_PER_WORKER
+from src.app.crud.crud_workers_trades import crud_worker_trades, MAX_TRADES_PER_WORKER
 from src.app.models import TradeCategory, WorkerProfile, WorkerTrade, SkillLevel
 from tests.conftest import create_test_worker_profile, create_test_trade_category
 

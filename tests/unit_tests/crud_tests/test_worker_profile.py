@@ -18,7 +18,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.exceptions.http_exceptions import DuplicateValueException
-from src.app.crud.crud_worker_profile import crud_worker_profiles
+from src.app.crud.crud_worker_profiles import crud_worker_profiles
 from src.app.models import User, WorkerProfile
 from src.app.schemas.worker_profile import (
     WorkerProfileCreate,

@@ -142,7 +142,7 @@ class CRUDTradeCategory(FastCRUD[
         )
         return list(result.scalars().all())
 
-    # crud/crud_trade_category.py
+    # crud/crud_trade_categories.py
 
     async def get_nested(self, db: AsyncSession) -> list[TradeCategoryWithChildren]:
         """Returns all root categories with their children nested inside."""

@@ -6,7 +6,6 @@ from unittest.mock import Mock, AsyncMock
 import pytest
 import pytest_asyncio
 from PIL import Image
-from asgi_lifespan import LifespanManager
 from faker import Faker
 from fastapi import Request, Depends
 from httpx import AsyncClient, ASGITransport
@@ -189,6 +188,11 @@ async def other_user(async_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def test_worker_profile(async_session: AsyncSession, test_user: User) -> WorkerProfile:
     return await create_test_worker_profile(async_session, test_user)
+
+
+@pytest_asyncio.fixture
+async def test_other_worker_profile(async_session: AsyncSession, other_user: User) -> WorkerProfile:
+    return await create_test_worker_profile(async_session, other_user)
 
 
 @pytest_asyncio.fixture

@@ -8,8 +8,8 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.crud.crud_worker_profile import crud_worker_profiles
-from src.app.crud.crud_worker_trade import crud_worker_trades
+from src.app.crud.crud_worker_profiles import crud_worker_profiles
+from src.app.crud.crud_workers_trades import crud_worker_trades
 from src.app.models import User, UserRole, WorkerProfile, TradeCategory, SkillLevel
 from src.app.schemas.worker_profile import WorkerProfileCreate
 from src.app.schemas.worker_trade import WorkerTradeCreate

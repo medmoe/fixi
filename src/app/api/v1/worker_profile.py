@@ -10,8 +10,8 @@ from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.events import publish
 from ...core.exceptions.http_exceptions import ForbiddenException, HTTPException, NotFoundException
-from ...crud.crud_worker_profile import crud_worker_profiles
-from ...crud.crud_worker_trade import crud_worker_trades
+from ...crud.crud_worker_profiles import crud_worker_profiles
+from ...crud.crud_workers_trades import crud_worker_trades
 from ...models import User, WorkerProfile
 from ...schemas.user import UserRead
 from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
