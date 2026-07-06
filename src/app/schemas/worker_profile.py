@@ -4,6 +4,7 @@ from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from .portfolio_image import PortfolioImageRead
 from .trade_category import TradeCategoryRead
 from .user import UserRead
 
@@ -38,6 +39,7 @@ class WorkerProfileNestedRead(WorkerProfileBase):
     user: UserRead
     id: int
     is_verified: bool
+    portfolio_images: list[PortfolioImageRead] = []
 
 
 class WorkerProfileCreate(WorkerProfileBase):

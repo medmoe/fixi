@@ -29,6 +29,5 @@ class WorkerProfile(Base):
 
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
-    # portfolio_image_urls: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
 
     # Trust & ratings
