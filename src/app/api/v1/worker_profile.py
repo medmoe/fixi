@@ -15,7 +15,7 @@ from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...models import User, WorkerProfile
-from ...schemas.portfolio_image import PortfolioImageRead, PortfolioImageCreate
+from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
 from ...schemas.user import UserRead
 from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileCreate, WorkerProfileCreateRequest, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import WorkerTradeAssignmentRequest
@@ -212,10 +212,10 @@ async def remove_trade_from_worker(
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
 
 
-# ————— POST /worker-profiles/{worker_profile_id}/portfolio-img ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— POST /worker-profiles/{worker_profile_id}/portfolio-images ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.post("/{worker_profile_id}/portfolio-img", response_model=PortfolioImageRead, status_code=201)
-async def upload_portfolio_img(
+@router.post("/{worker_profile_id}/portfolio-images", response_model=PortfolioImageRead, status_code=201)
+async def upload_portfolio_image(
         worker_profile_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
@@ -230,41 +230,50 @@ async def upload_portfolio_img(
     if existing_count >= MAX_PORTFOLIO_IMAGES:
         raise HTTPException(status_code=400, detail="Maximum number of portfolio images reached")
 
-    cdn_url = await _upload_image_file(db=db, worker_profile=worker_profile, file=file, placeholder="portfolio_img")
+    cdn_url = await _upload_image_file(db=db, worker_profile=worker_profile, file=file, placeholder="portfolio_image")
     object_in = PortfolioImageCreate.model_validate({"worker_profile_id": worker_profile_id, "image_url": cdn_url})
     return await crud_portfolio_images.create(db=db, object=object_in, schema_to_select=PortfolioImageRead, return_as_model=True)
 
 
-# ————— GET /worker-profiles/{worker_profile_id}/portfolio-img/{portfolio_img_id} ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— GET /worker-profiles/{worker_profile_id}/portfolio-img/{portfolio_image_id} ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.get("/{worker_profile_id}/portfolio-img/{portfolio_img_id}", response_model=PortfolioImageRead, status_code=200)
+@router.get("/{worker_profile_id}/portfolio-images/{portfolio_image_id}", response_model=PortfolioImageRead, status_code=200)
 async def get_portfolio_image(
         worker_profile_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
-        portfolio_img_id: int
+        portfolio_image_id: int
 ) -> PortfolioImageRead:
-    worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
-    portfolio_img = await crud_portfolio_images.get(
+    worker_profile_exists = await crud_worker_profiles.exists(db=db, id=worker_profile_id)
+    if not worker_profile_exists:
+        raise NotFoundException("Worker profile not found")
+
+    portfolio_image = await crud_portfolio_images.get(
         db=db,
         worker_profile_id=worker_profile_id,
-        id=portfolio_img_id,
+        id=portfolio_image_id,
         schema_to_select=PortfolioImageRead,
         return_as_model=True
     )
-    if not portfolio_img:
+    if not portfolio_image:
         raise NotFoundException("Portfolio image not found")
 
-    return portfolio_img
+    return portfolio_image
 
 
-# ————— GET /worker-profiles/{worker_profile_id}/portfolio-img ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— GET /worker-profiles/{worker_profile_id}/portfolio-images ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.get("/{worker_profile_id}/portfolio-img", response_model=list[PortfolioImageRead], status_code=200)
+@router.get("/{worker_profile_id}/portfolio-images", response_model=list[PortfolioImageRead], status_code=200)
 async def get_portfolio_images(
         worker_profile_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> list[PortfolioImageRead]:
-    worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
+    print(f"worker_profile_id: {worker_profile_id}")
+
+    worker_profile_exist = await crud_worker_profiles.exists(db=db, id=worker_profile_id)
+    if not worker_profile_exist:
+        raise NotFoundException("Worker profile not found")
+
+    print("PASSED")
     result = await crud_portfolio_images.get_multi(
         db=db,
         worker_profile_id=worker_profile_id,
@@ -274,18 +283,18 @@ async def get_portfolio_images(
     return result["data"]
 
 
-# ————— DELETE /worker-profiles/{worker_profile_id}/portfolio-img ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— DELETE /worker-profiles/{worker_profile_id}/portfolio-images ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.delete("/{worker_profile_id}/portfolio-img/{portfolio_img_id}", status_code=204)
+@router.delete("/{worker_profile_id}/portfolio-images/{portfolio_image_id}", status_code=204)
 async def delete_portfolio_image(
         worker_profile_id: int,
-        portfolio_img_id: int,
+        portfolio_image_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
 ) -> None:
     worker_profile = await _get_worker_profile_or_404(db=db, worker_profile_id=worker_profile_id)
     _assert_owner_or_admin(worker_profile_user_id=worker_profile.user.id, current_user=current_user)
     try:
-        await crud_portfolio_images.delete(db=db, id=portfolio_img_id, worker_profile_id=worker_profile_id)
+        await crud_portfolio_images.delete(db=db, id=portfolio_image_id, worker_profile_id=worker_profile_id)
     except NoResultFound:
         raise NotFoundException("Portfolio image not found")
