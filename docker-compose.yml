@@ -12,12 +12,18 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./src/app:/src/app
-      - ./src/.env:/src/.env
-      - ./src/scripts:/src/scripts
+      - ./src:/app/src
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/docs').status == 200 else 1)" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   frontend:
 
@@ -30,7 +36,8 @@ services:
     #      - "5173:80" For production
 
     depends_on:
-      - web
+      web:
+        condition: service_healthy
     volumes:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
@@ -96,6 +103,12 @@ services:
       - "6379"
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   opensearch:
     image: opensearchproject/opensearch:3
