@@ -49,6 +49,7 @@ def main():
 
     # Step 2: tests
     run(["docker", "compose", "-f", "docker-compose.test.yml", "run", "--rm", "tests", "pytest", "-x", "-v", "--no-cov"], "Running tests (pytest)")
+    run(["docker", "compose", "-f", "docker-compose.test.yml", "down", "-v", "--remove-orphans"], "Removing test containers")
 
     # Step 3: type-checking
     run(build_tool_cmd("mypy", "src", "--config-file", "pyproject.toml"), "Type-checking (mypy)")
