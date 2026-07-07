@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '../../../../components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form.tsx';
 import { Slider } from '@/components/ui/slider.tsx';
 
 export const ServiceRadiusField: React.FC = () => {

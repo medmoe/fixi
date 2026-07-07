@@ -1,11 +1,10 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {workerApi} from "@/lib/api/workerApi";
 import {WorkerProfile} from '../types/worker.types'
-import {useToast} from '@/components/ui/use-toast';
+import {toast} from 'sonner';
 
 export const useAvailabilityToggle = (workerId: number) => {
     const queryClient = useQueryClient();
-    const {toast} = useToast();
 
     return useMutation({
             mutationFn: (isAvailable: boolean) => workerApi.toggleAvailability(workerId, isAvailable),
@@ -30,11 +29,7 @@ export const useAvailabilityToggle = (workerId: number) => {
                 if (context?.previousProfile) {
                     queryClient.setQueryData(['workerProfile', workerId], context.previousProfile);
                 }
-                toast({
-                    variant: 'destructive',
-                    title: 'Status update failed',
-                    description: 'Failed to update availability, please try again.'
-                })
+                toast.error("Status update failed", {description: `Failed to update availability, please try again. ${newAvailability}::${err}`})
             },
             onSettled: () => {
                 // Sync cache back up with ground truth server reality

@@ -6,6 +6,7 @@ import {store} from './app/store';
 import './styles/index.css';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
+import {Toaster} from "sonner";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <App/>
+                <Toaster />
                 <ReactQueryDevtools initialIsOpen={false}/>
             </QueryClientProvider>
         </Provider>
