@@ -1,3 +1,5 @@
+import {UserRead} from '../../auth/types/user.types'
+
 export type SkillLevel = 'junior' | 'mid' | 'senior'
 
 export interface Trade {
@@ -18,7 +20,10 @@ export interface WorkerProfile {
     service_radius_km?: number;
     avatar_url?: string;
     is_available: boolean;
+    is_verified: boolean;
+    available_since: string | null;
     trades: WorkerTrade[];
+    user: UserRead;
 }
 
 export interface UpdateWorkerProfilePayload {

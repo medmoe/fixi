@@ -12,8 +12,8 @@ export const workerApi = {
         const {data} = await axios.patch<WorkerProfile>(`${API_BASE}/worker-profiles/${id}`, payload);
         return data;
     },
-    toggleAvailability: async (id: number, isAvailable: boolean): Promise<{ is_available: boolean }> => {
-        const {data} = await axios.patch<{ is_available: boolean }>(
+    toggleAvailability: async (id: number, isAvailable: boolean): Promise<{ is_available: boolean, available_since: string | null }> => {
+        const {data} = await axios.patch<{ is_available: boolean, available_since: string | null }>(
             `${API_BASE}/worker-profiles/${id}/availability`,
             {is_available: isAvailable}
         )
