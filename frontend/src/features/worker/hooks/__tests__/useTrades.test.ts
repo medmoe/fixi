@@ -8,7 +8,7 @@ import {useTrades} from '../useTrades';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('@lib/api/workerApi', () => ({
+vi.mock('@/lib/api/workerApi', () => ({
     workerApi: {
         getTrades: vi.fn(),
     }

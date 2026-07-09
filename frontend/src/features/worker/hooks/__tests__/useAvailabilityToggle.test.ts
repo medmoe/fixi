@@ -1,10 +1,10 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
-import {useAvailabilityToggle} from '../useAvailabilityToggle'
+import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle'
 import {workerApi} from '@/lib/api/workerApi'
 import {toast} from 'sonner'
-import type {WorkerProfile} from '../../types/worker.types'
+import type {WorkerProfile} from '@/features/worker/types/worker.types'
 import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from './helpers'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -18,6 +18,7 @@ vi.mock('@/lib/api/workerApi', () => ({
 vi.mock('sonner', () => ({
     toast: {
         error: vi.fn(),
+        success: vi.fn(),
     },
 }))
 
@@ -42,10 +43,11 @@ describe('useAvailabilityToggle', () => {
 
     describe('optimistic update', () => {
         it('immediately updates cache before API responds', async () => {
-            vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
-                is_available: true,
-                available_since: '2026-01-01T00:00:00Z',
-            })
+            vi.mocked(workerApi.toggleAvailability).mockImplementation(
+                () => new Promise((resolve) =>
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                )
+            )
 
             const {result} = renderHook(
                 () => useAvailabilityToggle(WORKER_ID),
@@ -56,16 +58,20 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(true)
             })
 
-            // check cache immediately — before API resolves
+            // ✅ wait for isPending to be true — means onMutate has completed
+            await waitFor(() => expect(result.current.isPending).toBe(true))
+
+            // now check cache — optimistic update should be applied
             const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
-            expect(cached?.is_available).toBe(true)  // ✅ optimistic update applied
+            expect(cached?.is_available).toBe(true)
         })
 
         it('flips is_available from false to true optimistically', async () => {
-            vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
-                is_available: true,
-                available_since: '2026-01-01T00:00:00Z',
-            })
+            vi.mocked(workerApi.toggleAvailability).mockImplementation(
+                () => new Promise((resolve) =>
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                )
+            )
 
             // start offline
             queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], {
@@ -82,15 +88,17 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(true)
             })
 
+            await waitFor(() => expect(result.current.isPending).toBe(true))
             const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(true)
         })
 
         it('flips is_available from true to false optimistically', async () => {
-            vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
-                is_available: false,
-                available_since: null,
-            })
+            vi.mocked(workerApi.toggleAvailability).mockImplementation(
+                () => new Promise((resolve) =>
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                )
+            )
 
             // start online
             queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], {
@@ -108,6 +116,7 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(false)
             })
 
+            await waitFor(() => expect(result.current.isPending).toBe(true))
             const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(false)
         })
@@ -215,14 +224,18 @@ describe('useAvailabilityToggle', () => {
             )
 
             await act(async () => {
-                result.current.mutate(true)
+                await result.current.mutateAsync(true)
             })
 
-            await waitFor(() => expect(result.current.isSuccess).toBe(true))
+            // ✅ wait for React to process all state updates
+            await waitFor(() => {
+                expect(toast.success).toHaveBeenCalled()  // confirm success path ran
+            })
+
             expect(toast.error).not.toHaveBeenCalled()
         })
 
-        it('does updated available_since on success', async () => {
+        it('does update available_since when toggling on', async () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
@@ -232,11 +245,17 @@ describe('useAvailabilityToggle', () => {
                 () => useAvailabilityToggle(WORKER_ID),
                 {wrapper: createWrapper(queryClient)},
             )
+
             await act(async () => {
-                result.current.mutate(true)
+                await result.current.mutateAsync(true)
             })
-            expect(result.current.data?.available_since).toBe('2026-01-01T00:00:00Z')
-            expect(result.current.data?.is_available).toBe(true)
+
+            await waitFor(() => expect(toast.success).toHaveBeenCalled())
+
+            // ✅ check query cache — not result.current.data
+            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            expect(cached?.is_available).toBe(true)
+            expect(cached?.available_since).toBe('2026-01-01T00:00:00Z')
         })
 
         it('does update available_since to null when flipping is_available to false', async () => {
@@ -249,10 +268,11 @@ describe('useAvailabilityToggle', () => {
                 {wrapper: createWrapper(queryClient)},
             )
             await act(async () => {
-                result.current.mutate(false)
+                await result.current.mutateAsync(false)
             })
-            expect(result.current.data?.available_since).toBe(null)
-            expect(result.current.data?.is_available).toBe(false)
+            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            expect(cached?.is_available).toBe(false)
+            expect(cached?.available_since).toBe(null)
         })
     })
 

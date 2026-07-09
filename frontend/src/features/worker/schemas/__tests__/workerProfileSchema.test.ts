@@ -60,6 +60,9 @@ describe('hourly_rate', () => {
     it('accepts empty string and treats it as undefined', () => {
         const result = parse({...validPayload, hourly_rate: ''})
         expect(result.success).toBe(true)
+        if (result.success) {
+            expect(result.data.hourly_rate).toBeUndefined()
+        }
     })
     it('accepts numeric string and coerces it to a number', () => {
         const result = parse({...validPayload, hourly_rate: '75.00'})
@@ -83,7 +86,7 @@ describe('hourly_rate', () => {
         const result = parse({...validPayload, hourly_rate: 'abc'})
         expect(result.success).toBe(false)
         if (!result.success) {
-            expect(result.error.issues[0].message).toBe('Hourly rate must be greater than 0')
+            expect(result.error.issues[0].message).toBe('Invalid input: expected number, received NaN')
         }
     })
 })

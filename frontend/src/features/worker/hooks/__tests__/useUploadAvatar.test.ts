@@ -9,9 +9,9 @@ import {toast} from "sonner";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('@lib/api/workerApi', () => ({
+vi.mock('@/lib/api/workerApi', () => ({
     workerApi: {
-        getTrades: vi.fn(),
+        uploadAvatar: vi.fn()
     }
 }))
 
@@ -194,7 +194,7 @@ describe('useUploadAvatar', () => {
 
         it('is pending during upload', async () => {
             vi.mocked(workerApi.uploadAvatar).mockImplementation(() => new Promise(() => {
-            }))
+            })) // never resolves
 
             const {result} = renderHook(
                 () => useUploadAvatar(WORKER_ID),

@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {act, renderHook, waitFor} from "@testing-library/react";
 import {QueryClient} from "@tanstack/react-query";
-import {workerApi} from "@/lib/api/workerApi.ts";
+import {workerApi} from "@/lib/api/workerApi";
 import {useUpdateWorkerProfile} from "../useUpdateWorkerProfile";
 import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from "./helpers";
 import {toast} from "sonner";
@@ -17,7 +17,8 @@ vi.mock('@/lib/api/workerApi.ts', () => ({
 
 vi.mock('sonner', () => ({
     toast: {
-        error: vi.fn()
+        error: vi.fn(),
+        success: vi.fn()
     }
 }))
 

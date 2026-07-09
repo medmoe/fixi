@@ -1,9 +1,12 @@
-import { defineConfig } from 'vitest/config'
+import {defineConfig, mergeConfig} from 'vitest/config'
+import viteConfig from './vite.config'
 
-export default defineConfig({
-    test: {
-        environment: 'jsdom', // needed for React hooks
-        globals: true,
-        setupFiles: ['./src/test/setup.ts'],
-    }
-})
+export default mergeConfig(
+    viteConfig,
+    defineConfig({
+        test: {
+            environment: 'jsdom', // needed for React hooks
+            globals: true,
+            setupFiles: ['./src/test/setup.ts'],
+        }
+    }))

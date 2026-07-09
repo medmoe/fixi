@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { createTestStore } from '../../../test-utils';
+import { createTestStore } from '@/test-utils.tsx';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const renderWithAuth = (accessToken: string | null, role: 'customer' | 'handyman' | null) => {
@@ -24,7 +24,7 @@ const renderWithAuth = (accessToken: string | null, role: 'customer' | 'handyman
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={['/app']}>
+      <MemoryRouter initialEntries={['/app']} future={{ v7_startTransition: true }}>
         <Routes>
           <Route path="/login" element={<div>Login Page</div>} />
           <Route
