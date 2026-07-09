@@ -1,5 +1,6 @@
 import axios from 'axios';
-import {Trade, UpdateWorkerProfilePayload, WorkerProfile} from "@/features/worker/types/worker.types.ts";
+import {UpdateWorkerProfilePayload, WorkerProfile} from "@/features/worker/types/worker.types.ts";
+import {TradeCategory} from "@/features/worker/types/tradeCategory.types";
 
 const API_BASE = 'api/v1';
 
@@ -25,8 +26,8 @@ export const workerApi = {
         const {data} = await axios.post<{ avatar_url: string }>(`${API_BASE}/worker-profiles/${id}/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
     },
-    getTrades: async(): Promise<Trade[]> => {
-        const { data } = await axios.get<Trade[]>(`${API_BASE}/trade-categories`)
+    getTrades: async (): Promise<TradeCategory[]> => {
+        const {data} = await axios.get<TradeCategory[]>(`${API_BASE}/trade-categories`)
         return data;
     }
 }

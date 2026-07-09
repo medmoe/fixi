@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm run vitest",
-    "vitest": "vitest run",
+    "vitest": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npx vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:watch": "jest --watch",

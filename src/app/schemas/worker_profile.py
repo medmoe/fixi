@@ -45,8 +45,8 @@ class WorkerProfileUpdate(BaseModel):
     years_of_experience: Annotated[int | None, Field(ge=0, le=100, default=None)] = None
     hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, default=None)] = None
     service_radius_km: Annotated[int | None, Field(ge=0, default=None)] = None
-    avatar_url: Annotated[str | None, Field(max_length=255, default=None)] = None
-    is_available: Annotated[bool | None, Field(default=None)] = None
+    avatar_url: Annotated[str | None, Field(max_length=255, default=None)] = None # TODO: remove it. we update it in different endpoint.
+    is_available: Annotated[bool | None, Field(default=None)] = None # TODO: remove it. we have it already in AvailabilityToggleResponse.
 
     @field_validator("avatar_url", mode="before")
     @classmethod
