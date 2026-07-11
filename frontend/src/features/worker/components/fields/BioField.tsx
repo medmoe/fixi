@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea.tsx';
+import { Textarea } from '@/components/ui/textarea';
 
 export const BioField: React.FC = () => {
   const { control, watch } = useFormContext();

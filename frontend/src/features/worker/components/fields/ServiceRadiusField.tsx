@@ -31,6 +31,7 @@ export const ServiceRadiusField: React.FC = () => {
                 aria-valuemin={1}
                 aria-valuemax={500}
                 aria-valuenow={radius}
+                name="Service Radius"
               />
             </div>
           </FormControl>
