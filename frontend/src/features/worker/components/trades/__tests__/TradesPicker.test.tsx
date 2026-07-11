@@ -1,26 +1,24 @@
-// src/features/worker/components/__tests__/TradesPicker.test.tsx
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {act, render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useForm, FormProvider } from 'react-hook-form'
-import { TradesPicker } from '../trades/TradesPicker'
-import { useTrades } from '../../hooks/useTrades'
-import type { Trade } from '../../types/worker.types'
+import {FormProvider, useForm} from 'react-hook-form'
+import {TradesPicker} from '@/features/worker/components/trades/TradesPicker'
+import {useTrades} from '@/features/worker/hooks/useTrades'
+import type {TradeCategory} from '@/features/worker/types/tradeCategory.types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('../../hooks/useTrades')
+vi.mock('@/features/worker/hooks/useTrades')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const mockTrades: Trade[] = [
-    { id: 1, name: 'plumbing',    display_name: 'Plumbing',    icon_name: 'wrench', parent_id: null },
-    { id: 2, name: 'electrical',  display_name: 'Electrical',  icon_name: 'bolt',   parent_id: null },
-    { id: 3, name: 'carpentry',   display_name: 'Carpentry',   icon_name: 'hammer', parent_id: null },
-    { id: 4, name: 'painting',    display_name: 'Painting',    icon_name: 'brush',  parent_id: null },
-    { id: 5, name: 'roofing',     display_name: 'Roofing',     icon_name: 'house',  parent_id: null },
-    { id: 6, name: 'landscaping', display_name: 'Landscaping', icon_name: 'tree',   parent_id: null },
+const mockTrades: TradeCategory[] = [
+    {id: 1, name: 'plumbing', display_name: 'Plumbing', icon_name: 'wrench', parent_id: null, created_at: '2026-01-01', children: []},
+    {id: 2, name: 'electrical', display_name: 'Electrical', icon_name: 'bolt', parent_id: null, created_at: '2026-01-01', children: []},
+    {id: 3, name: 'carpentry', display_name: 'Carpentry', icon_name: 'hammer', parent_id: null, created_at: '2026-01-01', children: []},
+    {id: 4, name: 'painting', display_name: 'Painting', icon_name: 'brush', parent_id: null, created_at: '2026-01-01', children: []},
+    {id: 5, name: 'roofing', display_name: 'Roofing', icon_name: 'house', parent_id: null, created_at: '2026-01-01', children: []},
+    {id: 6, name: 'landscaping', display_name: 'Landscaping', icon_name: 'tree', parent_id: null, created_at: '2026-01-01', children: []},
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -29,21 +27,22 @@ type TradesFormValues = {
     trades: { trade_id: number; skill_level: string }[]
 }
 
-const renderWithForm = (defaultValues: TradesFormValues = { trades: [] }) => {
+const renderWithForm = (defaultValues: TradesFormValues = {trades: []}) => {
     const Wrapper = () => {
         const methods = useForm<TradesFormValues>({
             defaultValues,
         })
         return (
             <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(() => {})}>
-                    <TradesPicker />
+                <form onSubmit={methods.handleSubmit(() => {
+                })}>
+                    <TradesPicker/>
                     <button type="submit">Submit</button>
                 </form>
             </FormProvider>
         )
     }
-    return render(<Wrapper />)
+    return render(<Wrapper/>)
 }
 
 
@@ -82,7 +81,7 @@ describe('TradesPicker', () => {
 
             renderWithForm()
 
-            expect(screen.queryByRole('button', { name: /plumbing/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', {name: /plumbing/i})).not.toBeInTheDocument()
         })
 
         it('loading text has animate-pulse class', () => {
@@ -119,7 +118,7 @@ describe('TradesPicker', () => {
         it('renders all available trade buttons', () => {
             renderWithForm()
             mockTrades.forEach(trade => {
-                expect(screen.getByRole('button', { name: new RegExp(trade.name, 'i') }))
+                expect(screen.getByRole('button', {name: new RegExp(trade.name, 'i')}))
                     .toBeInTheDocument()
             })
         })
@@ -131,7 +130,7 @@ describe('TradesPicker', () => {
 
         it('renders pre-selected trades from default values', () => {
             renderWithForm({
-                trades: [{ trade_id: 1, skill_level: 'junior' }],
+                trades: [{trade_id: 1, skill_level: 'junior'}],
             })
             expect(screen.getByText('plumbing')).toBeInTheDocument()
         })
@@ -143,7 +142,7 @@ describe('TradesPicker', () => {
         it('adds a trade when its button is clicked', async () => {
             renderWithForm()
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
+            await act(async () => await userEvent.click(screen.getByRole('button', {name: /plumbing/i})))
 
             expect(screen.getByText('plumbing')).toBeInTheDocument()
         })
@@ -151,17 +150,17 @@ describe('TradesPicker', () => {
         it('removes trade from available list after adding', async () => {
             renderWithForm()
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
+            await act(async () => await userEvent.click(screen.getByRole('button', {name: /plumbing/i})))
 
             // plumbing button should no longer appear in the available list
-            const availableSection = screen.queryByRole('button', { name: /^\+ plumbing$/i })
+            const availableSection = screen.queryByRole('button', {name: /^\+ plumbing$/i})
             expect(availableSection).not.toBeInTheDocument()
         })
 
         it('updates counter badge after adding a trade', async () => {
             renderWithForm()
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
+            await act(async () => await userEvent.click(screen.getByRole('button', {name: /plumbing/i})))
 
             expect(screen.getByText('1/5 Selected')).toBeInTheDocument()
         })
@@ -169,8 +168,10 @@ describe('TradesPicker', () => {
         it('adds multiple trades', async () => {
             renderWithForm()
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
-            await userEvent.click(screen.getByRole('button', { name: /electrical/i }))
+            await act(async () => {
+                await userEvent.click(screen.getByRole('button', {name: /plumbing/i}))
+                await userEvent.click(screen.getByRole('button', {name: /electrical/i}))
+            })
 
             expect(screen.getByText('plumbing')).toBeInTheDocument()
             expect(screen.getByText('electrical')).toBeInTheDocument()
@@ -180,18 +181,23 @@ describe('TradesPicker', () => {
         it('defaults new trade to mid skill level', async () => {
             renderWithForm()
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
+            await act(async () => await userEvent.click(screen.getByRole('button', {name: /plumbing/i})))
+            const select = screen.getByRole('combobox', {
+                name: /skill level for plumbing/i,
+            })
 
-            expect(screen.getByText('Mid-level')).toBeInTheDocument()
+            expect(select).toHaveTextContent('Mid-level')
+
         })
 
         it('shows remove button for each added trade', async () => {
             renderWithForm()
+            await act(async () => {
+                await userEvent.click(screen.getByRole('button', {name: /plumbing/i}))
+                await userEvent.click(screen.getByRole('button', {name: /electrical/i}))
+            })
 
-            await userEvent.click(screen.getByRole('button', { name: /plumbing/i }))
-            await userEvent.click(screen.getByRole('button', { name: /electrical/i }))
-
-            const removeButtons = screen.getAllByRole('button', { name: /remove trade/i })
+            const removeButtons = screen.getAllByRole('button', {name: /remove trade/i})
             expect(removeButtons).toHaveLength(2)
         })
     })
@@ -202,26 +208,26 @@ describe('TradesPicker', () => {
         it('hides available trades section when 5 trades are selected', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
-                    { trade_id: 3, skill_level: 'mid' },
-                    { trade_id: 4, skill_level: 'mid' },
-                    { trade_id: 5, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
+                    {trade_id: 3, skill_level: 'mid'},
+                    {trade_id: 4, skill_level: 'mid'},
+                    {trade_id: 5, skill_level: 'senior'},
                 ],
             })
 
             // no add buttons should be visible
-            expect(screen.queryByRole('button', { name: /^\+/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', {name: /^\+/i})).not.toBeInTheDocument()
         })
 
         it('shows destructive badge variant at max capacity', () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
-                    { trade_id: 3, skill_level: 'mid' },
-                    { trade_id: 4, skill_level: 'mid' },
-                    { trade_id: 5, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
+                    {trade_id: 3, skill_level: 'mid'},
+                    {trade_id: 4, skill_level: 'mid'},
+                    {trade_id: 5, skill_level: 'senior'},
                 ],
             })
 
@@ -232,11 +238,11 @@ describe('TradesPicker', () => {
         it('does not add trade when already at max 5', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
-                    { trade_id: 3, skill_level: 'mid' },
-                    { trade_id: 4, skill_level: 'mid' },
-                    { trade_id: 5, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
+                    {trade_id: 3, skill_level: 'mid'},
+                    {trade_id: 4, skill_level: 'mid'},
+                    {trade_id: 5, skill_level: 'senior'},
                 ],
             })
 
@@ -246,11 +252,11 @@ describe('TradesPicker', () => {
 
         it('shows available trades section when under max', async () => {
             renderWithForm({
-                trades: [{ trade_id: 1, skill_level: 'junior' }],
+                trades: [{trade_id: 1, skill_level: 'junior'}],
             })
 
             // should still show add buttons for remaining trades
-            expect(screen.getByRole('button', { name: /electrical/i })).toBeInTheDocument()
+            expect(screen.getByRole('button', {name: /electrical/i})).toBeInTheDocument()
         })
     })
 
@@ -259,82 +265,86 @@ describe('TradesPicker', () => {
     describe('removing trades', () => {
         it('removes a trade when remove button is clicked', async () => {
             renderWithForm({
-                trades: [{ trade_id: 1, skill_level: 'junior' }],
+                trades: [{trade_id: 1, skill_level: 'junior'}],
             })
 
             const removeButton = screen.getByRole('button', {
                 name: /remove trade allocation descriptor for plumbing/i,
             })
-            await userEvent.click(removeButton)
+            await act(async () => await userEvent.click(removeButton))
 
-            expect(screen.queryByText('plumbing')).not.toBeInTheDocument()
+            expect(
+                screen.queryByRole('button', {
+                    name: /remove trade allocation descriptor for plumbing/i,
+                })
+            ).not.toBeInTheDocument()
         })
 
         it('updates counter after removing a trade', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
                 ],
             })
 
             expect(screen.getByText('2/5 Selected')).toBeInTheDocument()
 
-            const removeButtons = screen.getAllByRole('button', { name: /remove trade/i })
-            await userEvent.click(removeButtons[0])
+            const removeButtons = screen.getAllByRole('button', {name: /remove trade/i})
+            await act(async () => await userEvent.click(removeButtons[0]))
 
             expect(screen.getByText('1/5 Selected')).toBeInTheDocument()
         })
 
         it('adds trade back to available list after removal', async () => {
             renderWithForm({
-                trades: [{ trade_id: 1, skill_level: 'junior' }],
+                trades: [{trade_id: 1, skill_level: 'junior'}],
             })
 
             const removeButton = screen.getByRole('button', {
                 name: /remove trade allocation descriptor for plumbing/i,
             })
-            await userEvent.click(removeButton)
+            await act(async () => await userEvent.click(removeButton))
 
             // plumbing should appear in available list again
-            expect(screen.getByRole('button', { name: /plumbing/i })).toBeInTheDocument()
+            expect(screen.getByRole('button', {name: /plumbing/i})).toBeInTheDocument()
         })
 
         it('shows available section again after removing from max', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
-                    { trade_id: 3, skill_level: 'mid' },
-                    { trade_id: 4, skill_level: 'mid' },
-                    { trade_id: 5, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
+                    {trade_id: 3, skill_level: 'mid'},
+                    {trade_id: 4, skill_level: 'mid'},
+                    {trade_id: 5, skill_level: 'senior'},
                 ],
             })
 
             // no add buttons at max
-            expect(screen.queryByRole('button', { name: /^\+/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', {name: /^\+/i})).not.toBeInTheDocument()
 
-            const removeButtons = screen.getAllByRole('button', { name: /remove trade/i })
-            await userEvent.click(removeButtons[0])
+            const removeButtons = screen.getAllByRole('button', {name: /remove trade/i})
+            await act(async () => await userEvent.click(removeButtons[0]))
 
             // now shows available section with remaining trades
-            expect(screen.getByRole('button', { name: /landscaping/i })).toBeInTheDocument()
+            expect(screen.getByRole('button', {name: /landscaping/i})).toBeInTheDocument()
         })
 
         it('removes correct trade when multiple exist', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
                 ],
             })
 
             const removeElectrical = screen.getByRole('button', {
                 name: /remove trade allocation descriptor for electrical/i,
             })
-            await userEvent.click(removeElectrical)
+            await act(async () => await userEvent.click(removeElectrical))
 
-            expect(screen.queryByText('electrical')).not.toBeInTheDocument()
+            expect(removeElectrical).not.toBeInTheDocument()
             expect(screen.getByText('plumbing')).toBeInTheDocument()
         })
     })
@@ -344,7 +354,7 @@ describe('TradesPicker', () => {
     describe('unknown trades', () => {
         it('shows fallback label for trade id not in available list', () => {
             renderWithForm({
-                trades: [{ trade_id: 999, skill_level: 'junior' }],
+                trades: [{trade_id: 999, skill_level: 'junior'}],
             })
 
             expect(screen.getByText('Unknown Trade (#999)')).toBeInTheDocument()
@@ -352,7 +362,7 @@ describe('TradesPicker', () => {
 
         it('remove button has aria-label with fallback trade name', () => {
             renderWithForm({
-                trades: [{ trade_id: 999, skill_level: 'junior' }],
+                trades: [{trade_id: 999, skill_level: 'junior'}],
             })
 
             expect(screen.getByRole('button', {
@@ -367,30 +377,32 @@ describe('TradesPicker', () => {
         it('renders skill level select for each selected trade', async () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'senior'},
                 ],
             })
 
-            const skillSelects = screen.getAllByRole('combobox', { name: /skill level for/i })
+            const skillSelects = screen.getAllByRole('combobox', {name: /skill level for/i})
             expect(skillSelects).toHaveLength(2)
         })
 
         it('renders correct skill level for each trade', () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'senior' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'senior'},
                 ],
             })
+            const plumbingSkill = screen.getByRole('combobox', {name: /skill level for plumbing/i})
+            const electricalSkill = screen.getByRole('combobox', {name: /skill level for electrical/i})
 
-            expect(screen.getByText('Junior')).toBeInTheDocument()
-            expect(screen.getByText('Senior')).toBeInTheDocument()
+            expect(plumbingSkill).toHaveTextContent('Junior')
+            expect(electricalSkill).toHaveTextContent('Senior')
         })
 
         it('skill level select has correct aria-label with trade name', () => {
             renderWithForm({
-                trades: [{ trade_id: 1, skill_level: 'junior' }],
+                trades: [{trade_id: 1, skill_level: 'junior'}],
             })
 
             expect(screen.getByLabelText('Skill level for plumbing')).toBeInTheDocument()
@@ -404,7 +416,7 @@ describe('TradesPicker', () => {
             renderWithForm()
 
             mockTrades.forEach(trade => {
-                expect(screen.getByRole('button', { name: new RegExp(trade.name, 'i') }))
+                expect(screen.getByRole('button', {name: new RegExp(trade.name, 'i')}))
                     .toBeInTheDocument()
             })
         })
@@ -412,7 +424,7 @@ describe('TradesPicker', () => {
         it('shows no selected trades section when trades array is empty', () => {
             renderWithForm()
 
-            expect(screen.queryByRole('button', { name: /remove trade/i }))
+            expect(screen.queryByRole('button', {name: /remove trade/i}))
                 .not.toBeInTheDocument()
         })
 
@@ -426,7 +438,7 @@ describe('TradesPicker', () => {
             })
 
             // available section hidden at max
-            expect(screen.queryByRole('button', { name: /^\+/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', {name: /^\+/i})).not.toBeInTheDocument()
         })
 
         it('shows no trades available message area when all are selected and under max', () => {
@@ -439,11 +451,11 @@ describe('TradesPicker', () => {
             })
 
             // only unselected trades appear
-            expect(screen.getByRole('button', { name: /roofing/i })).toBeInTheDocument()
-            expect(screen.getByRole('button', { name: /landscaping/i })).toBeInTheDocument()
+            expect(screen.getByRole('button', {name: /roofing/i})).toBeInTheDocument()
+            expect(screen.getByRole('button', {name: /landscaping/i})).toBeInTheDocument()
 
             // selected ones are not in available list
-            expect(screen.queryByRole('button', { name: /^\+ plumbing$/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole('button', {name: /^\+ plumbing$/i})).not.toBeInTheDocument()
         })
     })
 
@@ -453,8 +465,8 @@ describe('TradesPicker', () => {
         it('each remove button has descriptive aria-label', () => {
             renderWithForm({
                 trades: [
-                    { trade_id: 1, skill_level: 'junior' },
-                    { trade_id: 2, skill_level: 'mid' },
+                    {trade_id: 1, skill_level: 'junior'},
+                    {trade_id: 2, skill_level: 'mid'},
                 ],
             })
 

@@ -25,3 +25,17 @@ The most common frontend test failure causes in your project:
 | `img` not found | shadcn AvatarImage needs load event | Mock shadcn Avatar components |
 | `isSuccess` never true | `invalidateQueries` triggers refetch | Mock `invalidateQueries` in beforeEach |
 | Event loop error | asyncpg connection reused across loops | NullPool + function scope |
+
+---
+
+## Key lesson
+
+Radix UI components that use **portals** (`Select`, `Dialog`, `Popover`, `Tooltip`, `DropdownMenu`) all have this problem in jsdom. The pattern is always the same:
+
+```
+1. Portal renders outside document.body subtree
+2. screen.getBy* can't find elements in portals
+3. Solution: mock the component to render inline without portal
+```
+
+Add this to your debugging checklist for future Radix component tests.

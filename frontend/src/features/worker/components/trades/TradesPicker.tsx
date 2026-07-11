@@ -1,10 +1,10 @@
 import React from 'react';
 import {useFieldArray, useFormContext} from 'react-hook-form';
-import {useTrades} from '../../hooks/useTrades';
+import {useTrades} from '@/features/worker/hooks/useTrades';
 import {SkillLevelSelect} from './SkillLevelSelect';
-import {Badge} from '../../../../components/ui/badge';
-import {Button} from '../../../../components/ui/button';
-import {FormItem, FormLabel, FormMessage} from '../../../../components/ui/form';
+import {Badge} from '@/components/ui/badge.tsx';
+import {Button} from '@/components/ui/button.tsx';
+import {FormItem, FormLabel, FormMessage} from '@/components/ui/form.tsx';
 import {Plus, X} from 'lucide-react';
 import {SkillLevel} from '../../types/worker.types';
 
