@@ -1,3 +1,4 @@
+import jwt
 import pytest
 from httpx import AsyncClient
 from redis import Redis
@@ -180,6 +181,23 @@ class TestLoginEndpoint:
         assert response.status_code == 200
         assert "access_token" in response.json()
 
+    async def test_login_with_worker_role_success(self, async_client_with_redis):
+        client, _ = async_client_with_redis
+
+        # register worker
+        await client.post("/api/v1/auth/register", json=worker_payload())
+
+        # ✅ login as the worker we just registered
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"username_or_email": "janedoe", "password": "Secure123"},  # ✅ matches worker_payload username
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        decode = jwt.decode(data['access_token'], options={"verify_signature": False})
+        assert decode['role'] == 'worker'
+        assert data["token_type"] == "bearer"
     # ── Cookie ──────────────────────────────────────────────────────────────
 
     async def test_login_sets_refresh_token_cookie(self, async_client_with_redis: AsyncClient):

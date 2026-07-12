@@ -27,6 +27,7 @@ services:
 
   web-debug:
     # Run debugger service once pycharm server is listening when needed: docker compose --profile debug up web-debug
+    # IF the connection is refused, try changing port number in main.py settrace function the application will reload and connect to pycharm server
     profiles:
       - debug
 
