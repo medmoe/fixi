@@ -113,7 +113,7 @@ async def async_client_with_redis(async_session: AsyncSession):
             transport=ASGITransport(app=app),
             base_url="http://test"
     ) as client:
-        yield client
+        yield client, redis_client
 
     # teardown — close pool properly before clearing singleton
     if RateLimiter.pool is not None:

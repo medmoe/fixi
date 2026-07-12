@@ -13,6 +13,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy import text
 
+from .utils.rate_limit import rate_limiter
 from ..api.dependencies import get_current_superuser
 from ..middleware.client_cache_middleware import ClientCacheMiddleware
 from .config import (
@@ -74,13 +75,13 @@ async def close_redis_queue_pool() -> None:
 
 # -------------- rate limit --------------
 async def create_redis_rate_limit_pool() -> None:
-    # rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
-    pass
+    rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
 
 
-# async def close_redis_rate_limit_pool() -> None:
-#     if rate_limiter.client is not None:
-#         await rate_limiter.client.aclose()  # type: ignore
+
+async def close_redis_rate_limit_pool() -> None:
+    if rate_limiter.client is not None:
+        await rate_limiter.client.aclose()  # type: ignore
 
 
 # -------------- application --------------
