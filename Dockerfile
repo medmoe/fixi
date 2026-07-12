@@ -18,7 +18,7 @@ COPY . /app
 
 # Install the project in non-editable mode
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-editable
+    uv sync --locked --no-editable --extra debug
 
 # --------- Final Stage ---------
 FROM python:3.11-slim-bookworm

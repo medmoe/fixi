@@ -41,6 +41,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+debug = ['pydevd-pycharm~=261.4']
 dev = [
     "pytest>=7.4.2",
     "pytest-mock>=3.14.0",
@@ -49,6 +50,7 @@ dev = [
     "types-redis>=4.6.0",
     "ruff>=0.1.0",
 ]
+
 
 [build-system]
 requires = ["hatchling"]
@@ -114,6 +116,7 @@ dev = [
     "pytest-asyncio>=1.0.0",
     "faker>=26.0.0",
     "asgi-lifespan>=2.1.0",
+    "debugpy>=1.8.21",
 ]
 
 [tool.mypy]
