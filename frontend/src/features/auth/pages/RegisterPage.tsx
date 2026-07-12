@@ -2,12 +2,7 @@ import React, {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {AuthLayout} from '../components/AuthLayout';
 import {useRegisterMutation} from '../api/authApi';
-import type {RegisterCustomer, RegisterHandyman, UserRole} from '../types';
-import {useServiceCategoriesQuery} from '../queries';
-
-const defaultAvailability = {
-    weekday: '9-5'
-};
+import type {UserRole} from '../types';
 
 export const RegisterPage = () => {
     const navigate = useNavigate();
@@ -19,19 +14,9 @@ export const RegisterPage = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        saved_addresses: '',
-        skill_category: '',
-        skills: '',
-        certification_urls: '',
-        hourly_rate: ''
     });
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const {
-        data: serviceCategories = [],
-        isLoading: isLoadingServiceCategories,
-        isError: isServiceCategoriesError,
-    } = useServiceCategoriesQuery();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormState((prev) => ({...prev, [event.target.name]: event.target.value}));
@@ -40,6 +25,7 @@ export const RegisterPage = () => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const pattern = /^[a-z0-9]+$/;
+        const passwordPattern = /^(?=.*\d)(?=.*[A-Z]).{8,}$/;
         if (!pattern.test(formState.username)) {
             setError('Username can only contain lowercase letters and numbers');
             return;
@@ -48,43 +34,21 @@ export const RegisterPage = () => {
             setError('Passwords do not match');
             return;
         }
-        if (formState.password.length < 8) {
-            setError('Password must be at least 8 characters long');
+        if (!passwordPattern.test(formState.password)) {
+            setError('Password must be at least 8 characters long and contain at least one number and one uppercase letter');
             return;
         }
 
         setError(null);
         setMessage(null);
 
-        const basePayload = {
+        const payload = {
             name: formState.name,
             username: formState.username,
             email: formState.email,
             password: formState.password,
-            role
+            role_type: role
         };
-
-        const payload: RegisterCustomer | RegisterHandyman =
-            role === 'customer'
-                ? {
-                    ...basePayload,
-                    role: 'customer',
-                    saved_addresses: formState.saved_addresses
-                        ? formState.saved_addresses.split(',').map((item) => item.trim()).filter(Boolean)
-                        : []
-                }
-                : {
-                    ...basePayload,
-                    role: 'handyman',
-                    skill_category: formState.skill_category,
-                    skills: formState.skills.split(',').map((item) => item.trim()).filter(Boolean),
-                    certification_urls: formState.certification_urls
-                        ? formState.certification_urls.split(',').map((item) => item.trim()).filter(Boolean)
-                        : [],
-                    hourly_rate: Number(formState.hourly_rate || 0),
-                    availability: defaultAvailability
-                };
-
         try {
             await registerUser(payload).unwrap();
             // redirect to login page
@@ -116,12 +80,12 @@ export const RegisterPage = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setRole('handyman')}
+                        onClick={() => setRole('worker')}
                         className={`flex-1 rounded-full px-3 py-2 ${
-                            role === 'handyman' ? 'bg-amber-400 text-slate-900' : 'border border-slate-700 text-slate-300'
+                            role === 'worker' ? 'bg-amber-400 text-slate-900' : 'border border-slate-700 text-slate-300'
                         }`}
                     >
-                        Handyman
+                        Worker
                     </button>
                 </div>
 
@@ -172,56 +136,11 @@ export const RegisterPage = () => {
                         required
                     />
 
-                    {role === "handyman" && (
-                        <>
-                            <select
-                                name="skill_category"
-                                value={formState.skill_category}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                                required
-                            >
-                                <option value={""}>
-                                    {isLoadingServiceCategories ? "Loading skill categories..." : "Select skill category"}
-                                </option>
-                                {serviceCategories.map((category) => {
-                                    return <option key={category.id} value={category.name}>{category.name}</option>
-                                })}
-                            </select>
-                            {isServiceCategoriesError && (
-                                <p className="text-sm text-rose-300">Could not load skill categories. Please refresh and
-                                    try again.</p>
-                            )}
-                            <input
-                                name="skills"
-                                placeholder="Skills (comma separated)"
-                                value={formState.skills}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                            />
-                            <input
-                                name="certification_urls"
-                                placeholder="Certification URLs (comma separated)"
-                                value={formState.certification_urls}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                            />
-                            <input
-                                name="hourly_rate"
-                                placeholder="Hourly rate"
-                                value={formState.hourly_rate}
-                                onChange={handleChange}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-white"
-                            />
-                        </>
-                    )}
-
                     {error && <p className="text-sm text-rose-300">{error}</p>}
                     {message && <p className="text-sm text-emerald-300">{message}</p>}
 
                     <button
                         type="submit"
-                        disabled={isLoading || (role === 'handyman' && isLoadingServiceCategories)}
                         className="w-full rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
                     >
                         {isLoading ? 'Creating...' : 'Create account'}
