@@ -47,7 +47,7 @@ async def register(payload: RegisterRequest, db: Annotated[AsyncSession, Depends
         elif isinstance(payload, RegisterWorker):
             db.add(WorkerProfile(user_id=user.id))
         await db.refresh(user)
-    return RegisterResponse(id=user.id, username=user.username, email=user.email, role=user.role_type)
+    return RegisterResponse(id=user.id, username=user.username, email=user.email, role_type=user.role_type)
 
 
 @router.post("/login", response_model=Token, dependencies=[Depends(rate_limiter_dependency)])

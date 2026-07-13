@@ -53,6 +53,16 @@ class WorkerProfileUpdate(BaseModel):
     years_of_experience: Annotated[int | None, Field(ge=0, le=100, default=None)] = None
     hourly_rate: Annotated[Decimal | None, Field(ge=0, decimal_places=2, default=None)] = None
     service_radius_km: Annotated[int | None, Field(ge=0, default=None)] = None
+    avatar_url: Annotated[str | None, Field(max_length=255, default=None)] = None
+    is_available: Annotated[bool | None, Field(default=None)] = None
+
+    @field_validator("avatar_url", mode="before")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        if v is not None:
+            AnyHttpUrl(v)
+        return v
+
 
 class WorkerProfileUpdateInternal(BaseModel):
     """Used internally by admin -- can set is_verified, is_available, and available_since """

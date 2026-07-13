@@ -14,7 +14,8 @@ class TestAvailabilityToggle:
             test_worker_profile: WorkerProfile,
             auth_headers: dict,
     ):
-        response = await async_client_with_redis.patch(
+        client, _ = async_client_with_redis
+        response = await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": True},
             headers=auth_headers,
@@ -31,13 +32,14 @@ class TestAvailabilityToggle:
             auth_headers: dict,
     ):
         # first toggle on
-        await async_client_with_redis.patch(
+        client, _ = async_client_with_redis
+        await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": True},
             headers=auth_headers,
         )
         # then toggle off
-        response = await async_client_with_redis.patch(
+        response = await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": False},
             headers=auth_headers,
@@ -53,7 +55,8 @@ class TestAvailabilityToggle:
             test_worker_profile: WorkerProfile,
             other_auth_headers: dict,  # different user
     ):
-        response = await async_client_with_redis.patch(
+        client, _ = async_client_with_redis
+        response = await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": True},
             headers=other_auth_headers,
@@ -65,7 +68,8 @@ class TestAvailabilityToggle:
             async_client_with_redis: AsyncClient,
             test_worker_profile: WorkerProfile,
     ):
-        response = await async_client_with_redis.patch(
+        client, _ = async_client_with_redis
+        response = await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": True},
         )
@@ -77,6 +81,7 @@ class TestAvailabilityToggle:
             test_worker_profile: WorkerProfile,
             auth_headers: dict,
     ):
+        client, _ = async_client_with_redis
         """Verify the event bus receives the right payload."""
         received_events: list[dict] = []
 
@@ -86,7 +91,7 @@ class TestAvailabilityToggle:
         # subscribe before the request
         subscribe("worker_profile:availability_changed", capture_event)
 
-        await async_client_with_redis.patch(
+        await client.patch(
             f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
             json={"is_available": True},
             headers=auth_headers,

@@ -59,7 +59,7 @@ class TestRegisterEndpoint:
         data = response.json()
         assert data["username"] == "johndoe"
         assert data["email"] == "john@example.com"
-        assert data["role"] == "customer"
+        assert data["role_type"] == "customer"
         assert "id" in data
         assert "password" not in data  # never leak password
         assert "hashed_password" not in data  # never leak hash
@@ -70,7 +70,7 @@ class TestRegisterEndpoint:
         assert response.status_code == 201
         data = response.json()
         assert data["username"] == "janedoe"
-        assert data["role"] == "worker"
+        assert data["role_type"] == "worker"
 
     # ── Duplicate detection ─────────────────────────────────────────────────
 
@@ -196,8 +196,10 @@ class TestLoginEndpoint:
         data = response.json()
         assert "access_token" in data
         decode = jwt.decode(data['access_token'], options={"verify_signature": False})
+        print(decode)
         assert decode['role'] == 'worker'
         assert data["token_type"] == "bearer"
+
     # ── Cookie ──────────────────────────────────────────────────────────────
 
     async def test_login_sets_refresh_token_cookie(self, async_client_with_redis: AsyncClient):
@@ -283,13 +285,13 @@ class TestLoginRateLimit:
         response = await client.post("/api/v1/auth/login", json={"username_or_email": "johndoe", "password": "Pass123456"})
         assert response.status_code in {200, 401}
 
-    async def test_login_blocked_after_limit_exceeded(self, async_client_with_redis,):
+    async def test_login_blocked_after_limit_exceeded(self, async_client_with_redis, ):
         client, redis_client = async_client_with_redis
 
-        payload = {"username_or_email": "johndoe", "password": "Pass123456",}
+        payload = {"username_or_email": "johndoe", "password": "Pass123456", }
 
         # Create the rate-limit key
-        await client.post("/api/v1/auth/login", json=payload,)
+        await client.post("/api/v1/auth/login", json=payload, )
 
         keys = await redis_client.keys("ratelimit:*")
 
@@ -300,18 +302,17 @@ class TestLoginRateLimit:
         # Set the counter above the limit
         await redis_client.set(key, 10)
 
-        response = await client.post("/api/v1/auth/login", json=payload,)
+        response = await client.post("/api/v1/auth/login", json=payload, )
 
         assert response.status_code == 429
 
-
-    async def test_rate_limit_resets_after_window(self, async_client_with_redis :tuple[AsyncClient, Redis]):
+    async def test_rate_limit_resets_after_window(self, async_client_with_redis: tuple[AsyncClient, Redis]):
         client, redis_client = async_client_with_redis
 
-        payload = {"username_or_email": "johndoe", "password": "Pass123456",}
+        payload = {"username_or_email": "johndoe", "password": "Pass123456", }
 
         # Trigger rate limiter and create Redis key
-        response = await client.post("/api/v1/auth/login", json=payload,)
+        response = await client.post("/api/v1/auth/login", json=payload, )
 
         keys = await redis_client.keys("ratelimit:*")
         assert len(keys) == 1
@@ -325,7 +326,7 @@ class TestLoginRateLimit:
         # Simulate window expiration
         await redis_client.delete(key)
 
-        response = await client.post("/api/v1/auth/login", json=payload,)
+        response = await client.post("/api/v1/auth/login", json=payload, )
         # Request should no longer be rate limited
 
         assert response.status_code in {200, 401}

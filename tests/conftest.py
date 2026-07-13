@@ -198,35 +198,37 @@ async def test_other_worker_profile(async_session: AsyncSession, other_user: Use
 @pytest_asyncio.fixture
 async def auth_headers(async_client_with_redis: AsyncClient, test_user: User) -> dict:
     """ Get authentication headers for a test user."""
+    client, _ = async_client_with_redis
     login_data = {
         "username_or_email": test_user.username,
         "password": "testpassword123"
     }
-    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
-    print(response.json())
+    response = await client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
 @pytest_asyncio.fixture
 async def other_auth_headers(async_client_with_redis: AsyncClient, other_user: User) -> dict:
     """ Get authentication headers for a test user."""
+    client, _ = async_client_with_redis
     login_data = {
         "username_or_email": other_user.username,
         "password": "testpassword123"
     }
-    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
+    response = await client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
 @pytest_asyncio.fixture
 async def admin_auth_headers(async_client_with_redis: AsyncClient, test_admin_user: User) -> dict:
     """ Get authentication headers for a test user."""
+    client, _ = async_client_with_redis
     login_data = {
         "username": test_admin_user.username,
         "password": "testpassword123"
     }
 
-    response = await async_client_with_redis.post("/api/v1/auth/login", json=login_data)
+    response = await client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 

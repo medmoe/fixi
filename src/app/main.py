@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-import socket
+
 from .api import router
 from .core.config import settings
 from .core.setup import create_application, lifespan_factory
@@ -15,7 +15,7 @@ if os.getenv("DEBUG_MODE") == "true":
 
         pydevd_pycharm.settrace(
             'host.docker.internal',  # ✅ reaches host machine from inside container
-            port=45969, # update this port number to match the port given by pycharm debugger
+            port=45969,  # update this port number to match the port given by pycharm debugger
             stdout_to_server=True,
             stderr_to_server=True,
             suspend=False,  # ✅ don't pause on connect — only on breakpoints
