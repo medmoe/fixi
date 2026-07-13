@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, reveal_type
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from ..models.user import UserRole
 
-
 class UserBase(BaseModel):
+    model_config = ConfigDict(use_enum_values=True, from_attributes=True)
     name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
