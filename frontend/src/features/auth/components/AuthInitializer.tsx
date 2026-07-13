@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
+import { useAppDispatch } from '@/hooks/useAppDispatch.ts';
 import { clearCredentials, setCredentials, setUser } from '../authSlice';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import { apiSlice } from '../../../app/apiSlice';
+import { apiSlice } from '@/app/apiSlice.ts';
 import type { AuthToken, LoginRequest, RegisterRequest, RegisterResponse, UserRead } from '../types';
 
 export const authApi = apiSlice.injectEndpoints({

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/AuthLayout';
 import { useLoginMutation, useLazyGetMeQuery } from '../api/authApi';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
+import { useAppDispatch } from '@/hooks/useAppDispatch.ts';
 import { setCredentials, setUser } from '../authSlice';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 

@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { createTestStore } from '@/test-utils.tsx';
 import { ProtectedRoute } from './ProtectedRoute';
 
-const renderWithAuth = (accessToken: string | null, role: 'customer' | 'handyman' | null) => {
+const renderWithAuth = (accessToken: string | null, role: 'customer' | 'worker' | null) => {
   const store = createTestStore({
     auth: {
       accessToken,
