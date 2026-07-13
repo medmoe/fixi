@@ -38,7 +38,7 @@ class RegisterResponse(BaseModel):
     id: int
     username: str
     email: EmailStr
-    role: UserRole
+    role_type: UserRole
 
 
 class LoginRequest(BaseModel):

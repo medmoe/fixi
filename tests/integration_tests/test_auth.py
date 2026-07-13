@@ -1,5 +1,7 @@
+import jwt
 import pytest
 from httpx import AsyncClient
+from redis import Redis
 from sqlalchemy import select
 
 from src.app.crud.crud_worker_profiles import crud_worker_profiles
@@ -57,7 +59,7 @@ class TestRegisterEndpoint:
         data = response.json()
         assert data["username"] == "johndoe"
         assert data["email"] == "john@example.com"
-        assert data["role"] == "customer"
+        assert data["role_type"] == "customer"
         assert "id" in data
         assert "password" not in data  # never leak password
         assert "hashed_password" not in data  # never leak hash
@@ -68,7 +70,7 @@ class TestRegisterEndpoint:
         assert response.status_code == 201
         data = response.json()
         assert data["username"] == "janedoe"
-        assert data["role"] == "worker"
+        assert data["role_type"] == "worker"
 
     # ── Duplicate detection ─────────────────────────────────────────────────
 
@@ -156,9 +158,10 @@ class TestLoginEndpoint:
     # ── Happy path ──────────────────────────────────────────────────────────
 
     async def test_login_with_username_success(self, async_client_with_redis: AsyncClient):
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
 
-        response = await async_client_with_redis.post(
+        response = await client.post(
             "/api/v1/auth/login",
             json=login_payload(username_or_email="johndoe"),
         )
@@ -168,21 +171,42 @@ class TestLoginEndpoint:
         assert data["token_type"] == "bearer"
 
     async def test_login_with_email_success(self, async_client_with_redis: AsyncClient):
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
 
-        response = await async_client_with_redis.post(
+        response = await client.post(
             "/api/v1/auth/login",
             json=login_payload(username_or_email="john@example.com"),
         )
         assert response.status_code == 200
         assert "access_token" in response.json()
 
+    async def test_login_with_worker_role_success(self, async_client_with_redis):
+        client, _ = async_client_with_redis
+
+        # register worker
+        await client.post("/api/v1/auth/register", json=worker_payload())
+
+        # ✅ login as the worker we just registered
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"username_or_email": "janedoe", "password": "Secure123"},  # ✅ matches worker_payload username
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        decode = jwt.decode(data['access_token'], options={"verify_signature": False})
+        print(decode)
+        assert decode['role'] == 'worker'
+        assert data["token_type"] == "bearer"
+
     # ── Cookie ──────────────────────────────────────────────────────────────
 
     async def test_login_sets_refresh_token_cookie(self, async_client_with_redis: AsyncClient):
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
 
-        response = await async_client_with_redis.post("/api/v1/auth/login", json=login_payload())
+        response = await client.post("/api/v1/auth/login", json=login_payload())
 
         assert "refresh_token" in response.cookies
         cookie = response.headers.get("set-cookie", "")
@@ -191,8 +215,9 @@ class TestLoginEndpoint:
 
     async def test_login_cookie_not_secure_in_test_env(self, async_client_with_redis: AsyncClient):
         """secure=False expected in non-production environments"""
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
-        response = await async_client_with_redis.post("/api/v1/auth/login", json=login_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
+        response = await client.post("/api/v1/auth/login", json=login_payload())
 
         cookie = response.headers.get("set-cookie", "")
         assert "Secure" not in cookie  # test env should not set Secure flag
@@ -200,9 +225,10 @@ class TestLoginEndpoint:
     # ── Auth failures ───────────────────────────────────────────────────────
 
     async def test_login_wrong_password_fails(self, async_client_with_redis: AsyncClient):
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
 
-        response = await async_client_with_redis.post(
+        response = await client.post(
             "/api/v1/auth/login",
             json=login_payload(password="WrongPass1"),
         )
@@ -210,7 +236,8 @@ class TestLoginEndpoint:
         assert "access_token" not in response.json()
 
     async def test_login_nonexistent_user_fails(self, async_client_with_redis: AsyncClient):
-        response = await async_client_with_redis.post(
+        client, _ = async_client_with_redis
+        response = await client.post(
             "/api/v1/auth/login",
             json=login_payload(username_or_email="ghost@example.com"),
         )
@@ -218,13 +245,14 @@ class TestLoginEndpoint:
 
     async def test_login_wrong_and_nonexistent_same_response(self, async_client_with_redis: AsyncClient):
         """Both wrong password and unknown user should return identical response — no user enumeration"""
-        await async_client_with_redis.post("/api/v1/auth/register", json=customer_payload())
+        client, _ = async_client_with_redis
+        await client.post("/api/v1/auth/register", json=customer_payload())
 
-        wrong_password = await async_client_with_redis.post(
+        wrong_password = await client.post(
             "/api/v1/auth/login",
             json=login_payload(password="WrongPass1"),
         )
-        unknown_user = await async_client_with_redis.post(
+        unknown_user = await client.post(
             "/api/v1/auth/login",
             json=login_payload(username_or_email="ghost@example.com"),
         )
@@ -234,14 +262,16 @@ class TestLoginEndpoint:
     # ── Validation ──────────────────────────────────────────────────────────
 
     async def test_login_missing_password_fails(self, async_client_with_redis: AsyncClient):
-        response = await async_client_with_redis.post(
+        client, _ = async_client_with_redis
+        response = await client.post(
             "/api/v1/auth/login",
             json={"username_or_email": "johndoe"},
         )
         assert response.status_code == 422
 
     async def test_login_empty_credentials_fails(self, async_client_with_redis: AsyncClient):
-        response = await async_client_with_redis.post("/api/v1/auth/login", json={"username_or_email": "", "password": ""})
+        client, _ = async_client_with_redis
+        response = await client.post("/api/v1/auth/login", json={"username_or_email": "", "password": ""})
         assert response.status_code == 422
 
 
@@ -251,28 +281,52 @@ class TestLoginRateLimit:
             async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
     ):
         client, limiter = async_client_with_rate_limit
-        response = await client.post("/api/v1/auth/login", json={"username_or_email": "johndoe", "password": "Pass123456"})
-        assert response.status_code != 429
-
-    async def test_login_blocked_after_limit_exceeded(
-            self,
-            async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
-    ):
-        client, limiter = async_client_with_rate_limit
-        limiter.set_count(path="/api/v1/auth/login", count=10)
-        print(f"Limiter counts before request: {limiter.counts}")  # ✅ debug
 
         response = await client.post("/api/v1/auth/login", json={"username_or_email": "johndoe", "password": "Pass123456"})
-        print(f"Limiter counts after request: {limiter.counts}")  # ✅ debug
-        print(f"Response status: {response.status_code}")
+        assert response.status_code in {200, 401}
+
+    async def test_login_blocked_after_limit_exceeded(self, async_client_with_redis, ):
+        client, redis_client = async_client_with_redis
+
+        payload = {"username_or_email": "johndoe", "password": "Pass123456", }
+
+        # Create the rate-limit key
+        await client.post("/api/v1/auth/login", json=payload, )
+
+        keys = await redis_client.keys("ratelimit:*")
+
+        assert len(keys) == 1
+
+        key = keys[0]
+
+        # Set the counter above the limit
+        await redis_client.set(key, 10)
+
+        response = await client.post("/api/v1/auth/login", json=payload, )
+
         assert response.status_code == 429
 
-    async def test_rate_limit_resets_after_window(
-            self,
-            async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
-    ):
-        client, limiter = async_client_with_rate_limit
-        limiter.set_count(path="/api/v1/auth/login", count=10, ip="testclient")
-        limiter.reset()
-        response = await client.post("/api/v1/auth/login", json={"username_or_email": "johndoe", "password": "Pass123456"})
-        assert response.status_code != 429
+    async def test_rate_limit_resets_after_window(self, async_client_with_redis: tuple[AsyncClient, Redis]):
+        client, redis_client = async_client_with_redis
+
+        payload = {"username_or_email": "johndoe", "password": "Pass123456", }
+
+        # Trigger rate limiter and create Redis key
+        response = await client.post("/api/v1/auth/login", json=payload, )
+
+        keys = await redis_client.keys("ratelimit:*")
+        assert len(keys) == 1
+
+        key = keys[0]
+
+        # Verify Redis expiration is configured
+        ttl = await redis_client.ttl(key)
+        assert ttl > 0
+
+        # Simulate window expiration
+        await redis_client.delete(key)
+
+        response = await client.post("/api/v1/auth/login", json=payload, )
+        # Request should no longer be rate limited
+
+        assert response.status_code in {200, 401}

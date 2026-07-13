@@ -29,6 +29,7 @@ from .config import (
 from .db.database import Base
 from .db.database import async_engine as engine
 from .utils import cache, queue
+from .utils.rate_limit import rate_limiter
 
 
 # -------------- database --------------
@@ -74,13 +75,13 @@ async def close_redis_queue_pool() -> None:
 
 # -------------- rate limit --------------
 async def create_redis_rate_limit_pool() -> None:
-    # rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
-    pass
+    rate_limiter.initialize(settings.REDIS_RATE_LIMIT_URL)  # type: ignore
 
 
-# async def close_redis_rate_limit_pool() -> None:
-#     if rate_limiter.client is not None:
-#         await rate_limiter.client.aclose()  # type: ignore
+
+async def close_redis_rate_limit_pool() -> None:
+    if rate_limiter.client is not None:
+        await rate_limiter.client.aclose()  # type: ignore
 
 
 # -------------- application --------------

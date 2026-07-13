@@ -1,0 +1,41 @@
+### register worker
+POST http://localhost:8000/api/v1/auth/register
+Content-Type: application/json
+
+{
+"name": "john doe",
+"username" : "johndoe",
+"email": "test@test.com",
+"password": "1A123456",
+"role_type": "worker"
+}
+
+### login worker
+POST http://localhost:8000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email": "test@test.com",
+  "password": "1A123456"
+}
+
+### register customer
+POST http://localhost:8000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "customer name",
+  "username": "custusername",
+  "email": "cust@test.com",
+  "password": "Secure123",
+  "role_type": "customer"
+}
+
+### login customer
+POST http://localhost:8000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email": "cust@test.com",
+  "password": "Secure123"
+}

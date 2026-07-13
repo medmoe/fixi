@@ -70,7 +70,10 @@ async def authenticate_user(username_or_email: str, password: str, db: AsyncSess
 def _normalize_user_role(value: Any) -> UserRole:
     if isinstance(value, UserRole):
         return value
-    return UserRole(str(value))
+    str_value = str(value)
+    if '.' in str_value:
+        str_value = str_value.split('.')[-1]
+    return UserRole(str_value.lower())
 
 
 def create_token_payload(user: dict[str, Any]) -> dict[str, Any]:
