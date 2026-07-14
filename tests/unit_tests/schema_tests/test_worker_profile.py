@@ -322,7 +322,7 @@ class TestWorkerProfileRead:
 
             assert schema.user is not None
             assert schema.user.id is not None
-            assert schema.user.role_type is payload["user"]["role_type"]
+            assert schema.user.role_type is payload["user"]["role_type"].value
             assert schema.user.uuid == payload["user"]["uuid"]
 
 

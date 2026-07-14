@@ -10,7 +10,7 @@ Content-Type: application/json
 "role_type": "worker"
 }
 
-### login worker
+### login worker and capture token
 POST http://localhost:8000/api/v1/auth/login
 Content-Type: application/json
 
@@ -18,6 +18,16 @@ Content-Type: application/json
   "username_or_email": "test@test.com",
   "password": "1A123456"
 }
+
+> {% client.global.set("access_token", response.body.access_token) %}
+
+### fetch worker profile — uses token from login
+GET http://localhost:8000/api/v1/user/me
+Authorization: Bearer {{access_token}}
+
+
+### fetch users
+GET http://localhost:8000/api/v1/users
 
 ### register customer
 POST http://localhost:8000/api/v1/auth/register

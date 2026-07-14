@@ -43,8 +43,8 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
-    role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole), nullable=False, default=UserRole.CUSTOMER)
+    role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole, values_callable=lambda v: [e.value for e in v]), nullable=False, default=UserRole.CUSTOMER)
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
-    tier_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tiers.id"), index=True, default=None,)
+    tier_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tiers.id"), index=True, default=None, )
     tier: Mapped["Tier | None"] = relationship("Tier", back_populates="users", lazy="selectin", init=False)

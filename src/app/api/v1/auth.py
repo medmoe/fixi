@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Annotated, Any, Optional, cast
+from typing import Annotated, Optional, cast
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 from jose import JWTError
@@ -25,6 +25,7 @@ from ...core.security import (
 from ...crud.crud_users import crud_users
 from ...models import CustomerProfile, User, UserRole, WorkerProfile
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
+from ...schemas.user import UserRead
 from ..dependencies import rate_limiter_dependency
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
@@ -63,7 +64,7 @@ async def login(
         await verify_password("dummy", dummy_hash)
         raise UnauthorizedException("Wrong username, email or password.")
 
-    token_payload = create_token_payload(user)
+    token_payload = create_token_payload(cast(User, user))
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(data=token_payload, expires_delta=access_token_expires)
     refresh_token = await create_refresh_token(data=token_payload)
@@ -112,17 +113,12 @@ async def refresh_access_token(request: Request, db: AsyncSession = Depends(asyn
         raise UnauthorizedException("Invalid refresh token.")
 
     if "@" in user_data.username_or_email:
-        db_user = await crud_users.get(db=db, email=user_data.username_or_email, is_deleted=False)
+        db_user = await crud_users.get(db=db, email=user_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
     else:
-        db_user = await crud_users.get(db=db, username=user_data.username_or_email, is_deleted=False)
+        db_user = await crud_users.get(db=db, username=user_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
 
     if not db_user:
         raise UnauthorizedException("Invalid refresh token.")
 
-    if hasattr(db_user, "model_dump"):
-        user_payload_source = cast(dict[str, Any], db_user.model_dump())
-    else:
-        user_payload_source = cast(dict[str, Any], db_user)
-
-    new_access_token = await create_access_token(data=create_token_payload(user_payload_source))
+    new_access_token = await create_access_token(data=create_token_payload(User(**db_user.model_dump())))
     return {"access_token": new_access_token, "token_type": "bearer"}

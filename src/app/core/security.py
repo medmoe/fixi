@@ -1,7 +1,7 @@
 import io
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 import bcrypt
 import magic
@@ -9,10 +9,10 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import SecretStr
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..crud.crud_users import crud_users
-from ..models.user import UserRole
+from ..models import User
 from .config import settings
 from .db.crud_token_blacklist import crud_token_blacklist
 from .schemas import TokenBlacklistCreate, TokenData
@@ -41,6 +41,14 @@ class TokenType(str, Enum):
     REFRESH = "refresh"
 
 
+async def get_db_user(db: AsyncSession, username_or_email: str) -> User | None:
+    if "@" in username_or_email:
+        result = await db.execute(select(User).where(User.email == username_or_email, User.is_deleted.is_(False)))
+    else:
+        result = await db.execute(select(User).where(User.username == username_or_email, User.is_deleted.is_(False)))
+    return result.scalar_one_or_none()
+
+
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
     correct_password: bool = bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
     return correct_password
@@ -51,39 +59,23 @@ def get_password_hash(password: str) -> str:
     return hashed_password
 
 
-async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> dict[str, Any] | Literal[False]:
-    if "@" in username_or_email:
-        db_user = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
-    else:
-        db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
-
+async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> User | Literal[False]:
+    db_user = await get_db_user(db, username_or_email)
     if not db_user:
         return False
 
-    db_user = cast(dict[str, Any], db_user)
-    if not await verify_password(password, db_user["hashed_password"]):
+    if not await verify_password(password, db_user.hashed_password):
         return False
 
     return db_user
 
 
-def _normalize_user_role(value: Any) -> UserRole:
-    if isinstance(value, UserRole):
-        return value
-    str_value = str(value)
-    if '.' in str_value:
-        str_value = str_value.split('.')[-1]
-    return UserRole(str_value.lower())
-
-
-def create_token_payload(user: dict[str, Any]) -> dict[str, Any]:
-    role = _normalize_user_role(user.get("role_type", UserRole.CUSTOMER))
-    token_version = int(user.get("token_version", 1))
+def create_token_payload(user: User) -> dict[str, Any]:
     return {
-        "sub": user["username"],
-        "role": role.value,
-        "email": user["email"],
-        "tv": token_version,
+        "sub": user.username,
+        "role": user.role_type.value,
+        "email": user.email,
+        "tv": user.token_version,
     }
 
 
@@ -140,22 +132,15 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
         if username_or_email is None or token_type != expected_token_type or role is None or token_version is None:
             return None
 
-        if "@" in username_or_email:
-            db_user = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
-        else:
-            db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+        db_user = await get_db_user(db, username_or_email)
 
         if not db_user:
             return None
 
-        db_user = cast(dict[str, Any], db_user)
-        db_role = _normalize_user_role(db_user.get("role_type", UserRole.CUSTOMER)).value
-        db_token_version = int(db_user.get("token_version", 1))
-
-        if role != db_role or int(token_version) != db_token_version:
+        if role != db_user.role_type.value or token_version != db_user.token_version:
             return None
 
-        return TokenData(username_or_email=username_or_email, role=role, token_version=db_token_version)
+        return TokenData(username_or_email=username_or_email, role=role, token_version=db_user.token_version)
 
     except JWTError:
         return None
@@ -174,11 +159,7 @@ async def blacklist_tokens(access_token: str, refresh_token: str, db: AsyncSessi
         Database session for performing database operations.
     """
     for token in [access_token, refresh_token]:
-        payload = jwt.decode(token, SECRET_KEY.get_secret_value(), algorithms=[ALGORITHM])
-        exp_timestamp = payload.get("exp")
-        if exp_timestamp is not None:
-            expires_at = datetime.fromtimestamp(exp_timestamp)
-            await crud_token_blacklist.create(db, object=TokenBlacklistCreate(token=token, expires_at=expires_at))
+        await blacklist_token(token, db)
 
 
 async def blacklist_token(token: str, db: AsyncSession) -> None:
