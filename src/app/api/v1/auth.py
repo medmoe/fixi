@@ -5,6 +5,7 @@ from fastapi import APIRouter, Cookie, Depends, Request, Response
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..dependencies import rate_limiter_dependency
 from ...core.config import EnvironmentOption, settings
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import DuplicateValueException, UnauthorizedException
@@ -25,7 +26,6 @@ from ...core.security import (
 from ...crud.crud_users import crud_users
 from ...models import CustomerProfile, User, UserRole, WorkerProfile
 from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
-from ..dependencies import rate_limiter_dependency
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
 
@@ -63,7 +63,7 @@ async def login(
         await verify_password("dummy", dummy_hash)
         raise UnauthorizedException("Wrong username, email or password.")
 
-    token_payload = create_token_payload(user)
+    token_payload = create_token_payload(cast(User, user))
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(data=token_payload, expires_delta=access_token_expires)
     refresh_token = await create_refresh_token(data=token_payload)

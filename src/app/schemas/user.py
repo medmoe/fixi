@@ -1,83 +1,267 @@
+import re
 from datetime import datetime
-from typing import Annotated, reveal_type
-from uuid import UUID
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field, field_validator,
+)
 
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from ..models.user import UserRole
 
+#
+# -------------------------------------------------------------------------
+# Reusable field aliases
+# -------------------------------------------------------------------------
+#
+
+Name = Annotated[
+    str,
+    Field(
+        min_length=2,
+        max_length=30,
+        examples=["John Doe"],
+    ),
+]
+
+Username = Annotated[
+    str,
+    Field(
+        min_length=2,
+        max_length=20,
+        pattern=r"^[a-z][a-z0-9_]{1,19}$",
+        examples=["john_doe"],
+    ),
+]
+
+Location = Annotated[
+    str | None,
+    Field(
+        default=None,
+        max_length=100,
+        examples=["POINT(-73.9857 40.7484)"],
+    ),
+]
+
+Password = Annotated[
+    str,
+    Field(
+        min_length=8,
+        max_length=128,
+        examples=["StrongP@ssw0rd"],
+    ),
+]
+
+
+#
+# -------------------------------------------------------------------------
+# Base
+# -------------------------------------------------------------------------
+#
+
 class UserBase(BaseModel):
-    model_config = ConfigDict(use_enum_values=True, from_attributes=True)
-    name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
-    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
-    bio: Annotated[str | None, Field(max_length=500, default=None)]
-    location: Annotated[str | None, Field(max_length=100, default=None)]
+    model_config = ConfigDict(
+        from_attributes=True,
+        use_enum_values=True,
+    )
+
+    name: Name
+    username: Username
+    email: EmailStr
+    location: Location = None
 
 
-class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
-    profile_image_url: Annotated[str, Field(default="https://www.profileimageurl.com")]
-    hashed_password: str
-    is_superuser: bool = False
-    role_type: UserRole = UserRole.CUSTOMER
-    token_version: int = 1
-    tier_id: int | None = None
+#
+# -------------------------------------------------------------------------
+# Public output
+# -------------------------------------------------------------------------
+#
 
-
-class UserRead(BaseModel):
+class UserRead(UserBase, UUIDSchema):
     id: int
-    name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
-    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
-    uuid: UUID
     profile_image_url: str
-    location: str | None = None
-    role_type: UserRole = UserRole.CUSTOMER
+    role_type: UserRole
+    is_deleted: bool | None = None
+    deleted_at: datetime | None = None
+    updated_at: datetime | None = None
+    created_at: datetime | None = None
 
+    @field_validator("profile_image_url", mode="before")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        if v is not None:
+            AnyHttpUrl(v)
+        return v
+
+
+class UserDetail(UserRead, TimestampSchema):
+    """Returned when requesting the authenticated user's profile."""
+    pass
+
+
+#
+# -------------------------------------------------------------------------
+# Create
+# -------------------------------------------------------------------------
+#
 
 class UserCreate(UserBase):
-    model_config = ConfigDict(extra="forbid")
-    password: Annotated[str, Field(pattern=r"^.{8,}|[0-9]+|[A-Z]+|[a-z]+|[^a-zA-Z0-9]+$", examples=["Str1ngst!"])]
+    model_config = ConfigDict(
+        from_attributes=True,
+        use_enum_values=True,
+        extra="forbid"
+    )
+
+    password: Password
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError("Password must contain at least one lowercase letter.")
+
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must contain at least one uppercase letter.")
+
+        if not re.search(r"\d", value):
+            raise ValueError("Password must contain at least one digit.")
+
+        if not re.search(r"[^A-Za-z\d]", value):
+            raise ValueError("Password must contain at least one special character.")
+
+        return value
 
 
 class UserCreateInternal(UserBase):
     hashed_password: str
     role_type: UserRole = UserRole.CUSTOMER
+    is_superuser: bool = False
+    token_version: int = 1
+    tier_id: int | None = None
 
+
+#
+# -------------------------------------------------------------------------
+# Update
+# -------------------------------------------------------------------------
+#
 
 class UserUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        from_attributes=True,
+        use_enum_values=True,
+    )
+    name: Name | None = None
+    username: Username | None = None
+    email: EmailStr | None = None
+    profile_image_url: str | None = None
+    location: Location = None
 
-    name: Annotated[str | None, Field(min_length=2, max_length=30, examples=["User Userberg"], default=None)]
-    username: Annotated[
-        str | None, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userberg"], default=None)
-    ]
-    email: Annotated[EmailStr | None, Field(examples=["user.userberg@example.com"], default=None)]
-    profile_image_url: Annotated[
-        str | None,
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.profileimageurl.com"], default=None
-        ),
-    ]
-    bio: Annotated[str | None, Field(max_length=500, default=None)]
-    location: Annotated[str | None, Field(max_length=100, default=None)]
+    @field_validator("profile_image_url", mode="before")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        if v is not None:
+            AnyHttpUrl(v)
+        return v
 
 
 class UserUpdateInternal(UserUpdate):
     updated_at: datetime
+    hashed_password: str | None = None
+    is_deleted: bool | None = None
+    deleted_at: datetime | None = None
+    updated_at: datetime | None = None
 
+
+#
+# -------------------------------------------------------------------------
+# Password update
+# -------------------------------------------------------------------------
+#
+
+class UserPasswordUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        from_attributes=True,
+    )
+    current_password: str
+    new_password: Password
+
+    @field_validator("new_password", mode="before")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError("Password must contain at least one lowercase letter.")
+
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must contain at least one uppercase letter.")
+
+        if not re.search(r"\d", value):
+            raise ValueError("Password must contain at least one digit.")
+
+        if not re.search(r"[^A-Za-z\d]", value):
+            raise ValueError("Password must contain at least one special character.")
+
+        return value
+
+
+#
+# -------------------------------------------------------------------------
+# Tier update
+# -------------------------------------------------------------------------
+#
 
 class UserTierUpdate(BaseModel):
-    tier_id: int
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+    )
+
+    tier_id: Annotated[int, Field(gt=0)]
 
 
-class UserDelete(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+#
+# -------------------------------------------------------------------------
+# Admin update
+# -------------------------------------------------------------------------
+#
 
-    is_deleted: bool
-    deleted_at: datetime
+class UserAdminUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+    )
+
+    role_type: UserRole | None = None
+    is_superuser: bool | None = None
+    tier_id: Annotated[int | None, Field(gt=0)] = None
+
+
+#
+# -------------------------------------------------------------------------
+# Soft delete
+# -------------------------------------------------------------------------
+#
+
+class UserDeleteInternal(PersistentDeletion):
+    pass
 
 
 class UserRestoreDeleted(BaseModel):
-    is_deleted: bool
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+    )
+
+    pass
