@@ -1,7 +1,8 @@
 # src/app/api/v1/users.py
 
 from typing import Annotated, cast
-from fastapi import APIRouter, Depends, Request
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_superuser, get_current_user
@@ -9,7 +10,7 @@ from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException
 from ...core.security import blacklist_token, oauth2_scheme
 from ...crud.crud_users import crud_users
-from ...schemas.user import UserRead, UserUpdate, UserPasswordUpdate
+from ...schemas.user import UserPasswordUpdate, UserRead, UserUpdate
 
 router = APIRouter(tags=["users"])
 
@@ -24,9 +25,9 @@ def _assert_same_user(username: str, current_user: dict) -> None:
 
 # ─── GET /user/me ─────────────────────────────────────────────────────────────
 
-@router.get("/user/me", response_model=UserRead)
+@router.get("/user/me", response_model=UserRead, status_code=200)
 async def read_user_me(
-    current_user: Annotated[dict, Depends(get_current_user)],
+        current_user: Annotated[dict, Depends(get_current_user)],
 ) -> dict:
     """Return the authenticated user's own profile."""
     return current_user
@@ -34,10 +35,10 @@ async def read_user_me(
 
 # ─── GET /user/{username} ─────────────────────────────────────────────────────
 
-@router.get("/user/{username}", response_model=UserRead)
+@router.get("/user/{username}", response_model=UserRead, status_code=200)
 async def read_user(
-    username: str,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        username: str,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> UserRead:
     """Public — get any user's profile by username."""
     db_user = await crud_users.get(
@@ -54,49 +55,32 @@ async def read_user(
 
 # ─── PATCH /user/{username} ───────────────────────────────────────────────────
 
-@router.patch("/user/{username}", response_model=UserRead)
+@router.patch("/user/{username}", response_model=UserRead, status_code=200)
 async def update_user(
-    username: str,
-    values: UserUpdate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        username: str,
+        values: UserUpdate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> UserRead:
-    """Update own account — name, username, email, avatar, location."""
+    """Update own account — name, username, email, profile image , location."""
     _assert_same_user(username, current_user)
-
-    # verify user exists and is active
-    db_user = await crud_users.get(db=db, username=username, is_deleted=False)
-    if db_user is None:
-        raise NotFoundException("User not found.")
-
-    # skip duplicate checks if value unchanged
-    current_email = db_user["email"] if isinstance(db_user, dict) else db_user.email
-    current_username = db_user["username"] if isinstance(db_user, dict) else db_user.username
-
-    if values.email == current_email:
+    if values.email == current_user["email"]:
         values = values.model_copy(update={"email": None})
-    if values.username == current_username:
+    if values.username == current_user["username"]:
         values = values.model_copy(update={"username": None})
 
-    await crud_users.update(db=db, object=values, username=username)
-
-    updated = await crud_users.get(
-        db=db,
-        username=values.username or username,
-        schema_to_select=UserRead,
-        return_as_model=True,
-    )
-    return cast(UserRead, updated)
+    updated_user = await crud_users.update(db=db, object=values, username=username, schema_to_select=UserRead, return_as_model=True)
+    return cast(UserRead, updated_user)
 
 
 # ─── PATCH /user/{username}/password ─────────────────────────────────────────
 
-@router.patch("/user/{username}/password")
+@router.patch("/user/{username}/password", status_code=200)
 async def change_password(
-    username: str,
-    payload: UserPasswordUpdate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
+        username: str,
+        payload: UserPasswordUpdate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
     """Change own password — requires current password verification."""
     _assert_same_user(username, current_user)
@@ -106,12 +90,12 @@ async def change_password(
 
 # ─── DELETE /user/{username} — soft delete (deactivate) ──────────────────────
 
-@router.delete("/user/{username}")
+@router.delete("/user/{username}", status_code=200)
 async def deactivate_user(
-    username: str,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-    token: str = Depends(oauth2_scheme),
+        username: str,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        token: str = Depends(oauth2_scheme),
 ) -> dict[str, str]:
     """Deactivate own account — soft delete, blacklists token."""
     _assert_same_user(username, current_user)
@@ -122,16 +106,11 @@ async def deactivate_user(
 
 # ─── DELETE /user/{username}/hard — hard delete (superuser only) ──────────────
 
-@router.delete(
-    "/user/{username}/hard",
-    dependencies=[Depends(get_current_superuser)],
-)
+@router.delete("/user/{username}/hard", status_code=200, dependencies=[Depends(get_current_superuser)])
 async def hard_delete_user(
-    username: str,
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-    token: str = Depends(oauth2_scheme),
+        username: str,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
     """Permanently delete user — GDPR, superuser only."""
     await crud_users.hard_delete(db=db, username=username)
-    await blacklist_token(token=token, db=db)
     return {"message": "User permanently deleted."}

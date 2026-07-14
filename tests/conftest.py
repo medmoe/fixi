@@ -224,7 +224,7 @@ async def admin_auth_headers(async_client_with_redis: AsyncClient, test_admin_us
     """ Get authentication headers for a test user."""
     client, _ = async_client_with_redis
     login_data = {
-        "username": test_admin_user.username,
+        "username_or_email": test_admin_user.username,
         "password": "testpassword123"
     }
 

@@ -1,6 +1,6 @@
 # src/app/crud/crud_users.py
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from fastcrud import FastCRUD
@@ -13,10 +13,10 @@ from ..models import User
 from ..schemas.user import (
     UserCreateInternal,
     UserDeleteInternal,
+    UserPasswordUpdate,
     UserRead,
     UserUpdate,
     UserUpdateInternal,
-    UserPasswordUpdate,
 )
 
 

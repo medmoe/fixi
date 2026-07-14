@@ -14,6 +14,7 @@ from ..crud.crud_tiers import crud_tiers
 from ..crud.crud_users import crud_users
 from ..schemas.rate_limit import RateLimitRead
 from ..schemas.tier import TierRead
+from ..schemas.user import UserRead
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +30,12 @@ async def get_current_user(
         raise UnauthorizedException("User not authenticated.")
 
     if "@" in token_data.username_or_email:
-        user = await crud_users.get(db=db, email=token_data.username_or_email, is_deleted=False)
+        user = await crud_users.get(db=db, email=token_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
     else:
-        user = await crud_users.get(db=db, username=token_data.username_or_email, is_deleted=False)
+        user = await crud_users.get(db=db, username=token_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
 
     if user:
-        if hasattr(user, 'model_dump'):
-            return cast(dict[str, Any], user.model_dump())
-        else:
-            return cast(dict[str, Any], user)
+        return user.model_dump()
 
     raise UnauthorizedException("User not authenticated.")
 
@@ -112,14 +110,14 @@ async def rate_limiter_dependency(
         user_id = user["id"]
         tier = await crud_tiers.get(db, id=user["tier_id"], schema_to_select=TierRead)
         if tier:
-            tier = cast(TierRead, tier) # type: ignore[assignment]
-            rate_limit = await crud_rate_limits.get(db=db, tier_id=tier.id, path=path, schema_to_select=RateLimitRead) # type: ignore[attr-defined]
+            tier = cast(TierRead, tier)  # type: ignore[assignment]
+            rate_limit = await crud_rate_limits.get(db=db, tier_id=tier.id, path=path, schema_to_select=RateLimitRead)  # type: ignore[attr-defined]
             if rate_limit:
-                rate_limit = cast(RateLimitRead, rate_limit) # type: ignore[assignment]
-                limit, period = rate_limit.limit, rate_limit.period # type: ignore[attr-defined]
+                rate_limit = cast(RateLimitRead, rate_limit)  # type: ignore[assignment]
+                limit, period = rate_limit.limit, rate_limit.period  # type: ignore[attr-defined]
             else:
                 logger.warning(
-                    f"User {user_id} with tier '{tier.name}' has no specific rate limit for path '{path}'. Applying default rate limit." # type: ignore[attr-defined]
+                    f"User {user_id} with tier '{tier.name}' has no specific rate limit for path '{path}'. Applying default rate limit."  # type: ignore[attr-defined]
                 )
                 limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
         else:

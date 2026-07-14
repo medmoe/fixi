@@ -83,7 +83,6 @@ class TestRegisterEndpoint:
     async def test_register_duplicate_username_fails(self, async_client: AsyncClient):
         await async_client.post("/api/v1/auth/register", json=customer_payload())
         response = await async_client.post("/api/v1/auth/register", json=customer_payload(email="different@example.com"), )  # different email, same username
-        print(response)
         assert response.status_code == 409
 
     async def test_register_duplicate_email_and_username_fails(self, async_client: AsyncClient):
@@ -131,7 +130,6 @@ class TestRegisterEndpoint:
 
     async def test_register_customer_creates_customer_profile(self, async_client: AsyncClient, async_session):
         response = await async_client.post("/api/v1/auth/register", json=customer_payload())
-        print(response.json())
         user_id = response.json()["id"]
 
         result = await async_session.execute(select(CustomerProfile).where(CustomerProfile.user_id == user_id))
@@ -163,7 +161,7 @@ class TestLoginEndpoint:
 
         response = await client.post(
             "/api/v1/auth/login",
-            json=login_payload(username_or_email="johndoe"),
+            json=login_payload(),
         )
         assert response.status_code == 200
         data = response.json()
@@ -196,7 +194,6 @@ class TestLoginEndpoint:
         data = response.json()
         assert "access_token" in data
         decode = jwt.decode(data['access_token'], options={"verify_signature": False})
-        print(decode)
         assert decode['role'] == 'worker'
         assert data["token_type"] == "bearer"
 

@@ -12,10 +12,10 @@ from pydantic import SecretStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..models import User
 from .config import settings
 from .db.crud_token_blacklist import crud_token_blacklist
 from .schemas import TokenBlacklistCreate, TokenData
-from ..models import UserRole, User
 
 ALLOWED_MIME_TYPES = {
     'image/jpeg',
@@ -43,9 +43,9 @@ class TokenType(str, Enum):
 
 async def get_db_user(db: AsyncSession, username_or_email: str) -> User | None:
     if "@" in username_or_email:
-        result = await db.execute(select(User).where(User.email == username_or_email, User.is_deleted == False))
+        result = await db.execute(select(User).where(User.email == username_or_email, User.is_deleted.is_(False)))
     else:
-        result = await db.execute(select(User).where(User.username == username_or_email, User.is_deleted == False))
+        result = await db.execute(select(User).where(User.username == username_or_email, User.is_deleted.is_(False)))
     return result.scalar_one_or_none()
 
 
@@ -70,20 +70,10 @@ async def authenticate_user(username_or_email: str, password: str, db: AsyncSess
     return db_user
 
 
-def _normalize_user_role(value: Any) -> UserRole:
-    if isinstance(value, UserRole):
-        return value
-    str_value = str(value)
-    if '.' in str_value:
-        str_value = str_value.split('.')[-1]
-    return UserRole(str_value.lower())
-
-
 def create_token_payload(user: User) -> dict[str, Any]:
-    role = _normalize_user_role(user.role_type)
     return {
         "sub": user.username,
-        "role": role.value,
+        "role": user.role_type.value,
         "email": user.email,
         "tv": user.token_version,
     }
@@ -147,9 +137,7 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
         if not db_user:
             return None
 
-        db_role = _normalize_user_role(db_user.role_type)
-
-        if role != db_role or token_version != db_user.token_version:
+        if role != db_user.role_type.value or token_version != db_user.token_version:
             return None
 
         return TokenData(username_or_email=username_or_email, role=role, token_version=db_user.token_version)
@@ -171,11 +159,7 @@ async def blacklist_tokens(access_token: str, refresh_token: str, db: AsyncSessi
         Database session for performing database operations.
     """
     for token in [access_token, refresh_token]:
-        payload = jwt.decode(token, SECRET_KEY.get_secret_value(), algorithms=[ALGORITHM])
-        exp_timestamp = payload.get("exp")
-        if exp_timestamp is not None:
-            expires_at = datetime.fromtimestamp(exp_timestamp)
-            await crud_token_blacklist.create(db, object=TokenBlacklistCreate(token=token, expires_at=expires_at))
+        await blacklist_token(token, db)
 
 
 async def blacklist_token(token: str, db: AsyncSession) -> None:

@@ -7,10 +7,11 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     EmailStr,
-    Field, field_validator,
+    Field,
+    field_validator,
 )
 
-from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ..core.schemas import PersistentDeletion, UUIDSchema
 from ..models.user import UserRole
 
 #
@@ -89,6 +90,8 @@ class UserRead(UserBase, UUIDSchema):
     deleted_at: datetime | None = None
     updated_at: datetime | None = None
     created_at: datetime | None = None
+    is_superuser: bool | None = None
+    tier_id: int | None = None
 
     @field_validator("profile_image_url", mode="before")
     @classmethod
@@ -96,13 +99,6 @@ class UserRead(UserBase, UUIDSchema):
         if v is not None:
             AnyHttpUrl(v)
         return v
-
-
-class UserDetail(UserRead, TimestampSchema):
-    """Returned when requesting the authenticated user's profile."""
-    pass
-
-
 #
 # -------------------------------------------------------------------------
 # Create
@@ -178,7 +174,6 @@ class UserUpdateInternal(UserUpdate):
     hashed_password: str | None = None
     is_deleted: bool | None = None
     deleted_at: datetime | None = None
-    updated_at: datetime | None = None
 
 
 #

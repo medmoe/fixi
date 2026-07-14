@@ -10,7 +10,6 @@ from src.app.models import UserRole
 from src.app.schemas.user import (
     UserBase,
     UserRead,
-    UserDetail,
     UserCreate,
     UserCreateInternal,
     UserUpdate,
@@ -431,25 +430,3 @@ class TestUserAdminUpdate:
         assert schema.role_type == UserRole.WORKER
         assert schema.is_superuser is False
         assert schema.tier_id is None
-
-# ─── UserDetail ───────────────────────────────────────────────────────────────
-
-class TestUserDetail:
-    def test_valid(self):
-        now = datetime.now(UTC)
-        schema = UserDetail(**valid_read_payload(
-            created_at=now,
-            updated_at=now,
-        ))
-        assert schema.id == 1
-        assert schema.created_at == now
-
-    def test_inherits_user_read_fields(self):
-        now = datetime.now(UTC)
-        schema = UserDetail(**valid_read_payload(
-            created_at=now,
-            updated_at=now,
-        ))
-        data = schema.model_dump()
-        assert data['role_type'] == 'customer'
-        assert data['email'] == 'john@example.com'

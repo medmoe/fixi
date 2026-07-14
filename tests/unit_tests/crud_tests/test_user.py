@@ -7,7 +7,7 @@ from src.app.core.exceptions.http_exceptions import DuplicateValueException
 from src.app.core.security import authenticate_user
 from src.app.crud.crud_users import crud_users
 from src.app.models import User
-from src.app.schemas.user import UserRead, UserUpdate, UserDetail, UserPasswordUpdate
+from src.app.schemas.user import UserRead, UserUpdate, UserPasswordUpdate
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ class TestUserUpdate:
     @pytest.mark.unit
     async def test_updated_at_is_set_when_user_is_updated(self, async_session: AsyncSession, test_user: User):
         schema = UserUpdate.model_validate(create_update_payload(username="new_username"))
-        updated_user = await crud_users.update(db=async_session, object=schema, id=test_user.id, schema_to_select=UserDetail, return_as_model=True)
+        updated_user = await crud_users.update(db=async_session, object=schema, id=test_user.id, schema_to_select=UserRead, return_as_model=True)
         assert updated_user.updated_at is not None
 
 
