@@ -1,4 +1,4 @@
-import {UserRead} from '../../auth/types/user.types'
+import {UserRead} from '../../auth/types'
 
 export type SkillLevel = 'junior' | 'mid' | 'senior'
 
