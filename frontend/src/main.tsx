@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {Provider} from 'react-redux';
 import App from './App';
-import {store} from './app/store';
+import {store} from '@/store';
 import './styles/index.css';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <App/>
-                <Toaster />
+                <Toaster/>
                 <ReactQueryDevtools initialIsOpen={false}/>
             </QueryClientProvider>
         </Provider>

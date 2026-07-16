@@ -295,6 +295,12 @@ Verify the complete feature flow.
 
 Only for major user journeys.
 
+#####  Key Best Practices for Cypress E2E
+
+* **Don't Mock Your APIs:** Unlike Unit or Integration tests (where we mocked Radix UI and Redux stores), E2E tests should target your live local dev environment (e.g., `http://localhost:5173`). Your frontend should communicate with a real running backend or a sandbox DB.
+* **Isolate Tests:** Use `beforeEach` to reset cookies, local storage, and database states so one failing test doesn't break subsequent tests.
+* **Use Semantic Selectors:** Select elements using native HTML roles (`[role="combobox"]`, `button[type="submit"]`) or custom data attributes (`data-testid="submit-btn"`) instead of relying on fragile CSS class structures.
+
 ---
 
 # Suggested project structure
