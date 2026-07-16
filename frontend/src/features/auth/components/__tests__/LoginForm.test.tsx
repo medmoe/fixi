@@ -10,7 +10,7 @@ import {renderWithProviders} from '@/test/renderWithProviders'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('../hooks/useAuth')
+vi.mock('@/features/auth/hooks/useAuth')
 
 const mockLogin = vi.fn()
 

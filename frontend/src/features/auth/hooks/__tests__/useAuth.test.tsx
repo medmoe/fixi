@@ -3,7 +3,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {MemoryRouter} from 'react-router-dom'
-import {QueryClientProvider} from '@tanstack/react-query'
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {Provider} from 'react-redux'
 import {useAuth} from '@/features/auth/hooks/useAuth'
 import {authApi} from '@/lib/api/authApi'
@@ -130,7 +130,7 @@ describe('useAuth', () => {
             expect(authApi.login).toHaveBeenCalledWith({
                 username_or_email: 'johndoe',
                 password: 'Pass123',
-            })
+            }, expect.objectContaining({client: expect.any(QueryClient)}))
         })
 
         it('stores access token in sessionStorage on success', async () => {

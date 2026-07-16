@@ -1,30 +1,17 @@
 import React from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { registerSchema, type RegisterFormValues } from '../schemas/authSchema'
-import { useRegister } from '../hooks/useRegister'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import {useForm} from 'react-hook-form'
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Link} from 'react-router-dom'
+import {Loader2} from 'lucide-react'
+import {type RegisterFormValues, registerSchema} from '../schemas/authSchema'
+import {useRegister} from '@/features/auth/hooks/useRegister'
+import {Button} from '@/components/ui/button'
+import {Input} from '@/components/ui/input'
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select'
 
 export const RegisterForm: React.FC = () => {
-    const { mutate: register, isPending } = useRegister()
+    const {mutate: register, isPending} = useRegister()
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
@@ -47,12 +34,13 @@ export const RegisterForm: React.FC = () => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-5"
                 aria-label="Registration form"
+                noValidate // bypass browser validation since we are using zod validation.
             >
                 {/* Name */}
                 <FormField
                     control={form.control}
                     name="name"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="register-name">Full Name</FormLabel>
                             <FormControl>
@@ -66,7 +54,7 @@ export const RegisterForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -75,7 +63,7 @@ export const RegisterForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="username"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="register-username">Username</FormLabel>
                             <FormControl>
@@ -89,7 +77,7 @@ export const RegisterForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -98,7 +86,7 @@ export const RegisterForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="email"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="register-email">Email</FormLabel>
                             <FormControl>
@@ -112,7 +100,7 @@ export const RegisterForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -121,7 +109,7 @@ export const RegisterForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="password"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="register-password">Password</FormLabel>
                             <FormControl>
@@ -135,7 +123,7 @@ export const RegisterForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -144,7 +132,7 @@ export const RegisterForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="role_type"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel>I want to join as</FormLabel>
                             <Select
@@ -153,7 +141,7 @@ export const RegisterForm: React.FC = () => {
                             >
                                 <FormControl>
                                     <SelectTrigger aria-label="Select role">
-                                        <SelectValue placeholder="Select a role" />
+                                        <SelectValue placeholder="Select a role"/>
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -165,7 +153,7 @@ export const RegisterForm: React.FC = () => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -178,7 +166,7 @@ export const RegisterForm: React.FC = () => {
                     aria-label="Create account"
                 >
                     {isPending
-                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...</>
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating account...</>
                         : 'Create Account'
                     }
                 </Button>

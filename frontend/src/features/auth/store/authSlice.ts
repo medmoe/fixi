@@ -3,8 +3,8 @@ import {type AuthState} from '../types/auth.types';
 
 
 export const initialAuthState: AuthState = {
-    accessToken: sessionStorage.getItem('accessToken'),
-    isAuthenticated: !!sessionStorage.getItem('accessToken'),
+    accessToken: sessionStorage.getItem('access_token'),
+    isAuthenticated: !!sessionStorage.getItem('access_token'),
     isLoading: false,
 };
 
@@ -16,13 +16,13 @@ const authSlice = createSlice({
             state.accessToken = action.payload
             state.isAuthenticated = true
             state.isLoading = false
-            sessionStorage.setItem('accessToken', action.payload)
+            sessionStorage.setItem('access_token', action.payload)
         },
         clearCredentials: (state) => {
             state.accessToken = null
             state.isAuthenticated = false
             state.isLoading = false
-            sessionStorage.removeItem('accessToken')
+            sessionStorage.removeItem('access_token')
         },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload

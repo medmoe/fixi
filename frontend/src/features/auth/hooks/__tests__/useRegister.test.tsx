@@ -3,7 +3,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {MemoryRouter} from 'react-router-dom'
-import {QueryClientProvider} from '@tanstack/react-query'
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {useRegister} from '@/features/auth/hooks/useRegister'
 import {authApi} from '@/lib/api/authApi'
 import {toast} from 'sonner'
@@ -74,7 +74,9 @@ describe('useRegister', () => {
                 await result.current.mutateAsync(validPayload)
             })
 
-            expect(authApi.register).toHaveBeenCalledWith(validPayload)
+            expect(authApi.register).toHaveBeenCalledWith(
+                validPayload, expect.objectContaining({client: expect.any(QueryClient)})
+            )
         })
 
         it('shows success toast with username', async () => {

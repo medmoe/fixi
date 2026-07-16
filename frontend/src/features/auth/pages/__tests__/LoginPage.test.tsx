@@ -6,7 +6,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { renderWithProviders } from '@/test/renderWithProviders'
 
-vi.mock('../hooks/useAuth')
+vi.mock('@/features/auth/hooks/useAuth')
 
 describe('LoginPage', () => {
     beforeEach(() => {
