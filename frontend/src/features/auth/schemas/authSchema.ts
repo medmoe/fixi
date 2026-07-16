@@ -12,12 +12,14 @@ export const registerSchema = z.object({
         .min(3, 'Username must be at least 3 characters')
         .max(20, 'Username must be at most 20 characters')
         .regex(/^[a-z][a-z0-9_]{1,19}$/, 'Username must start with a letter and contain only lowercase letters, numbers, or underscores'),
-    email: z.string().email('Invalid email address'),
+    email: z.email('Invalid email address'),
     password: z
         .string()
         .min(8, 'Password must be at least 8 characters long')
+        .max(120, 'Password must be at most 120 characters')
         .refine((val) => /[0-9]/.test(val), 'Password must contain at least one digit')
-        .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one capital letter'),
+        .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one capital letter')
+        .refine((val) => /[^a-zA-Z0-9]/.test(val), 'Password must contain at least one special character'),
     role_type: z.enum(RoleType),
 })
 

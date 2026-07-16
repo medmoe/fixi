@@ -1,31 +1,24 @@
-import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { authApi } from '@/lib/api/authApi'
-import { toast } from 'sonner'
-import type { LoginPayload, LoginResponse, AuthState } from '@/features/auth/types/auth.types'
+import {useCallback} from 'react'
+import {useNavigate} from 'react-router-dom'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {authApi} from '@/lib/api/authApi'
+import {toast} from 'sonner'
+import type {LoginPayload, LoginResponse} from '@/features/auth/types/auth.types'
+import {clearCredentials, setCredentials} from "@/features/auth/store/authSlice";
+import {useAppDispatch, useAppSelector} from "@/store/hooks"
 
 export const useAuth = () => {
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-
-    const [authState, setAuthState] = useState<AuthState>({
-        accessToken: sessionStorage.getItem('access_token'),
-        isAuthenticated: !!sessionStorage.getItem('access_token'),
-        isLoading: false,
-    })
+    const dispatch = useAppDispatch()
+    const authState = useAppSelector((state) => state.auth)
 
     // ─── Login ────────────────────────────────────────────────────────────────
 
     const loginMutation = useMutation<LoginResponse, Error, LoginPayload>({
         mutationFn: authApi.login,
         onSuccess: (data) => {
-            sessionStorage.setItem('access_token', data.access_token)
-            setAuthState({
-                accessToken: data.access_token,
-                isAuthenticated: true,
-                isLoading: false,
-            })
+            dispatch(setCredentials(data.access_token))
             toast.success('Welcome back!')
             navigate('/dashboard')
         },
@@ -41,12 +34,7 @@ export const useAuth = () => {
         mutationFn: authApi.logout,
         onSettled: () => {
             // always clear state — even if API call fails
-            sessionStorage.removeItem('access_token')
-            setAuthState({
-                accessToken: null,
-                isAuthenticated: false,
-                isLoading: false,
-            })
+            dispatch(clearCredentials())
             queryClient.clear()
             navigate('/login')
         },

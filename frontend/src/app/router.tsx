@@ -11,8 +11,8 @@ export const router = createBrowserRouter([
         path: '/register',
         element: <RegisterPage />,
     },
-    {
-        path: '/dashboard',
-        element: <Dashboard />,   // your protected route
-    },
+    // {
+    //     path: '/dashboard',
+    //     element: <Dashboard />,   // your protected route
+    // },
 ])
