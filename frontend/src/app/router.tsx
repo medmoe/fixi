@@ -2,6 +2,7 @@
 import {createBrowserRouter} from 'react-router-dom'
 import {LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
+import {WorkerDashboardPage} from "@/features/worker/pages/WorkerDashboardPage.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -16,8 +17,8 @@ export const router = createBrowserRouter([
         path: '/register',
         element: <RegisterPage/>,
     },
-    // {
-    //     path: '/dashboard',
-    //     element: <Dashboard />,   // your protected route
-    // },
+    {
+        path: '/dashboard',
+        element: <WorkerDashboardPage />,   // your protected route
+    },
 ])

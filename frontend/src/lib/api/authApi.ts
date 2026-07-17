@@ -3,12 +3,12 @@ import type {LoginPayload, LoginResponse, RegisterPayload, RegisterResponse,} fr
 
 export const authApi = {
     register: async (payload: RegisterPayload): Promise<RegisterResponse> => {
-        const { data } = await apiClient.post('/api/v1/auth/register', payload)
+        const { data } = await apiClient.post('/auth/register', payload)
         return data
     },
 
     login: async (payload: LoginPayload): Promise<LoginResponse> => {
-        const { data } = await apiClient.post('/api/v1/auth/login', payload)
+        const { data } = await apiClient.post('/auth/login', payload)
         return data
     },
 
@@ -17,7 +17,7 @@ export const authApi = {
     },
 
     refresh: async (): Promise<LoginResponse> => {
-        const { data } = await apiClient.post('/api/v1/auth/refresh')
+        const { data } = await apiClient.post('/auth/refresh')
         return data
     },
 }

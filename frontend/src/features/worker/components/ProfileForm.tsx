@@ -26,7 +26,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
             bio: profile.bio || '',
             hourly_rate: profile.hourly_rate || undefined,
             service_radius_km: profile.service_radius_km || 25,
-            trades: profile.trades.map(t => ({trade_id: t.trade_id, skill_level: t.skill_level}))
+            trades: profile.trades?.map(t => ({trade_id: t.trade_id, skill_level: t.skill_level}))
         }
     });
 

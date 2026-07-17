@@ -6,12 +6,12 @@ import {Badge} from '@/components/ui/badge.tsx';
 import {Button} from '@/components/ui/button.tsx';
 import {FormItem, FormLabel, FormMessage} from '@/components/ui/form.tsx';
 import {Plus, X} from 'lucide-react';
-import {SkillLevel} from '../../types/worker.types';
+import {SkillLevel} from '@/features/worker/types';
 
 export const TradesPicker: React.FC = () => {
     const {control} = useFormContext();
     const {data: availableTrades = [], isLoading} = useTrades();
-
+    console.log('shape of availableTrades', availableTrades);
     const {fields, append, remove} = useFieldArray({
         control,
         name: "trades",
@@ -82,7 +82,7 @@ export const TradesPicker: React.FC = () => {
             {/* Available Trade Selection Matrix */}
             {fields.length < MAX_TRADES && (
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-dashed">
-                    {availableTrades
+                    {(availableTrades || [])
                         .filter(t => !selectedTradeIds.includes(t.id))
                         .map(trade => (
                             <Button

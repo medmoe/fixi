@@ -1,36 +1,56 @@
 // src/features/worker/components/__tests__/BioField.test.tsx
-
+import React, {act} from 'react'
 import {describe, expect, it, vi} from 'vitest'
-import {act, render, screen} from '@testing-library/react'
+import {render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {FormProvider, useForm} from 'react-hook-form'
+import {FormProvider, useController, useForm, useFormContext} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
 import {BioField} from '../BioField'
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
+//
+vi.mock('@/components/ui/form', () => {
 
-// vi.mock('@/components/ui/form', () => ({
-//     FormField: ({render, control, name}: any) => {
-//         // simulate react-hook-form's render prop pattern
-//         const {useController} = require('react-hook-form')
-//         const {field} = useController({name, control})
-//         return render({field})
-//     },
-//     FormItem: ({children}: any) => <div>{children}</div>,
-//     FormLabel: ({children, htmlFor}: any) => <label htmlFor={htmlFor}>{children}</label>,
-//     FormControl: ({children}: any) => <div>{children}</div>,
-//     FormMessage: () => null,
-// }))
+    // ✅ context to pass field name from FormField to FormMessage
+    const FieldNameContext = React.createContext<string>('')
 
-// vi.mock('@/components/ui/textarea', async () => {
-//     const React = await import('react');
-//     return {
-//         Textarea: React.forwardRef<HTMLTextAreaElement, any>((props, ref) => (
-//             <textarea ref={ref} {...props} />
-//         )),
-//     };
-// });
+    return {
+        FormField: ({render, control, name}: any) => {
+            const {field} = useController({name, control})
+            return (
+                <FieldNameContext.Provider value={name}>
+                    {render({field})}
+                </FieldNameContext.Provider>
+            )
+        },
+        FormItem: ({children}: any) => <div>{children}</div>,
+        FormLabel: ({children, htmlFor}: any) => (
+            <label htmlFor={htmlFor}>{children}</label>
+        ),
+        FormControl: ({children}: any) => <div>{children}</div>,
+
+        // ✅ reads error for the specific field
+        FormMessage: ({children}: any) => {
+            const fieldName = React.useContext(FieldNameContext)
+            const {formState: {errors}} = useFormContext()
+            const error = fieldName
+                ? (errors[fieldName] as any)?.message
+                : null
+
+            const message = children ?? error
+            if (!message) return null
+            return <p className="text-destructive text-sm">{message}</p>
+        },
+    }
+})
+vi.mock('@/components/ui/textarea', async () => {
+    return {
+        Textarea: React.forwardRef<HTMLTextAreaElement, any>((props, ref) => (
+            <textarea ref={ref} {...props} />
+        )),
+    };
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -270,10 +290,12 @@ describe('BioField', () => {
 
     describe('form integration', () => {
         it('shows validation error message when bio exceeds 500 chars on submit', async () => {
+            const user = userEvent.setup()
             const Wrapper = () => {
                 const methods = useForm<BioFormValues>({
                     resolver: zodResolver(bioSchema),
                     defaultValues: {bio: ''},
+                    mode: 'onChange',  // ✅ validate on change, not just submit
                 })
                 return (
                     <FormProvider {...methods}>
@@ -288,12 +310,12 @@ describe('BioField', () => {
             render(<Wrapper/>)
 
             const textarea = screen.getByRole('textbox', {name: /bio/i})
+
             await act(async () => {
-                await userEvent.type(textarea, 'a'.repeat(501))
-                await userEvent.click(screen.getByRole('button', {name: /submit/i}))
+                await user.type(textarea, 'a'.repeat(501))
             })
 
-            // FormMessage renders zod validation error
+            // ✅ error shows on change — no need to click disabled button
             await screen.findByText(/bio cannot exceed 500 characters/i)
         })
 

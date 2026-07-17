@@ -7,7 +7,7 @@ import {AlertCircle, Loader2} from 'lucide-react';
 
 export const WorkerDashboardPage: React.FC = () => {
     // Hardcoded for presentation abstraction context; typically extracted via Auth Token context boundaries
-    const TARGET_WORKER_ID = 42;
+    const TARGET_WORKER_ID = 1;
 
     const {data: profile, isLoading, error} = useWorkerProfile(TARGET_WORKER_ID);
 

@@ -14,7 +14,7 @@ export const Hero = () => (
                 id="hero-heading"
                 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight"
             >
-                Connect with Trusted
+                Connect with Trusted{" "}
                 <span className="text-primary"> Local Professionals</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
