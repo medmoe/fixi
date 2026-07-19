@@ -227,7 +227,7 @@ class TestLoginEndpoint:
 
         response = await client.post(
             "/api/v1/auth/login",
-            json=login_payload(password="WrongPass1"),
+            json=login_payload(password="wrong"),
         )
         assert response.status_code == 401
         assert "access_token" not in response.json()
@@ -266,9 +266,28 @@ class TestLoginEndpoint:
         )
         assert response.status_code == 422
 
-    async def test_login_empty_credentials_fails(self, async_client_with_redis: AsyncClient):
+    async def test_login_missing_username_or_email_fails(self, async_client_with_redis: AsyncClient):
         client, _ = async_client_with_redis
-        response = await client.post("/api/v1/auth/login", json={"username_or_email": "", "password": ""})
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"password": "Pass123456"},
+        )
+        assert response.status_code == 422
+
+    async def test_login_username_or_email_exceeds_max_length(self, async_client_with_redis: AsyncClient):
+        client, _ = async_client_with_redis
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"username_or_email": "a" * 256, "password": "Pass123456"},
+        )
+        assert response.status_code == 422
+
+    async def test_login_password_exceeds_max_length(self, async_client_with_redis: AsyncClient):
+        client, _ = async_client_with_redis
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"username_or_email": "johndoe", "password": "a" * 129},
+        )
         assert response.status_code == 422
 
 
