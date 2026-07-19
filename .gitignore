@@ -135,6 +135,7 @@ cython_debug/
 
 # Frontend
 frontend/node_modules/
-
+frontend/coverage
+frontend/cypress/screenshots
 
 DOCKER_NOTES.md

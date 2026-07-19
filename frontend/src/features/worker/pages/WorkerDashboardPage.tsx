@@ -1,59 +1,137 @@
-import React from 'react';
-import {useWorkerProfile} from '../hooks/useWorkerProfile.ts'
-import {AvailabilityToggle} from '../components/AvailabilityToggle';
-import {AvatarUploadField} from '../components/fields/AvatarUploadField';
-import {ProfileForm} from '../components/ProfileForm';
-import {AlertCircle, Loader2} from 'lucide-react';
+import React, {useState} from 'react'
+import {AccountTab, useUser} from '@/features/user'
+import {LogoutButton} from '@/components/LogoutButton'
+import {ProfileTab} from '../components/ProfileTab'
+import {AlertCircle, Briefcase, Loader2, UserCircle} from 'lucide-react'
+
+type Tab = 'profile' | 'account'
 
 export const WorkerDashboardPage: React.FC = () => {
-    // Hardcoded for presentation abstraction context; typically extracted via Auth Token context boundaries
-    const TARGET_WORKER_ID = 1;
+    const [activeTab, setActiveTab] = useState<Tab>('profile')
 
-    const {data: profile, isLoading, error} = useWorkerProfile(TARGET_WORKER_ID);
+    const {data: user, isLoading, error} = useUser()
 
     if (isLoading) {
         return (
-            <div className="flex h-[60vh] w-full flex-col items-center justify-center gap-2">
+            <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
-                <p className="text-sm font-medium text-muted-foreground">Hydrating your systems profile payload...</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                    Loading your dashboard...
+                </p>
             </div>
-        );
+        )
     }
 
-    if (error || !profile) {
+    if (error || !user) {
         return (
             <div className="mx-auto max-w-md my-12 border-destructive/50 bg-destructive/10 text-destructive rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
-                    <h3 className="font-semibold text-sm">System Synchronization Failure</h3>
-                    <p className="text-xs opacity-90 mt-1">We ran into trouble loading data records from infrastructure nodes. Verify connection tokens and reload.</p>
+                    <h3 className="font-semibold text-sm">
+                        System Synchronization Failure
+                    </h3>
+                    <p className="text-xs opacity-90 mt-1">
+                        We ran into trouble loading your account data. Please try
+                        again later.
+                    </p>
                 </div>
             </div>
-        );
+        )
     }
 
+    const navItems: { id: Tab; label: string; icon: React.ReactNode }[] = [
+        {
+            id: 'profile',
+            label: 'Profile',
+            icon: <Briefcase className="h-4 w-4"/>,
+        },
+        {
+            id: 'account',
+            label: 'Account',
+            icon: <UserCircle className="h-4 w-4"/>,
+        },
+    ]
+
     return (
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-            <header className="mb-8 space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Worker Administration Control</h1>
-                <p className="text-muted-foreground">Manage service configurations, dispatch discovery profiles, and capability declarations.</p>
-            </header>
-
-            {/* Desktop Responsive Layout Engine Strategy Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
-                {/* Left Side: Dynamic Controls Column Group */}
-                <div className="space-y-6 lg:col-span-1">
-                    <AvailabilityToggle workerId={profile.id} isAvailable={profile.is_available}/>
-                    <AvatarUploadField workerId={profile.id} currentAvatarUrl={profile.avatar_url}/>
+        <div className="min-h-screen bg-background flex">
+            {/* ═══ Sidebar ═══════════════════════════════════════════════════ */}
+            <aside className="w-64 border-r bg-card hidden lg:flex flex-col">
+                {/* Sidebar Header */}
+                <div className="p-6 border-b">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                            {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">
+                                {user.role_type}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right Side: Main Data Ingestion Form Panel Frame */}
-                <div className="lg:col-span-2">
-                    <ProfileForm profile={profile}/>
+                {/* Sidebar Navigation */}
+                <nav className="flex-1 p-4 space-y-1">
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                activeTab === item.id
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : 'text-muted-foreground hover:bg-muted'
+                            }`}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </button>
+                    ))}
+                </nav>
+
+                {/* Sidebar Footer: Logout */}
+                <div className="p-4 border-t">
+                    <LogoutButton/>
+                </div>
+            </aside>
+
+            {/* ═══ Mobile Header + Main Content ══════════════════════════════ */}
+            <div className="flex-1 flex flex-col">
+                {/* Mobile Top Bar */}
+                <header className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
+                            {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-sm">{user.name}</span>
+                    </div>
+                    <LogoutButton/>
+                </header>
+
+                {/* Mobile Tab Switcher */}
+                <div className="lg:hidden border-b bg-card px-4 py-2 flex gap-2">
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                activeTab === item.id
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : 'text-muted-foreground hover:bg-muted'
+                            }`}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
 
+                {/* Main Content */}
+                <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+                    {activeTab === 'profile' && <ProfileTab/>}
+                    {activeTab === 'account' && <AccountTab/>}
+                </main>
             </div>
         </div>
-    );
-};
+    )
+}

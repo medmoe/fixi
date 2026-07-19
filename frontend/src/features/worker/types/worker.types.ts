@@ -1,4 +1,4 @@
-import {UserRead} from '../../auth/types'
+import {UserRead} from '@/features/user/types/user.types'
 
 export type SkillLevel = 'junior' | 'mid' | 'senior'
 
@@ -31,4 +31,11 @@ export interface UpdateWorkerProfilePayload {
 
 export interface PaginatedResult<T> {
     data: T[];
+}
+
+export interface WorkerProfileCreateRequest {
+    bio?: string;
+    years_of_experience?: number;
+    hourly_rate?: number;
+    service_radius_km?: number;
 }

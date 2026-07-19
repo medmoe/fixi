@@ -3,6 +3,10 @@ import {TradeCategory} from "@/features/worker/types/tradeCategory.types";
 import apiClient from "@/lib/api/apiClient";
 
 export const workerApi = {
+    createWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfile> => {
+        const {data} = await apiClient.post<WorkerProfile>('/worker-profiles', payload);
+        return data;
+    },
     getWorkerProfile: async (id: number): Promise<WorkerProfile> => {
         const {data} = await apiClient.get<WorkerProfile>(`/worker-profiles/${id}`);
         return data;

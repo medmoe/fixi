@@ -11,7 +11,6 @@ import {SkillLevel} from '@/features/worker/types';
 export const TradesPicker: React.FC = () => {
     const {control} = useFormContext();
     const {data: availableTrades = [], isLoading} = useTrades();
-    console.log('shape of availableTrades', availableTrades);
     const {fields, append, remove} = useFieldArray({
         control,
         name: "trades",

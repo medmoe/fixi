@@ -23,7 +23,22 @@ export const useAuth = () => {
             navigate('/dashboard')
         },
         onError: (error: any) => {
-            const message = error.response?.data?.detail ?? 'Login failed. Please try again.'
+            const detail = error.response?.data?.detail
+
+            // FastAPI validation errors: detail is an array of error objects
+            // FastAPI generic errors: detail is a string
+            // Network/Axios errors: no response.data.detail
+            let message: string
+
+            if (Array.isArray(detail)) {
+                // [{ loc: ['body', 'username'], msg: 'field required', type: 'missing' }, ...]
+                message = detail.map((err: any) => err.msg).join('. ')
+            } else if (typeof detail === 'string') {
+                message = detail
+            } else {
+                message = 'Login failed. Please try again.'
+            }
+
             toast.error(message)
         },
     })

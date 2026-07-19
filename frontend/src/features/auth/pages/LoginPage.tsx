@@ -1,6 +1,6 @@
 // src/features/auth/pages/LoginPage.tsx
 import React from 'react'
-import { LoginForm } from '../components/LoginForm'
+import { LoginForm } from '@/features/auth'
 
 export const LoginPage: React.FC = () => (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

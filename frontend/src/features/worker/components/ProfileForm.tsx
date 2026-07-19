@@ -2,8 +2,7 @@ import React from 'react';
 import {SubmitHandler, useForm} from 'react-hook-form'; // Import SubmitHandler
 import {zodResolver} from '@hookform/resolvers/zod';
 import {WorkerProfileFormValues, workerProfileSchema} from '../schemas/workerProfileSchema';
-import {UpdateWorkerProfilePayload, WorkerProfile} from '../types/worker.types';
-import {useUpdateWorkerProfile} from '../hooks/useUpdateWorkerProfile';
+import {UpdateWorkerProfilePayload, WorkerProfile, useUpdateWorkerProfile} from '@/features/worker';
 import {Form} from '@/components/ui/form';
 import {Button} from '@/components/ui/button';
 import {BioField} from './fields/BioField';

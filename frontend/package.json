@@ -14,7 +14,7 @@
     "test:watch": "jest --watch",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "add:shadcn": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npx shadcn@latest add",
+    "add:shadcn": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npx shadcn@latest add --overwrite",
     "add:pkg": "docker run --rm -v $(pwd):/app -w /app node:22-alpine npm install",
     "clean": "docker run --rm -v $(pwd):/app -w /app node:22-alpine sh -c 'rm -rf node_modules package-lock.json'",
     "fresh": "docker run --rm -v $(pwd):/app -w /app node:22-alpine sh -c 'rm -rf node_modules package-lock.json && npm install'",

@@ -1,7 +1,7 @@
 // src/features/worker/components/__tests__/BioField.test.tsx
 import React, {act} from 'react'
 import {describe, expect, it, vi} from 'vitest'
-import {render, screen} from '@testing-library/react'
+import {fireEvent, render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {FormProvider, useController, useForm, useFormContext} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
@@ -290,7 +290,6 @@ describe('BioField', () => {
 
     describe('form integration', () => {
         it('shows validation error message when bio exceeds 500 chars on submit', async () => {
-            const user = userEvent.setup()
             const Wrapper = () => {
                 const methods = useForm<BioFormValues>({
                     resolver: zodResolver(bioSchema),
@@ -311,12 +310,15 @@ describe('BioField', () => {
 
             const textarea = screen.getByRole('textbox', {name: /bio/i})
 
-            await act(async () => {
-                await user.type(textarea, 'a'.repeat(501))
-            })
+            // await act(async () => {
+            //     await user.type(textarea, 'a'.repeat(501))
+            // })
+            fireEvent.change(textarea, {target: {value: 'a'.repeat(501)}})
+
 
             // ✅ error shows on change — no need to click disabled button
-            await screen.findByText(/bio cannot exceed 500 characters/i)
+            const errorMessage = await screen.findByText(/bio cannot exceed 500 characters/i)
+            expect(errorMessage).toBeInTheDocument()
         })
 
         it('submits successfully with valid bio', async () => {
