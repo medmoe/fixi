@@ -6,11 +6,11 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .crud_users import crud_users
 from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..models import User, WorkerProfile
 from ..schemas.user import UserRead
-from ..schemas.worker_profile import WorkerProfileBase, WorkerProfileCreate, WorkerProfileDelete, WorkerProfileNestedRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
-from .crud_users import crud_users
+from ..schemas.worker_profile import WorkerProfileBase, WorkerProfileCreate, WorkerProfileDelete, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal
 
 
 class CRUDWorker(FastCRUD[
@@ -19,7 +19,7 @@ class CRUDWorker(FastCRUD[
     WorkerProfileUpdate | WorkerProfileUpdateInternal,
     WorkerProfileUpdateInternal,
     WorkerProfileDelete,
-    WorkerProfileNestedRead
+    WorkerProfileRead
 ]):
 
     async def create(  # type: ignore[override] # FastCRUD overloads can't be satisfied by a single implementation.
@@ -27,9 +27,9 @@ class CRUDWorker(FastCRUD[
             db: AsyncSession,
             object: WorkerProfileCreate,
             commit: bool = True,
-            schema_to_select: type[WorkerProfileNestedRead] | None = WorkerProfileNestedRead,
+            schema_to_select: type[WorkerProfileRead] | None = WorkerProfileRead,
             return_as_model: bool = True
-    ) -> WorkerProfileNestedRead:
+    ) -> WorkerProfileRead:
         user = await crud_users.get(db=db, id=object.user_id, schema_to_select=UserRead, return_as_model=True)
 
         if user is None:
@@ -43,7 +43,7 @@ class CRUDWorker(FastCRUD[
         if commit:
             await db.commit()
             await db.refresh(db_object)
-        return WorkerProfileNestedRead(**WorkerProfileBase.model_validate(db_object).model_dump(), id=db_object.id, is_verified=db_object.is_verified, user=user)
+        return WorkerProfileRead(**WorkerProfileBase.model_validate(db_object).model_dump(), id=db_object.id, is_verified=db_object.is_verified, user=user)
 
     async def delete(
             self,
