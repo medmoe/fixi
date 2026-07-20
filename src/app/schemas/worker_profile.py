@@ -30,6 +30,7 @@ class WorkerProfileRead(WorkerProfileBase):
     id: int
     user_id: int
     is_verified: bool
+    available_since: Annotated[datetime | None, Field(default=None)] = None
 
 
 class WorkerProfileCreate(WorkerProfileBase):

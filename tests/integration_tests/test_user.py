@@ -30,8 +30,8 @@ def password_payload(**overrides) -> dict:
 
 class TestGetUser:
     @pytest.mark.integration
-    async def test_successful_user_retrieval(self, async_client: AsyncClient, test_user: User, auth_headers: dict):
-        response = await async_client.get(f"/api/v1/user/me", headers=auth_headers)
+    async def test_successful_user_retrieval(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
+        response = await async_client.get(f"/api/v1/user/me", headers=worker_profile_auth_headers)
         assert response.status_code == 200
         data = response.json()
         for key in ("id", "name", "username", "email", "profile_image_url", "role_type", "created_at"):
@@ -63,10 +63,10 @@ class TestGetUserByUsername:
 
 class TestPatchUser:
     @pytest.mark.integration
-    async def test_successful_user_update(self, async_client: AsyncClient, auth_headers: dict, test_user: User):
+    async def test_successful_user_update(self, async_client: AsyncClient, worker_profile_auth_headers: dict, test_user: User):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
             json={"name": "Updated Name"}
         )
         assert response.status_code == 200
@@ -103,7 +103,7 @@ class TestPatchUser:
             self,
             async_client: AsyncClient,
             test_user: User,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
             async_session: AsyncSession
     ):
         test_user.is_deleted = True
@@ -112,35 +112,35 @@ class TestPatchUser:
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
             json={"name": "Updated Name"},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         print(response.json())
         assert response.status_code == 401
 
     @pytest.mark.integration
-    async def test_failed_user_update_of_existing_email(self, async_client: AsyncClient, test_user: User, other_user: User, auth_headers: dict):
+    async def test_failed_user_update_of_existing_email(self, async_client: AsyncClient, test_user: User, other_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
             json={"email": other_user.email},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 409
 
     @pytest.mark.integration
-    async def test_failed_user_update_of_existing_username(self, async_client: AsyncClient, test_user: User, other_user: User, auth_headers: dict):
+    async def test_failed_user_update_of_existing_username(self, async_client: AsyncClient, test_user: User, other_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
             json={"username": other_user.username},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 409
 
     @pytest.mark.integration
-    async def test_failed_user_update_when_adding_extra_fields(self, async_client: AsyncClient, test_user: User, auth_headers: dict):
+    async def test_failed_user_update_when_adding_extra_fields(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
             json={"username": "new_username", "extra_field": "extra_value"},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 422
 
@@ -149,20 +149,20 @@ class TestPatchUser:
 
 class TestPatchPassword:
     @pytest.mark.integration
-    async def test_successful_password_update(self, async_client: AsyncClient, test_user: User, auth_headers: dict):
+    async def test_successful_password_update(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}/password",
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
             json=password_payload()
         )
         assert response.status_code == 200
 
     @pytest.mark.integration
-    async def test_failed_password_update_if_adding_extra_fields(self, async_client: AsyncClient, test_user: User, auth_headers: dict):
+    async def test_failed_password_update_if_adding_extra_fields(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}/password",
             json=password_payload(extra="extra_field"),
-            headers=auth_headers
+            headers=worker_profile_auth_headers
         )
         assert response.status_code == 422
 
@@ -175,32 +175,32 @@ class TestPatchPassword:
         assert response.status_code == 401
 
     @pytest.mark.integration
-    async def test_failed_password_update_of_inactive_user(self, async_client: AsyncClient, test_user: User, auth_headers: dict, async_session: AsyncSession):
+    async def test_failed_password_update_of_inactive_user(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict, async_session: AsyncSession):
         test_user.is_deleted = True
         async_session.add(test_user)
         await async_session.commit()
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}/password",
             json=password_payload(),
-            headers=auth_headers
+            headers=worker_profile_auth_headers
         )
         assert response.status_code == 401
 
     @pytest.mark.integration
-    async def test_failed_password_update_of_non_existed_user(self, async_client: AsyncClient, test_user: User, auth_headers: dict):
+    async def test_failed_password_update_of_non_existed_user(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
             f"/api/v1/user/doesNotExist/password",
             json=password_payload(),
-            headers=auth_headers
+            headers=worker_profile_auth_headers
         )
         assert response.status_code == 403
 
     @pytest.mark.integration
-    async def test_failed_password_update_when_not_owner(self, async_client: AsyncClient, test_user: User, auth_headers: dict, other_user: User):
+    async def test_failed_password_update_when_not_owner(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict, other_user: User):
         response = await async_client.patch(
             f"/api/v1/user/{other_user.username}/password",
             json=password_payload(),
-            headers=auth_headers
+            headers=worker_profile_auth_headers
         )
         assert response.status_code == 403
 
@@ -209,8 +209,8 @@ class TestPatchPassword:
 
 class TestSoftDeleteUser:
     @pytest.mark.integration
-    async def test_successful_soft_delete(self, async_client: AsyncClient, test_user: User, auth_headers: dict, async_session: AsyncSession):
-        response = await async_client.delete(f"/api/v1/user/{test_user.username}", headers=auth_headers)
+    async def test_successful_soft_delete(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict, async_session: AsyncSession):
+        response = await async_client.delete(f"/api/v1/user/{test_user.username}", headers=worker_profile_auth_headers)
         assert response.status_code == 200
         user = await crud_users.get(db=async_session, username=test_user.username, is_deleted=False)
         assert user is None
@@ -226,8 +226,8 @@ class TestSoftDeleteUser:
         assert response.status_code == 401
 
     @pytest.mark.integration
-    async def test_failed_soft_delete_when_not_owner(self, async_client: AsyncClient, test_user: User, other_user: User, auth_headers: dict):
-        response = await async_client.delete(f"/api/v1/user/{other_user.username}", headers=auth_headers)
+    async def test_failed_soft_delete_when_not_owner(self, async_client: AsyncClient, test_user: User, other_user: User, worker_profile_auth_headers: dict):
+        response = await async_client.delete(f"/api/v1/user/{other_user.username}", headers=worker_profile_auth_headers)
         assert response.status_code == 403
 
 
@@ -245,12 +245,12 @@ class TestHardDeleteUser:
     async def test_non_admin_cannot_hard_delete(
             self,
             async_client: AsyncClient,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
             test_user: User,
     ):
         response = await async_client.delete(
             f"/api/v1/user/{test_user.username}/hard",
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
 
         assert response.status_code == 403

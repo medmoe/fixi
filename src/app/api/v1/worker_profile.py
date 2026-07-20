@@ -6,30 +6,20 @@ from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...api.dependencies import get_current_user, rate_limiter_dependency, require_role
+from ...api.dependencies import get_current_user, rate_limiter_dependency
 from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.events import publish
-from ...core.exceptions.http_exceptions import ForbiddenException, HTTPException, NotFoundException
+from ...core.exceptions.http_exceptions import HTTPException, NotFoundException
 from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
-from ...schemas.worker_profile import (
-    AvailabilityToggleRequest,
-    AvailabilityToggleResponse,
-    WorkerProfileCreate,
-    WorkerProfileCreateRequest,
-    WorkerProfileRead,
-    WorkerProfileUpdate,
-    WorkerProfileUpdateInternal,
-    WorkerProfileWithTradesRead,
-    WorkerTradeNestedRead
-)
+from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
-router = APIRouter(tags=["workers"], prefix="/worker-profiles")
+router = APIRouter(tags=["workers"], prefix="/worker-profile")
 
 MAX_PORTFOLIO_IMAGES = 10
 
@@ -46,13 +36,6 @@ async def _get_worker_profile_or_404(db: AsyncSession, user_id: int) -> WorkerPr
     if worker_profile is None:
         raise NotFoundException("Worker profile not found")
     return worker_profile
-
-
-def _assert_owner_or_admin(worker_profile_user_id: int, current_user: dict[str, Any]) -> None:
-    is_owner = current_user["id"] == worker_profile_user_id
-    is_admin = current_user.get("is_superuser", False)
-    if not (is_owner or is_admin):
-        raise ForbiddenException("You are not authorized to access this resource")
 
 
 async def _upload_image_file(
@@ -80,20 +63,6 @@ async def _upload_image_file(
     return cdn_url
 
 
-# ————— Post Worker Profiles ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-@router.post("", response_model=WorkerProfileRead, status_code=201)
-async def create_worker_profile(
-        body: WorkerProfileCreateRequest,
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        current_user: Annotated[dict, Depends(require_role("worker"))]) -> Any:
-    """ Create a worker profile. Requires worker role JWT."""
-    data = {**body.model_dump(mode="json"), "user_id": current_user["id"]}
-    object_in = WorkerProfileCreate.model_validate(data)
-    profile = await crud_worker_profiles.create(db=db, object=object_in, schema_to_select=WorkerProfileRead, return_as_model=True)
-    return profile
-
-
 # ————— GET /worker-profile ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 @router.get("", response_model=WorkerProfileWithTradesRead)
@@ -119,16 +88,21 @@ async def update_worker_profile(
         body: WorkerProfileUpdate,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
-) -> WorkerProfileRead:
+) -> Any:
     """ Partial update — owner or admin only. """
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
 
-    updated_worker_profile = await crud_worker_profiles.update(db=db, object=body, user_id=worker_profile.user_id, schema_to_select=WorkerProfileRead, return_as_model=True)
+    updated_worker_profile = await crud_worker_profiles.update(
+        db=db,
+        object=body,
+        user_id=worker_profile.user_id,
+        schema_to_select=WorkerProfileRead,
+        return_as_model=True
+    )
     return updated_worker_profile
 
 
-# ————— PATCH /worker-profiles/availability —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— PATCH /worker-profile/availability —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 @router.patch("/availability", response_model=AvailabilityToggleResponse, dependencies=[Depends(rate_limiter_dependency)])
 async def toggle_worker_availability(
@@ -138,7 +112,6 @@ async def toggle_worker_availability(
 ) -> AvailabilityToggleResponse:
     """ Toggle worker availability — owner only. Max 10 toggles per minute."""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
 
     # set available_since only when toggling ON
     available_since: datetime | None = None
@@ -169,15 +142,14 @@ async def toggle_worker_availability(
 
 # ————— POST /worker-profile/avatar ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.post("/avatar", response_model=dict)
+@router.post("/avatar", response_model=WorkerProfileRead)
 async def upload_worker_avatar(
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
         file: UploadFile = File(...),
-) -> dict[str, str]:
+) -> Any:
     """ Upload avatar image — owner or admin only"""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
     avatar_url = await _upload_image_file(db=db, worker_profile=worker_profile, file=file, placeholder="avatar")
     # update the profile
     updated_worker_profile = await crud_worker_profiles.update(
@@ -201,7 +173,6 @@ async def assign_trade_to_worker(
 ) -> list[WorkerTradeNestedRead]:
     """ Assign a trade to a worker profile — owner only."""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
 
     updated_trades = await crud_worker_trades.assign_trade(
         db=db,
@@ -222,7 +193,6 @@ async def remove_trade_from_worker(
 ) -> list[WorkerTradeNestedRead]:
     """ Remove a trade from a worker profile — owner only."""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
 
     updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile.id, trade_category_id=trade_id)
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
@@ -238,7 +208,6 @@ async def upload_portfolio_image(
 ) -> PortfolioImageRead:
     """ Upload portfolio image — owner or admin only """
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user_id, current_user=current_user)
 
     # check limit
     existing_count = await crud_portfolio_images.count(db=db, worker_profile_id=worker_profile.id)
@@ -282,13 +251,10 @@ async def get_portfolio_images(
         worker_profile_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> list[PortfolioImageRead]:
-    print(f"worker_profile_id: {worker_profile_id}")
-
     worker_profile_exist = await crud_worker_profiles.exists(db=db, id=worker_profile_id)
     if not worker_profile_exist:
         raise NotFoundException("Worker profile not found")
 
-    print("PASSED")
     result = await crud_portfolio_images.get_multi(
         db=db,
         worker_profile_id=worker_profile_id,
@@ -298,18 +264,16 @@ async def get_portfolio_images(
     return result["data"]
 
 
-# ————— DELETE /worker-profile/{worker_profile_id}/portfolio-images ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— DELETE /worker-profile/{worker_profile_id}/portfolio-images/{portfolio_image_id} ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.delete("/{worker_profile_id}/portfolio-images/{portfolio_image_id}", status_code=204)
+@router.delete("/portfolio-images/{portfolio_image_id}", status_code=204)
 async def delete_portfolio_image(
-        worker_profile_id: int,
         portfolio_image_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
 ) -> None:
-    worker_profile = await _get_worker_profile_or_404(db=db, user_id=worker_profile_id)
-    _assert_owner_or_admin(worker_profile_user_id=worker_profile.user.id, current_user=current_user)
+    worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
     try:
-        await crud_portfolio_images.delete(db=db, id=portfolio_image_id, worker_profile_id=worker_profile_id)
+        await crud_portfolio_images.delete(db=db, id=portfolio_image_id, worker_profile_id=worker_profile.id)
     except NoResultFound:
         raise NotFoundException("Portfolio image not found")
