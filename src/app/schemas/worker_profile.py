@@ -5,7 +5,6 @@ from typing import Annotated
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
 from .trade_category import TradeCategoryRead
-from .user import UserRead
 
 
 class WorkerProfileBase(BaseModel):
@@ -31,13 +30,7 @@ class WorkerProfileRead(WorkerProfileBase):
     id: int
     user_id: int
     is_verified: bool
-
-
-class WorkerProfileNestedRead(WorkerProfileBase):
-    model_config = ConfigDict(from_attributes=True, extra="forbid")
-    user: UserRead
-    id: int
-    is_verified: bool
+    available_since: Annotated[datetime | None, Field(default=None)] = None
 
 
 class WorkerProfileCreate(WorkerProfileBase):
@@ -105,7 +98,7 @@ class WorkerTradeNestedRead(BaseModel):
     trade_category: TradeCategoryRead | None = None
 
 
-class WorkerProfileWithTradesRead(WorkerProfileNestedRead):
+class WorkerProfileWithTradesRead(WorkerProfileRead):
     """Profile response with embedded trades list."""
     trades: list[WorkerTradeNestedRead] = []
 

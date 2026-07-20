@@ -12,7 +12,7 @@ from src.app.crud.crud_worker_profiles import crud_worker_profiles
 from src.app.crud.crud_workers_trades import crud_worker_trades
 from src.app.models import User, TradeCategory, WorkerProfile, WorkerTrade, SkillLevel
 from src.app.schemas.trade_category import TradeCategoryCreate
-from src.app.schemas.worker_profile import WorkerProfileCreate
+from src.app.schemas.worker_profile import WorkerProfileCreate, WorkerProfileRead
 from src.app.schemas.worker_trade import WorkerTradeCreate, WorkerTradeUpdate, WorkerTradeRead
 
 
@@ -159,8 +159,8 @@ class TestCreate:
         assert wt1.trade_category_id != wt2.trade_category_id
 
     async def test_same_trade_can_have_multiple_workers(self, async_session: AsyncSession, test_trade_category: TradeCategory, test_user: User, other_user: User):
-        worker1 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=test_user.id))
-        worker2 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=other_user.id))
+        worker1 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
+        worker2 = await crud_worker_profiles.create(db=async_session, object=worker_create_schema(user_id=other_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
         wt1 = await create_test_worker_trade(async_session, worker1.id, test_trade_category.id)
         wt2 = await create_test_worker_trade(async_session, worker2.id, test_trade_category.id)
         assert wt1.worker_profile_id != wt2.worker_profile_id

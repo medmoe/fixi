@@ -19,7 +19,6 @@ from src.app.schemas.worker_profile import (
     WorkerProfileRead,
     WorkerProfileDelete,
     WorkerProfileBase,
-    WorkerProfileNestedRead
 )
 from tests.conftest import fake
 
@@ -314,16 +313,6 @@ class TestWorkerProfileRead:
             with pytest.raises(ValidationError) as exc:
                 WorkerProfileRead(**payload)
             assert "user_id" in str(exc.value)
-
-    class TestNestedStructure:
-        def test_nested_user_structure(self):
-            payload = nested_payload()
-            schema = WorkerProfileNestedRead(**payload)
-
-            assert schema.user is not None
-            assert schema.user.id is not None
-            assert schema.user.role_type is payload["user"]["role_type"].value
-            assert schema.user.uuid == payload["user"]["uuid"]
 
 
 # ===========================================================================

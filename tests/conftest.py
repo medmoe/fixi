@@ -1,4 +1,5 @@
 from datetime import datetime, UTC
+from decimal import Decimal
 from io import BytesIO
 from typing import AsyncGenerator, Annotated
 from unittest.mock import Mock, AsyncMock
@@ -41,6 +42,8 @@ test_engine = create_async_engine(
     future=True
 )
 testSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+
+TEST_PASSWORD = "testpassword123"
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -201,7 +204,19 @@ async def auth_headers(async_client_with_redis: AsyncClient, test_user: User) ->
     client, _ = async_client_with_redis
     login_data = {
         "username_or_email": test_user.username,
-        "password": "testpassword123"
+        "password": TEST_PASSWORD
+    }
+    response = await client.post("/api/v1/auth/login", json=login_data)
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def worker_profile_auth_headers(async_client_with_redis: AsyncClient, test_user: User) -> dict:
+    """ Get authentication headers for a test user."""
+    client, _ = async_client_with_redis
+    login_data = {
+        "username_or_email": test_user.username,
+        "password": TEST_PASSWORD
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
@@ -213,7 +228,7 @@ async def other_auth_headers(async_client_with_redis: AsyncClient, other_user: U
     client, _ = async_client_with_redis
     login_data = {
         "username_or_email": other_user.username,
-        "password": "testpassword123"
+        "password": TEST_PASSWORD
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
@@ -225,7 +240,7 @@ async def admin_auth_headers(async_client_with_redis: AsyncClient, test_admin_us
     client, _ = async_client_with_redis
     login_data = {
         "username_or_email": test_admin_user.username,
-        "password": "testpassword123"
+        "password": TEST_PASSWORD
     }
 
     response = await client.post("/api/v1/auth/login", json=login_data)
@@ -292,7 +307,7 @@ async def create_test_user(async_session: AsyncSession, **kwargs) -> User:
         name=fake.name(),
         username=fake.user_name(),
         email=fake.email(),
-        hashed_password=get_password_hash("testpassword123"),
+        hashed_password=get_password_hash(TEST_PASSWORD),
         **kwargs
     )
     async_session.add(user)
@@ -305,7 +320,7 @@ async def create_test_worker_profile(async_session: AsyncSession, user: User | N
     """ Create a test worker """
     if user is None:
         user = await create_test_user(async_session)
-    worker = WorkerProfile(user_id=user.id, **kwargs)
+    worker = WorkerProfile(user_id=user.id, hourly_rate=Decimal(25.00), **kwargs)
     async_session.add(worker)
     await async_session.commit()
     await async_session.refresh(worker)
@@ -321,7 +336,7 @@ async def create_bulk_test_worker_profiles(async_session: AsyncSession, paramete
             "name": fake.name(),
             "username": fake.user_name(),
             "email": fake.email(),
-            "hashed_password": get_password_hash("testpassword123"),
+            "hashed_password": get_password_hash(TEST_PASSWORD),
             "is_superuser": False,
             "uuid": uuid7(),
             "created_at": datetime.now(UTC),

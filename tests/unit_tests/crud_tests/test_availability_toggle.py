@@ -10,7 +10,7 @@ from src.app.api.v1.worker_profile import toggle_worker_availability
 from src.app.core.exceptions.http_exceptions import ForbiddenException
 from src.app.schemas.worker_profile import (
     AvailabilityToggleRequest,
-    WorkerProfileNestedRead,
+    WorkerProfileRead
 )
 
 
@@ -21,13 +21,12 @@ def make_worker_profile(
         user_id: int = 42,
         is_available: bool = False,
 ) -> MagicMock:
-    """Mock WorkerProfileNestedRead instance."""
-    profile = MagicMock(spec=WorkerProfileNestedRead)
+    """Mock WorkerProfileRead instance."""
+    profile = MagicMock(spec=WorkerProfileRead)
     profile.id = worker_profile_id
     profile.is_available = is_available
     profile.available_since = None
-    profile.user = MagicMock()
-    profile.user.id = user_id
+    profile.user_id = user_id
     return profile
 
 
@@ -62,7 +61,7 @@ class TestToggleAvailabilityOn:
             ),
         ):
             result = await toggle_worker_availability(
-                worker_profile_id=1,
+
                 body=AvailabilityToggleRequest(is_available=True),
                 db=db,
                 current_user=current_user,
@@ -99,7 +98,6 @@ class TestToggleAvailabilityOn:
             ),
         ):
             await toggle_worker_availability(
-                worker_profile_id=1,
                 body=AvailabilityToggleRequest(is_available=True),
                 db=db,
                 current_user=current_user,
@@ -135,7 +133,6 @@ class TestToggleAvailabilityOff:
             ),
         ):
             result = await toggle_worker_availability(
-                worker_profile_id=1,
                 body=AvailabilityToggleRequest(is_available=False),
                 db=db,
                 current_user=current_user,
@@ -171,7 +168,6 @@ class TestToggleAvailabilityOff:
             ),
         ):
             await toggle_worker_availability(
-                worker_profile_id=1,
                 body=AvailabilityToggleRequest(is_available=False),
                 db=db,
                 current_user=current_user,
@@ -186,53 +182,6 @@ class TestToggleAvailabilityOff:
 # ─── TestUnauthorized ─────────────────────────────────────────────────────────
 
 class TestUnauthorizedToggle:
-    async def test_other_user_raises_forbidden(self):
-        db = make_db()
-        profile = make_worker_profile(user_id=42)
-        other_user = make_current_user(user_id=99, is_superuser=False)  # different user
-
-        with (
-            patch(
-                "src.app.api.v1.worker_profile._get_worker_profile_or_404",
-                new=AsyncMock(return_value=profile),
-            ),
-        ):
-            with pytest.raises(ForbiddenException):
-                await toggle_worker_availability(
-                    worker_profile_id=1,
-                    body=AvailabilityToggleRequest(is_available=True),
-                    db=db,
-                    current_user=other_user,
-                )
-
-    async def test_admin_can_toggle_any_profile(self):
-        db = make_db()
-        profile = make_worker_profile(user_id=42)
-        admin = make_current_user(user_id=99, is_superuser=True)  # different user but admin
-
-        with (
-            patch(
-                "src.app.api.v1.worker_profile._get_worker_profile_or_404",
-                new=AsyncMock(return_value=profile),
-            ),
-            patch(
-                "src.app.api.v1.worker_profile.crud_worker_profiles.update",
-                new=AsyncMock(return_value=None),
-            ),
-            patch(
-                "src.app.api.v1.worker_profile.publish",
-                new=AsyncMock(return_value=None),
-            ),
-        ):
-            result = await toggle_worker_availability(
-                worker_profile_id=1,
-                body=AvailabilityToggleRequest(is_available=True),
-                db=db,
-                current_user=admin,
-            )
-
-        assert result.is_available is True
-
     async def test_update_called_with_correct_fields(self):
         db = make_db()
         profile = make_worker_profile()
@@ -254,7 +203,6 @@ class TestUnauthorizedToggle:
             ),
         ):
             await toggle_worker_availability(
-                worker_profile_id=1,
                 body=AvailabilityToggleRequest(is_available=True),
                 db=db,
                 current_user=current_user,

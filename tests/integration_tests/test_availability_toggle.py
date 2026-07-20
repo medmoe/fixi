@@ -12,14 +12,15 @@ class TestAvailabilityToggle:
             async_client_with_redis: AsyncClient,
             async_session: AsyncSession,
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         client, _ = async_client_with_redis
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
+        print(response.json())
         assert response.status_code == 200
         data = response.json()
         assert data["is_available"] is True
@@ -29,27 +30,27 @@ class TestAvailabilityToggle:
             self,
             async_client_with_redis: AsyncClient,
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         # first toggle on
         client, _ = async_client_with_redis
         await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         # then toggle off
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": False},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 200
         data = response.json()
         assert data["is_available"] is False
         assert data["available_since"] is None  # ✅ cleared on toggle off
 
-    async def test_unauthorized_returns_403(
+    async def test_unauthorized_returns_404(
             self,
             async_client_with_redis: AsyncClient,
             test_worker_profile: WorkerProfile,
@@ -57,11 +58,11 @@ class TestAvailabilityToggle:
     ):
         client, _ = async_client_with_redis
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
             headers=other_auth_headers,
         )
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     async def test_unauthenticated_returns_401(
             self,
@@ -70,7 +71,7 @@ class TestAvailabilityToggle:
     ):
         client, _ = async_client_with_redis
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
         )
         assert response.status_code == 401
@@ -79,7 +80,7 @@ class TestAvailabilityToggle:
             self,
             async_client_with_redis: AsyncClient,
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         client, _ = async_client_with_redis
         """Verify the event bus receives the right payload."""
@@ -92,9 +93,9 @@ class TestAvailabilityToggle:
         subscribe("worker_profile:availability_changed", capture_event)
 
         await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
 
         assert len(received_events) == 1
@@ -108,15 +109,15 @@ class TestRateLimiting:
             self,
             async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         client, limiter = async_client_with_rate_limit
         limiter.limit = 10
 
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 200
 
@@ -124,16 +125,16 @@ class TestRateLimiting:
             self,
             async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         client, limiter = async_client_with_rate_limit
 
         # pre-fill the counter to the limit
-        limiter.set_count(user_id=test_worker_profile.user_id, path="/api/v1/worker-profiles/1/availability", count=10)
+        limiter.set_count(user_id=test_worker_profile.user_id, path="/api/v1/worker-profile/availability", count=10)
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 429
 
@@ -141,7 +142,7 @@ class TestRateLimiting:
             self,
             async_client_with_rate_limit: tuple[AsyncClient, FakeRateLimiter],
             test_worker_profile: WorkerProfile,
-            auth_headers: dict,
+            worker_profile_auth_headers: dict,
     ):
         client, limiter = async_client_with_rate_limit
 
@@ -152,8 +153,8 @@ class TestRateLimiting:
         limiter.reset()
 
         response = await client.patch(
-            f"/api/v1/worker-profiles/{test_worker_profile.id}/availability",
+            f"/api/v1/worker-profile/availability",
             json={"is_available": True},
-            headers=auth_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 200

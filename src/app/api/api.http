@@ -10,6 +10,15 @@ Content-Type: application/json
 "role_type": "worker"
 }
 
+### login worker with wrong password or wrong username
+POST http://localhost:8000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email" : "wrong_username",
+  "password": "123456"
+}
+
 ### login worker and capture token
 POST http://localhost:8000/api/v1/auth/login
 Content-Type: application/json

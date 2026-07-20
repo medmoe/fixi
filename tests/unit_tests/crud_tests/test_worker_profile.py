@@ -14,16 +14,16 @@ from decimal import Decimal
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.core.exceptions.http_exceptions import DuplicateValueException
 from src.app.crud.crud_worker_profiles import crud_worker_profiles
 from src.app.models import User, WorkerProfile
 from src.app.schemas.worker_profile import (
     WorkerProfileCreate,
     WorkerProfileUpdate,
     WorkerProfileUpdateInternal,
+    WorkerProfileRead
 )
 from tests.conftest import create_test_worker_profile, create_bulk_test_worker_profiles
 
@@ -79,34 +79,34 @@ class TestWorkerProfileCreate:
     class TestSuccess:
 
         async def test_create_returns_profile(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id))
+            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
             assert profile is not None
 
         async def test_create_persists_bio(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(bio="Expert welder", user_id=test_user.id))
+            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(bio="Expert welder", user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
             assert profile.bio == "Expert welder"
 
         async def test_create_sets_is_available_default(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id), )
+            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
             assert profile.is_available is True
 
         async def test_create_sets_is_verified_false_by_default(self, async_session: AsyncSession, test_user: User):
-            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id), )
+            profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
             assert profile.is_verified is False
 
     class TestDuplicates:
 
         async def test_create_duplicate_user_id_fails(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
             """Each user can only have one worker profile."""
-            with pytest.raises(DuplicateValueException):
-                await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_worker_profile.user_id), )
+            with pytest.raises(IntegrityError):
+                await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_worker_profile.user_id), schema_to_select=WorkerProfileRead, return_as_model=True)
 
     class TestInvalidData:
 
         async def test_create_with_nonexistent_user_id_fails(self, async_session: AsyncSession):
             """FK constraint — user must exist."""
             with pytest.raises(Exception):
-                await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=99999))
+                await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=99999), schema_to_select=WorkerProfileRead, return_as_model=True)
 
 
 # ===========================================================================
@@ -153,23 +153,23 @@ class TestWorkerProfileRead:
             self.profiles = await create_bulk_test_worker_profiles(async_session, parameters)
 
         async def test_get_multi_returns_all_profiles(self):
-            result = await crud_worker_profiles.get_multi(db=self.session)
+            result = await crud_worker_profiles.get_multi(db=self.session, schema_to_select=WorkerProfileRead, return_as_model=True)
             assert result["total_count"] == len(self.profiles)
 
         async def test_get_multi_respects_limit(self):
             limit = 3
-            result = await crud_worker_profiles.get_multi(db=self.session, limit=limit)
+            result = await crud_worker_profiles.get_multi(db=self.session, limit=limit, schema_to_select=WorkerProfileRead, return_as_model=True)
             assert len(result["data"]) == limit
             assert result["total_count"] == len(self.profiles)
 
         async def test_get_multi_respects_offset(self, ):
             offset = 2
-            result = await crud_worker_profiles.get_multi(db=self.session, offset=offset)
+            result = await crud_worker_profiles.get_multi(db=self.session, offset=offset, schema_to_select=WorkerProfileRead, return_as_model=True)
             assert len(result["data"]) == len(self.profiles) - offset
 
         async def test_get_multi_limit_and_offset_combined(self, ):
             limit, offset = 4, 2
-            result = await crud_worker_profiles.get_multi(db=self.session, limit=limit, offset=offset)
+            result = await crud_worker_profiles.get_multi(db=self.session, limit=limit, offset=offset, schema_to_select=WorkerProfileRead, return_as_model=True)
             assert len(result["data"]) == min(len(self.profiles) - offset, limit)
 
     class TestFilters:
@@ -255,40 +255,38 @@ class TestWorkerProfileUpdate:
             updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id)
             assert updated["bio"] == "Updated bio"
 
-        async def test_update_does_not_affect_other_fields(self, async_session: AsyncSession):
-            test_worker_profile = await create_test_worker_profile(async_session, hourly_rate=100)
+        async def test_update_does_not_affect_other_fields(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
             await crud_worker_profiles.update(db=async_session, object=WorkerProfileUpdate(bio="New bio"), user_id=test_worker_profile.user_id, id=test_worker_profile.id)
-            updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id)
-            assert updated["hourly_rate"] == test_worker_profile.hourly_rate  # unchanged
+            updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id, schema_to_select=WorkerProfileRead, return_as_model=True)
+            assert updated.hourly_rate == test_worker_profile.hourly_rate  # unchanged
 
     class TestFullUpdate:
 
-        async def test_update_all_fields(self, async_session: AsyncSession, test_user: User):
-            worker_profile = await crud_worker_profiles.create(db=async_session, object=create_schema(user_id=test_user.id))
+        async def test_update_all_fields(self, async_session: AsyncSession, test_user: User, test_worker_profile: WorkerProfile):
             await crud_worker_profiles.update(
                 db=async_session,
                 object=WorkerProfileUpdate(
                     bio="Fully updated",
                     years_of_experience=20,
-                    hourly_rate=100.00,
+                    hourly_rate=Decimal(100.00),
                     service_radius_km=50,
                     is_available=False,
                 ),
                 user_id=test_user.id,
-                id=worker_profile.id,
+                id=test_worker_profile.id,
             )
-            updated = await crud_worker_profiles.get(db=async_session, id=worker_profile.id)
-            assert updated["bio"] == "Fully updated"
-            assert updated["years_of_experience"] == 20
-            assert updated["is_available"] is False
+            updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id, schema_to_select=WorkerProfileRead, return_as_model=True)
+            assert updated.bio == "Fully updated"
+            assert updated.years_of_experience == 20
+            assert updated.is_available is False
 
     class TestInternalUpdate:
         """WorkerProfileUpdateInternal — admin can set is_verified."""
 
         async def test_admin_can_verify_worker(self, async_session: AsyncSession, test_worker_profile):
             await crud_worker_profiles.update(db=async_session, object=WorkerProfileUpdateInternal(is_verified=True), user_id=test_worker_profile.user_id, id=test_worker_profile.id)
-            updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id)
-            assert updated["is_verified"] is True
+            updated = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id, schema_to_select=WorkerProfileRead, return_as_model=True)
+            assert updated.is_verified is True
 
     class TestUpdatesTimestamp:
 
@@ -299,9 +297,9 @@ class TestWorkerProfileUpdate:
             await async_session.refresh(user)
 
             await crud_worker_profiles.update(db=async_session,
-                                              object=WorkerProfileUpdate(bio="Trigger timestamp update"),
-                                              user_id=test_worker_profile.user_id,
-                                              id=test_worker_profile.id)
+                object=WorkerProfileUpdate(bio="Trigger timestamp update"),
+                user_id=test_worker_profile.user_id,
+                id=test_worker_profile.id)
             await async_session.refresh(user)
 
             assert user.updated_at > datetime(2020, 1, 1, tzinfo=UTC)
@@ -329,7 +327,7 @@ class TestWorkerProfileDelete:
 
         async def test_delete_removes_profile(self, async_session: AsyncSession, test_worker_profile: WorkerProfile):
             await crud_worker_profiles.delete(db=async_session, user_id=test_worker_profile.user_id, hard=True)
-            fetched = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id)
+            fetched = await crud_worker_profiles.get(db=async_session, id=test_worker_profile.id, schema_to_select=WorkerProfileRead, return_as_model=True)
             assert fetched is None
 
     class TestNotFound:
@@ -361,13 +359,13 @@ class TestWorkerProfileDelete:
 class TestWorkerProfileEdgeCases:
 
     async def test_none_bio_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(bio=None, user_id=test_user.id))
+        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(bio=None, user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
         assert profile.bio is None
 
     async def test_zero_hourly_rate_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(hourly_rate=0.00, user_id=test_user.id))
+        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(hourly_rate=0.00, user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
         assert profile.hourly_rate == 0.00
 
     async def test_zero_years_experience_persists(self, async_session: AsyncSession, test_user: User):
-        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(years_of_experience=0, user_id=test_user.id))
+        profile = await crud_worker_profiles.create(db=async_session, object=create_schema(years_of_experience=0, user_id=test_user.id), schema_to_select=WorkerProfileRead, return_as_model=True)
         assert profile.years_of_experience == 0
