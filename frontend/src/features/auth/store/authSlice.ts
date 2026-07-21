@@ -1,5 +1,6 @@
 import {createSlice, type PayloadAction} from '@reduxjs/toolkit';
 import {type AuthState} from '../types/auth.types';
+import {setAccessToken} from '@/lib/api/apiClient'
 
 
 export const initialAuthState: AuthState = {
@@ -16,13 +17,13 @@ const authSlice = createSlice({
             state.accessToken = action.payload
             state.isAuthenticated = true
             state.isLoading = false
-            sessionStorage.setItem('access_token', action.payload)
+            setAccessToken(action.payload)
         },
         clearCredentials: (state) => {
             state.accessToken = null
             state.isAuthenticated = false
             state.isLoading = false
-            sessionStorage.removeItem('access_token')
+            setAccessToken(null)
         },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload

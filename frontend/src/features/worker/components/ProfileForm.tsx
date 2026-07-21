@@ -2,7 +2,7 @@ import React from 'react';
 import {SubmitHandler, useForm} from 'react-hook-form'; // Import SubmitHandler
 import {zodResolver} from '@hookform/resolvers/zod';
 import {WorkerProfileFormValues, workerProfileSchema} from '../schemas/workerProfileSchema';
-import {UpdateWorkerProfilePayload, WorkerProfile, useUpdateWorkerProfile} from '@/features/worker';
+import {UpdateWorkerProfilePayload, useUpdateWorkerProfile, WorkerProfile} from '@/features/worker';
 import {Form} from '@/components/ui/form';
 import {Button} from '@/components/ui/button';
 import {BioField} from './fields/BioField';
@@ -16,7 +16,7 @@ interface ProfileFormProps {
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
-    const {mutate: updateProfile, isPending} = useUpdateWorkerProfile(profile.id);
+    const {mutate: updateProfile, isPending} = useUpdateWorkerProfile();
 
     // 1. react-hook-form uses WorkerProfileFormValues (z.input) to safely track state
     const form = useForm<WorkerProfileFormValues>({

@@ -74,8 +74,10 @@ describe('useRegister', () => {
                 await result.current.mutateAsync(validPayload)
             })
 
+            // TanStack Query passes mutation context as second arg
             expect(authApi.register).toHaveBeenCalledWith(
-                validPayload, expect.objectContaining({client: expect.any(QueryClient)})
+                validPayload,
+                expect.objectContaining({client: expect.any(QueryClient)})
             )
         })
 

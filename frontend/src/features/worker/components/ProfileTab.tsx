@@ -14,15 +14,13 @@ import {AlertCircle, Briefcase, Loader2} from 'lucide-react'
  * - ProfileForm: updates existing profile (bio, hourly_rate, service_radius_km, trades)
  */
 export const ProfileTab: React.FC = () => {
-    // const workerId = user?.id
-    const workerId = 1 // we need to fetch profile based on user.id
 
     const {
         data: profile,
         isLoading: profileLoading,
         isError: isProfileError,
         error: profileError,
-    } = useWorkerProfile(workerId)
+    } = useWorkerProfile()
 
     if (profileLoading) {
         return (

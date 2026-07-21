@@ -30,3 +30,7 @@ export interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
 }
+
+export interface RefreshResponse {
+    access_token: string
+}

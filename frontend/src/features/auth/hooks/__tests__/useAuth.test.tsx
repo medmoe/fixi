@@ -10,6 +10,7 @@ import {authApi} from '@/lib/api/authApi'
 import {toast} from 'sonner'
 import {createTestQueryClient, createTestStore} from '@/test/renderWithProviders'
 import type {ReactNode} from 'react'
+import {getAccessToken, setAccessToken} from '@/lib/api/apiClient'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,10 @@ vi.mock('@/lib/api/authApi', () => ({
         login: vi.fn(),
         logout: vi.fn(),
     },
+}))
+vi.mock('@/lib/api/apiClient', () => ({
+    setAccessToken: vi.fn(),
+    getAccessToken: vi.fn((): string | null => null),
 }))
 
 vi.mock('sonner', () => ({
@@ -56,13 +61,11 @@ const createWrapper = (preloadedState = {}) => {
     }
 }
 
-
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('useAuth', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        sessionStorage.clear()
     })
 
     // ─── Initial state ────────────────────────────────────────────────────────
@@ -75,8 +78,8 @@ describe('useAuth', () => {
             expect(result.current.accessToken).toBeNull()
         })
 
-        it('is authenticated when token exists in sessionStorage', () => {
-            sessionStorage.setItem('access_token', 'existing-token')
+        it('is authenticated when token exists in memory', () => {
+            vi.mocked(getAccessToken).mockReturnValue('existing-token')
             const {wrapper} = createWrapper({
                 auth: {
                     accessToken: 'existing-token',
@@ -133,7 +136,7 @@ describe('useAuth', () => {
             }, expect.objectContaining({client: expect.any(QueryClient)}))
         })
 
-        it('stores access token in sessionStorage on success', async () => {
+        it('stores access token in memory on success', async () => {
             vi.mocked(authApi.login).mockResolvedValue({
                 access_token: 'test-token',
                 token_type: 'bearer',
@@ -149,9 +152,28 @@ describe('useAuth', () => {
                 })
             })
 
-            await waitFor(() =>
-                expect(sessionStorage.getItem('access_token')).toBe('test-token')
-            )
+            expect(setAccessToken).toHaveBeenCalledWith('test-token')
+        })
+
+        it('does NOT store token in sessionStorage', async () => {
+            const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+            vi.mocked(authApi.login).mockResolvedValue({
+                access_token: 'test-token',
+                token_type: 'bearer',
+            })
+
+            const {wrapper} = createWrapper()
+            const {result} = renderHook(() => useAuth(), {wrapper})
+
+            await act(async () => {
+                await result.current.login({
+                    username_or_email: 'johndoe',
+                    password: 'Pass123',
+                })
+            })
+
+            expect(setItemSpy).not.toHaveBeenCalledWith('access_token', expect.anything())
+            setItemSpy.mockRestore()
         })
 
         it('updates isAuthenticated to true on success', async () => {
@@ -217,7 +239,7 @@ describe('useAuth', () => {
             )
         })
 
-        it('shows error toast on login failure', async () => {
+        it('shows string error detail on login failure', async () => {
             vi.mocked(authApi.login).mockRejectedValue({
                 response: {data: {detail: 'Invalid credentials'}},
             })
@@ -237,6 +259,35 @@ describe('useAuth', () => {
             )
         })
 
+        it('shows array error details joined on login failure', async () => {
+            vi.mocked(authApi.login).mockRejectedValue({
+                response: {
+                    data: {
+                        detail: [
+                            {msg: 'Username is required'},
+                            {msg: 'Password must be at least 8 characters'},
+                        ],
+                    },
+                },
+            })
+
+            const {wrapper} = createWrapper()
+            const {result} = renderHook(() => useAuth(), {wrapper})
+
+            await act(async () => {
+                await result.current.login({
+                    username_or_email: '',
+                    password: 'short',
+                })
+            })
+
+            await waitFor(() =>
+                expect(toast.error).toHaveBeenCalledWith(
+                    'Username is required. Password must be at least 8 characters'
+                )
+            )
+        })
+
         it('shows fallback error message when no detail in response', async () => {
             vi.mocked(authApi.login).mockRejectedValue(new Error('Network error'))
 
@@ -251,7 +302,7 @@ describe('useAuth', () => {
             })
 
             await waitFor(() =>
-                expect(toast.error).toHaveBeenCalledWith('Login failed. Please try again.')
+                expect(toast.error).toHaveBeenCalledWith('Something went wrong. Please try again.')
             )
         })
 
@@ -286,7 +337,7 @@ describe('useAuth', () => {
             })
 
             await waitFor(() => expect(result.current.isLoggingIn).toBe(false))
-            expect(sessionStorage.getItem('access_token')).toBeNull()
+            expect(setAccessToken).not.toHaveBeenCalled()
         })
     })
 
@@ -314,8 +365,7 @@ describe('useAuth', () => {
             expect(authApi.logout).toHaveBeenCalledTimes(1)
         })
 
-        it('clears sessionStorage on logout', async () => {
-            sessionStorage.setItem('access_token', 'test-token')
+        it('clears access token from memory on logout', async () => {
             vi.mocked(authApi.logout).mockResolvedValue(undefined)
 
             const {wrapper} = createWrapper(authenticatedState)
@@ -325,9 +375,22 @@ describe('useAuth', () => {
                 await result.current.logout()
             })
 
-            await waitFor(() =>
-                expect(sessionStorage.getItem('access_token')).toBeNull()
-            )
+            expect(setAccessToken).toHaveBeenCalledWith(null)
+        })
+
+        it('does NOT use sessionStorage for token cleanup', async () => {
+            const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem')
+            vi.mocked(authApi.logout).mockResolvedValue(undefined)
+
+            const {wrapper} = createWrapper(authenticatedState)
+            const {result} = renderHook(() => useAuth(), {wrapper})
+
+            await act(async () => {
+                await result.current.logout()
+            })
+
+            expect(removeItemSpy).not.toHaveBeenCalled()
+            removeItemSpy.mockRestore()
         })
 
         it('clears auth state on logout', async () => {
@@ -361,8 +424,7 @@ describe('useAuth', () => {
             )
         })
 
-        it('clears session even when logout API fails', async () => {
-            sessionStorage.setItem('access_token', 'test-token')
+        it('clears memory token even when logout API fails', async () => {
             vi.mocked(authApi.logout).mockRejectedValue(new Error('Network error'))
 
             const {wrapper, store} = createWrapper(authenticatedState)
@@ -373,7 +435,7 @@ describe('useAuth', () => {
             })
 
             await waitFor(() => {
-                expect(sessionStorage.getItem('access_token')).toBeNull()
+                expect(setAccessToken).toHaveBeenCalledWith(null)
                 expect(store.getState().auth.isAuthenticated).toBe(false)
             })
         })

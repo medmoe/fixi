@@ -8,6 +8,7 @@ export default mergeConfig(
             environment: 'jsdom', // needed for React hooks
             globals: true,
             setupFiles: ['./src/test/setup.ts'],
+            disableConsoleIntercept: true,
             coverage: {
                 provider: 'v8',
                 reporter: ['text', 'json', 'html'],

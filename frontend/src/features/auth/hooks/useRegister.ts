@@ -1,8 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
-import { authApi } from '@/lib/api/authApi'
-import { toast } from 'sonner'
-import type { RegisterPayload, RegisterResponse } from '@/features/auth/types/auth.types'
+import {useMutation} from '@tanstack/react-query'
+import {useNavigate} from 'react-router-dom'
+import {authApi} from '@/lib/api/authApi'
+import {toast} from 'sonner'
+import type {RegisterPayload, RegisterResponse} from '@/features/auth/types/auth.types'
 
 export const useRegister = () => {
     const navigate = useNavigate()

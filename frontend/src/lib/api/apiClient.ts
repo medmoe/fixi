@@ -1,25 +1,43 @@
-import axios from 'axios'
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
+import axios from 'axios'
+
+// ─── Token Storage (Memory Only — Most Secure) ────────────────────────────────
+// Access token is stored ONLY in memory (never localStorage/sessionStorage/cookies).
+// This prevents XSS token theft. On page refresh, the token is lost and a silent
+// refresh is performed using the httpOnly refresh_token cookie.
+//
+// Security: XSS cannot steal what it cannot access. The refresh_token is httpOnly
+// so it's never exposed to JavaScript.
+
+let accessToken: string | null = null
+
+export const setAccessToken = (token: string | null) => {
+    accessToken = token
+}
+
+export const getAccessToken = (): string | null => accessToken
+
+// ─── Axios Instance ───────────────────────────────────────────────────────────
 
 const apiClient: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1',
-    withCredentials: true,   // ✅ sends refresh token cookie automatically
+    withCredentials: true,   // ✅ sends httpOnly refresh_token cookie automatically
     headers: {
         'Content-Type': 'application/json',
     },
 })
 
-// ─── Request interceptor — attach access token ────────────────────────────────
+// ─── Request Interceptor — attach access token from memory ──────────────────
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    const token = sessionStorage.getItem('access_token')
+    const token = getAccessToken()
     if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`
     }
     return config
 })
 
-// ─── Response interceptor — silent token refresh ──────────────────────────────
+// ─── Response Interceptor — silent token refresh ──────────────────────────────
 
 let isRefreshing = false
 let failedQueue: Array<{
@@ -38,14 +56,31 @@ const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue = []
 }
 
+// Auth endpoints that should NOT trigger token refresh on 401
+const AUTH_ENDPOINTS = [
+    '/api/v1/auth/login',
+    '/api/v1/auth/register',
+    '/api/v1/auth/refresh',
+]
+
+const isAuthEndpoint = (url?: string): boolean => {
+    if (!url) return false
+    return AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint))
+}
+
 apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip refresh logic for auth endpoints — their 401s are legitimate
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !isAuthEndpoint(originalRequest.url)
+        ) {
             if (isRefreshing) {
-                // ✅ queue requests while refresh is in progress
+                // Queue requests while refresh is in progress
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject })
                 }).then((token) => {
@@ -58,15 +93,22 @@ apiClient.interceptors.response.use(
             isRefreshing = true
 
             try {
+                // Backend reads refresh_token from httpOnly cookie (withCredentials)
+                // and returns new access_token in response body
                 const { data } = await apiClient.post('/api/v1/auth/refresh')
                 const newToken = data.access_token
-                sessionStorage.setItem('access_token', newToken)
+
+                // Store new access token in memory only
+                setAccessToken(newToken)
+
+                // Update default header for subsequent requests
                 apiClient.defaults.headers.common.Authorization = `Bearer ${newToken}`
+
                 processQueue(null, newToken)
                 return apiClient(originalRequest)
             } catch (refreshError) {
                 processQueue(refreshError, null)
-                sessionStorage.removeItem('access_token')
+                setAccessToken(null)
                 window.location.href = '/login'
                 return Promise.reject(refreshError)
             } finally {

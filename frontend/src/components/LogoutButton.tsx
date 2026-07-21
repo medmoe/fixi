@@ -1,4 +1,5 @@
 import React from 'react'
+import {setAccessToken} from '@/lib/api/apiClient'
 import {useNavigate} from 'react-router-dom'
 import {Loader2, LogOut} from 'lucide-react'
 import {Button} from '@/components/ui/button'
@@ -30,7 +31,7 @@ export const LogoutButton: React.FC = () => {
             navigate('/login', {replace: true})
         } catch (error) {
             // Even if API fails, clear local state and redirect
-            sessionStorage.removeItem('access_token')
+            setAccessToken(null)
             navigate('/login', {replace: true})
         }
     }
