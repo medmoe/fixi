@@ -39,14 +39,6 @@ const mockProfile: WorkerProfile = {
     is_verified: false,
     available_since: null,
     trades: [{trade_id: 1, skill_level: 'junior'}],
-    user: {
-        id: 42,
-        name: 'John Doe',
-        username: 'johndoe',
-        email: 'johndoe@example.com',
-        uuid: '12345678-1234-1234-1234-123456789012',
-        role_type: 'worker',
-    },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -91,12 +83,7 @@ describe('ProfileForm', () => {
             expect(getSubmitButton()).toBeInTheDocument()
         })
 
-        it('passes profile.id to useUpdateWorkerProfile', async () => {
-            await renderComponent()
-            expect(useUpdateWorkerProfile).toHaveBeenCalledWith(mockProfile.id)
-        })
-
-        it('renders without crashing when optional fields are undefined', async() => {
+        it('renders without crashing when optional fields are undefined', async () => {
             await renderComponent({...mockProfile, bio: undefined, hourly_rate: undefined, service_radius_km: undefined, trades: []})
             expect(getSubmitButton()).toBeInTheDocument()
         })

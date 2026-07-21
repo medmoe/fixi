@@ -1,5 +1,3 @@
-import {UserRead} from '@/features/user/types/user.types'
-
 export type SkillLevel = 'junior' | 'mid' | 'senior'
 
 export interface WorkerTrade {
@@ -19,7 +17,6 @@ export interface WorkerProfile {
     is_verified: boolean;
     available_since: string | null;
     trades: WorkerTrade[];
-    user: UserRead;
 }
 
 export interface UpdateWorkerProfilePayload {

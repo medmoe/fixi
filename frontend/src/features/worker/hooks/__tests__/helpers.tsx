@@ -1,19 +1,9 @@
-import {WorkerProfile} from '../../types/worker.types'
+import {WorkerProfile} from '@/features/worker'
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import type {ReactNode} from "react";
 
-export const WORKER_ID = 1
-
 export const mockProfile: WorkerProfile = {
-    id: WORKER_ID,
-    user: {
-        id: 42,
-        name: 'John Doe',
-        username: 'johndoe',
-        email: 'johndoe@example.com',
-        uuid: '123e4567-e89b-12d3-a456-426614174000',
-        role_type: 'worker',
-    },
+    id: 1,
     bio: 'Experienced plumber',
     hourly_rate: 75.00,
     service_radius_km: 20,

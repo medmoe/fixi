@@ -2,8 +2,8 @@ import {vi} from 'vitest'
 import {renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
 import {workerApi} from '@/lib/api/workerApi'
-import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from "./helpers";
-import {useWorkerProfile} from '../useWorkerProfile.ts'
+import {createQueryClient, createWrapper, mockProfile} from "./helpers";
+import {useWorkerProfile} from '@/features/worker'
 import {SkillLevel} from "@/features/worker/types/worker.types";
 
 
@@ -28,18 +28,18 @@ describe('useWorkerProfile', () => {
     // ─── Query execution ────────────────────────────────────────────────────────────────────
 
     describe('query execution', () => {
-        it('calls getWorkerProfile with correct workerId', async () => {
+        it('calls getWorkerProfile', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
-            await waitFor(() => expect(workerApi.getWorkerProfile).toHaveBeenCalledWith(WORKER_ID))
+            await waitFor(() => expect(workerApi.getWorkerProfile).toHaveBeenCalledWith())
         })
         it('calls getWorkerProfile exactly once on mount', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(workerApi.getWorkerProfile).toHaveBeenCalledTimes(1))
@@ -47,68 +47,20 @@ describe('useWorkerProfile', () => {
         it('uses correct query key', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
-            await waitFor(() => expect(queryClient.getQueryData(['workerProfile', WORKER_ID])).toEqual(mockProfile))
-        })
-        it('does not share cache with different workerIds', async () => {
-            vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
-            renderHook(
-                () => useWorkerProfile(WORKER_ID),
-                {wrapper: createWrapper(queryClient)}
-            )
-            await waitFor(() => expect(queryClient.getQueryData(['workerProfile', WORKER_ID])).toEqual(mockProfile))
-            await waitFor(() => expect(queryClient.getQueryData(['workerProfile', 999])).toBeUndefined()) // different workerId should have no cache
+            await waitFor(() => expect(queryClient.getQueryData(['workerProfile'])).toEqual(mockProfile))
         })
     })
-    // ─── Enabled flag ────────────────────────────────────────────────────────────────────
-    describe('enabled flag', () => {
-        it('does not fetch when workerId is 0', () => {
-            vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
-            renderHook(
-                () => useWorkerProfile(0),
-                {wrapper: createWrapper(queryClient)}
-            )
-            expect(workerApi.getWorkerProfile).not.toHaveBeenCalled()
-        })
-        it('is not loading when disabled', () => {
-            const {result} = renderHook(
-                () => useWorkerProfile(0),
-                {wrapper: createWrapper(queryClient)}
-            )
-            expect(result.current.isLoading).toBe(false)
-            expect(result.current.isPending).toBe(true) // pending but not loading
-            expect(result.current.fetchStatus).toBe('idle')
-        })
-        it('fetches when workerId is a valid positive number', async () => {
-            vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
-            renderHook(
-                () => useWorkerProfile(WORKER_ID),
-                {wrapper: createWrapper(queryClient)}
-            )
-            await waitFor(() => expect(workerApi.getWorkerProfile).toHaveBeenCalledWith(WORKER_ID))
-        })
-        it('starts fetching when workerId changes from 0 to valid id', async () => {
-            vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
-            let workerId = 0
-            const {rerender} = renderHook(
-                () => useWorkerProfile(workerId),
-                {wrapper: createWrapper(queryClient)}
-            )
-            await waitFor(() => expect(workerApi.getWorkerProfile).not.toHaveBeenCalled()) // starts disabled
-            workerId = WORKER_ID
-            rerender()
-            await waitFor(() => expect(workerApi.getWorkerProfile).toHaveBeenCalledWith(WORKER_ID))
-        })
-    })
+
     // ─── Loading state ────────────────────────────────────────────────────────────────────
     describe('loading state', () => {
         it('is loading initially when fetching', () => {
             vi.mocked(workerApi.getWorkerProfile).mockImplementation(() => new Promise(() => {
             })) // never resolves
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             expect(result.current.isLoading).toBe(true)
@@ -117,7 +69,7 @@ describe('useWorkerProfile', () => {
         it('is not loading after successful fetch', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -126,7 +78,7 @@ describe('useWorkerProfile', () => {
         it('is not loading after failed fetch', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockRejectedValue(new Error('API error'))
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -138,7 +90,7 @@ describe('useWorkerProfile', () => {
         it('returns worker profile data on success', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -147,7 +99,7 @@ describe('useWorkerProfile', () => {
         it('returns correct profile fields', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -160,7 +112,7 @@ describe('useWorkerProfile', () => {
             }
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(profileWithTrades)
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -170,15 +122,15 @@ describe('useWorkerProfile', () => {
         it('caches result — does not refetch when hook remounts', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)
             const {unmount} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
 
-            await waitFor(() => expect(queryClient.getQueryData(['workerProfile', WORKER_ID])).toEqual(mockProfile))
+            await waitFor(() => expect(queryClient.getQueryData(['workerProfile',])).toEqual(mockProfile))
             unmount()
             // remount — should use cache
             renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             // still only called once
@@ -190,7 +142,7 @@ describe('useWorkerProfile', () => {
         it('is error when API call fails', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockRejectedValue(new Error('API call failed'))
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isError).toBe(true))
@@ -200,7 +152,7 @@ describe('useWorkerProfile', () => {
             const error = new Error('Not found')
             vi.mocked(workerApi.getWorkerProfile).mockRejectedValue(error)
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isError).toBe(true))
@@ -209,11 +161,11 @@ describe('useWorkerProfile', () => {
         it('does not cache error state', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockRejectedValue(new Error('API call failed'))
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isError).toBe(true))
-            expect(queryClient.getQueryData(['workerProfile', WORKER_ID])).toBeUndefined()
+            expect(queryClient.getQueryData(['workerProfile',])).toBeUndefined()
         })
     })
     // ─── Refetch behavior ────────────────────────────────────────────────────────────────────
@@ -225,7 +177,7 @@ describe('useWorkerProfile', () => {
                 .mockResolvedValueOnce(updatedProfile) // refresh
 
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -240,7 +192,7 @@ describe('useWorkerProfile', () => {
                 .mockResolvedValueOnce({...mockProfile, is_available: true})
 
             const {result} = renderHook(
-                () => useWorkerProfile(WORKER_ID),
+                () => useWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))

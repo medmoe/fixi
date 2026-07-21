@@ -1,4 +1,4 @@
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
+import type {AxiosInstance, InternalAxiosRequestConfig} from 'axios'
 import axios from 'axios'
 
 // ─── Token Storage (Memory Only — Most Secure) ────────────────────────────────
@@ -58,9 +58,10 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 // Auth endpoints that should NOT trigger token refresh on 401
 const AUTH_ENDPOINTS = [
-    '/api/v1/auth/login',
-    '/api/v1/auth/register',
-    '/api/v1/auth/refresh',
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
 ]
 
 const isAuthEndpoint = (url?: string): boolean => {
@@ -72,7 +73,6 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config
-
         // Skip refresh logic for auth endpoints — their 401s are legitimate
         if (
             error.response?.status === 401 &&
@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
             if (isRefreshing) {
                 // Queue requests while refresh is in progress
                 return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject })
+                    failedQueue.push({resolve, reject})
                 }).then((token) => {
                     originalRequest.headers.Authorization = `Bearer ${token}`
                     return apiClient(originalRequest)
@@ -95,7 +95,7 @@ apiClient.interceptors.response.use(
             try {
                 // Backend reads refresh_token from httpOnly cookie (withCredentials)
                 // and returns new access_token in response body
-                const { data } = await apiClient.post('/api/v1/auth/refresh')
+                const {data} = await apiClient.post('/api/v1/auth/refresh')
                 const newToken = data.access_token
 
                 // Store new access token in memory only

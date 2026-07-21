@@ -7,6 +7,7 @@ import {setAccessToken} from '@/lib/api/apiClient'
 import type {LoginPayload, LoginResponse} from '@/features/auth/types/auth.types'
 import {clearCredentials, setCredentials} from "@/features/auth/store/authSlice";
 import {useAppDispatch, useAppSelector} from "@/store/hooks"
+import {USER_QUERY_KEY} from "@/features/user/hooks/useUser";
 
 const formatApiError = (error: any): string => {
     const detail = error?.response?.data?.detail
@@ -53,6 +54,9 @@ export const useAuth = () => {
 
     const logoutMutation = useMutation<void, Error, void>({
         mutationFn: authApi.logout,
+        onMutate: () => {
+            queryClient.cancelQueries({queryKey: [USER_QUERY_KEY]})
+        },
         onSettled: () => {
             // Always clear state — even if API call fails
             setAccessToken(null)
