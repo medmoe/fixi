@@ -99,6 +99,16 @@ class UserRead(UserBase, UUIDSchema):
         if v is not None:
             AnyHttpUrl(v)
         return v
+
+
+class UserReadInternal(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+    username: Username
+    email: EmailStr
+    role_type: UserRole
+    token_version: int
+
+
 #
 # -------------------------------------------------------------------------
 # Create
