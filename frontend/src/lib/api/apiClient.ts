@@ -95,7 +95,7 @@ apiClient.interceptors.response.use(
             try {
                 // Backend reads refresh_token from httpOnly cookie (withCredentials)
                 // and returns new access_token in response body
-                const {data} = await apiClient.post('/api/v1/auth/refresh')
+                const {data} = await apiClient.post('/auth/refresh')
                 const newToken = data.access_token
 
                 // Store new access token in memory only

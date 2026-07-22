@@ -1,6 +1,4 @@
 import React from 'react'
-import {setAccessToken} from '@/lib/api/apiClient'
-import {useNavigate} from 'react-router-dom'
 import {Loader2, LogOut} from 'lucide-react'
 import {Button} from '@/components/ui/button'
 import {useAuth} from '@/features/auth'
@@ -18,23 +16,6 @@ import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, A
  */
 export const LogoutButton: React.FC = () => {
     const {logout, isLoggingOut} = useAuth()
-    const navigate = useNavigate()
-
-    const handleLogout = async () => {
-        try {
-            logout()
-            // logout() should:
-            // 1. Call POST /api/v1/auth/logout (apiClient handles refresh_token cookie)
-            // 2. Clear sessionStorage.removeItem('access_token')
-            // 3. Clear React Query cache: queryClient.clear()
-            // 4. Reset auth state
-            navigate('/login', {replace: true})
-        } catch (error) {
-            // Even if API fails, clear local state and redirect
-            setAccessToken(null)
-            navigate('/login', {replace: true})
-        }
-    }
 
     return (
         <AlertDialog>
@@ -43,13 +24,14 @@ export const LogoutButton: React.FC = () => {
                     variant="ghost"
                     className="w-full justify-start gap-2 text-destructive hover:text-destructive"
                     aria-label="Logout"
+                    data-testid="logout-button"
                 >
                     <LogOut className="h-4 w-4"/>
                     <span>Logout</span>
                 </Button>
             </AlertDialogTrigger>
 
-            <AlertDialogContent>
+            <AlertDialogContent data-testid="logout-dialog">
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -57,11 +39,12 @@ export const LogoutButton: React.FC = () => {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel data-testid="logout-cancel">Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                        onClick={handleLogout}
+                        onClick={logout}
                         disabled={isLoggingOut}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-testid="logout-confirm"
                     >
                         {isLoggingOut ? (
                             <>

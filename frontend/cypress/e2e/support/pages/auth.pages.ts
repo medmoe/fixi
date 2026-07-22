@@ -1,168 +1,210 @@
 /// <reference types="cypress" />
+// cypress/support/pages/auth.pages.ts
 
-// ─── Login Page Object ─────────────────────────────────────────────────────
+// ─── Login Page Object ──────────────────────────────────────────────────────
+
 export class LoginPage {
-  visit() {
-    cy.visit('/login')
-    return this
-  }
+    private readonly selectors = {
+        form: 'form[aria-label="Login form"]',
+        usernameField: '[aria-label="Username or email"]',
+        passwordField: '[aria-label="Password"]',
+        submitButton: '[aria-label="Sign in"]',
+        registerLink: 'a[href="/register"]',
+        errorMessages: '[role="alert"]',
+        toastError: '[data-sonner-toast]',
+    }
 
-  getForm() {
-    return cy.get('form[aria-label="Login form"]')
-  }
+    visit() {
+        cy.visit('/login')
+        return this
+    }
 
-  getUsernameField() {
-    return cy.get('[aria-label="Username or email"]')
-  }
+    login(usernameOrEmail: string, password: string) {
+        cy.get(this.selectors.usernameField).clear().type(usernameOrEmail)
+        cy.get(this.selectors.passwordField).clear().type(password)
+        cy.get(this.selectors.submitButton).click()
+        return this
+    }
 
-  getPasswordField() {
-    return cy.get('[aria-label="Password"]').first()
-  }
+    submit() {
+        cy.get(this.selectors.submitButton).click()
+        return this
+    }
 
-  getSubmitButton() {
-    return cy.get('[aria-label="Sign in"]')
-  }
+    goToRegister() {
+        cy.get(this.selectors.registerLink).click()
+        return this
+    }
 
-  getRegisterLink() {
-    return cy.contains('Register')
-  }
+    getForm() {
+        return cy.get(this.selectors.form)
+    }
 
-  getErrorMessages() {
-    return cy.get('[role="alert"]')
-  }
+    getErrorMessages() {
+        return cy.get(this.selectors.errorMessages)
+    }
 
-  fillForm(username_or_email: string, password: string) {
-    this.getUsernameField().clear().type(username_or_email)
-    this.getPasswordField().clear().type(password)
-    return this
-  }
+    getToastError() {
+        return cy.get(this.selectors.toastError)
+    }
 
-  submit() {
-    this.getSubmitButton().click()
-    return this
-  }
+    getUsernameField() {
+        return cy.get(this.selectors.usernameField)
+    }
 
-  login(username_or_email: string, password: string) {
-    this.fillForm(username_or_email, password).submit()
-    return this
-  }
+    getPasswordField() {
+        return cy.get(this.selectors.passwordField)
+    }
 
-  goToRegister() {
-    this.getRegisterLink().click()
-    return new RegisterPage()
-  }
+    getSubmitButton() {
+        return cy.get(this.selectors.submitButton)
+    }
 }
 
-// ─── Register Page Object ────────────────────────────────────────────────────
+// ─── Register Page Object ───────────────────────────────────────────────────
+
 export class RegisterPage {
-  visit() {
-    cy.visit('/register')
-    return this
-  }
+    private readonly selectors = {
+        form: 'form[aria-label="Registration form"]',
+        nameField: '[aria-label="Full name"]',
+        usernameField: '[aria-label="Username"]',
+        emailField: '[aria-label="Email address"]',
+        passwordField: 'input[type="password"]',
+        roleSelect: '[aria-label="Select role"]',
+        submitButton: '[aria-label="Create account"]',
+        loginLink: 'a[href="/login"]',
+        errorMessages: '[role="alert"]',
+        toastError: '[data-sonner-toast]',
+    }
 
-  getForm() {
-    return cy.get('form[aria-label="Registration form"]')
-  }
+    visit() {
+        cy.visit('/register')
+        return this
+    }
 
-  getNameField() {
-    return cy.get('[aria-label="Full name"]')
-  }
+    register(user: {
+        name: string
+        username: string
+        email: string
+        password: string
+        role_type: 'customer' | 'worker'
+    }) {
+        cy.get(this.selectors.nameField).clear().type(user.name)
+        cy.get(this.selectors.usernameField).clear().type(user.username)
+        cy.get(this.selectors.emailField).clear().type(user.email)
+        // Password is the last password input on register page
+        cy.get(this.selectors.passwordField).last().clear().type(user.password)
+        cy.get(this.selectors.roleSelect).click()
+        cy.contains('[role="option"]', user.role_type === 'worker' ? 'Worker' : 'Customer').click()
+        cy.get(this.selectors.submitButton).click()
+        return this
+    }
 
-  getUsernameField() {
-    return cy.get('[aria-label="Username"]')
-  }
+    submit() {
+        cy.get(this.selectors.submitButton).click()
+        return this
+    }
 
-  getEmailField() {
-    return cy.get('[aria-label="Email address"]')
-  }
+    goToLogin() {
+        cy.get(this.selectors.loginLink).click()
+        return this
+    }
 
-  getPasswordField() {
-    return cy.get('input[type="password"]').last()
-  }
+    getForm() {
+        return cy.get(this.selectors.form)
+    }
 
-  getRoleSelect() {
-    return cy.get('[aria-label="Select role"]')
-  }
+    getErrorMessages() {
+        return cy.get(this.selectors.errorMessages)
+    }
 
-  getSubmitButton() {
-    return cy.get('[aria-label="Create account"]')
-  }
+    getToastError() {
+        return cy.get(this.selectors.toastError)
+    }
 
-  getLoginLink() {
-    return cy.contains('Sign in')
-  }
+    getNameField() {
+        return cy.get(this.selectors.nameField)
+    }
 
-  getErrorMessages() {
-    return cy.get('[role="alert"]')
-  }
+    getUsernameField() {
+        return cy.get(this.selectors.usernameField)
+    }
 
-  selectRole(role: 'customer' | 'worker') {
-    this.getRoleSelect().click()
-    cy.get(`[data-value="${role}"]`).click()
-    return this
-  }
+    getEmailField() {
+        return cy.get(this.selectors.emailField)
+    }
 
-  fillForm(user: {
-    name: string
-    username: string
-    email: string
-    password: string
-    role_type: 'customer' | 'worker'
-  }) {
-    this.getNameField().clear().type(user.name)
-    this.getUsernameField().clear().type(user.username)
-    this.getEmailField().clear().type(user.email)
-    this.getPasswordField().clear().type(user.password)
-    this.selectRole(user.role_type)
-    return this
-  }
+    getPasswordField() {
+        return cy.get(this.selectors.passwordField).last()
+    }
 
-  submit() {
-    this.getSubmitButton().click()
-    return this
-  }
+    getRoleSelect() {
+        return cy.get(this.selectors.roleSelect)
+    }
 
-  register(user: {
-    name: string
-    username: string
-    email: string
-    password: string
-    role_type: 'customer' | 'worker'
-  }) {
-    this.fillForm(user).submit()
-    return this
-  }
-
-  goToLogin() {
-    this.getLoginLink().click()
-    return new LoginPage()
-  }
+    getSubmitButton() {
+        return cy.get(this.selectors.submitButton)
+    }
 }
 
-// ─── Dashboard Page Object ───────────────────────────────────────────────────
+// ─── Dashboard Page Object ──────────────────────────────────────────────────
+
 export class DashboardPage {
-  visit() {
-    cy.visit('/dashboard')
-    return this
-  }
+    private readonly selectors = {
+        logoutButton: '[data-testid="logout-button"]',
+        alertDialog: '[data-testid="logout-dialog"]',
+        confirmLogoutButton: '[data-testid="logout-confirm"]',
+        cancelLogoutButton: '[data-testid="logout-cancel"]',
+        userMenu: '[data-testid="user-menu"]',
+    }
 
-  assertAuthenticated() {
-    cy.url().should('include', '/dashboard')
-    return this
-  }
+    visit() {
+        cy.visit('/dashboard')
+        return this
+    }
 
-  assertUnauthenticated() {
-    cy.url().should('not.include', '/dashboard')
-    return this
-  }
+    logout() {
+        this.assertAuthenticated()
+        cy.get(this.selectors.logoutButton).first().click()
+        cy.get(this.selectors.alertDialog).should('be.visible')
+        cy.get(this.selectors.confirmLogoutButton).should('be.visible').click()
+        return this
+    }
 
-  getLogoutButton() {
-    return cy.get('[aria-label="Logout"]')
-  }
+    openLogoutDialog() {
+        this.assertAuthenticated()
+        cy.get(this.selectors.logoutButton).first().click()
+        cy.get(this.selectors.alertDialog).should('be.visible')
+        return this
+    }
 
-  logout() {
-    this.getLogoutButton().click()
-    cy.get('[role="alertdialog"]').find('button').contains('Logout').click()
-    return this
-  }
+    cancelLogout() {
+        cy.get(this.selectors.alertDialog)
+            .find('button')
+            .contains('Cancel')
+            .click()
+        return this
+    }
+
+    assertAuthenticated() {
+        cy.url().should('include', '/dashboard')
+        return this
+    }
+
+    assertUnauthenticated() {
+        cy.url().should('include', '/login')
+        return this
+    }
+
+    getLogoutButton() {
+        return cy.get(this.selectors.logoutButton)
+    }
+
+    getAlertDialog() {
+        return cy.get(this.selectors.alertDialog)
+    }
+
+    getUserMenu() {
+        return cy.get(this.selectors.userMenu)
+    }
 }
