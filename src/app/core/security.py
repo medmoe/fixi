@@ -1,7 +1,8 @@
 import io
+import uuid
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import bcrypt
 import magic
@@ -13,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import User
+from ..schemas.user import UserReadInternal
 from .config import settings
 from .db.crud_token_blacklist import crud_token_blacklist
 from .schemas import TokenBlacklistCreate, TokenData
@@ -70,7 +72,16 @@ async def authenticate_user(username_or_email: str, password: str, db: AsyncSess
     return db_user
 
 
-def create_token_payload(user: User) -> dict[str, Any]:
+def create_token_payload(user: UserReadInternal) -> dict[str, Any]:
+    """Generates the base payload dictionary for a user's JWT.
+
+    Args:
+        user (UserReadInternal): The authenticated user's internal database model.
+
+    Returns:
+        dict[str, Any]: A dictionary containing claims for username ('sub'),
+            user role ('role'), email address ('email'), and token version ('tv').
+    """
     return {
         "sub": user.username,
         "role": user.role_type.value,
@@ -79,26 +90,85 @@ def create_token_payload(user: User) -> dict[str, Any]:
     }
 
 
-async def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
+def _create_jwt_token(
+        data: dict[str, Any],
+        token_type: TokenType,
+        default_expire_delta: timedelta,
+        expires_delta: timedelta | None = None,
+) -> str:
+    """Internal helper to construct, timestamp, and encode a JWT.
+
+    Args:
+        data (dict[str, Any]): Base claims to include in the token payload.
+        token_type (TokenType): Type of token being issued (e.g., ACCESS or REFRESH).
+        default_expire_delta (timedelta): Fallback duration until token expiration.
+        expires_delta (timedelta | None, optional): Custom expiration duration override.
+
+    Returns:
+        str: Encoded JSON Web Token as a string.
+    """
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
-    else:
-        expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire, "token_type": TokenType.ACCESS})
-    encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY.get_secret_value(), algorithm=ALGORITHM)
-    return encoded_jwt
+    now = datetime.now(UTC)
+    delta = expires_delta if expires_delta is not None else default_expire_delta
+    expire = now + delta
+
+    to_encode.update({
+        "exp": expire,
+        "iat": now,
+        "jti": str(uuid.uuid4()),
+        "token_type": token_type,
+    })
+
+    token = jwt.encode(
+        to_encode,
+        SECRET_KEY.get_secret_value(),
+        algorithm=ALGORITHM,
+    )
+    return cast(str, token)
 
 
-async def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
-    else:
-        expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "token_type": TokenType.REFRESH})
-    encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY.get_secret_value(), algorithm=ALGORITHM)
-    return encoded_jwt
+async def create_access_token(
+        data: dict[str, Any],
+        expires_delta: timedelta | None = None
+) -> str:
+    """Creates a signed JWT access token.
+
+    Args:
+        data (dict[str, Any]): Claims payload to embed in the token.
+        expires_delta (timedelta | None, optional): Custom expiration time.
+            Defaults to ACCESS_TOKEN_EXPIRE_MINUTES if omitted.
+
+    Returns:
+        str: Encoded JWT access token.
+    """
+    return _create_jwt_token(
+        data=data,
+        token_type=TokenType.ACCESS,
+        default_expire_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        expires_delta=expires_delta,
+    )
+
+
+async def create_refresh_token(
+        data: dict[str, Any],
+        expires_delta: timedelta | None = None
+) -> str:
+    """Creates a signed JWT refresh token.
+
+    Args:
+        data (dict[str, Any]): Claims payload to embed in the token.
+        expires_delta (timedelta | None, optional): Custom expiration time.
+            Defaults to REFRESH_TOKEN_EXPIRE_DAYS if omitted.
+
+    Returns:
+        str: Encoded JWT refresh token.
+    """
+    return _create_jwt_token(
+        data=data,
+        token_type=TokenType.REFRESH,
+        default_expire_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_delta=expires_delta,
+    )
 
 
 async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSession) -> TokenData | None:
