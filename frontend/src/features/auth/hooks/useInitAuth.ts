@@ -1,8 +1,6 @@
-import {useNavigate} from 'react-router-dom'
 import {useQuery} from '@tanstack/react-query'
 import {getAccessToken, setAccessToken} from '@/lib/api/apiClient'
 import {authApi} from '@/lib/api/authApi'
-import {useAuth} from './useAuth'
 
 /**
  * useInitAuth — Handles silent token refresh on app initialization.
@@ -13,8 +11,6 @@ import {useAuth} from './useAuth'
  * redirected to login.
  */
 export const useInitAuth = () => {
-    const navigate = useNavigate()
-    const {logout} = useAuth()
 
     const {isLoading} = useQuery({
         queryKey: ['auth', 'init'],
@@ -30,8 +26,6 @@ export const useInitAuth = () => {
                 return {initialized: true, refreshed: true}
             } catch {
                 // Silent refresh failed — user needs to log in
-                logout()
-                navigate('/login')
                 return {initialized: false}
             }
         },

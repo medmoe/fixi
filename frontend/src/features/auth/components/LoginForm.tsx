@@ -1,23 +1,16 @@
 import React from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
-import { loginSchema, type LoginFormValues } from '../schemas/authSchema'
-import { useAuth } from '@/features/auth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form'
+import {useForm} from 'react-hook-form'
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Link} from 'react-router-dom'
+import {Loader2} from 'lucide-react'
+import {type LoginFormValues, loginSchema} from '../schemas/authSchema'
+import {useAuth} from '@/features/auth'
+import {Button} from '@/components/ui/button'
+import {Input} from '@/components/ui/input'
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 
 export const LoginForm: React.FC = () => {
-    const { login, isLoggingIn } = useAuth()
+    const {login, isLoggingIn} = useAuth()
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -42,7 +35,7 @@ export const LoginForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="username_or_email"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="username-or-email">
                                 Username or Email
@@ -58,7 +51,7 @@ export const LoginForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -67,7 +60,7 @@ export const LoginForm: React.FC = () => {
                 <FormField
                     control={form.control}
                     name="password"
-                    render={({ field }) => (
+                    render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="login-password">
                                 Password
@@ -83,7 +76,7 @@ export const LoginForm: React.FC = () => {
                                     value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage/>
                         </FormItem>
                     )}
                 />
@@ -96,7 +89,7 @@ export const LoginForm: React.FC = () => {
                     aria-label="Sign in"
                 >
                     {isLoggingIn
-                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</>
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Signing in...</>
                         : 'Sign In'
                     }
                 </Button>

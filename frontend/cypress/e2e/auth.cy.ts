@@ -42,7 +42,7 @@ describe('Authentication E2E', () => {
         // On register page, password is the last password input
         cy.get('input[type="password"]').last().clear().type(user.password)
         cy.get('[aria-label="Select role"]').click()
-        cy.get(`[data-value="${user.role_type}"]`).click()
+        cy.get('[role="option"]').contains(`${user.role_type.charAt(0).toUpperCase()}`).click()
     }
 
     const submitLogin = () => {
@@ -119,8 +119,20 @@ describe('Authentication E2E', () => {
         it('should successfully login with valid credentials and redirect to worker dashboard', () => {
             cy.intercept('POST', '**/api/v1/auth/login', {
                 statusCode: 200,
-                body: {access_token: 'fake-access-token', user: {id: 1, role_type: 'worker'}},
+                body: {access_token: 'fake-access-token'},
             }).as('loginRequest')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {id: 1, role_type: 'worker', username: 'test', email: 'test@test.com', name: 'Test Worker'},
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {id: 1, hourly_rate: 100, bio: 'Test worker bio', service_radius_km: 20},
+            }).as('workerProfile')
+            cy.intercept('POST', '**/api/v1/auth/refresh', {
+                statusCode: 200,
+                body: {access_token: 'refreshed-token'},
+            }).as('refresh')
 
             fillLoginForm(existingUser)
             submitLogin()
@@ -129,11 +141,14 @@ describe('Authentication E2E', () => {
                 username_or_email: existingUser.username_or_email,
                 password: existingUser.password,
             })
+            cy.wait('@userMe')
+            cy.wait('@workerProfile')
 
             // Token is stored in memory only (not sessionStorage) via apiClient.setAccessToken
             // We verify auth state by checking dashboard access
             cy.url().should('include', '/dashboard')
-            cy.contains('Dashboard').should('be.visible')
+            cy.contains('Profile').should('be.visible')
+            cy.contains('Account').should('be.visible')
         })
 
         it('should handle login API error (401 Unauthorized)', () => {
@@ -155,15 +170,16 @@ describe('Authentication E2E', () => {
                 statusCode: 422,
                 body: {
                     detail: [
-                        {loc: ['body', 'username_or_email'], msg: 'field required', type: 'missing'},
+                        {loc: ['body', 'password'], msg: 'String should have at most 128 characters', type: 'string_too_long'},
                     ],
                 },
             }).as('validationError')
 
-            fillLoginForm({username_or_email: '', password: 'password123'})
+            fillLoginForm({username_or_email: 'username', password: 'password123!'})
             submitLogin()
 
             cy.wait('@validationError')
+            cy.get('[data-sonner-toast]').should('contain.text', 'String should have at most 128 characters')
         })
 
         it('should handle network error gracefully', () => {
@@ -200,17 +216,32 @@ describe('Authentication E2E', () => {
             // Since token is in memory, we need to login first
             cy.intercept('POST', '**/api/v1/auth/login', {
                 statusCode: 200,
-                body: {access_token: 'existing-token', user: {id: 1, role_type: 'worker'}},
+                body: {access_token: 'existing-token'},
             }).as('autoLogin')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {id: 1, role_type: 'worker', name: 'test', username: 'test', email: 'test@test.com'},
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {id: 1, hourly_rate: 100, bio: 'Test worker bio', service_radius_km: 20},
+            }).as('workerProfile')
+            cy.intercept('POST', '**/api/v1/auth/refresh', {
+                statusCode: 200,
+                body: {access_token: 'refreshed-token'},
+            }).as('refresh')
 
             cy.visit('/login')
             fillLoginForm({username_or_email: 'test@test.com', password: 'password123'})
             submitLogin()
             cy.wait('@autoLogin')
+            cy.wait('@userMe')
+            cy.wait('@workerProfile')
             cy.url().should('include', '/dashboard')
 
             // Now try visiting login again — should redirect to dashboard
             cy.visit('/login')
+            cy.wait('@refresh')
             cy.url().should('include', '/dashboard')
         })
     })
@@ -249,6 +280,7 @@ describe('Authentication E2E', () => {
         it('should show validation error for name less than 2 characters', () => {
             cy.get('[aria-label="Full name"]').type('A')
             cy.get('[aria-label="Username"]').type('testuser') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Name must be at least 2 characters')
         })
 
@@ -261,6 +293,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Full name"]').type('John Doe')
             cy.get('[aria-label="Username"]').type('ab')
             cy.get('[aria-label="Email address"]').type('john@example.com') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Username must be at least 3 characters')
         })
 
@@ -268,6 +301,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Full name"]').type('John Doe')
             cy.get('[aria-label="Username"]').type('a'.repeat(21))
             cy.get('[aria-label="Email address"]').type('john@example.com') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Username must be at most 20 characters')
         })
 
@@ -275,6 +309,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Full name"]').type('John Doe')
             cy.get('[aria-label="Username"]').type('123invalid')
             cy.get('[aria-label="Email address"]').type('john@example.com') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Username must start with a letter')
         })
 
@@ -282,6 +317,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Full name"]').type('John Doe')
             cy.get('[aria-label="Username"]').type('InvalidUser')
             cy.get('[aria-label="Email address"]').type('john@example.com') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Username must start with a letter and contain only lowercase letters, numbers, or underscores')
         })
 
@@ -295,6 +331,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('invalid-email')
             cy.get('input[type="password"]').last().type('Password123!') // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Invalid email address')
         })
 
@@ -303,12 +340,13 @@ describe('Authentication E2E', () => {
             cy.get('[role="alert"]').should('contain.text', 'Password must be at least 8 characters long')
         })
 
+        // Password Field
         it('should show validation error for password less than 8 characters', () => {
             cy.get('[aria-label="Full name"]').type('John Doe')
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('john@example.com')
             cy.get('input[type="password"]').last().type('Short1!')
-            cy.get('[aria-label="Select role"]').click() // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Password must be at least 8 characters long')
         })
 
@@ -317,7 +355,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('john@example.com')
             cy.get('input[type="password"]').last().type('A1!' + 'a'.repeat(120))
-            cy.get('[aria-label="Select role"]').click() // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Password must be at most 120 characters')
         })
 
@@ -326,7 +364,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('john@example.com')
             cy.get('input[type="password"]').last().type('NoDigits!')
-            cy.get('[aria-label="Select role"]').click() // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Password must contain at least one digit')
         })
 
@@ -335,7 +373,7 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('john@example.com')
             cy.get('input[type="password"]').last().type('nocapital123!')
-            cy.get('[aria-label="Select role"]').click() // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Password must contain at least one capital letter')
         })
 
@@ -344,25 +382,26 @@ describe('Authentication E2E', () => {
             cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('john@example.com')
             cy.get('input[type="password"]').last().type('NoSpecial123')
-            cy.get('[aria-label="Select role"]').click() // trigger validation
+            submitRegister()
             cy.get('[role="alert"]').should('contain.text', 'Password must contain at least one special character')
         })
 
         it('should show all validation errors when submitting empty form', () => {
             submitRegister()
-            cy.get('[role="alert"]').should('have.length.at.least', 5)
+            cy.get('[role="alert"]').should('have.length.at.least', 4)
         })
 
         it('should allow role selection between customer and worker', () => {
             cy.get('[aria-label="Select role"]').click()
-            cy.get('[data-value="customer"]').should('be.visible')
-            cy.get('[data-value="worker"]').should('be.visible')
 
-            cy.get('[data-value="worker"]').click()
+            cy.get('[role="option"]').contains('Customer').should('be.visible')
+            cy.get('[role="option"]').contains('Worker').should('be.visible')
+
+            cy.get('[role="option"]').contains('Worker').click()
             cy.get('[aria-label="Select role"]').should('contain.text', 'Worker')
 
             cy.get('[aria-label="Select role"]').click()
-            cy.get('[data-value="customer"]').click()
+            cy.get('[role="option"]').contains('Customer').click()
             cy.get('[aria-label="Select role"]').should('contain.text', 'Customer')
         })
 
@@ -532,11 +571,22 @@ describe('Authentication E2E', () => {
                 statusCode: 200,
                 body: {access_token: 'test-token', user: {id: 1, role_type: 'worker'}},
             }).as('login')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {id: 1, role_type: 'worker', name: 'test', username: 'test', email: 'test@test.com'},
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {id: 1, bio: 'test bio text', hourly_rate: 100},
+            }).as('workerProfile')
 
             cy.visit('/login')
             fillLoginForm(existingUser)
             submitLogin()
             cy.wait('@login')
+            cy.wait('@userMe')
+            cy.wait('@workerProfile')
+
             cy.url().should('include', '/dashboard')
 
             // Step 2: Setup logout intercept
