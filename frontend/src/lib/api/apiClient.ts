@@ -97,7 +97,6 @@ apiClient.interceptors.response.use(
                 // and returns new access_token in response body
                 const {data} = await apiClient.post('/auth/refresh')
                 const newToken = data.access_token
-
                 // Store new access token in memory only
                 setAccessToken(newToken)
 

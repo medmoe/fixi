@@ -1,6 +1,8 @@
 import {useQuery} from '@tanstack/react-query'
-import {getAccessToken, setAccessToken} from '@/lib/api/apiClient'
-import {authApi} from '@/lib/api/authApi'
+import {setAccessToken} from '@/lib/api/apiClient'
+import {clearCredentials, setCredentials} from "@/features/auth/store/authSlice.ts";
+import {useAppDispatch} from "@/store/hooks";
+import {authApi} from "@/lib/api/authApi"
 
 /**
  * useInitAuth — Handles silent token refresh on app initialization.
@@ -11,28 +13,29 @@ import {authApi} from '@/lib/api/authApi'
  * redirected to login.
  */
 export const useInitAuth = () => {
-
-    const {isLoading} = useQuery({
+    const dispatch = useAppDispatch()
+    const {isLoading, isError, data} = useQuery({
         queryKey: ['auth', 'init'],
         queryFn: async () => {
-            // Only refresh if we don't already have a token in memory
-            if (getAccessToken()) {
-                return {initialized: true}
-            }
-
             try {
-                const {access_token} = await authApi.refresh()
+                const response = await authApi.refresh()
+                const access_token = response.access_token
                 setAccessToken(access_token)
-                return {initialized: true, refreshed: true}
-            } catch {
-                // Silent refresh failed — user needs to log in
-                return {initialized: false}
+                dispatch(setCredentials(access_token))
+                return response
+            } catch (error) {
+                setAccessToken(null)
+                dispatch(clearCredentials())
+                throw error
             }
         },
         retry: false,
         refetchOnWindowFocus: false,
         staleTime: Infinity,
     })
-
-    return {isLoading}
+    return {
+        isLoading,
+        isError,
+        isAuthenticated: !!data,
+    }
 }

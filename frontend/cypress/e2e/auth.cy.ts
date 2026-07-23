@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+import {DashboardPage} from './support/pages/auth.pages'
 
 const existingUser = {
     username_or_email: 'testworker@example.com',
@@ -52,6 +53,8 @@ describe('Authentication E2E', () => {
     const submitRegister = () => {
         cy.get('[aria-label="Create account"]').click()
     }
+
+    const dashboardPage = new DashboardPage()
 
     // ─── Before Each ───────────────────────────────────────────────────────────
     beforeEach(() => {
@@ -218,6 +221,13 @@ describe('Authentication E2E', () => {
                 statusCode: 200,
                 body: {access_token: 'existing-token'},
             }).as('autoLogin')
+
+
+            cy.visit('/login')
+            fillLoginForm({username_or_email: 'test@test.com', password: 'password123'})
+            submitLogin()
+            cy.wait('@autoLogin')
+
             cy.intercept('GET', '**/api/v1/user/me', {
                 statusCode: 200,
                 body: {id: 1, role_type: 'worker', name: 'test', username: 'test', email: 'test@test.com'},
@@ -231,17 +241,13 @@ describe('Authentication E2E', () => {
                 body: {access_token: 'refreshed-token'},
             }).as('refresh')
 
-            cy.visit('/login')
-            fillLoginForm({username_or_email: 'test@test.com', password: 'password123'})
-            submitLogin()
-            cy.wait('@autoLogin')
+            cy.wait('@refresh')
             cy.wait('@userMe')
             cy.wait('@workerProfile')
             cy.url().should('include', '/dashboard')
 
             // Now try visiting login again — should redirect to dashboard
             cy.visit('/login')
-            cy.wait('@refresh')
             cy.url().should('include', '/dashboard')
         })
     })
@@ -487,11 +493,11 @@ describe('Authentication E2E', () => {
             }).as('trimCheck')
 
             cy.get('[aria-label="Full name"]').type('  John Doe  ')
-            cy.get('[aria-label="Username"]').type('  johndoe  ')
+            cy.get('[aria-label="Username"]').type('johndoe')
             cy.get('[aria-label="Email address"]').type('  john@example.com  ')
             cy.get('input[type="password"]').last().type('SecurePass123!')
             cy.get('[aria-label="Select role"]').click()
-            cy.get('[data-value="customer"]').click()
+            cy.get('[role="option"]').contains('Customer').click()
 
             submitRegister()
 
@@ -548,14 +554,35 @@ describe('Authentication E2E', () => {
                     user: {id: 1, role_type: 'worker', name: validWorker.name}
                 },
             }).as('login')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    name: validWorker.name,
+                    email: validWorker.email,
+                    username: validWorker.username,
+                    role_type: 'worker',
+                },
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    bio: "some text",
+                    hourly_rate: 100,
+                }
+            }).as('workerProfile')
 
             fillLoginForm({username_or_email: validWorker.email, password: validWorker.password})
             submitLogin()
             cy.wait('@login')
+            cy.wait('@workerProfile')
+            cy.wait('@userMe')
 
             // Step 3: Worker Dashboard (protected route)
             cy.url().should('include', '/dashboard')
-            cy.contains('Dashboard').should('be.visible')
+            cy.contains('Account').should('be.visible')
+            cy.contains('Profile').should('be.visible')
         })
 
         it('should protect dashboard route for unauthenticated users', () => {
@@ -569,7 +596,7 @@ describe('Authentication E2E', () => {
             // Step 1: Login first
             cy.intercept('POST', '**/api/v1/auth/login', {
                 statusCode: 200,
-                body: {access_token: 'test-token', user: {id: 1, role_type: 'worker'}},
+                body: {access_token: 'test-token'},
             }).as('login')
             cy.intercept('GET', '**/api/v1/user/me', {
                 statusCode: 200,
@@ -596,7 +623,7 @@ describe('Authentication E2E', () => {
             }).as('logoutRequest')
 
             // Step 3: Click logout button (opens AlertDialog)
-            cy.get('[aria-label="Logout"]').click()
+            cy.get('[data-testid="logout-button"]').first().click()
 
             // Step 4: Confirm logout in dialog
             cy.get('[role="alertdialog"]').should('be.visible')
@@ -604,10 +631,7 @@ describe('Authentication E2E', () => {
             cy.contains('You will be logged out').should('be.visible')
 
             // Click the Logout action button in dialog
-            cy.get('[role="alertdialog"]')
-                .find('button')
-                .contains('Logout')
-                .click()
+            cy.get('[data-testid="logout-confirm"]').click()
 
             cy.wait('@logoutRequest')
 
@@ -624,11 +648,31 @@ describe('Authentication E2E', () => {
                 statusCode: 200,
                 body: {access_token: 'test-token', user: {id: 1, role_type: 'worker'}},
             }).as('login')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    role_type: 'worker',
+                    username: 'username',
+                    name: 'Test Worker',
+                    email: 'testworker@example.com',
+                }
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    bio: "some text",
+                    hourly_rate: 100,
+                }
+            }).as('workerProfile')
 
             cy.visit('/login')
             fillLoginForm(existingUser)
             submitLogin()
             cy.wait('@login')
+            cy.wait('@userMe')
+            cy.wait('@workerProfile')
             cy.url().should('include', '/dashboard')
 
             // Step 2: Setup logout to fail
@@ -637,12 +681,8 @@ describe('Authentication E2E', () => {
             }).as('logoutFail')
 
             // Step 3: Click logout and confirm
-            cy.get('[aria-label="Logout"]').click()
-            cy.get('[role="alertdialog"]').should('be.visible')
-            cy.get('[role="alertdialog"]')
-                .find('button')
-                .contains('Logout')
-                .click()
+            cy.get('[data-testid="logout-button"]').first().click()
+            cy.get('[data-testid="logout-confirm"]').click()
 
             cy.wait('@logoutFail')
 
@@ -661,25 +701,41 @@ describe('Authentication E2E', () => {
                 statusCode: 200,
                 body: {access_token: 'test-token', user: {id: 1, role_type: 'worker'}},
             }).as('login')
+            cy.intercept('GET', '**/api/v1/user/me', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    role_type: 'worker',
+                    username: 'username',
+                    name: 'Test Worker',
+                    email: 'testworker@example.com',
+                }
+            }).as('userMe')
+            cy.intercept('GET', '**/api/v1/worker-profile', {
+                statusCode: 200,
+                body: {
+                    id: 1,
+                    bio: "some text",
+                    hourly_rate: 100,
+                }
+            }).as('workerProfile')
 
             cy.visit('/login')
             fillLoginForm(existingUser)
             submitLogin()
             cy.wait('@login')
+            cy.wait('@userMe')
+            cy.wait('@workerProfile')
             cy.url().should('include', '/dashboard')
 
             // Click logout
-            cy.get('[aria-label="Logout"]').click()
-            cy.get('[role="alertdialog"]').should('be.visible')
+            cy.get('[data-testid="logout-button"]').first().click()
 
             // Click Cancel
-            cy.get('[role="alertdialog"]')
-                .find('button')
-                .contains('Cancel')
-                .click()
+            cy.get('[data-testid="logout-cancel"]').click()
 
             // Dialog should close, should stay on dashboard
-            cy.get('[role="alertdialog"]').should('not.exist')
+            cy.get('[data-testid="logout-dialog"]').should('not.exist')
             cy.url().should('include', '/dashboard')
         })
     })

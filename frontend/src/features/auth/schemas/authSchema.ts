@@ -1,12 +1,12 @@
-import { z } from 'zod'
+import {z} from 'zod'
 
 const RoleType = {
-  customer: "customer",
-  worker: "worker",
+    customer: "customer",
+    worker: "worker",
 } as const;
 
 export const registerSchema = z.object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    name: z.string().min(2, 'Name must be at least 2 characters').trim(),
     username: z
         .string()
         .min(3, 'Username must be at least 3 characters')
