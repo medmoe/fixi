@@ -1,12 +1,12 @@
 // src/app/router.tsx
-import {createBrowserRouter} from 'react-router-dom'
+import {createBrowserRouter, RouteObject} from 'react-router-dom'
 import {LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
 import {WorkerDashboardPage} from "@/features/worker/pages/WorkerDashboardPage.tsx";
 import {AuthInitializer} from "@/features/auth/components/AuthInitializer.tsx";
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
     {
         element: <AuthInitializer/>,
         children: [
@@ -32,4 +32,7 @@ export const router = createBrowserRouter([
             },
         ]
     }
-])
+
+]
+
+export const router = createBrowserRouter(routes)

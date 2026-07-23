@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query'
-import {setAccessToken} from '@/lib/api/apiClient'
+import {getAccessToken, setAccessToken} from '@/lib/api/apiClient'
 import {clearCredentials, setCredentials} from "@/features/auth/store/authSlice.ts";
 import {useAppDispatch} from "@/store/hooks";
 import {authApi} from "@/lib/api/authApi"
@@ -14,6 +14,8 @@ import {authApi} from "@/lib/api/authApi"
  */
 export const useInitAuth = () => {
     const dispatch = useAppDispatch()
+    const hasToken = !!getAccessToken()
+
     const {isLoading, isError, data} = useQuery({
         queryKey: ['auth', 'init'],
         queryFn: async () => {
@@ -29,6 +31,7 @@ export const useInitAuth = () => {
                 throw error
             }
         },
+        enabled: !hasToken,
         retry: false,
         refetchOnWindowFocus: false,
         staleTime: Infinity,
@@ -36,6 +39,6 @@ export const useInitAuth = () => {
     return {
         isLoading,
         isError,
-        isAuthenticated: !!data,
+        isAuthenticated: hasToken ? true : !!data,
     }
 }

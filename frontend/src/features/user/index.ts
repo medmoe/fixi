@@ -1,4 +1,4 @@
-export {useUser} from './hooks/useUser'
+export {useUser, USER_QUERY_KEY} from './hooks/useUser'
 export {useChangePassword} from './hooks/useChangePassword'
 export {useDeactivateAccount} from './hooks/useDeactivateAccount'
 export {useUpdateUser} from './hooks/useUpdateUser'

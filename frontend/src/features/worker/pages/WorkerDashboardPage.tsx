@@ -57,7 +57,7 @@ export const WorkerDashboardPage: React.FC = () => {
             {/* ═══ Sidebar ═══════════════════════════════════════════════════ */}
             <aside className="w-64 border-r bg-card hidden lg:flex flex-col">
                 {/* Sidebar Header */}
-                <div className="p-6 border-b">
+                <div data-testid="sidebar-header" className="p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                             {user.name.charAt(0).toUpperCase()}
@@ -98,7 +98,7 @@ export const WorkerDashboardPage: React.FC = () => {
             {/* ═══ Mobile Header + Main Content ══════════════════════════════ */}
             <div className="flex-1 flex flex-col">
                 {/* Mobile Top Bar */}
-                <header className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
+                <header data-testid="mobile-header" className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                             {user.name.charAt(0).toUpperCase()}

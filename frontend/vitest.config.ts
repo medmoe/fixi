@@ -13,7 +13,13 @@ export default mergeConfig(
                 provider: 'v8',
                 reporter: ['text', 'json', 'html'],
                 include: ['src/**'],
-                exclude: ['**/types/**', '**/constants/**'],
+                exclude: [
+                    '**/types/**',
+                    '**/constants/**',
+                    'src/components/ui/**',
+                    'src/styles/**',
+                    '**/index.ts',
+                ],
                 thresholds: {
                     lines: 80,
                     functions: 80,

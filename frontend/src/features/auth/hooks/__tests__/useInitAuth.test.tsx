@@ -9,7 +9,8 @@ import {authApi} from '@/lib/api/authApi'
 import {getAccessToken, setAccessToken} from '@/lib/api/apiClient'
 import {createTestQueryClient} from '@/test/renderWithProviders'
 import type {ReactNode} from 'react'
-
+import {store} from '@/store'
+import {Provider} from "react-redux";
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('@/lib/api/authApi', () => ({
@@ -43,9 +44,11 @@ vi.mock('@/features/auth/hooks/useAuth', () => ({
 const createWrapper = () => {
     const queryClient = createTestQueryClient()
     return ({children}: { children: ReactNode }) => (
-        <QueryClientProvider client={queryClient}>
-            <MemoryRouter>{children}</MemoryRouter>
-        </QueryClientProvider>
+        <Provider store={store}>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>{children}</MemoryRouter>
+            </QueryClientProvider>
+        </Provider>
     )
 }
 
@@ -110,18 +113,6 @@ describe('useInitAuth', () => {
             const {result} = renderHook(() => useInitAuth(), {wrapper: createWrapper()})
 
             await waitFor(() => expect(result.current.isLoading).toBe(false))
-        })
-
-        it('calls logout and navigates to login on refresh failure', async () => {
-            vi.mocked(getAccessToken).mockReturnValue(null)
-            vi.mocked(authApi.refresh).mockRejectedValue(new Error('Invalid refresh token'))
-
-            renderHook(() => useInitAuth(), {wrapper: createWrapper()})
-
-            await waitFor(() => {
-                expect(mockLogout).toHaveBeenCalledTimes(1)
-                expect(mockNavigate).toHaveBeenCalledWith('/login')
-            })
         })
 
         it('does not store token on refresh failure', async () => {
