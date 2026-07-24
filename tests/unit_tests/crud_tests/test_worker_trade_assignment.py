@@ -198,7 +198,7 @@ class TestRemoveTrade:
             trade: TradeCategory,
             assigned_trade: WorkerTrade,
     ):
-        result = await crud_worker_trades.remove_trade(
+        result = await crud_worker_trades.dismiss_trade_category(
             db=async_session,
             worker_profile_id=worker_profile.id,
             trade_category_id=trade.id,
@@ -226,7 +226,7 @@ class TestRemoveTrade:
         )
 
         # remove only the first trade
-        result = await crud_worker_trades.remove_trade(
+        result = await crud_worker_trades.dismiss_trade_category(
             db=async_session,
             worker_profile_id=worker_profile.id,
             trade_category_id=trade.id,
@@ -242,7 +242,7 @@ class TestRemoveTrade:
     ):
         """Removing a trade that was never assigned raises NotFoundException."""
         with pytest.raises(NotFoundException):
-            await crud_worker_trades.remove_trade(
+            await crud_worker_trades.dismiss_trade_category(
                 db=async_session,
                 worker_profile_id=worker_profile.id,
                 trade_category_id=trade.id,  # never assigned
@@ -254,7 +254,7 @@ class TestRemoveTrade:
             trade: TradeCategory,
     ):
         with pytest.raises(NotFoundException):
-            await crud_worker_trades.remove_trade(
+            await crud_worker_trades.dismiss_trade_category(
                 db=async_session,
                 worker_profile_id=99999,
                 trade_category_id=trade.id,
@@ -268,7 +268,7 @@ class TestRemoveTrade:
             assigned_trade: WorkerTrade,
     ):
         """After removing a trade, the same trade can be reassigned."""
-        await crud_worker_trades.remove_trade(
+        await crud_worker_trades.dismiss_trade_category(
             db=async_session,
             worker_profile_id=worker_profile.id,
             trade_category_id=trade.id,
@@ -302,7 +302,7 @@ class TestRemoveTrade:
             )
 
         # remove one
-        await crud_worker_trades.remove_trade(
+        await crud_worker_trades.dismiss_trade_category(
             db=async_session,
             worker_profile_id=worker_profile.id,
             trade_category_id=trades[0].id,

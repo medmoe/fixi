@@ -178,7 +178,7 @@ class TestRead:
             worker_profile_id=test_worker_profile.id,
             trade_category_id=test_trade_category.id,
         )
-        result = await crud_worker_trades.get_trades_for_worker_profile(
+        result = await crud_worker_trades.get_trade_categories_for_worker_profile(
             db=async_session,
             worker_profile_id=test_worker_profile.id,
         )
@@ -190,7 +190,7 @@ class TestRead:
             async_session: AsyncSession,
             test_worker_profile: WorkerProfile,
     ):
-        result = await crud_worker_trades.get_trades_for_worker_profile(
+        result = await crud_worker_trades.get_trade_categories_for_worker_profile(
             db=async_session,
             worker_profile_id=test_worker_profile.id,
         )
@@ -201,7 +201,7 @@ class TestRead:
             async_session: AsyncSession,
     ):
         with pytest.raises(NotFoundException):
-            await crud_worker_trades.get_trades_for_worker_profile(
+            await crud_worker_trades.get_trade_categories_for_worker_profile(
                 db=async_session,
                 worker_profile_id=99999,
             )
@@ -256,7 +256,7 @@ class TestRead:
             worker_profile_id=test_worker_profile.id,
             trade_category_id=test_trade_category.id,
         )
-        result = await crud_worker_trades.get_trades_for_worker_profile(
+        result = await crud_worker_trades.get_trade_categories_for_worker_profile(
             db=async_session,
             worker_profile_id=test_worker_profile.id,
         )

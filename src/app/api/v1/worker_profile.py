@@ -72,7 +72,7 @@ async def get_worker_profile(
 ) -> WorkerProfileWithTradesRead:
     """ Public endpoint — returns worker profile with nested trades. """
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
-    worker_trades = await crud_worker_trades.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile.id)
+    worker_trades = await crud_worker_trades.get_trade_categories_for_worker_profile(db=db, worker_profile_id=worker_profile.id)
     nested_trades = [WorkerTradeNestedRead.model_validate(wt) for wt in worker_trades]
 
     return WorkerProfileWithTradesRead(
@@ -213,19 +213,19 @@ async def assign_trades(
     )
 
 
-# ————— DELETE /worker-profile/trades/{trade_id} ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+# ————— DELETE /worker-profile/trade-categories/{trade_category_id} ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 @router.delete("/trades/{trade_id}", response_model=list[WorkerTradeNestedRead])
 async def remove_trade_from_worker(
-        trade_id: int,
+        trade_category_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)]
 ) -> list[WorkerTradeNestedRead]:
     """ Remove a trade from a worker profile — owner only."""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
 
-    updated_trades = await crud_worker_trades.remove_trade(db=db, worker_profile_id=worker_profile.id, trade_category_id=trade_id)
-    return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
+    updated_worker_trade_categories = await crud_worker_trades.dismiss_trade_category(db=db, worker_profile_id=worker_profile.id, trade_category_id=trade_category_id)
+    return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_worker_trade_categories]
 
 
 # ————— POST /worker-profile/portfolio-images ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
