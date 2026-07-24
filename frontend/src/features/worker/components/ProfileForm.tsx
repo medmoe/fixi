@@ -2,7 +2,7 @@ import React from 'react';
 import {SubmitHandler, useForm} from 'react-hook-form'; // Import SubmitHandler
 import {zodResolver} from '@hookform/resolvers/zod';
 import {WorkerProfileFormValues, workerProfileSchema} from '../schemas/workerProfileSchema';
-import {UpdateWorkerProfilePayload, useUpdateWorkerProfile, WorkerProfile} from '@/features/worker';
+import {UpdateWorkerProfilePayload, useUpdateWorkerProfile, WorkerProfileWithTradesRead} from '@/features/worker';
 import {Form} from '@/components/ui/form';
 import {Button} from '@/components/ui/button';
 import {BioField} from './fields/BioField';
@@ -12,7 +12,7 @@ import {TradesPicker} from './trades/TradesPicker';
 import {Loader2, Save} from 'lucide-react';
 
 interface ProfileFormProps {
-    profile: WorkerProfile;
+    profile: WorkerProfileWithTradesRead;
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {

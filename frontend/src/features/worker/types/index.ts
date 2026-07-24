@@ -1,2 +1,13 @@
-export type {SkillLevel, WorkerTrade, WorkerProfile, UpdateWorkerProfilePayload, PaginatedResult, WorkerProfileCreateRequest} from './worker.types'
-export type {TradeCategory} from './tradeCategory.types'
+export type {
+    WorkerProfileRead,
+    WorkerProfileWithTradesRead,
+    UpdateWorkerProfilePayload,
+    PaginatedResult,
+    WorkerProfileCreateRequest
+} from './worker.types'
+export type {
+    TradeCategoryRead,
+    WorkerTradeNestedRead,
+    TradeCategoryWithChildren,
+    SkillLevel
+} from './tradeCategory.types'

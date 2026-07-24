@@ -1,13 +1,8 @@
-export type SkillLevel = 'junior' | 'mid' | 'senior'
+import {WorkerTradeNestedRead} from "@/features/worker";
 
-export interface WorkerTrade {
-    trade_id: number;
-    name?: string; // optional helper mapping from full trade entity
-    skill_level: SkillLevel;
-}
-
-export interface WorkerProfile {
+export interface WorkerProfileRead {
     id: number;
+    user_id: number;
     bio?: string;
     hourly_rate?: number;
     years_of_experience?: number;
@@ -16,7 +11,10 @@ export interface WorkerProfile {
     is_available: boolean;
     is_verified: boolean;
     available_since: string | null;
-    trades: WorkerTrade[];
+}
+
+export interface WorkerProfileWithTradesRead extends WorkerProfileRead {
+    trade_categories: WorkerTradeNestedRead[];
 }
 
 export interface UpdateWorkerProfilePayload {

@@ -18,14 +18,6 @@ const queryClient = new QueryClient({
     }
 });
 
-if (import.meta.env.DEV && import.meta.env.VITE_MSW === 'true') {
-    import('./mocks/browser').then(({worker}) => {
-        worker.start({
-            onUnhandledRequest: 'bypass'
-        });
-    });
-}
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <Provider store={store}>

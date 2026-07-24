@@ -4,7 +4,7 @@ import {QueryClient} from '@tanstack/react-query'
 import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle'
 import {workerApi} from '@/lib/api/workerApi'
 import {toast} from 'sonner'
-import type {WorkerProfile} from '@/features/worker/types/worker.types'
+import type {WorkerProfileWithTradesRead} from '@/features/worker/types/worker.types'
 import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from './helpers'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ describe('useAvailabilityToggle', () => {
         vi.clearAllMocks()
 
         // seed the cache with a profile before each test
-        queryClient.setQueryData<WorkerProfile>(
+        queryClient.setQueryData<WorkerProfileWithTradesRead>(
             ['workerProfile', WORKER_ID],
             mockProfile,
         )
@@ -62,7 +62,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(result.current.isPending).toBe(true))
 
             // now check cache — optimistic update should be applied
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(true)
         })
 
@@ -74,7 +74,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start offline
-            queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
                 ...mockProfile,
                 is_available: false,
             })
@@ -89,7 +89,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             await waitFor(() => expect(result.current.isPending).toBe(true))
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(true)
         })
 
@@ -101,7 +101,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start online
-            queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
                 ...mockProfile,
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
@@ -117,7 +117,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             await waitFor(() => expect(result.current.isPending).toBe(true))
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(false)
         })
 
@@ -136,7 +136,7 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(true)
             })
 
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.bio).toBe(mockProfile.bio)
             expect(cached?.hourly_rate).toBe(mockProfile.hourly_rate)
             expect(cached?.service_radius_km).toBe(mockProfile.service_radius_km)
@@ -161,7 +161,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             // cache should still be empty — no crash
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached).toBeUndefined()
         })
     })
@@ -253,7 +253,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(toast.success).toHaveBeenCalled())
 
             // ✅ check query cache — not result.current.data
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(true)
             expect(cached?.available_since).toBe('2026-01-01T00:00:00Z')
         })
@@ -270,7 +270,7 @@ describe('useAvailabilityToggle', () => {
             await act(async () => {
                 await result.current.mutateAsync(false)
             })
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(false)
             expect(cached?.available_since).toBe(null)
         })
@@ -285,7 +285,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start offline
-            queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
                 ...mockProfile,
                 is_available: false,
             })
@@ -302,7 +302,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(result.current.isError).toBe(true))
 
             // cache should be reverted to false
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached?.is_available).toBe(false)  // ✅ rolled back
         })
 
@@ -374,7 +374,7 @@ describe('useAvailabilityToggle', () => {
 
             await waitFor(() => expect(result.current.isError).toBe(true))
 
-            const cached = queryClient.getQueryData<WorkerProfile>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
             expect(cached).toBeUndefined()  // still undefined, no crash ✅
         })
     })

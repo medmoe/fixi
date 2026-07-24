@@ -1,18 +1,18 @@
-import {UpdateWorkerProfilePayload, WorkerProfile} from "@/features/worker/types/worker.types.ts";
-import {TradeCategory} from "@/features/worker/types/tradeCategory.types";
+import {UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
+import {TradeCategoryRead, TradeCategoryWithChildren} from "@/features/worker/types/tradeCategory.types";
 import apiClient from "@/lib/api/apiClient";
 
 export const workerApi = {
-    createWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfile> => {
-        const {data} = await apiClient.post<WorkerProfile>('/worker-profile', payload);
+    createWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileWithTradesRead> => {
+        const {data} = await apiClient.post<WorkerProfileWithTradesRead>('/worker-profile', payload);
         return data;
     },
-    getWorkerProfile: async (): Promise<WorkerProfile> => {
-        const {data} = await apiClient.get<WorkerProfile>(`/worker-profile`);
+    getWorkerProfile: async (): Promise<WorkerProfileWithTradesRead> => {
+        const {data} = await apiClient.get<WorkerProfileWithTradesRead>(`/worker-profile`);
         return data;
     },
-    updateWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfile> => {
-        const {data} = await apiClient.patch<WorkerProfile>(`/worker-profile`, payload);
+    updateWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileWithTradesRead> => {
+        const {data} = await apiClient.patch<WorkerProfileWithTradesRead>(`/worker-profile`, payload);
         return data;
     },
     toggleAvailability: async (isAvailable: boolean): Promise<{ is_available: boolean, available_since: string | null }> => {
@@ -28,8 +28,8 @@ export const workerApi = {
         const {data} = await apiClient.post<{ avatar_url: string }>(`/worker-profiles/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
     },
-    getTrades: async (): Promise<TradeCategory[]> => {
-        const {data} = await apiClient.get<TradeCategory[]>(`/trade-categories`)
+    getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {
+        const {data} = await apiClient.get<TradeCategoryRead[] | TradeCategoryWithChildren[]>(`/trade-categories`)
         return data;
     }
 }

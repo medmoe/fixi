@@ -5,4 +5,14 @@ export {useUploadAvatar} from './hooks/useUploadAvatar'
 export {useWorkerProfile} from './hooks/useWorkerProfile'
 export {}
 export {WorkerDashboardPage} from './pages/WorkerDashboardPage'
-export type {SkillLevel, WorkerTrade, WorkerProfile, UpdateWorkerProfilePayload, PaginatedResult, TradeCategory} from './types'
+export type {
+    WorkerProfileRead,
+    WorkerProfileCreateRequest,
+    SkillLevel,
+    WorkerProfileWithTradesRead,
+    UpdateWorkerProfilePayload,
+    PaginatedResult,
+    WorkerTradeNestedRead,
+    TradeCategoryWithChildren,
+    TradeCategoryRead
+} from './types'

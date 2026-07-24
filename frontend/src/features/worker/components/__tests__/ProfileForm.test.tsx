@@ -5,7 +5,7 @@ import {act, render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {ProfileForm} from '@/features/worker/components/ProfileForm'
 import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile'
-import type {WorkerProfile} from '@/features/worker/types'
+import type {WorkerProfileWithTradesRead} from '@/features/worker/types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -30,22 +30,38 @@ vi.mock('@/features/worker/components/trades/TradesPicker', () => ({
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const mockProfile: WorkerProfile = {
+const mockProfile: WorkerProfileWithTradesRead = {
     id: 1,
+    user_id: 1,
     bio: 'Experienced plumber',
     hourly_rate: 75.00,
     service_radius_km: 20,
     is_available: true,
     is_verified: false,
     available_since: null,
-    trades: [{trade_id: 1, skill_level: 'junior'}],
+    trade_categories: [
+        {
+            trade_category_id: 1,
+            worker_profile_id: 1,
+            id: 1,
+            skill_level: 'junior',
+            trade_category: {
+                id: 1,
+                name: 'Plumbing',
+                display_name: 'Plumbing services',
+                icon_name: 'wrench',
+                created_at: '2026-01-01T00:00:00.000Z',
+                parent_id: null,
+            }
+        }
+    ],
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const mockMutate = vi.fn()
 
-const renderComponent = async (profile: WorkerProfile = mockProfile) => {
+const renderComponent = async (profile: WorkerProfileWithTradesRead = mockProfile) => {
     let result: ReturnType<typeof render>
     await act(async () => {
         result = render(<ProfileForm profile={profile}/>)
@@ -84,7 +100,7 @@ describe('ProfileForm', () => {
         })
 
         it('renders without crashing when optional fields are undefined', async () => {
-            await renderComponent({...mockProfile, bio: undefined, hourly_rate: undefined, service_radius_km: undefined, trades: []})
+            await renderComponent({...mockProfile, bio: undefined, hourly_rate: undefined, service_radius_km: undefined, trade_categories: []})
             expect(getSubmitButton()).toBeInTheDocument()
         })
     })

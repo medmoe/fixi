@@ -1,6 +1,6 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {workerApi} from "@/lib/api/workerApi";
-import {WorkerProfile} from '../types/worker.types'
+import {WorkerProfileWithTradesRead} from '../types/worker.types'
 import {toast} from 'sonner';
 
 export const useAvailabilityToggle = (workerId: number) => {
@@ -13,11 +13,11 @@ export const useAvailabilityToggle = (workerId: number) => {
                 await queryClient.cancelQueries({queryKey: ['workerProfile', workerId]});
 
                 // Snapshot the previous profile value
-                const previousProfile = queryClient.getQueryData<WorkerProfile>(['workerProfile', workerId]);
+                const previousProfile = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId]);
 
                 // Optimistically update the new value
                 if (previousProfile) {
-                    queryClient.setQueryData<WorkerProfile>(['workerProfile', workerId], {
+                    queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId], {
                         ...previousProfile,
                         is_available: newAvailability,
                     });
@@ -25,7 +25,7 @@ export const useAvailabilityToggle = (workerId: number) => {
                 return {previousProfile};
             },
             onSuccess: (serverResponseData) => {
-                queryClient.setQueryData<WorkerProfile>(['workerProfile', workerId], (previousProfile) => {
+                queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId], (previousProfile) => {
                     if (!previousProfile) return undefined;
                     // Overwrite our quick optimistic guess with the absolute truth from the server
                     return {

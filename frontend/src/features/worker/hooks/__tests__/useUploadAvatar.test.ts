@@ -3,7 +3,7 @@ import {QueryClient} from '@tanstack/react-query'
 import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from "@/features/worker/hooks/__tests__/helpers.tsx";
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {useUploadAvatar} from "@/features/worker/hooks/useUploadAvatar";
-import type {WorkerProfile} from "@/features/worker/types/worker.types";
+import type {WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types";
 import {workerApi} from "@/lib/api/workerApi";
 import {toast} from "sonner";
 
@@ -28,7 +28,7 @@ describe('useUploadAvatar', () => {
     beforeEach(() => {
         queryClient = createQueryClient()
         vi.clearAllMocks()
-        queryClient.setQueryData<WorkerProfile>(['workerProfile', WORKER_ID], mockProfile)
+        queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], mockProfile)
     })
 
     const mockFile = new File(['image content'], 'avatar.png', {type: 'image/png'})
