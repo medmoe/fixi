@@ -165,7 +165,7 @@ async def upload_worker_avatar(
 
 # ————— POST /worker-profile/trades ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.post("/trades", response_model=list[WorkerTradeNestedRead])
+@router.post("/trade-categories", response_model=list[WorkerTradeNestedRead])
 async def assign_trade_to_worker(
         body: WorkerTradeAssignmentRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
@@ -185,12 +185,12 @@ async def assign_trade_to_worker(
 
 # ————— POST /worker-profile/trade-categories/assign ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.post("/trade-categories/assign", response_model=WorkerProfileWithTradesRead)
+@router.post("/trade-categories/assign", response_model=list[WorkerTradeNestedRead])
 async def assign_trades(
         body: TradeAssignRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],  # ✅ auth required
-) -> WorkerProfileWithTradesRead:
+) -> list[WorkerTradeNestedRead]:
     """
     Assign a list of trades to a worker profile.
     - Nonexistent trade IDs are ignored
@@ -198,24 +198,18 @@ async def assign_trades(
     - Rejects with 400 if total would exceed 5
     - Returns updated profile with all trades
     """
-    updated_trades, worker_profile = await crud_worker_trades.assign_trades_bulk(
+    worker_trade_categories = await crud_worker_trades.assign_trades_bulk(
         db=db,
         user_id=current_user["id"],
         trade_category_ids=body.trade_category_ids,
     )
 
-    nested_trade_categories = [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
-    worker_profile_read = WorkerProfileRead.model_validate(worker_profile)
-
-    return WorkerProfileWithTradesRead(
-        **worker_profile_read.model_dump(),
-        trade_categories=nested_trade_categories,
-    )
+    return [WorkerTradeNestedRead.model_validate(wt) for wt in worker_trade_categories]
 
 
 # ————— DELETE /worker-profile/trade-categories/{trade_category_id} ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.delete("/trades/{trade_id}", response_model=list[WorkerTradeNestedRead])
+@router.delete("/trade-categories/{trade_category_id}", response_model=list[WorkerTradeNestedRead])
 async def remove_trade_from_worker(
         trade_category_id: int,
         db: Annotated[AsyncSession, Depends(async_get_db)],
