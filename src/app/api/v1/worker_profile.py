@@ -16,7 +16,7 @@ from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
 from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
-from ...schemas.worker_trade import WorkerTradeAssignmentRequest
+from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
 router = APIRouter(tags=["workers"], prefix="/worker-profile")
@@ -77,7 +77,7 @@ async def get_worker_profile(
 
     return WorkerProfileWithTradesRead(
         **worker_profile.model_dump(),
-        trades=nested_trades
+        trade_categories=nested_trades
     )
 
 
@@ -181,6 +181,36 @@ async def assign_trade_to_worker(
         skill_level=body.skill_level
     )
     return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
+
+
+# ————— POST /worker-profile/trade-categories/assign ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+@router.post("/trade-categories/assign", response_model=WorkerProfileWithTradesRead)
+async def assign_trades(
+        body: TradeAssignRequest,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)],  # ✅ auth required
+) -> WorkerProfileWithTradesRead:
+    """
+    Assign a list of trades to a worker profile.
+    - Nonexistent trade IDs are ignored
+    - Already assigned trades are ignored
+    - Rejects with 400 if total would exceed 5
+    - Returns updated profile with all trades
+    """
+    updated_trades, worker_profile = await crud_worker_trades.assign_trades_bulk(
+        db=db,
+        user_id=current_user["id"],
+        trade_category_ids=body.trade_category_ids,
+    )
+
+    nested_trade_categories = [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
+    worker_profile_read = WorkerProfileRead.model_validate(worker_profile)
+
+    return WorkerProfileWithTradesRead(
+        **worker_profile_read.model_dump(),
+        trade_categories=nested_trade_categories,
+    )
 
 
 # ————— DELETE /worker-profile/trades/{trade_id} ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
