@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ..core.exceptions.http_exceptions import BadRequestException, DuplicateValueException, NotFoundException
-from ..models import SkillLevel, TradeCategory, WorkerProfile
-from ..models.worker_trade import WorkerTrade
+from ..models import SkillLevel, TradeCategory, WorkerProfile, WorkerTrade
 from ..schemas.worker_trade import (
     WorkerTradeCreate,
     WorkerTradeDelete,
@@ -180,6 +179,81 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
 
         # return full updated trades list
         return await self.get_trades_for_worker_profile(db=db, worker_profile_id=worker_profile_id)
+
+    async def assign_trades_bulk(
+            self,
+            db: AsyncSession,
+            user_id: int,
+            trade_category_ids: list[int],
+    ) -> tuple[list[WorkerTrade], WorkerProfile]:
+        """
+        Assign multiple trades to a worker atomically.
+        - Ignores nonexistent trade IDs
+        - Ignores already assigned trade IDs
+        - Rejects if the total exceeds MAX_TRADES_PER_WORKER
+        - Does not modify any assignments on failure
+        """
+        result = await db.execute(
+            select(WorkerProfile).where(WorkerProfile.user_id == user_id)
+        )
+        worker_profile = result.scalar_one_or_none()
+        if worker_profile is None:
+            raise NotFoundException("Worker profile not found")
+
+        worker_profile = cast(WorkerProfile, worker_profile)
+
+        # deduplicate incoming ids
+        unique_ids = list(set(trade_category_ids))
+
+        # fetch only existing trades in one query
+        existing_trade_categories: list[TradeCategory] = []
+        if unique_ids:
+            result = await db.execute(
+                select(TradeCategory).where(TradeCategory.id.in_(unique_ids))
+            )
+            existing_trade_categories = cast(list[TradeCategory], list(result.scalars().all()))
+
+        # fetch already assigned trade ids in one query
+        result = await db.execute(
+            select(WorkerTrade.trade_category_id).where(
+                WorkerTrade.worker_profile_id == worker_profile.id
+            )
+        )
+        already_assigned_ids = {row.trade_category_id for row in result}
+
+        # filter to only new valid trades
+        new_trade_categories = [trade_category for trade_category in existing_trade_categories if trade_category.id not in already_assigned_ids]
+
+        # check limit BEFORE modifying anything
+        current_count = len(already_assigned_ids)
+        if current_count + len(new_trade_categories) > MAX_TRADES_PER_WORKER:
+            raise BadRequestException(
+                f"Assigning these trades would exceed the limit of "
+                f"{MAX_TRADES_PER_WORKER} trades per worker. "
+                f"Current: {current_count}, New valid: {len(new_trade_categories)}."
+            )
+
+        # insert new assignments
+        if new_trade_categories:
+            new_assignments = [
+                WorkerTrade(
+                    worker_profile_id=worker_profile.id,
+                    trade_category_id=trade_category.id,
+                    skill_level=SkillLevel.junior,
+                    worker_profile=worker_profile,
+                    trade_category=trade_category,
+                )
+                for trade_category in new_trade_categories
+            ]
+            db.add_all(new_assignments)
+            await db.commit()
+
+        # return updated trades with nested trade details
+        trade_categories = await self.get_trades_for_worker_profile(
+            db=db,
+            worker_profile_id=worker_profile.id,
+        )
+        return trade_categories, worker_profile
 
 
 crud_worker_trades = CRUDWorkerTrade(WorkerTrade)

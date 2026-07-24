@@ -54,3 +54,9 @@ class WorkerTradeAssignmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     trade_category_id: Annotated[int, Field(gt=0)]
     skill_level: Annotated[SkillLevel, Field(default=SkillLevel.junior)]
+
+
+class TradeAssignRequest(BaseModel):
+    """Body for bulk trade assignment."""
+    model_config = ConfigDict(extra="forbid")
+    trade_category_ids: list[int] = []
