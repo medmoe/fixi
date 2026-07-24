@@ -105,7 +105,7 @@ class TestAssignTradeCategories:
 
     # ─── Empty list ───────────────────────────────────────────────────────────
 
-    async def test_empty_trade_category_ids_returns_current_profile(
+    async def test_empty_trade_category_ids_returns_current_assigned_trade_categories(
             self,
             async_client: AsyncClient,
             async_session: AsyncSession,
@@ -120,8 +120,7 @@ class TestAssignTradeCategories:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "trade_categories" in data
-        assert data["trade_categories"] == []
+        assert data == []
 
     # ─── Nonexistent trades ───────────────────────────────────────────────────
 
@@ -139,7 +138,7 @@ class TestAssignTradeCategories:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["trade_categories"] == []
+        assert data == []
 
     async def test_mix_of_valid_and_nonexistent_trade_category_ids(
             self,
@@ -157,7 +156,7 @@ class TestAssignTradeCategories:
         )
         assert response.status_code == 200
         data = response.json()
-        assigned_ids = [t["trade_category_id"] for t in data["trade_categories"]]
+        assigned_ids = [t["trade_category_id"] for t in data]
         assert trade_categories[0].id in assigned_ids
         assert trade_categories[1].id in assigned_ids
         assert len(assigned_ids) == 2
@@ -188,7 +187,7 @@ class TestAssignTradeCategories:
         )
         assert response.status_code == 200
         data = response.json()
-        assigned_ids = [t["trade_category_id"] for t in data["trade_categories"]]
+        assigned_ids = [t["trade_category_id"] for t in data]
         # still only one assignment — no duplicate
         assert assigned_ids.count(trade_categories[0].id) == 1
 
@@ -206,7 +205,8 @@ class TestAssignTradeCategories:
             headers=worker_auth_headers,
         )
         assert response.status_code == 200
-        assigned_ids = [t["trade_category_id"] for t in response.json()["trade_categories"]]
+        data = response.json()
+        assigned_ids = [t["trade_category_id"] for t in data]
         assert assigned_ids.count(trade_categories[0].id) == 1
 
     # ─── Max limit ────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ class TestAssignTradeCategories:
             headers=worker_auth_headers,
         )
         assert response.status_code == 200
-        assert len(response.json()["trade_categories"]) == 5
+        assert len(response.json()) == 5
 
     async def test_limit_check_excludes_already_assigned_trade_categories(
             self,
@@ -276,7 +276,7 @@ class TestAssignTradeCategories:
             headers=worker_auth_headers,
         )
         assert response.status_code == 200
-        assert len(response.json()["trade_categories"]) == 5
+        assert len(response.json()) == 5
 
     async def test_no_assignments_modified_on_limit_exceeded(
             self,
@@ -306,7 +306,7 @@ class TestAssignTradeCategories:
             f"/api/v1/worker-profile",
             headers=worker_auth_headers,
         )
-        assigned_ids = [t["trade_category_id"] for t in profile_response.json()["trade_categories"]]
+        assigned_ids = [t["trade_category_id"] for t in profile_response.json()['trade_categories']]
         assert len(assigned_ids) == 3
         assert all(t.id in assigned_ids for t in trade_categories[:3])
 
@@ -327,11 +327,13 @@ class TestAssignTradeCategories:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "id" in data
-        assert "user_id" in data
-        assert "trade_categories" in data
-        assert "is_available" in data
-        assert "is_verified" in data
+        for t in data:
+            assert "id" in t
+            assert "trade_category_id" in t
+            assert "worker_profile_id" in t
+            assert "skill_level" in t
+            assert "trade_category" in t
+
 
     async def test_response_trade_categories_include_trade_category_details(
             self,
@@ -347,9 +349,14 @@ class TestAssignTradeCategories:
             headers=worker_auth_headers,
         )
         assert response.status_code == 200
-        trade = response.json()["trade_categories"][0]
-        assert "trade_category_id" in trade
-        assert "skill_level" in trade
+        trade = response.json()[0]
+        assert "trade_category" in trade
+        assert "parent_id" in trade["trade_category"]
+        assert "created_at" in trade["trade_category"]
+        assert "name" in trade["trade_category"]
+        assert "display_name" in trade["trade_category"]
+        assert "icon_name" in trade["trade_category"]
+
 
     async def test_existing_trade_categories_preserved_in_response(
             self,
@@ -373,7 +380,7 @@ class TestAssignTradeCategories:
             json={"trade_category_ids": [trade_categories[1].id]},
             headers=worker_auth_headers,
         )
-        assigned_ids = [t["trade_category_id"] for t in response.json()["trade_categories"]]
+        assigned_ids = [t["trade_category_id"] for t in response.json()]
         assert trade_categories[0].id in assigned_ids  # existing preserved
         assert trade_categories[1].id in assigned_ids  # new one added
         assert len(assigned_ids) == 2

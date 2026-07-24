@@ -33,7 +33,6 @@ class TradeCategoryUpdateInternal(TradeCategoryBase):
 class TradeCategoryRead(TradeCategoryBase):
     model_config = ConfigDict(extra='forbid', from_attributes=True)
     id: int
-    parent_id: int | None = None
     created_at: datetime | None = None
 
 

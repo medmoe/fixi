@@ -187,7 +187,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             db: AsyncSession,
             user_id: int,
             trade_category_ids: list[int],
-    ) -> tuple[list[WorkerTrade], WorkerProfile]:
+    ) -> list[WorkerTrade]:
         """
         Assign multiple trades to a worker atomically.
         - Ignores nonexistent trade IDs
@@ -251,11 +251,10 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
             await db.commit()
 
         # return updated trades with nested trade details
-        trade_categories = await self.get_trade_categories_for_worker_profile(
+        return await self.get_trade_categories_for_worker_profile(
             db=db,
             worker_profile_id=worker_profile.id,
         )
-        return trade_categories, worker_profile
 
 
 crud_worker_trades = CRUDWorkerTrade(WorkerTrade)
