@@ -1,10 +1,7 @@
-// src/features/worker/components/__tests__/AvatarUploadField.test.tsx
-
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {AvatarUploadField} from '../AvatarUploadField'
-import {useUploadAvatar} from '@/features/worker/hooks/useUploadAvatar'
+import {AvatarUploadField, useUploadAvatar} from '@/features/worker'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +26,6 @@ vi.mock('@/components/ui/avatar', () => ({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const WORKER_ID = 1
 const CURRENT_AVATAR_URL = 'https://cdn.example.com/avatar.jpg'
 
 const mockMutate = vi.fn()
@@ -37,7 +33,6 @@ const mockMutate = vi.fn()
 const renderComponent = (props: Partial<{ workerId: number; currentAvatarUrl: string }> = {}) => {
     return render(
         <AvatarUploadField
-            workerId={props.workerId ?? WORKER_ID}
             currentAvatarUrl={props.currentAvatarUrl ?? CURRENT_AVATAR_URL}
         />
     )
@@ -174,12 +169,6 @@ describe('AvatarUploadField', () => {
             expect(mockMutate).toHaveBeenCalledWith(file, expect.objectContaining({
                 onError: expect.any(Function),
             }))
-        })
-
-        it('calls uploadAvatar with correct workerId', () => {
-            renderComponent({workerId: 5})
-
-            expect(useUploadAvatar).toHaveBeenCalledWith(5)
         })
 
         it('does nothing when no file is selected', async () => {

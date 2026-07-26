@@ -1,5 +1,5 @@
 import {UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
-import {TradeCategoryRead, TradeCategoryWithChildren} from "@/features/worker/types/tradeCategory.types";
+import {TradeCategoryRead, TradeCategoryWithChildren, WorkerTradeNestedRead} from "@/features/worker";
 import apiClient from "@/lib/api/apiClient";
 
 export const workerApi = {
@@ -31,5 +31,20 @@ export const workerApi = {
     getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {
         const {data} = await apiClient.get<TradeCategoryRead[] | TradeCategoryWithChildren[]>(`/trade-categories`)
         return data;
-    }
+    },
+
+    assignTrades: async (trade_category_ids: number[]): Promise<WorkerTradeNestedRead[]> => {
+        const {data} = await apiClient.post<WorkerTradeNestedRead[]>(
+            '/worker-profile/trade-categories/assign',
+            {trade_category_ids},
+        )
+        return data
+    },
+
+    removeTrade: async (trade_category_id: number): Promise<WorkerTradeNestedRead[]> => {
+        const {data} = await apiClient.delete<WorkerTradeNestedRead[]>(
+            `/worker-profile/trade-categories/${trade_category_id}`,
+        )
+        return data
+    },
 }

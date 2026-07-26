@@ -15,11 +15,14 @@ export const mockProfile: WorkerProfileWithTradesRead = {
 }
 
 export const createWrapper = (queryClient: QueryClient) => {
-    return ({children}: { children: ReactNode }) => (
+    // Return a stable component reference
+    const Wrapper = ({children}: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>
             {children}
         </QueryClientProvider>
     )
+    Wrapper.displayName = 'TestWrapper'
+    return Wrapper
 }
 
 export const createQueryClient = () =>

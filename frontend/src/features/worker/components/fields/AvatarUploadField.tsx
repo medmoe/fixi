@@ -1,18 +1,17 @@
 import React, {useRef, useState} from 'react';
-import {useUploadAvatar} from '../../hooks/useUploadAvatar';
+import {useUploadAvatar} from '@/features/worker';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar.tsx';
 import {Button} from '@/components/ui/button.tsx';
 import {Loader2, Upload} from 'lucide-react';
 
 interface AvatarUploadFieldProps {
-    workerId: number;
     currentAvatarUrl?: string;
 }
 
-export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({workerId, currentAvatarUrl}) => {
+export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvatarUrl}) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [localPreview, setLocalPreview] = useState<string | null>(null);
-    const {mutate: uploadAvatar, isPending} = useUploadAvatar(workerId);
+    const {mutate: uploadAvatar, isPending} = useUploadAvatar();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

@@ -2,13 +2,13 @@ import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {workerApi} from "@/lib/api/workerApi";
 import {toast} from 'sonner';
 
-export const useUploadAvatar = (workerId: number) => {
+export const useUploadAvatar = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (file: File) => workerApi.uploadAvatar(workerId, file),
+        mutationFn: (file: File) => workerApi.uploadAvatar(file),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['workerProfile', workerId]})
+            queryClient.invalidateQueries({queryKey: ['workerProfile']})
             toast.success("Avatar uploaded successfully");
         },
         onError: () => {
