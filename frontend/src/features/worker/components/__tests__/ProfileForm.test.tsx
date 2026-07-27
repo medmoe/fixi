@@ -29,7 +29,7 @@ vi.mock('@/features/worker/components/fields/ServiceRadiusField', () => ({
 vi.mock('@/features/worker/components/fields/AvatarUploadField', () => ({
     AvatarUploadField: () => <div data-testid="avatar-upload-field"/>,
 }))
-vi.mock('@/features/worker/components/trades/TradesPicker', () => ({
+vi.mock('@/features/worker/components/trades/TradeCategoryPicker', () => ({
     TradeCategoryPicker: () => <div data-testid="trades-picker"/>,
 }))
 
@@ -76,7 +76,7 @@ const renderComponent = async (profile: WorkerProfileWithTradesRead = mockProfil
     return result!
 }
 
-const getSubmitButton = () => screen.getByRole('button', {name: /update profile/i})
+const getSubmitButton = (name='Update Profile') => screen.getByRole('button', {name: name})
 
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ describe('ProfileForm', () => {
                 isPending: true,
             } as any)
             await renderComponent()
-            expect(getSubmitButton()).toBeDisabled()
+            expect(getSubmitButton('Saving...')).toBeDisabled()
         })
 
         it('has type="submit"', async () => {
@@ -199,7 +199,7 @@ describe('ProfileForm', () => {
                 isPending: true,
             } as any)
             await renderComponent()
-            await act(async () => await userEvent.click(getSubmitButton()))
+            await act(async () => await userEvent.click(getSubmitButton('Saving...')))
             expect(mockUpdateMutate).not.toHaveBeenCalled()
         })
     })

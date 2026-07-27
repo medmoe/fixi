@@ -123,8 +123,7 @@ describe('Authentication E2E - POM Style', () => {
                 body: {id: 1, bio: 'test bio', hourly_rate: 100},
             }).as('workerProfile')
             cy.intercept('POST', '**/api/v1/auth/refresh', {
-                statusCode: 200,
-                body: {access_token: 'refreshed-token'},
+                statusCode: 401,
             }).as('refresh')
 
             loginPage.visit().login(testUser.email, testUser.password)

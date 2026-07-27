@@ -1,4 +1,3 @@
-// src/features/worker/components/ProfileForm.tsx
 
 import React, {useState} from 'react'
 import {SubmitHandler, useForm} from 'react-hook-form'
