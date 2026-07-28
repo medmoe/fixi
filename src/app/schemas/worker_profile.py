@@ -107,10 +107,3 @@ class AvailabilityToggleRequest(BaseModel):
     """ PATCH body for toggling availability """
     model_config = ConfigDict(extra="forbid")
     is_available: bool
-
-
-class AvailabilityToggleResponse(BaseModel):
-    """ Response after toggling availability """
-    model_config = ConfigDict(from_attributes=True)
-    is_available: bool
-    available_since: datetime | None = None
