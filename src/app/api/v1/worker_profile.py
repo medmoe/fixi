@@ -15,7 +15,7 @@ from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
-from ...schemas.worker_profile import AvailabilityToggleRequest, AvailabilityToggleResponse, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
+from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
@@ -104,12 +104,12 @@ async def update_worker_profile(
 
 # ————— PATCH /worker-profile/availability —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-@router.patch("/availability", response_model=AvailabilityToggleResponse, dependencies=[Depends(rate_limiter_dependency)])
+@router.patch("/availability", response_model=WorkerProfileRead, dependencies=[Depends(rate_limiter_dependency)])
 async def toggle_worker_availability(
         body: AvailabilityToggleRequest,
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
-) -> AvailabilityToggleResponse:
+) -> Any:
     """ Toggle worker availability — owner only. Max 10 toggles per minute."""
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user['id'])
 
@@ -119,10 +119,12 @@ async def toggle_worker_availability(
         available_since = datetime.now(UTC)
 
     # update both fields atomically
-    await crud_worker_profiles.update(
+    updated_worker_profile = await crud_worker_profiles.update(
         db=db,
         object=WorkerProfileUpdateInternal(is_available=body.is_available, available_since=available_since),
         user_id=worker_profile.user_id,
+        schema_to_select=WorkerProfileRead,
+        return_as_model=True
     )
     # public event — prep for WebSocket in Week 7
     await publish(
@@ -134,10 +136,7 @@ async def toggle_worker_availability(
         }
     )
 
-    return AvailabilityToggleResponse(
-        is_available=body.is_available,
-        available_since=available_since
-    )
+    return updated_worker_profile
 
 
 # ————— POST /worker-profile/avatar ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

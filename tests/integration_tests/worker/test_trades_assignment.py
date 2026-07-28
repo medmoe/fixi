@@ -1,4 +1,3 @@
-# tests/integration_tests/test_worker_trades_assignment.py
 
 import pytest_asyncio
 from httpx import AsyncClient

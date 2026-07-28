@@ -97,7 +97,6 @@ class TestUpdateWorkerProfile:
 
     async def test_partial_update_only_changes_sent_fields(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, ):
         original_rate = test_worker_profile.hourly_rate
-        print(original_rate)
         response = await async_client.patch(f"/api/v1/worker-profile", json={"bio": "Only bio changed."}, headers=auth_headers, )
         assert response.status_code == 200
         data = response.json()
