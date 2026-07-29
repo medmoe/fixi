@@ -22,6 +22,7 @@ vi.mock('sonner', () => ({
     },
 }))
 
+const {trade_categories, is_available, available_since, ...workerProfileRead} = mockProfile
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ describe('useAvailabilityToggle', () => {
         it('immediately updates cache before API responds', async () => {
             vi.mocked(workerApi.toggleAvailability).mockImplementation(
                 () => new Promise((resolve) =>
-                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z', ...workerProfileRead}), 100)
                 )
             )
 
@@ -69,7 +70,7 @@ describe('useAvailabilityToggle', () => {
         it('flips is_available from false to true optimistically', async () => {
             vi.mocked(workerApi.toggleAvailability).mockImplementation(
                 () => new Promise((resolve) =>
-                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z', ...workerProfileRead}), 100)
                 )
             )
 
@@ -96,7 +97,7 @@ describe('useAvailabilityToggle', () => {
         it('flips is_available from true to false optimistically', async () => {
             vi.mocked(workerApi.toggleAvailability).mockImplementation(
                 () => new Promise((resolve) =>
-                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z'}), 100)
+                    setTimeout(() => resolve({is_available: true, available_since: '2026-01-01T00:00:00Z', ...workerProfileRead}), 100)
                 )
             )
 
@@ -125,6 +126,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const {result} = renderHook(
@@ -146,6 +148,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             // clear the cache
@@ -173,6 +176,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const {result} = renderHook(
@@ -192,6 +196,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const {result} = renderHook(
@@ -215,6 +220,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const {result} = renderHook(
@@ -238,6 +244,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: false,
                 available_since: null,
+                ...workerProfileRead
             })
             const {result} = renderHook(
                 () => useAvailabilityToggle(),
@@ -338,6 +345,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const cancelQueriesSpy = vi.spyOn(queryClient, 'cancelQueries')
@@ -395,6 +403,7 @@ describe('useAvailabilityToggle', () => {
             vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
+                ...workerProfileRead
             })
 
             const {result} = renderHook(

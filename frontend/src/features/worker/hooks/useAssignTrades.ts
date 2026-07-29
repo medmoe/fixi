@@ -1,8 +1,7 @@
-
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { workerApi } from '@/lib/api/workerApi'
-import { toast } from 'sonner'
-import type { WorkerTradeNestedRead } from '@/features/worker/types/tradeCategory.types'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {workerApi} from '@/lib/api/workerApi'
+import {toast} from 'sonner'
+import type {WorkerTradeNestedRead} from '@/features/worker/types/tradeCategory.types'
 
 export const useAssignTrades = () => {
     const queryClient = useQueryClient()
@@ -10,8 +9,17 @@ export const useAssignTrades = () => {
     const assignTrades = useMutation<WorkerTradeNestedRead[], Error, number[]>({
         mutationFn: (trade_category_ids: number[]) =>
             workerApi.assignTrades(trade_category_ids),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['workerProfile'] })
+        onSuccess: (assignedTradeCategories) => {
+            queryClient.setQueryData(
+                ['workerProfile'],
+                (old) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        trade_categories: assignedTradeCategories,
+                    }
+                }
+            )
             toast.success('Trades updated successfully')
         },
         onError: (error: any) => {
@@ -25,8 +33,17 @@ export const useAssignTrades = () => {
     const removeTrade = useMutation<WorkerTradeNestedRead[], Error, number>({
         mutationFn: (trade_category_id: number) =>
             workerApi.removeTrade(trade_category_id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['workerProfile'] })
+        onSuccess: (assignedTradeCategories) => {
+            queryClient.setQueryData(
+                ['workerProfile'],
+                (old) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        trade_categories: assignedTradeCategories,
+                    }
+                }
+            )
             toast.success('Trade removed successfully')
         },
         onError: () => {
@@ -34,5 +51,5 @@ export const useAssignTrades = () => {
         },
     })
 
-    return { assignTrades, removeTrade }
+    return {assignTrades, removeTrade}
 }

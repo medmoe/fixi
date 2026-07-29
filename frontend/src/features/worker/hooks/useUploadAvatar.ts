@@ -7,8 +7,17 @@ export const useUploadAvatar = () => {
 
     return useMutation({
         mutationFn: (file: File) => workerApi.uploadAvatar(file),
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['workerProfile']})
+        onSuccess: (updatedProfile) => {
+            queryClient.setQueryData(
+                ['workerProfile'],
+                (old) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        ...updatedProfile
+                    }
+                }
+            )
             toast.success("Avatar uploaded successfully");
         },
         onError: () => {

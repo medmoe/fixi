@@ -3,8 +3,7 @@ import {renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
 import {workerApi} from '@/lib/api/workerApi'
 import {createQueryClient, createWrapper, mockProfile} from "./helpers";
-import {useWorkerProfile} from '@/features/worker'
-import {SkillLevel} from "@/features/worker/types/worker.types";
+import {useWorkerProfile, WorkerProfileWithTradesRead} from '@/features/worker'
 
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -106,9 +105,22 @@ describe('useWorkerProfile', () => {
             expect(result.current.data).toEqual(mockProfile)
         })
         it('returns profile with trades', async () => {
-            const profileWithTrades = {
+            const profileWithTrades: WorkerProfileWithTradesRead = {
                 ...mockProfile,
-                trades: [{trade_id: 1, skill_level: 'senior' as SkillLevel, id: 1, name: 'test trade'}]
+                trade_categories: [{
+                    trade_category_id: 1,
+                    skill_level: 'senior',
+                    worker_profile_id: 1,
+                    id: 1,
+                    trade_category: {
+                        id: 1,
+                        name: 'test trade',
+                        display_name: 'test trade',
+                        created_at: '2026-01-01',
+                        icon_name: 'bolt',
+                        parent_id: null
+                    }
+                }]
             }
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(profileWithTrades)
             const {result} = renderHook(
@@ -116,8 +128,8 @@ describe('useWorkerProfile', () => {
                 {wrapper: createWrapper(queryClient)}
             )
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
-            expect(result.current.data?.trades).toHaveLength(1)
-            expect(result.current.data?.trades[0].skill_level).toBe('senior')
+            expect(result.current.data?.trade_categories).toHaveLength(1)
+            expect(result.current.data?.trade_categories[0].skill_level).toBe('senior')
         })
         it('caches result — does not refetch when hook remounts', async () => {
             vi.mocked(workerApi.getWorkerProfile).mockResolvedValue(mockProfile)

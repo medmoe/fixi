@@ -3,8 +3,8 @@ import {renderHook, waitFor} from '@testing-library/react'
 import {workerApi} from '@/lib/api/workerApi';
 import {QueryClient} from '@tanstack/react-query'
 import {createQueryClient, createWrapper} from './helpers';
-import type {TradeCategory} from '../../types/tradeCategory.types'
 import {useTrades} from '../useTrades';
+import {TradeCategoryWithChildren} from "@/features/worker";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ vi.mock('sonner', () => ({
     }
 }))
 
-const mockTrades: TradeCategory[] = [
+const mockTrades: TradeCategoryWithChildren[] = [
     {id: 1, name: 'plumbing', display_name: 'Plumbing', icon_name: 'wrench', parent_id: null, created_at: '2026-01-01', children: []},
     {id: 2, name: 'electrical', display_name: 'Electrical', icon_name: 'bolt', parent_id: null, created_at: '2026-01-01', children: []},
 ]

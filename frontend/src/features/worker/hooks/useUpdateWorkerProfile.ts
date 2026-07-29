@@ -10,13 +10,12 @@ export const useUpdateWorkerProfile = () => {
         mutationFn: (payload: UpdateWorkerProfilePayload) => workerApi.updateWorkerProfile(payload),
         onSuccess: (updatedProfile) => {
             queryClient.setQueryData<WorkerProfileWithTradesRead>(
-                 ['workerProfile'],
+                ['workerProfile'],
                 (old) => {
                     if (!old) return old;
                     return {
                         ...old,
                         ...updatedProfile,
-                        trade_categories: old.trade_categories
                     }
                 }
             )

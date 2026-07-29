@@ -22,6 +22,8 @@ vi.mock('sonner', () => ({
     }
 }))
 
+const {trade_categories, ...workerProfileRead} = mockProfile;
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('useUpdateWorkerProfile', () => {
@@ -38,7 +40,7 @@ describe('useUpdateWorkerProfile', () => {
     // ─── API call ──────────────────────────────────────────────────────
     describe('API call', () => {
         it('calls updateWorkerProfile with correct payload', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile, bio: 'updated bio'})
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead, bio: 'updated bio'})
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),
                 {wrapper: createWrapper(queryClient)}
@@ -50,7 +52,7 @@ describe('useUpdateWorkerProfile', () => {
             expect(workerApi.updateWorkerProfile).toHaveBeenCalledTimes(1)
         })
         it('calls updateWorkerProfile with partial payload', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile, hourly_rate: 90})
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead, hourly_rate: 90})
 
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),
@@ -69,7 +71,7 @@ describe('useUpdateWorkerProfile', () => {
 
     describe('on success', () => {
         it('shows success toast', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile})
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),
@@ -93,7 +95,7 @@ describe('useUpdateWorkerProfile', () => {
             }
             // seed the cache
             queryClient.setQueryData(['workerProfile'], existingProfile);
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile, bio: 'New bio'});
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead, bio: 'New bio'});
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),
                 {wrapper: createWrapper(queryClient)},
@@ -106,7 +108,7 @@ describe('useUpdateWorkerProfile', () => {
             expect(cached?.trade_categories).toEqual(existingProfile.trade_categories);
         })
         it('does not show error toast on success', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile})
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),

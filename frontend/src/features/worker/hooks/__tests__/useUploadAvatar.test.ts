@@ -20,6 +20,7 @@ vi.mock('sonner', () => ({
         success: vi.fn(),
     }
 }))
+const {trade_categories, ...workerProfileRead} = mockProfile
 
 describe('useUploadAvatar', () => {
     let queryClient: QueryClient
@@ -35,8 +36,8 @@ describe('useUploadAvatar', () => {
     // ─── API call ──────────────────────────────────────────────────────────────
 
     describe('API call', () => {
-        it('calls uploadAvatar with correct workerId and file', async () => {
-            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png'})
+        it('calls uploadAvatar with file', async () => {
+            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png', ...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUploadAvatar(),
@@ -52,7 +53,7 @@ describe('useUploadAvatar', () => {
         })
 
         it('passes the exact File object to the API', async () => {
-            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png'})
+            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png', ...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUploadAvatar(),
@@ -74,7 +75,7 @@ describe('useUploadAvatar', () => {
 
     describe('on success', () => {
         it('shows success toast', async () => {
-            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png'})
+            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png', ...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUploadAvatar(),
@@ -89,26 +90,32 @@ describe('useUploadAvatar', () => {
             expect(toast.success).toHaveBeenCalledWith('Avatar uploaded successfully')
         })
 
-        it('invalidates workerProfile query on success', async () => {
-            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png'})
-
-            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+        it('update cache on success', async () => {
+            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png', ...workerProfileRead})
+            const existingProfile: WorkerProfileWithTradesRead = {
+                ...mockProfile,
+                avatar_url: 'http://minio.com/old.png',
+                trade_categories: [
+                    {id: 1, skill_level: "junior", worker_profile_id: mockProfile.id, trade_category_id: 10, trade_category: null}
+                ]
+            }
+            queryClient.setQueryData(['workerProfile'], existingProfile)
 
             const {result} = renderHook(
                 () => useUploadAvatar(),
                 {wrapper: createWrapper(queryClient)},
             )
-
             await act(async () => {
                 result.current.mutate(mockFile)
             })
-
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
-            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['workerProfile']})
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile'])
+            expect(cached?.avatar_url).toBe('https://cdn.example.com/avatar.png')
+            expect(cached?.trade_categories).toEqual(existingProfile.trade_categories)
         })
 
         it('does not show error toast on success', async () => {
-            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png'})
+            vi.mocked(workerApi.uploadAvatar).mockResolvedValue({avatar_url: 'https://cdn.example.com/avatar.png', ...workerProfileRead})
 
             const {result} = renderHook(
                 () => useUploadAvatar(),

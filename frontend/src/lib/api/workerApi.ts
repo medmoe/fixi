@@ -1,4 +1,4 @@
-import {UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
+import {UpdateWorkerProfilePayload, WorkerProfileRead, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
 import {TradeCategoryRead, TradeCategoryWithChildren, WorkerTradeNestedRead} from "@/features/worker";
 import apiClient from "@/lib/api/apiClient";
 
@@ -11,21 +11,21 @@ export const workerApi = {
         const {data} = await apiClient.get<WorkerProfileWithTradesRead>(`/worker-profile`);
         return data;
     },
-    updateWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileWithTradesRead> => {
-        const {data} = await apiClient.patch<WorkerProfileWithTradesRead>(`/worker-profile`, payload);
+    updateWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileRead> => {
+        const {data} = await apiClient.patch<WorkerProfileRead>(`/worker-profile`, payload);
         return data;
     },
-    toggleAvailability: async (isAvailable: boolean): Promise<{ is_available: boolean, available_since: string | null }> => {
-        const {data} = await apiClient.patch<{ is_available: boolean, available_since: string | null }>(
+    toggleAvailability: async (isAvailable: boolean): Promise<WorkerProfileRead> => {
+        const {data} = await apiClient.patch<WorkerProfileRead>(
             `/worker-profile/availability`,
             {is_available: isAvailable}
         )
         return data;
     },
-    uploadAvatar: async (file: File): Promise<{ avatar_url: string }> => {
+    uploadAvatar: async (file: File): Promise<WorkerProfileRead> => {
         const formData = new FormData();
         formData.append('file', file);
-        const {data} = await apiClient.post<{ avatar_url: string }>(`/worker-profile/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
+        const {data} = await apiClient.post<WorkerProfileRead>(`/worker-profile/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
     },
     getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {

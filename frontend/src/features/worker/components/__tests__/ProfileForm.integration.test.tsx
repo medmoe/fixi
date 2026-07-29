@@ -90,7 +90,7 @@ const setupMocks = (opts: {
         }
     })
 
-    mockAssignMutate = vi.fn((ids: number[], options?: any) => {
+    mockAssignMutate = vi.fn((_ids: number[], options?: any) => {
         if (options?.onSuccess) {
             mockAssignOnSuccess = options.onSuccess
         }
@@ -428,7 +428,6 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
     describe('max trades constraint', () => {
         it('disables adding trades when 5 trades are already assigned', async () => {
-            const user = userEvent.setup()
 
             // Profile with 5 trades already assigned
             const maxedProfile: WorkerProfileWithTradesRead = {

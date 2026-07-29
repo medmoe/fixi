@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-import {DashboardPage} from './support/pages/auth.pages'
 
 const existingUser = {
     username_or_email: 'testworker@example.com',
@@ -53,8 +52,6 @@ describe('Authentication E2E', () => {
     const submitRegister = () => {
         cy.get('[aria-label="Create account"]').click()
     }
-
-    const dashboardPage = new DashboardPage()
 
     // ─── Before Each ───────────────────────────────────────────────────────────
     beforeEach(() => {

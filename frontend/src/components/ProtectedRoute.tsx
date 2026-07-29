@@ -28,7 +28,6 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                                                                   children,
                                                                   allowedRoles,
-                                                                  fallback,
                                                               }) => {
     const {isLoading: authLoading, isAuthenticated} = useAuth()
     const {data: user, isLoading: userLoading, error: userError} = useUser()
