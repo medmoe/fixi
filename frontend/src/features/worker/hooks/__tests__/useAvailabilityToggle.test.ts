@@ -5,7 +5,7 @@ import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityTogg
 import {workerApi} from '@/lib/api/workerApi'
 import {toast} from 'sonner'
 import type {WorkerProfileWithTradesRead} from '@/features/worker/types/worker.types'
-import {createQueryClient, createWrapper, mockProfile, WORKER_ID} from './helpers'
+import {createQueryClient, createWrapper, mockProfile} from './helpers'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ describe('useAvailabilityToggle', () => {
 
         // seed the cache with a profile before each test
         queryClient.setQueryData<WorkerProfileWithTradesRead>(
-            ['workerProfile', WORKER_ID],
+            ['workerProfile'],
             mockProfile,
         )
     })
@@ -50,7 +50,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -62,7 +62,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(result.current.isPending).toBe(true))
 
             // now check cache — optimistic update should be applied
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile'])
             expect(cached?.is_available).toBe(true)
         })
 
@@ -74,13 +74,13 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start offline
-            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile'], {
                 ...mockProfile,
                 is_available: false,
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -89,7 +89,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             await waitFor(() => expect(result.current.isPending).toBe(true))
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile'])
             expect(cached?.is_available).toBe(true)
         })
 
@@ -101,14 +101,14 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start online
-            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile'], {
                 ...mockProfile,
                 is_available: true,
                 available_since: '2026-01-01T00:00:00Z',
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -117,7 +117,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             await waitFor(() => expect(result.current.isPending).toBe(true))
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached?.is_available).toBe(false)
         })
 
@@ -128,7 +128,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -136,7 +136,7 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(true)
             })
 
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached?.bio).toBe(mockProfile.bio)
             expect(cached?.hourly_rate).toBe(mockProfile.hourly_rate)
             expect(cached?.service_radius_km).toBe(mockProfile.service_radius_km)
@@ -149,10 +149,10 @@ describe('useAvailabilityToggle', () => {
             })
 
             // clear the cache
-            queryClient.removeQueries({queryKey: ['workerProfile', WORKER_ID]})
+            queryClient.removeQueries({queryKey: ['workerProfile',]})
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -161,7 +161,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             // cache should still be empty — no crash
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached).toBeUndefined()
         })
     })
@@ -176,7 +176,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -184,32 +184,8 @@ describe('useAvailabilityToggle', () => {
                 result.current.mutate(true)
             })
 
-            expect(workerApi.toggleAvailability).toHaveBeenCalledWith(WORKER_ID, true)
+            expect(workerApi.toggleAvailability).toHaveBeenCalledWith(true)
             expect(workerApi.toggleAvailability).toHaveBeenCalledTimes(1)
-        })
-
-        it('invalidates workerProfile query after success', async () => {
-            vi.mocked(workerApi.toggleAvailability).mockResolvedValue({
-                is_available: true,
-                available_since: '2026-01-01T00:00:00Z',
-            })
-
-            const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-            const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
-                {wrapper: createWrapper(queryClient)},
-            )
-
-            await act(async () => {
-                result.current.mutate(true)
-            })
-
-            await waitFor(() => {
-                expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-                    queryKey: ['workerProfile', WORKER_ID],
-                })
-            })
         })
 
         it('does not show error toast on success', async () => {
@@ -219,7 +195,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -242,7 +218,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -253,7 +229,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(toast.success).toHaveBeenCalled())
 
             // ✅ check query cache — not result.current.data
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached?.is_available).toBe(true)
             expect(cached?.available_since).toBe('2026-01-01T00:00:00Z')
         })
@@ -264,13 +240,13 @@ describe('useAvailabilityToggle', () => {
                 available_since: null,
             })
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
             await act(async () => {
                 await result.current.mutateAsync(false)
             })
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached?.is_available).toBe(false)
             expect(cached?.available_since).toBe(null)
         })
@@ -285,13 +261,13 @@ describe('useAvailabilityToggle', () => {
             )
 
             // start offline
-            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID], {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile',], {
                 ...mockProfile,
                 is_available: false,
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -302,7 +278,7 @@ describe('useAvailabilityToggle', () => {
             await waitFor(() => expect(result.current.isError).toBe(true))
 
             // cache should be reverted to false
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached?.is_available).toBe(false)  // ✅ rolled back
         })
 
@@ -312,7 +288,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -330,40 +306,16 @@ describe('useAvailabilityToggle', () => {
             )
         })
 
-        it('invalidates query even after error', async () => {
-            vi.mocked(workerApi.toggleAvailability).mockRejectedValue(
-                new Error('Network error'),
-            )
-
-            const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-            const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
-                {wrapper: createWrapper(queryClient)},
-            )
-
-            await act(async () => {
-                result.current.mutate(true)
-            })
-
-            await waitFor(() => expect(result.current.isError).toBe(true))
-
-            // onSettled fires on both success and error
-            expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-                queryKey: ['workerProfile', WORKER_ID],
-            })
-        })
-
         it('does not revert if no previous profile in context', async () => {
             vi.mocked(workerApi.toggleAvailability).mockRejectedValue(
                 new Error('Network error'),
             )
 
             // clear cache before mutation
-            queryClient.removeQueries({queryKey: ['workerProfile', WORKER_ID]})
+            queryClient.removeQueries({queryKey: ['workerProfile',]})
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -374,7 +326,7 @@ describe('useAvailabilityToggle', () => {
 
             await waitFor(() => expect(result.current.isError).toBe(true))
 
-            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', WORKER_ID])
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile',])
             expect(cached).toBeUndefined()  // still undefined, no crash ✅
         })
     })
@@ -391,7 +343,7 @@ describe('useAvailabilityToggle', () => {
             const cancelQueriesSpy = vi.spyOn(queryClient, 'cancelQueries')
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -401,7 +353,7 @@ describe('useAvailabilityToggle', () => {
 
             await waitFor(() => {
                 expect(cancelQueriesSpy).toHaveBeenCalledWith({
-                    queryKey: ['workerProfile', WORKER_ID],
+                    queryKey: ['workerProfile',],
                 })
             })
         })
@@ -412,7 +364,7 @@ describe('useAvailabilityToggle', () => {
     describe('mutation state', () => {
         it('is idle initially', () => {
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
             expect(result.current.isPending).toBe(false)
@@ -428,7 +380,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -446,7 +398,7 @@ describe('useAvailabilityToggle', () => {
             })
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 
@@ -463,7 +415,7 @@ describe('useAvailabilityToggle', () => {
             )
 
             const {result} = renderHook(
-                () => useAvailabilityToggle(WORKER_ID),
+                () => useAvailabilityToggle(),
                 {wrapper: createWrapper(queryClient)},
             )
 

@@ -25,7 +25,7 @@ export const workerApi = {
     uploadAvatar: async (file: File): Promise<{ avatar_url: string }> => {
         const formData = new FormData();
         formData.append('file', file);
-        const {data} = await apiClient.post<{ avatar_url: string }>(`/worker-profiles/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
+        const {data} = await apiClient.post<{ avatar_url: string }>(`/worker-profile/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
     },
     getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {

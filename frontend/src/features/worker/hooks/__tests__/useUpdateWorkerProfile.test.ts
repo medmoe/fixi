@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {act, renderHook, waitFor} from "@testing-library/react";
 import {QueryClient} from "@tanstack/react-query";
 import {workerApi} from "@/lib/api/workerApi";
-import {useUpdateWorkerProfile} from "@/features/worker";
+import {useUpdateWorkerProfile, WorkerProfileWithTradesRead} from "@/features/worker";
 import {createQueryClient, createWrapper, mockProfile} from "./helpers";
 import {toast} from "sonner";
 
@@ -32,7 +32,7 @@ describe('useUpdateWorkerProfile', () => {
         vi.clearAllMocks();
 
         // seed the cache with a profile before each test
-        queryClient.setQueryData(['workerProfile', ], mockProfile);
+        queryClient.setQueryData(['workerProfile',], mockProfile);
     })
 
     // ─── API call ──────────────────────────────────────────────────────
@@ -83,22 +83,27 @@ describe('useUpdateWorkerProfile', () => {
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
             expect(toast.success).toHaveBeenCalledWith('Profile updated successfully')
         })
-        it('invalidates workerProfile query on success', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile})
-
-            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
+        it('updates the cache', async () => {
+            const existingProfile: WorkerProfileWithTradesRead = {
+                ...mockProfile,
+                bio: 'Old bio',
+                trade_categories: [
+                    {id: 1, skill_level: "junior", worker_profile_id: mockProfile.id, trade_category_id: 10, trade_category: null}
+                ]
+            }
+            // seed the cache
+            queryClient.setQueryData(['workerProfile'], existingProfile);
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile, bio: 'New bio'});
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),
                 {wrapper: createWrapper(queryClient)},
-            )
-
-            await act(async () => {
-                result.current.mutate({bio: 'Updated bio'})
-            })
-
-            await waitFor(() => expect(result.current.isSuccess).toBe(true))
-            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['workerProfile', ]})
+            );
+            await act(async () => result.current.mutate({hourly_rate: 100}))
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            const cached = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile'])
+            expect(cached?.bio).toBe('New bio');
+            expect(cached?.hourly_rate).toBe(existingProfile.hourly_rate);
+            expect(cached?.trade_categories).toEqual(existingProfile.trade_categories);
         })
         it('does not show error toast on success', async () => {
             vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...mockProfile})

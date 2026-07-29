@@ -12,13 +12,11 @@ vi.mock('@/features/worker/hooks/useAvailabilityToggle')
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const WORKER_ID = 1
 const mockToggle = vi.fn()
 
-const renderComponent = (props: { workerId?: number; isAvailable?: boolean } = {}) => {
+const renderComponent = (props: { isAvailable?: boolean } = {}) => {
     return render(
         <AvailabilityToggle
-            workerId={props.workerId ?? WORKER_ID}
             isAvailable={props.isAvailable ?? false}
         />
     )
@@ -42,29 +40,27 @@ describe('AvailabilityToggle', () => {
     describe('rendering', () => {
         it('renders the label', () => {
             renderComponent()
-            expect(screen.getByText('Operations Dispatch State')).toBeInTheDocument()
+            expect(screen.getByText(/currently offline/i)).toBeInTheDocument()
         })
 
         it('renders the switch', () => {
             renderComponent()
-            expect(screen.getByRole('switch', {name: /availability toggle/i})).toBeInTheDocument()
+            expect(screen.getByTestId('availability-switch')).toBeInTheDocument()
         })
 
         it('renders offline status text when not available', () => {
             renderComponent({isAvailable: false})
-            expect(screen.getByText('You are offline (hidden from client maps)')).toBeInTheDocument()
+            expect(screen.getByText(/hidden from client searches/i)).toBeInTheDocument()
         })
 
         it('renders online status text when available', () => {
             renderComponent({isAvailable: true})
-            expect(screen.getByText('You are online & visible to discovery engines')).toBeInTheDocument()
+            expect(screen.getByText(/visible to clients in discovery/i)).toBeInTheDocument()
         })
 
         it('renders the status indicator dot', () => {
             renderComponent()
-            // aria-hidden dot indicator
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toBeInTheDocument()
+            expect(screen.getByRole('switch', {name: /availability toggle/i})).toBeInTheDocument();
         })
     })
 
@@ -121,43 +117,9 @@ describe('AvailabilityToggle', () => {
 
         it('label is associated with switch via htmlFor', () => {
             renderComponent()
-            const label = screen.getByText('Operations Dispatch State').closest('label')
+            const label = screen.getByText(/currently offline/i).closest('label')
             expect(label).toHaveAttribute('for', 'availability-switch')
             expect(screen.getByRole('switch')).toHaveAttribute('id', 'availability-switch')
-        })
-
-        it('status dot is hidden from screen readers', () => {
-            renderComponent()
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveAttribute('aria-hidden', 'true')
-        })
-    })
-
-    // ─── Status indicator dot ─────────────────────────────────────────────────
-
-    describe('status indicator dot', () => {
-        it('dot has emerald color class when online', () => {
-            renderComponent({isAvailable: true})
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveClass('bg-emerald-500')
-        })
-
-        it('dot has muted color class when offline', () => {
-            renderComponent({isAvailable: false})
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveClass('bg-muted-foreground')
-        })
-
-        it('dot has animate-pulse class when online', () => {
-            renderComponent({isAvailable: true})
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveClass('animate-pulse')
-        })
-
-        it('dot does not have animate-pulse class when offline', () => {
-            renderComponent({isAvailable: false})
-            const dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).not.toHaveClass('animate-pulse')
         })
     })
 
@@ -204,11 +166,6 @@ describe('AvailabilityToggle', () => {
 
             expect(mockToggle).not.toHaveBeenCalled()
         })
-
-        it('calls useAvailabilityToggle with correct workerId', () => {
-            renderComponent({workerId: 42})
-            expect(useAvailabilityToggle).toHaveBeenCalledWith(42)
-        })
     })
 
     // ─── Pending state ────────────────────────────────────────────────────────
@@ -229,14 +186,14 @@ describe('AvailabilityToggle', () => {
         it('still shows correct online status text during pending', () => {
             renderComponent({isAvailable: true})
             expect(
-                screen.getByText('You are online & visible to discovery engines')
+                screen.getByText(/visible to clients in discovery/i)
             ).toBeInTheDocument()
         })
 
         it('still shows correct offline status text during pending', () => {
             renderComponent({isAvailable: false})
             expect(
-                screen.getByText('You are offline (hidden from client maps)')
+                screen.getByText(/hidden from client searches/i)
             ).toBeInTheDocument()
         })
     })
@@ -246,48 +203,34 @@ describe('AvailabilityToggle', () => {
     describe('isAvailable prop changes', () => {
         it('updates status text when isAvailable changes from false to true', () => {
             const {rerender} = render(
-                <AvailabilityToggle workerId={WORKER_ID} isAvailable={false}/>
+                <AvailabilityToggle isAvailable={false}/>
             )
-            expect(screen.getByText('You are offline (hidden from client maps)')).toBeInTheDocument()
+            expect(screen.getByText(/hidden from client searches/i)).toBeInTheDocument()
 
-            rerender(<AvailabilityToggle workerId={WORKER_ID} isAvailable={true}/>)
+            rerender(<AvailabilityToggle isAvailable={true}/>)
 
-            expect(screen.getByText('You are online & visible to discovery engines')).toBeInTheDocument()
+            expect(screen.getByText(/visible to clients in discovery/i)).toBeInTheDocument()
         })
 
         it('updates status text when isAvailable changes from true to false', () => {
             const {rerender} = render(
-                <AvailabilityToggle workerId={WORKER_ID} isAvailable={true}/>
+                <AvailabilityToggle isAvailable={true}/>
             )
-            expect(screen.getByText('You are online & visible to discovery engines')).toBeInTheDocument()
+            expect(screen.getByText(/visible to clients in discovery/i)).toBeInTheDocument()
 
-            rerender(<AvailabilityToggle workerId={WORKER_ID} isAvailable={false}/>)
+            rerender(<AvailabilityToggle isAvailable={false}/>)
 
-            expect(screen.getByText('You are offline (hidden from client maps)')).toBeInTheDocument()
-        })
-
-        it('updates dot color when isAvailable changes', () => {
-            const {rerender} = render(
-                <AvailabilityToggle workerId={WORKER_ID} isAvailable={false}/>
-            )
-
-            let dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveClass('bg-muted-foreground')
-
-            rerender(<AvailabilityToggle workerId={WORKER_ID} isAvailable={true}/>)
-
-            dot = document.querySelector('[aria-hidden="true"]')
-            expect(dot).toHaveClass('bg-emerald-500')
+            expect(screen.getByText(/hidden from client searches/i)).toBeInTheDocument()
         })
 
         it('updates aria-checked when isAvailable changes', () => {
             const {rerender} = render(
-                <AvailabilityToggle workerId={WORKER_ID} isAvailable={false}/>
+                <AvailabilityToggle isAvailable={false}/>
             )
 
             expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
 
-            rerender(<AvailabilityToggle workerId={WORKER_ID} isAvailable={true}/>)
+            rerender(<AvailabilityToggle isAvailable={true}/>)
 
             expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
         })

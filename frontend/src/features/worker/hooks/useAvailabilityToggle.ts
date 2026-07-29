@@ -1,52 +1,65 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {workerApi} from "@/lib/api/workerApi";
-import {WorkerProfileWithTradesRead} from '../types/worker.types'
+import {WorkerProfileWithTradesRead} from '@/features/worker'
 import {toast} from 'sonner';
 
-export const useAvailabilityToggle = (workerId: number) => {
+export const useAvailabilityToggle = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-            mutationFn: (isAvailable: boolean) => workerApi.toggleAvailability(workerId, isAvailable),
-            onMutate: async (newAvailability) => {
-                // Cancel any outgoing refetching so they don't overwrite our optimistic update
-                await queryClient.cancelQueries({queryKey: ['workerProfile', workerId]});
+        mutationFn: (isAvailable: boolean) =>
+            workerApi.toggleAvailability(isAvailable),
 
-                // Snapshot the previous profile value
-                const previousProfile = queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId]);
+        onMutate: async (newAvailability) => {
+            await queryClient.cancelQueries({queryKey: ['workerProfile']});
 
-                // Optimistically update the new value
-                if (previousProfile) {
-                    queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId], {
+            const previousProfile =
+                queryClient.getQueryData<WorkerProfileWithTradesRead>(['workerProfile']);
+
+            if (previousProfile) {
+                queryClient.setQueryData<WorkerProfileWithTradesRead>(
+                    ['workerProfile'],
+                    {
                         ...previousProfile,
                         is_available: newAvailability,
-                    });
-                }
-                return {previousProfile};
-            },
-            onSuccess: (serverResponseData) => {
-                queryClient.setQueryData<WorkerProfileWithTradesRead>(['workerProfile', workerId], (previousProfile) => {
-                    if (!previousProfile) return undefined;
-                    // Overwrite our quick optimistic guess with the absolute truth from the server
+                    }
+                );
+            }
+
+            return {previousProfile};
+        },
+
+        onSuccess: (updatedProfile) => {
+            queryClient.setQueryData<WorkerProfileWithTradesRead>(
+                ['workerProfile'],
+                (previousProfile) => {
+                    if (!previousProfile) return previousProfile;
+
                     return {
                         ...previousProfile,
-                        is_available: serverResponseData.is_available,
-                        available_since: serverResponseData.available_since,
+                        ...updatedProfile,
                     };
-                });
-                toast.success(serverResponseData.is_available ? "You are now available" : "You are now unavailable")
-            },
-            onError: (err, newAvailability, context) => {
-                // Revert back to snapshot if server fails
-                if (context?.previousProfile) {
-                    queryClient.setQueryData(['workerProfile', workerId], context.previousProfile);
                 }
-                toast.error("Status update failed", {description: `Failed to update availability, please try again. ${newAvailability}::${err}`})
-            },
-            onSettled: () => {
-                // Sync cache back up with ground truth server reality
-                queryClient.invalidateQueries({queryKey: ['workerProfile', workerId]})
+            );
+
+            toast.success(
+                updatedProfile.is_available
+                    ? "You are now available"
+                    : "You are now unavailable"
+            );
+        },
+
+        onError: (err, newAvailability, context) => {
+            if (context?.previousProfile) {
+                queryClient.setQueryData(
+                    ['workerProfile'],
+                    context.previousProfile
+                );
             }
-        }
-    )
-}
+
+            toast.error("Status update failed", {
+                description: `Failed to update availability, please try again. ${newAvailability}::${err}`,
+            });
+        },
+    });
+};

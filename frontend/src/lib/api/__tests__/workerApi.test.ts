@@ -192,11 +192,11 @@ describe('workerApi', () => {
     describe('uploadAvatar', () => {
         const mockFile = new File(['avatar-image'], 'avatar.jpg', {type: 'image/jpeg'})
 
-        it('calls POST /worker-profiles/avatar with FormData', async () => {
+        it('calls POST /worker-profile/avatar with FormData', async () => {
             mockPost.mockResolvedValueOnce({data: {avatar_url: 'https://example.com/avatar.jpg'}})
             await workerApi.uploadAvatar(mockFile)
             expect(mockPost).toHaveBeenCalledWith(
-                '/worker-profiles/avatar',
+                '/worker-profile/avatar',
                 expect.any(FormData),
                 {headers: {'Content-Type': 'multipart/form-data'}}
             )

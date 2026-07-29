@@ -1,17 +1,18 @@
 import React, {useState} from 'react'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
-import {ProfileTab} from '../components/ProfileTab'
 import {AlertCircle, Briefcase, Loader2, UserCircle} from 'lucide-react'
+import {AvailabilityToggle, ProfileTab, useWorkerProfile} from "@/features/worker";
 
 type Tab = 'profile' | 'account'
 
 export const WorkerDashboardPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('profile')
 
-    const {data: user, isLoading, error} = useUser()
+    const {data: user, isLoading: isLoadingUser, error: userError} = useUser()
+    const {data: workerProfile, isLoading: isLoadingWorkerProfile, error: workerProfileError} = useWorkerProfile()
 
-    if (isLoading) {
+    if (isLoadingWorkerProfile || isLoadingUser) {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
@@ -22,7 +23,7 @@ export const WorkerDashboardPage: React.FC = () => {
         )
     }
 
-    if (error || !user) {
+    if (workerProfileError || !workerProfile || userError || !user ) {
         return (
             <div className="mx-auto max-w-md my-12 border-destructive/50 bg-destructive/10 text-destructive rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
@@ -56,19 +57,24 @@ export const WorkerDashboardPage: React.FC = () => {
         <div className="min-h-screen bg-background flex">
             {/* ═══ Sidebar ═══════════════════════════════════════════════════ */}
             <aside className="w-64 border-r bg-card hidden lg:flex flex-col">
-                {/* Sidebar Header */}
+                {/* Sidebar Header — User Identity */}
                 <div data-testid="sidebar-header" className="p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user?.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">{user.name}</p>
+                            <p className="font-medium text-sm truncate">{user?.name}</p>
                             <p className="text-xs text-muted-foreground capitalize">
-                                {user.role_type}
+                                {user?.role_type}
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Availability Section — Prominent placement for operational status */}
+                <div data-testid="availability-section" className="px-4 py-3 border-b bg-muted/30">
+                    <AvailabilityToggle isAvailable={workerProfile ? workerProfile.is_available : false}/>
                 </div>
 
                 {/* Sidebar Navigation */}
@@ -101,12 +107,17 @@ export const WorkerDashboardPage: React.FC = () => {
                 <header data-testid="mobile-header" className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user?.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium text-sm">{user.name}</span>
+                        <span className="font-medium text-sm">{user?.name}</span>
                     </div>
                     <LogoutButton/>
                 </header>
+
+                {/* Mobile Availability Banner */}
+                <div data-testid="mobile-availability" className="lg:hidden px-4 py-2 border-b bg-muted/30">
+                    <AvailabilityToggle isAvailable={workerProfile ? workerProfile.is_available : false}/>
+                </div>
 
                 {/* Mobile Tab Switcher */}
                 <div className="lg:hidden border-b bg-card px-4 py-2 flex gap-2">
