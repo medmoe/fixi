@@ -22,7 +22,7 @@ class UserRole(Enum):
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True, init=False)
 
@@ -34,6 +34,7 @@ class User(Base):
     profile_image_url: Mapped[str] = mapped_column(String, default="https://profileimageurl.com")
     # Stored as geometry(Point, 4326). Reads are exposed as WKT text.
     location: Mapped[str | None] = mapped_column(PostGISPoint(), default=None)
+    display_location: Mapped[str | None] = mapped_column(String(255), default=None)
 
     # uuid: universally unique identifier exposed to the outside world. That's what we put in URLs, API responses, and tokens.
     # id: used internally only.

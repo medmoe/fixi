@@ -5,6 +5,7 @@ from typing import Any
 
 from fastcrud import FastCRUD
 from fastcrud.exceptions.http_exceptions import NotFoundException
+from geoalchemy2.functions import ST_SetSRID, ST_MakePoint
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions.http_exceptions import DuplicateValueException
@@ -59,6 +60,11 @@ class CRUDUser(FastCRUD[
             object if isinstance(object, dict)
             else object.model_dump(exclude_unset=True, mode="json")
         )
+
+        # convert lat/lng to PostGIS point
+        if isinstance(object, UserUpdate) and object.latitude is not None and object.longitude is not None:
+            point = ST_SetSRID(ST_MakePoint(object.longitude, object.latitude), 4326)
+
         internal = UserUpdateInternal(
             **update_data,
             updated_at=datetime.now(UTC).replace(tzinfo=None),

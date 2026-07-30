@@ -17,6 +17,7 @@ dependencies = [
     "crudadmin>=0.4.2",
     "fastapi>=0.109.1",
     "fastcrud>=0.15.5",
+    "geoalchemy2>=0.20.0",
     "greenlet>=2.0.2",
     "gunicorn>=23.0.0",
     "httptools>=0.6.1",

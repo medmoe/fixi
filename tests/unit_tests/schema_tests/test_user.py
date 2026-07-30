@@ -4,6 +4,7 @@ from datetime import datetime, UTC
 from uuid import uuid4
 
 import pytest
+from geoalchemy2.functions import ST_SetSRID, ST_MakePoint
 from pydantic import ValidationError
 
 from src.app.models import UserRole
@@ -281,7 +282,9 @@ class TestUserUpdate:
         assert schema.username is None
         assert schema.email is None
         assert schema.profile_image_url is None
-        assert schema.location is None
+        assert schema.display_location is None
+        assert schema.latitude is None
+        assert schema.longitude is None
 
     def test_partial_update_name(self):
         schema = UserUpdate(name="Jane Doe")
@@ -291,6 +294,16 @@ class TestUserUpdate:
     def test_partial_update_email(self):
         schema = UserUpdate(email="new@example.com")
         assert schema.email == "new@example.com"
+
+    def test_partial_update_location(self):
+        schema = UserUpdate(display_location="New York City", latitude=40.7128, longitude=-74.0060)
+        assert schema.display_location == "New York City"
+        assert schema.latitude == 40.7128
+        assert schema.longitude == -74.0060
+
+    def test_missing_latitude(self):
+        with pytest.raises(ValidationError):
+            UserUpdate(display_location="New York City", longitude=-74.0060)
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
@@ -312,14 +325,20 @@ class TestUserUpdate:
         with pytest.raises(ValidationError):
             UserUpdate(profile_image_url="not-a-url")
 
+    def test_display_name_exceeds_max_length(self):
+        with pytest.raises(ValidationError):
+            UserUpdate(display_location="J" * 256)
+
 
 # ─── UserUpdateInternal ───────────────────────────────────────────────────────
 
 class TestUserUpdateInternal:
     def test_valid(self):
         now = datetime.now(UTC)
-        schema = UserUpdateInternal(updated_at=now)
+        point = ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)
+        schema = UserUpdateInternal(updated_at=now, location=point)
         assert schema.updated_at == now
+        assert schema.location == point
 
     def test_requires_updated_at(self):
         with pytest.raises(ValidationError):

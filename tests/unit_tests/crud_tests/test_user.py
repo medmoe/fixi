@@ -34,6 +34,14 @@ class TestUserUpdate:
         assert updated_user.email == "johndoe@test.com"
 
     @pytest.mark.unit
+    async def test_successful_user_location_update(self, async_session: AsyncSession, test_user: User):
+        schema = UserUpdate.model_validate(create_update_payload(display_location="New York City", latitude=40.7128, longitude=-74.0060))
+        updated_user = await crud_users.update(db=async_session, object=schema, id=test_user.id, schema_to_select=UserRead, return_as_model=True)
+        assert updated_user.display_location == "New York City"
+        assert updated_user.latitude == 40.7128
+        assert updated_user.longitude == -74.00600
+
+    @pytest.mark.unit
     async def test_failed_user_update_of_existing_email(self, async_session: AsyncSession, test_user: User, other_user: User):
         schema = UserUpdate.model_validate(create_update_payload(email=other_user.email))
         with pytest.raises(DuplicateValueException):

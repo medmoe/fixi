@@ -14,7 +14,7 @@ class WorkerProfile(Base):
         autoincrement=True, primary_key=True, unique=True, nullable=False, init=False
     )
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id", ondelete="CASCADE"), unique=True, index=True
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
     )
 
     # Profile fields

@@ -8,8 +8,9 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
-    field_validator,
+    field_validator, model_validator,
 )
+from pydantic.json_schema import SkipJsonSchema
 
 from ..core.schemas import PersistentDeletion, UUIDSchema
 from ..models.user import UserRole
@@ -57,6 +58,15 @@ Password = Annotated[
     ),
 ]
 
+DisplayLocation = Annotated[
+    str | None,
+    Field(
+        default=None,
+        max_length=255,
+        examples=["NY, New York City"]
+    )
+]
+
 
 #
 # -------------------------------------------------------------------------
@@ -74,6 +84,7 @@ class UserBase(BaseModel):
     username: Username
     email: EmailStr
     location: Location = None
+    display_location: DisplayLocation = None
 
 
 #
@@ -169,7 +180,9 @@ class UserUpdate(BaseModel):
     username: Username | None = None
     email: EmailStr | None = None
     profile_image_url: str | None = None
-    location: Location = None
+    display_location: DisplayLocation = None
+    latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
+    longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
 
     @field_validator("profile_image_url", mode="before")
     @classmethod
@@ -178,12 +191,22 @@ class UserUpdate(BaseModel):
             AnyHttpUrl(v)
         return v
 
+    @model_validator(mode="after")
+    def validate_location_fields(self):
+        values = (self.display_location, self.latitude, self.longitude)
+        if not (all(v is None for v in values) or all(v is not None for v in values)):
+            raise ValueError("display_location, latitude, and longitude must either all be provided or all be None.")
+        return self
+
 
 class UserUpdateInternal(UserUpdate):
     updated_at: datetime
     hashed_password: str | None = None
     is_deleted: bool | None = None
     deleted_at: datetime | None = None
+    location: Location = None
+    latitude: SkipJsonSchema[Annotated[float, Field(ge=-90, le=90)] | None] = Field(default=None, exclude=True)
+    longitude: SkipJsonSchema[Annotated[float, Field(ge=-180, le=180)] | None] = Field(default=None, exclude=True)
 
 
 #
