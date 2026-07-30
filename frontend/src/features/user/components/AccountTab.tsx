@@ -7,7 +7,17 @@ import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
-import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from '@/components/ui/alert-dialog'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
 import {ImageIcon, Loader2, Lock, MapPin, Trash2, UserCircle} from 'lucide-react'
 
 export const AccountTab: React.FC = () => {
