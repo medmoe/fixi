@@ -32,7 +32,6 @@ class WorkerProfileRead(WorkerProfileBase):
     is_verified: bool
     available_since: Annotated[datetime | None, Field(default=None)] = None
 
-
 class WorkerProfileCreate(WorkerProfileBase):
     """Used by workers to create their profile"""
     model_config = ConfigDict(extra="forbid", from_attributes=True)  # tells pydantic to read data from object attributes instead of only from dictionaries

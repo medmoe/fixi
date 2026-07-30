@@ -1,42 +1,32 @@
-import { useEffect } from 'react';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { clearCredentials, setCredentials, setUser } from '../authSlice';
-import { useAuthRedirect } from '../hooks/useAuthRedirect';
-import { useNavigate } from 'react-router-dom';
-import { useLazyGetMeQuery, useRefreshMutation } from '../api/authApi';
+import React from 'react'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
+import { useInitAuth } from '@/features/auth/hooks/useInitAuth'
+import { Loader2 } from 'lucide-react'
 
-export const AuthInitializer = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const roleRedirect = useAuthRedirect();
-  const [refresh] = useRefreshMutation();
-  const [triggerMe] = useLazyGetMeQuery();
+const PUBLIC_ROUTES = ['/', '/login', '/register']
 
-  useEffect(() => {
-    let isActive = true;
+export const AuthInitializer: React.FC = () => {
+    // 1. Hook returns isAuthenticated directly from TanStack query result
+    const { isLoading, isAuthenticated } = useInitAuth()
+    const location = useLocation()
 
-    const bootstrap = async () => {
-      try {
-        const token = await refresh().unwrap();
-        if (!isActive) return;
-        dispatch(setCredentials({ accessToken: token.access_token }));
+    // 2. While verifying refresh token, render the full-screen loader
+    if (isLoading) {
+        return (
+            <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">Loading...</p>
+            </div>
+        )
+    }
 
-        const user = await triggerMe().unwrap();
-        if (!isActive) return;
-        dispatch(setUser(user));
-        navigate(roleRedirect, { replace: true });
-      } catch {
-        if (!isActive) return;
-        dispatch(clearCredentials());
-      }
-    };
+    const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname)
 
-    bootstrap();
+    // 3. Declarative Redirect: If authenticated user lands on login/register/landing, send to dashboard
+    if (isAuthenticated && isPublicRoute) {
+        return <Navigate to="/dashboard" replace />
+    }
 
-    return () => {
-      isActive = false;
-    };
-  }, [dispatch, refresh, triggerMe]);
-
-  return null;
-};
+    // 4. Render matched child route
+    return <Outlet />
+}
