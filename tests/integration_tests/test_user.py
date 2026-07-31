@@ -114,7 +114,6 @@ class TestPatchUser:
             json={"name": "Updated Name"},
             headers=worker_profile_auth_headers,
         )
-        print(response.json())
         assert response.status_code == 401
 
     @pytest.mark.integration
@@ -140,6 +139,27 @@ class TestPatchUser:
         response = await async_client.patch(
             f"/api/v1/user/{test_user.username}",
             json={"username": "new_username", "extra_field": "extra_value"},
+            headers=worker_profile_auth_headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.integration
+    async def test_successful_user_location_update(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
+        response = await async_client.patch(
+            f"/api/v1/user/{test_user.username}",
+            json={"display_location": "New York City", "longitude": 40.7128, "latitude": -74.006},
+            headers=worker_profile_auth_headers,
+        )
+        assert response.status_code == 200
+        result = response.json()
+        assert result["display_location"] == "New York City"
+        assert result["location"] == "POINT(40.7128 -74.006)"
+
+    @pytest.mark.integration
+    async def test_failed_user_location_update_with_invalid_data(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
+        response = await async_client.patch(
+            f"/api/v1/user/{test_user.username}",
+            json={"display_location": "New York City", "longitude": "invalid", "latitude": -74.006},
             headers=worker_profile_auth_headers,
         )
         assert response.status_code == 422

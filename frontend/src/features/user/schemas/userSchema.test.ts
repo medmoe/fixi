@@ -7,7 +7,9 @@ const validUserPayload = {
     name: 'John Doe',
     username: 'john_doe',
     email: 'john@example.com',
-    location: 'New York, NY',
+    display_location: 'New York, United States',
+    latitude: 40.7127281,
+    longitude: -74.0060152,
     profile_image_url: 'https://example.com/image.jpg',
 }
 
@@ -175,33 +177,150 @@ describe('email', () => {
 
 // ——————— Location —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-describe('location', () => {
-    it('accepts a valid location', () => {
-        const result = parseUser({...validUserPayload, location: 'New York, NY'})
+describe('display_location', () => {
+    it('accepts a geocoded location with coordinates', () => {
+        const result = parseUser(validUserPayload)
         expect(result.success).toBe(true)
     })
-    it('accepts location at maximum length of 200', () => {
-        const result = parseUser({...validUserPayload, location: 'a'.repeat(200)})
+    it('accepts display_location at maximum length of 255', () => {
+        const result = parseUser({...validUserPayload, display_location: 'a'.repeat(255)})
         expect(result.success).toBe(true)
     })
-    it('accepts empty string', () => {
-        const result = parseUser({...validUserPayload, location: ''})
-        expect(result.success).toBe(true)
-    })
-    it('accepts undefined', () => {
-        const result = parseUser({...validUserPayload, location: undefined})
-        expect(result.success).toBe(true)
-    })
-    it('accepts null', () => {
-        const result = parseUser({...validUserPayload, location: null})
-        expect(result.success).toBe(true)
-    })
-    it('rejects location longer than 200 characters', () => {
-        const result = parseUser({...validUserPayload, location: 'a'.repeat(201)})
+    it('rejects display_location longer than 255 characters', () => {
+        const result = parseUser({...validUserPayload, display_location: 'a'.repeat(256)})
         expect(result.success).toBe(false)
         if (!result.success) {
-            expect(result.error.issues[0].message).toBe('Location must be at most 200 characters')
+            expect(result.error.issues[0].message).toBe('Location must be at most 255 characters')
         }
+    })
+    it('accepts all three location fields omitted', () => {
+        const result = parseUser({
+            name: 'John Doe',
+            username: 'john_doe',
+            email: 'john@example.com',
+        })
+        expect(result.success).toBe(true)
+    })
+    it('accepts all three location fields as null — clearing the location', () => {
+        const result = parseUser({
+            ...validUserPayload,
+            display_location: null,
+            latitude: null,
+            longitude: null,
+        })
+        expect(result.success).toBe(true)
+    })
+    it('treats an empty display_location with no coordinates as cleared', () => {
+        const result = parseUser({
+            ...validUserPayload,
+            display_location: '',
+            latitude: null,
+            longitude: null,
+        })
+        expect(result.success).toBe(true)
+    })
+})
+
+// ——————— Location — arbitrary text cannot be submitted ————————————————————————————————————————————————————————————————————————————————
+
+describe('ungeocoded location text', () => {
+    const NOT_GEOCODED = 'Select a location from the suggestions'
+
+    it('rejects free text with no coordinates', () => {
+        const result = parseUser({
+            ...validUserPayload,
+            display_location: 'somewhere that does not exist',
+            latitude: null,
+            longitude: null,
+        })
+        expect(result.success).toBe(false)
+        if (!result.success) {
+            expect(result.error.issues[0].message).toBe(NOT_GEOCODED)
+        }
+    })
+    it('reports the error on the display_location field', () => {
+        const result = parseUser({
+            ...validUserPayload,
+            display_location: 'somewhere that does not exist',
+            latitude: null,
+            longitude: null,
+        })
+        expect(result.success).toBe(false)
+        if (!result.success) {
+            expect(result.error.issues[0].path).toEqual(['display_location'])
+        }
+    })
+    it('rejects free text when coordinates are merely undefined', () => {
+        const result = parseUser({
+            name: 'John Doe',
+            username: 'john_doe',
+            email: 'john@example.com',
+            display_location: 'somewhere that does not exist',
+        })
+        expect(result.success).toBe(false)
+    })
+    it('rejects a latitude with no longitude', () => {
+        const result = parseUser({...validUserPayload, longitude: null})
+        expect(result.success).toBe(false)
+    })
+    it('rejects a longitude with no latitude', () => {
+        const result = parseUser({...validUserPayload, latitude: null})
+        expect(result.success).toBe(false)
+    })
+    it('rejects coordinates with no display_location', () => {
+        const result = parseUser({...validUserPayload, display_location: null})
+        expect(result.success).toBe(false)
+    })
+})
+
+// ——————— Coordinates ————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+describe('coordinates', () => {
+    it('accepts latitude at the -90 boundary', () => {
+        const result = parseUser({...validUserPayload, latitude: -90})
+        expect(result.success).toBe(true)
+    })
+    it('accepts latitude at the 90 boundary', () => {
+        const result = parseUser({...validUserPayload, latitude: 90})
+        expect(result.success).toBe(true)
+    })
+    it('accepts longitude at the -180 boundary', () => {
+        const result = parseUser({...validUserPayload, longitude: -180})
+        expect(result.success).toBe(true)
+    })
+    it('accepts longitude at the 180 boundary', () => {
+        const result = parseUser({...validUserPayload, longitude: 180})
+        expect(result.success).toBe(true)
+    })
+    it('rejects latitude above 90', () => {
+        const result = parseUser({...validUserPayload, latitude: 90.1})
+        expect(result.success).toBe(false)
+        if (!result.success) {
+            expect(result.error.issues[0].message).toBe('Latitude must be between -90 and 90')
+        }
+    })
+    it('rejects latitude below -90', () => {
+        const result = parseUser({...validUserPayload, latitude: -90.1})
+        expect(result.success).toBe(false)
+    })
+    it('rejects longitude above 180', () => {
+        const result = parseUser({...validUserPayload, longitude: 180.1})
+        expect(result.success).toBe(false)
+        if (!result.success) {
+            expect(result.error.issues[0].message).toBe('Longitude must be between -180 and 180')
+        }
+    })
+    it('rejects longitude below -180', () => {
+        const result = parseUser({...validUserPayload, longitude: -180.1})
+        expect(result.success).toBe(false)
+    })
+    it('rejects a non-numeric latitude', () => {
+        const result = parseUser({...validUserPayload, latitude: '40.71'})
+        expect(result.success).toBe(false)
+    })
+    it('rejects a non-numeric longitude', () => {
+        const result = parseUser({...validUserPayload, longitude: 'not-a-number'})
+        expect(result.success).toBe(false)
     })
 })
 
@@ -268,7 +387,9 @@ describe('full user update schema', () => {
                 name: 'John Doe',
                 username: 'john_doe',
                 email: 'john@example.com',
-                location: 'New York, NY',
+                display_location: 'New York, United States',
+                latitude: 40.7127281,
+                longitude: -74.0060152,
                 profile_image_url: 'https://example.com/image.jpg',
             })
         }

@@ -41,7 +41,7 @@ class CRUDUser(FastCRUD[
             one_or_none: bool = False,
             **kwargs: Any,
     ) -> Any:
-        """Update user fields — automatically sets updated_at."""
+        """Update user fields — automatically sets updated_at and location"""
         # check duplicate email if being changed
         if isinstance(object, UserUpdate) and object.email is not None:
             existing = await self.exists(db=db, email=object.email)
@@ -59,22 +59,65 @@ class CRUDUser(FastCRUD[
             object if isinstance(object, dict)
             else object.model_dump(exclude_unset=True, mode="json")
         )
+
         internal = UserUpdateInternal(
             **update_data,
             updated_at=datetime.now(UTC).replace(tzinfo=None),
         )
 
-        return await super().update(
+        # fastcrud builds its RETURNING clause from bare column names, so
+        # PostGISPoint.column_expression (ST_AsText) never renders and `location`
+        # would come back as raw EWKB hex. Update without RETURNING, then re-SELECT
+        # through the ORM columns so the geometry is decoded to WKT.
+        wants_return = bool(return_columns or schema_to_select or return_as_model)
+
+        # resolve target ids first: the filters may match on fields this update changes
+        target_ids: list[int] = []
+        if wants_return:
+            matched = await self.get_multi(db=db, limit=None, **kwargs)
+            target_ids = [row["id"] for row in matched["data"]]
+
+        await super().update(
             db=db,
             object=internal,
             allow_multiple=allow_multiple,
             commit=commit,
-            return_columns=return_columns,
+            **kwargs,
+        )
+
+        if not wants_return:
+            return None
+
+        if allow_multiple:
+            if not target_ids:
+                return {"data": []}
+            fetched = await self.get_multi(
+                db=db,
+                limit=None,
+                schema_to_select=schema_to_select,
+                return_as_model=return_as_model,
+                id__in=target_ids,
+            )
+            return {"data": [self._trim_to_return_columns(row, return_columns) for row in fetched["data"]]}
+
+        if not target_ids:
+            return None
+
+        row = await self.get(
+            db=db,
+            id=target_ids[0],
             schema_to_select=schema_to_select,
             return_as_model=return_as_model,
             one_or_none=one_or_none,
-            **kwargs,
         )
+        return self._trim_to_return_columns(row, return_columns)
+
+    @staticmethod
+    def _trim_to_return_columns(row: Any, return_columns: list[str] | None) -> Any:
+        """Honor an explicit return_columns subset; models and None pass through."""
+        if not return_columns or not isinstance(row, dict):
+            return row
+        return {key: value for key, value in row.items() if key in return_columns}
 
     async def change_password(
             self,

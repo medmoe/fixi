@@ -399,6 +399,7 @@ dependencies = [
     { name = "crudadmin" },
     { name = "fastapi" },
     { name = "fastcrud" },
+    { name = "geoalchemy2" },
     { name = "greenlet" },
     { name = "gunicorn" },
     { name = "httptools" },
@@ -456,6 +457,7 @@ requires-dist = [
     { name = "faker", marker = "extra == 'dev'", specifier = ">=26.0.0" },
     { name = "fastapi", specifier = ">=0.109.1" },
     { name = "fastcrud", specifier = ">=0.15.5" },
+    { name = "geoalchemy2", specifier = ">=0.20.0" },
     { name = "greenlet", specifier = ">=2.0.2" },
     { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "httptools", specifier = ">=0.6.1" },
@@ -509,6 +511,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/06/5ef9131152b98d1d914067389a3334cebe21b1db4505e232cc6f2a6392cb/fastcrud-0.22.3.tar.gz", hash = "sha256:d8ebe74bf07352c5260698fec7bd40f0a1c09b8f189c6d57d157f04ef86bc09a", size = 103271, upload-time = "2026-06-21T03:53:59.231Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/36/ac/23eed29a3ff360e5f07f84fe61f409360341e839e15838e2aa823a782846/fastcrud-0.22.3-py3-none-any.whl", hash = "sha256:8ea2cb20ab111ae37793cfc0c88592dbed4700ef6ebebfcb6ef161582df780da", size = 136899, upload-time = "2026-06-21T03:53:57.911Z" },
+]
+
+[[package]]
+name = "geoalchemy2"
+version = "0.20.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/63/74/6cb1ef591bf47d28f41aa770f2f3a91c0a570aee0a4083bed7f8c533d8df/geoalchemy2-0.20.0.tar.gz", hash = "sha256:450f427f4bc3cf2d5ddee0af3763aed0f3eea2384e7c9a99798d8f1508279322", size = 280805, upload-time = "2026-05-12T14:50:26.132Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/08/b66ad4239f592e05202e25925c08cdd04cc14c3994000ec70ec61fea202c/geoalchemy2-0.20.0-py3-none-any.whl", hash = "sha256:1489a1d106519542a79c97cd0b4c537d80462c353610ebc2429cf2c43daac717", size = 96467, upload-time = "2026-05-12T14:50:24.998Z" },
 ]
 
 [[package]]

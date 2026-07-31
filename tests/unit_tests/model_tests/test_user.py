@@ -2,13 +2,17 @@ from datetime import datetime, UTC
 from typing import Any
 
 import pytest
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.ext.asyncio import AsyncSession
+from geoalchemy2.functions import ST_SetSRID, ST_MakePoint
 
 from src.app.models import User, UserRole, Tier
 
 
 # ————— helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+LOCATION = ST_SetSRID(ST_MakePoint(-74.006, 40.7128), 4326)
+
 def create_user_payload(**overrides) -> dict[str, Any]:
     return {
         "name": "John Doe",
@@ -17,7 +21,6 @@ def create_user_payload(**overrides) -> dict[str, Any]:
         "hashed_password": "hashed_password",
         **overrides
     }
-
 
 def create_second_user_payload(**overrides) -> dict[str, Any]:
     return {
@@ -159,3 +162,20 @@ class TestUserModel:
             await async_session.commit()
             await async_session.refresh(user)
             assert user.tier is None
+
+    class TestLocationField:
+        @pytest.mark.unit
+        async def test_create_user_with_location_pass(self, async_session: AsyncSession):
+            user = User(**create_user_payload(location=LOCATION))
+            async_session.add(user)
+            await async_session.commit()
+            await async_session.refresh(user)
+            assert user is not None
+
+        @pytest.mark.unit
+        async def test_create_user_fail_with_invalid_location(self, async_session: AsyncSession):
+            user = User(**create_user_payload(location= "invalid location"))
+            async_session.add(user)
+            with pytest.raises(InternalError):
+                await async_session.commit()
+
