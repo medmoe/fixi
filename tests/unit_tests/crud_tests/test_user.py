@@ -38,8 +38,11 @@ class TestUserUpdate:
         schema = UserUpdate.model_validate(create_update_payload(display_location="New York City", latitude=40.7128, longitude=-74.0060))
         updated_user = await crud_users.update(db=async_session, object=schema, id=test_user.id, schema_to_select=UserRead, return_as_model=True)
         assert updated_user.display_location == "New York City"
-        assert updated_user.latitude == 40.7128
-        assert updated_user.longitude == -74.00600
+        assert updated_user.location == "POINT(-74.006 40.7128)"
+
+        # the geometry must survive a fresh read, not just the update's return value
+        fetched_user = await crud_users.get(db=async_session, id=test_user.id, schema_to_select=UserRead, return_as_model=True)
+        assert fetched_user.location == "POINT(-74.006 40.7128)"
 
     @pytest.mark.unit
     async def test_failed_user_update_of_existing_email(self, async_session: AsyncSession, test_user: User, other_user: User):

@@ -8,7 +8,8 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
-    field_validator, model_validator,
+    field_validator,
+    model_validator,
 )
 from pydantic.json_schema import SkipJsonSchema
 
@@ -44,7 +45,6 @@ Location = Annotated[
     str | None,
     Field(
         default=None,
-        max_length=100,
         examples=["POINT(-73.9857 40.7484)"],
     ),
 ]
@@ -207,6 +207,12 @@ class UserUpdateInternal(UserUpdate):
     location: Location = None
     latitude: SkipJsonSchema[Annotated[float, Field(ge=-90, le=90)] | None] = Field(default=None, exclude=True)
     longitude: SkipJsonSchema[Annotated[float, Field(ge=-180, le=180)] | None] = Field(default=None, exclude=True)
+
+    @model_validator(mode="after")
+    def build_location(self):
+        if self.latitude is not None and self.longitude is not None:
+            self.location = f"POINT({self.longitude} {self.latitude})"
+        return self
 
 
 #

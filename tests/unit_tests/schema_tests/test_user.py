@@ -335,10 +335,11 @@ class TestUserUpdate:
 class TestUserUpdateInternal:
     def test_valid(self):
         now = datetime.now(UTC)
-        point = ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)
-        schema = UserUpdateInternal(updated_at=now, location=point)
+        schema = UserUpdateInternal(updated_at=now, display_location="San Francisco", longitude=-122.4194, latitude=37.7749)
         assert schema.updated_at == now
-        assert schema.location == point
+        assert schema.display_location == "San Francisco"
+        assert schema.location is not None
+        assert schema.location == f"POINT(-122.4194 37.7749)"
 
     def test_requires_updated_at(self):
         with pytest.raises(ValidationError):
@@ -349,6 +350,41 @@ class TestUserUpdateInternal:
         schema = UserUpdateInternal(name="Jane Doe", updated_at=now)
         assert schema.name == "Jane Doe"
         assert schema.updated_at == now
+
+    def test_longitude_latitude_excluded_from_dump(self):
+        now = datetime.now(UTC)
+        schema = UserUpdateInternal(
+            updated_at=now, longitude=-122.4194, latitude=37.7749, display_location="San Francisco"
+        )
+        # still readable as attributes — exclude is serialization-only
+        assert schema.latitude == 37.7749
+        assert schema.longitude == -122.4194
+
+        dumped = schema.model_dump(exclude_unset=True)
+        assert "latitude" not in dumped
+        assert "longitude" not in dumped
+        assert dumped["location"] == "POINT(-122.4194 37.7749)"
+        assert "latitude" not in schema.model_dump_json()
+
+    def test_latitude_longitude_hidden_from_json_schema(self):
+        properties = UserUpdateInternal.model_json_schema()["properties"]
+        assert "latitude" not in properties
+        assert "longitude" not in properties
+        assert "location" in properties
+
+    @pytest.mark.parametrize("lat,lon", [(91, 0), (-91, 0), (0, 181), (0, -181)])
+    def test_rejects_out_of_range_coordinates(self, lat, lon):
+        with pytest.raises(ValidationError):
+            UserUpdateInternal(
+                updated_at=datetime.now(UTC), display_location="X", latitude=lat, longitude=lon
+            )
+
+    @pytest.mark.parametrize("lat,lon", [(90.0, 180.0), (-90.0, -180.0), (0.0, 0.0)])
+    def test_accepts_boundary_coordinates(self, lat, lon):
+        schema = UserUpdateInternal(
+            updated_at=datetime.now(UTC), display_location="X", latitude=lat, longitude=lon
+        )
+        assert schema.location == f"POINT({lon} {lat})"
 
 
 # ─── UserPasswordUpdate ───────────────────────────────────────────────────────
