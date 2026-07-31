@@ -1,5 +1,7 @@
 import {z} from 'zod'
 
+export const NOT_GEOCODED_MESSAGE = "Select a location from the suggestions"
+
 export const userUpdateSchema = z.object({
     name: z
         .string()
@@ -14,11 +16,24 @@ export const userUpdateSchema = z.object({
             'Username must start with a letter and contain only lowercase letters, numbers, or underscores'
         ),
     email: z.email('Invalid email address'),
-    location: z
+    // Location is geocoded: the label and its coordinates travel together, and the
+    // UI only ever sets them from an OpenStreetMap suggestion. See the refine below.
+    display_location: z
         .string()
-        .max(200, 'Location must be at most 200 characters')
+        .max(255, 'Location must be at most 255 characters')
         .optional()
-        .or(z.literal(''))
+        .nullable(),
+    latitude: z
+        .number('Latitude must be between -90 and 90')
+        .min(-90, 'Latitude must be between -90 and 90')
+        .max(90, 'Latitude must be between -90 and 90')
+        .optional()
+        .nullable(),
+    longitude: z
+        .number('Longitude must be between -180 and 180')
+        .min(-180, 'Longitude must be between -180 and 180')
+        .max(180, 'Longitude must be between -180 and 180')
+        .optional()
         .nullable(),
     profile_image_url: z
         .url()
@@ -27,6 +42,23 @@ export const userUpdateSchema = z.object({
         .or(z.literal(''))
         .nullable(),
 })
+    // All three or none: the backend stores them as a single PostGIS point, and
+    // rejecting a half-filled set here is what stops ungeocodable free text from
+    // ever being submitted.
+    .superRefine((values, ctx) => {
+        const hasLabel = typeof values.display_location === 'string' && values.display_location.length > 0
+        const hasLatitude = typeof values.latitude === 'number'
+        const hasLongitude = typeof values.longitude === 'number'
+
+        if (hasLabel && hasLatitude && hasLongitude) return
+        if (!hasLabel && !hasLatitude && !hasLongitude) return
+
+        ctx.addIssue({
+            code: 'custom',
+            path: ['display_location'],
+            message: NOT_GEOCODED_MESSAGE,
+        })
+    })
 
 export type UserUpdateFormValues = z.infer<typeof userUpdateSchema>
 

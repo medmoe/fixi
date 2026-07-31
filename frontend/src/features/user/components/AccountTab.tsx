@@ -2,23 +2,13 @@ import React from 'react'
 import {useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {useAuth} from '@/features/auth'
-import {useChangePassword, useDeactivateAccount, type UserPasswordFormValues, userPasswordSchema, type UserUpdateFormValues, userUpdateSchema, useUpdateUser, useUser} from '@/features/user'
+import {LocationSearchField, useChangePassword, useDeactivateAccount, type UserPasswordFormValues, userPasswordSchema, type UserUpdateFormValues, userUpdateSchema, useUpdateUser, useUser} from '@/features/user'
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger
-} from '@/components/ui/alert-dialog'
-import {ImageIcon, Loader2, Lock, MapPin, Trash2, UserCircle} from 'lucide-react'
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger} from '@/components/ui/alert-dialog'
+import {ImageIcon, Loader2, Lock, Trash2, UserCircle} from 'lucide-react'
 
 export const AccountTab: React.FC = () => {
     const {data: user} = useUser()
@@ -33,7 +23,9 @@ export const AccountTab: React.FC = () => {
             name: user.name,
             username: user.username,
             email: user.email,
-            location: user.location || '',
+            display_location: user.display_location ?? null,
+            latitude: (user as any).latitude ?? null,
+            longitude: (user as any).longitude ?? null,
             profile_image_url: user.profile_image_url || '',
         },
     })
@@ -46,7 +38,13 @@ export const AccountTab: React.FC = () => {
         if (values.name !== user.name) payload.name = values.name
         if (values.username !== user.username) payload.username = values.username
         if (values.email !== user.email) payload.email = values.email
-        if (values.location !== (user.location || '')) payload.location = values.location || null
+        // The three location fields move together — the backend stores them as one
+        // PostGIS point, so a partial set would be rejected.
+        if ((values.display_location ?? null) !== (user.display_location ?? null)) {
+            payload.display_location = values.display_location || null
+            payload.latitude = values.latitude ?? null
+            payload.longitude = values.longitude ?? null
+        }
         if (values.profile_image_url !== (user.profile_image_url || ''))
             payload.profile_image_url = values.profile_image_url || null
 
@@ -165,26 +163,7 @@ export const AccountTab: React.FC = () => {
                                 )}
                             />
 
-                            <FormField
-                                control={updateForm.control}
-                                name="location"
-                                render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel className="flex items-center gap-1">
-                                            <MapPin className="h-3 w-3"/>
-                                            Location
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="City, Country"
-                                                {...field}
-                                                value={field.value ?? ''}
-                                            />
-                                        </FormControl>
-                                        <FormMessage/>
-                                    </FormItem>
-                                )}
-                            />
+                            <LocationSearchField/>
 
                             <FormField
                                 control={updateForm.control}

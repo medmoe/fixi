@@ -19,6 +19,7 @@ vi.mock('@/features/user', () => ({
     useDeactivateAccount: vi.fn(),
     userUpdateSchema: {},
     userPasswordSchema: {},
+    LocationSearchField: () => <div data-testid="location-search-field">search field</div>
 }))
 
 vi.mock('@/features/auth', () => ({
