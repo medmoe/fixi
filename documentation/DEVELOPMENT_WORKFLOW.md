@@ -628,10 +628,10 @@ Keep frontend types aligned with backend Pydantic schemas.
 For a typical new feature, use this order:
 
 1. Define the endpoint behavior.
-2. Add or update the SQLAlchemy model in `src/app/models/`.
-3. Add or update Pydantic schemas in `src/app/schemas/`.
-4. Add or update CRUD helper in `src/app/crud/`.
-5. Add API routes in `src/app/api/v1/`.
+2. Add or update the SQLAlchemy model in `../src/app/models`.
+3. Add or update Pydantic schemas in `../src/app/schemas`.
+4. Add or update CRUD helper in `../src/app/crud`.
+5. Add API routes in `../src/app/api/v1`.
 6. Register the router in the app.
 7. Create and review Alembic migration.
 8. Apply the migration.
@@ -1034,7 +1034,7 @@ In short:
 - `api/v1/` is for HTTP endpoints.
 - `core/` is for shared infrastructure.
 - `services/` is for business logic.
-- `tests/` verifies everything works.
+- `../tests` verifies everything works.
 
 This separation keeps the backend easier to understand, test, and maintain.
 

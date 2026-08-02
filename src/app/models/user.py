@@ -13,6 +13,7 @@ from ..core.db.database import Base
 from ..core.db.types import PostGISPoint
 
 if TYPE_CHECKING:
+    from .job import Job
     from .tier import Tier
 
 
@@ -48,4 +49,7 @@ class User(Base):
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
     tier_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tiers.id"), index=True, default=None, )
+
+    # ─── Relationship ──────────────────────────────────────────────────────────\
     tier: Mapped["Tier | None"] = relationship("Tier", back_populates="users", lazy="selectin", init=False)
+    jobs: Mapped[list["Job"]] = relationship("Job", lazy="selectin", default_factory=list, init=False)
