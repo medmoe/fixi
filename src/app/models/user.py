@@ -13,8 +13,8 @@ from ..core.db.database import Base
 from ..core.db.types import PostGISPoint
 
 if TYPE_CHECKING:
-    from .tier import Tier
     from .job import Job
+    from .tier import Tier
 
 
 class UserRole(Enum):

@@ -2,15 +2,16 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, ForeignKey, Enum as SAEnum, Numeric, Text, CheckConstraint, Index
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.db.database import Base
-from ..core.db.models import TimestampMixin, SoftDeleteMixin, UUIDMixin
+from ..core.db.models import SoftDeleteMixin, TimestampMixin, UUIDMixin
 from ..core.db.types import PostGISPoint
 
 if TYPE_CHECKING:
-    from ..models import User, TradeCategory
+    from ..models import TradeCategory, User
 
 
 class JobStatus(Enum):
