@@ -6,15 +6,16 @@ budget constraints, extra fields rejection, and nested model behavior.
 """
 from datetime import datetime, UTC
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from src.app.models import JobStatus
 from src.app.schemas.job import (
     JobBase,
+    JobCreateInternal,
     JobCreate,
-    JobCreateRequest,
     JobDelete,
     JobFilter,
     JobRead,
@@ -22,7 +23,6 @@ from src.app.schemas.job import (
     JobUpdateInternal,
     TradeCategoryRead,
 )
-from src.app.models import JobStatus
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -109,59 +109,65 @@ class TestJobBase:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestJobCreate:
-    """Tests for the service-layer JobCreate schema."""
+    """Tests for the client-facing JobCreate schema."""
 
     def test_valid_construction(self):
-        job = JobCreate(**_valid_job_base_kwargs(user_id=42))
-        assert job.user_id == 42
+        job = JobCreate(**_valid_job_base_kwargs(latitude=47.01, longitude=-122.01))
+        assert job.latitude == 47.01
+        assert job.longitude == -122.01
 
-    def test_user_id_required(self):
-        with pytest.raises(ValidationError):
-            JobCreate(**_valid_job_base_kwargs())
-
-    def test_user_id_must_be_int(self):
-        with pytest.raises(ValidationError):
-            JobCreate(**_valid_job_base_kwargs(user_id="not-an-int"))
+    def test_latitude_longitude_are_optional(self):
+        job = JobCreate(**_valid_job_base_kwargs())
+        assert job.latitude is None
+        assert job.longitude is None
 
     def test_inherits_job_base_validation(self):
         with pytest.raises(ValidationError):
-            JobCreate(**_valid_job_base_kwargs(title="", user_id=1))
+            JobCreate(**_valid_job_base_kwargs(title=""))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JobCreateRequest
+# JobCreateInternal
 # ═══════════════════════════════════════════════════════════════════════════════
 
-class TestJobCreateRequest:
-    """Tests for the client-facing JobCreateRequest schema."""
+class TestJobCreateInternal:
+    """Tests for JobCreateInternal schema."""
 
     def test_valid_construction(self):
-        req = JobCreateRequest(
+        req = JobCreateInternal(
             title="Fix leaky faucet",
             description="Kitchen sink",
             trade_category_id=1,
+            user_id=42,
             budget_min=Decimal("100.00"),
             budget_max=Decimal("500.00"),
             display_location="123 Main St",
+            latitude=40.7128,
+            longitude=-74.0060,
         )
         assert req.title == "Fix leaky faucet"
 
-    def test_no_user_id_field(self):
-        with pytest.raises(ValidationError):
-            JobCreateRequest(title="Test", user_id=42)
+    def test_no_latitude_longitude_fields(self):
+        req = JobCreateInternal(title="Test", user_id=42)
+        assert req.latitude is None
+        assert req.longitude is None
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
-            JobCreateRequest(title="Test", injected_field="bad")
+            JobCreateInternal(title="Test", injected_field="bad")
 
-    def test_all_fields_optional_except_title(self):
-        req = JobCreateRequest(title="Minimal job")
+    def test_all_fields_optional_except_title_and_user_id(self):
+        req = JobCreateInternal(title="Minimal job", user_id=42)
         assert req.description is None
         assert req.trade_category_id is None
         assert req.budget_min is None
         assert req.budget_max is None
         assert req.display_location is None
         assert req.location is None
+
+    def test_location_is_set(self):
+        job_update = JobUpdateInternal(latitude= 12.02, longitude= 12.02, user_id=42)
+        assert job_update.location == "POINT(12.02 12.02)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -172,14 +178,14 @@ class TestJobUpdate:
     """Tests for the partial-update JobUpdate schema."""
 
     def test_all_fields_optional(self):
-        update = JobUpdate()
-        assert update.title is None
-        assert update.status is None
+        job_update = JobUpdate()
+        assert job_update.title is None
+        assert job_update.status is None
 
     def test_partial_update_valid(self):
-        update = JobUpdate(title="New title", status=JobStatus.IN_PROGRESS)
-        assert update.title == "New title"
-        assert update.status == JobStatus.IN_PROGRESS
+        job_update = JobUpdate(title="New title", status=JobStatus.IN_PROGRESS)
+        assert job_update.title == "New title"
+        assert job_update.status == JobStatus.IN_PROGRESS
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
@@ -193,6 +199,10 @@ class TestJobUpdate:
         with pytest.raises(ValidationError):
             JobUpdate(budget_min=Decimal("-1.00"))
 
+    def test_latitude_longitude_accepted(self):
+        job_update = JobUpdate(latitude=0.0, longitude=0.0)
+        assert job_update.latitude == 0.0
+        assert job_update.longitude == 0.0
 
 class TestJobUpdateInternal:
     """Tests for the internal JobUpdateInternal schema."""
@@ -201,13 +211,17 @@ class TestJobUpdateInternal:
         update = JobUpdateInternal(user_id=99)
         assert update.user_id == 99
 
-    def test_user_id_optional(self):
-        update = JobUpdateInternal()
-        assert update.user_id is None
+    def test_user_id_required(self):
+        with pytest.raises(ValidationError):
+            update = JobUpdateInternal()
 
     def test_inherits_job_update_validation(self):
         with pytest.raises(ValidationError):
             JobUpdateInternal(title="", budget_min=Decimal("-5.00"))
+
+    def test_location_is_set(self):
+        job_update = JobUpdateInternal(latitude= 12.02, longitude= 12.02, user_id=42)
+        assert job_update.location == "POINT(12.02 12.02)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
