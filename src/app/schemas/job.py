@@ -8,9 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .trade_category import TradeCategoryRead
 from ..models import JobStatus
-
+from .trade_category import TradeCategoryRead
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Base
