@@ -11,9 +11,8 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic.json_schema import SkipJsonSchema
 
-from ..core.schemas import PersistentDeletion, UUIDSchema
+from ..core.schemas import PersistentDeletion, UUIDSchema, LocationBuilderMixin
 from ..models.user import UserRole
 
 #
@@ -199,20 +198,12 @@ class UserUpdate(BaseModel):
         return self
 
 
-class UserUpdateInternal(UserUpdate):
+class UserUpdateInternal(UserUpdate, LocationBuilderMixin):
     updated_at: datetime
     hashed_password: str | None = None
     is_deleted: bool | None = None
     deleted_at: datetime | None = None
     location: Location = None
-    latitude: SkipJsonSchema[Annotated[float, Field(ge=-90, le=90)] | None] = Field(default=None, exclude=True)
-    longitude: SkipJsonSchema[Annotated[float, Field(ge=-180, le=180)] | None] = Field(default=None, exclude=True)
-
-    @model_validator(mode="after")
-    def build_location(self):
-        if self.latitude is not None and self.longitude is not None:
-            self.location = f"POINT({self.longitude} {self.latitude})"
-        return self
 
 
 #

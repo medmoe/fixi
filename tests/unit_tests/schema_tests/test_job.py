@@ -22,6 +22,7 @@ from src.app.schemas.job import (
     JobUpdate,
     JobUpdateInternal,
     TradeCategoryRead,
+    PaginationParams
 )
 
 
@@ -37,7 +38,6 @@ def _valid_job_base_kwargs(**overrides) -> dict:
         "budget_min": Decimal("100.00"),
         "budget_max": Decimal("500.00"),
         "display_location": "123 Main St, NY",
-        "status": JobStatus.OPEN,
         **overrides,
     }
 
@@ -52,7 +52,6 @@ class TestJobBase:
     def test_valid_construction(self):
         job = JobBase(**_valid_job_base_kwargs())
         assert job.title == "Fix leaky faucet"
-        assert job.status == JobStatus.OPEN
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError) as exc_info:
@@ -91,18 +90,6 @@ class TestJobBase:
         with pytest.raises(ValidationError):
             JobBase(**_valid_job_base_kwargs(budget_min=Decimal("100.123")))
 
-    def test_status_defaults_to_open(self):
-        payload = _valid_job_base_kwargs()
-        del payload['status']
-        job = JobBase(**payload)
-        # status has a default, so passing None is allowed and falls back to OPEN
-        assert job.status == JobStatus.OPEN
-
-    def test_all_enum_statuses_accepted(self):
-        for status in JobStatus:
-            job = JobBase(**_valid_job_base_kwargs(status=status))
-            assert job.status == status
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # JobCreate
@@ -120,6 +107,12 @@ class TestJobCreate:
         job = JobCreate(**_valid_job_base_kwargs())
         assert job.latitude is None
         assert job.longitude is None
+
+    def test_latitude_longitude_must_be_given_together(self):
+        with pytest.raises(ValidationError):
+            JobCreate(**_valid_job_base_kwargs(latitude=47.01))
+        with pytest.raises(ValidationError):
+            JobCreate(**_valid_job_base_kwargs(longitude=-122.01))
 
     def test_inherits_job_base_validation(self):
         with pytest.raises(ValidationError):
@@ -146,11 +139,13 @@ class TestJobCreateInternal:
             longitude=-74.0060,
         )
         assert req.title == "Fix leaky faucet"
+        assert req.location is not None and req.location.startswith("POINT")
 
     def test_no_latitude_longitude_fields(self):
         req = JobCreateInternal(title="Test", user_id=42)
         assert req.latitude is None
         assert req.longitude is None
+        assert req.location is None
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
@@ -166,7 +161,7 @@ class TestJobCreateInternal:
         assert req.location is None
 
     def test_location_is_set(self):
-        job_update = JobUpdateInternal(latitude= 12.02, longitude= 12.02, user_id=42)
+        job_update = JobCreateInternal(latitude=12.02, longitude=12.02, user_id=42, title="Test")
         assert job_update.location == "POINT(12.02 12.02)"
 
 
@@ -204,6 +199,13 @@ class TestJobUpdate:
         assert job_update.latitude == 0.0
         assert job_update.longitude == 0.0
 
+    def test_latitude_longitude_must_be_given_both(self):
+        with pytest.raises(ValidationError):
+            JobUpdate(latitude=0.0)
+        with pytest.raises(ValidationError):
+            JobUpdate(longitude=0.0)
+
+
 class TestJobUpdateInternal:
     """Tests for the internal JobUpdateInternal schema."""
 
@@ -215,12 +217,16 @@ class TestJobUpdateInternal:
         with pytest.raises(ValidationError):
             update = JobUpdateInternal()
 
+    def test_user_id_must_be_positive(self):
+        with pytest.raises(ValidationError):
+            update = JobUpdateInternal(user_id=-1)
+
     def test_inherits_job_update_validation(self):
         with pytest.raises(ValidationError):
             JobUpdateInternal(title="", budget_min=Decimal("-5.00"))
 
     def test_location_is_set(self):
-        job_update = JobUpdateInternal(latitude= 12.02, longitude= 12.02, user_id=42)
+        job_update = JobUpdateInternal(latitude=12.02, longitude=12.02, user_id=42)
         assert job_update.location == "POINT(12.02 12.02)"
 
 
@@ -388,23 +394,18 @@ class TestJobFilter:
     def test_empty_filter_valid(self):
         f = JobFilter()
         assert f.status is None
-        assert f.offset == 0
-        assert f.limit == 20
 
     def test_all_fields_set(self):
         f = JobFilter(
             status=JobStatus.OPEN,
             trade_category_id=1,
             user_id=42,
-            budget_min=Decimal("100.00"),
-            budget_max=Decimal("500.00"),
+            min_budget=Decimal("100.00"),
+            max_budget=Decimal("500.00"),
             search="plumber",
             is_deleted=False,
-            offset=10,
-            limit=50,
         )
         assert f.status == JobStatus.OPEN
-        assert f.limit == 50
 
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
@@ -412,19 +413,19 @@ class TestJobFilter:
 
     def test_offset_negative_fails(self):
         with pytest.raises(ValidationError):
-            JobFilter(offset=-1)
+            PaginationParams(offset=-1)
 
     def test_limit_zero_fails(self):
         with pytest.raises(ValidationError):
-            JobFilter(limit=0)
+            PaginationParams(limit=0)
 
     def test_limit_over_100_fails(self):
         with pytest.raises(ValidationError):
-            JobFilter(limit=101)
+            PaginationParams(limit=101)
 
     def test_budget_min_negative_fails(self):
         with pytest.raises(ValidationError):
-            JobFilter(budget_min=Decimal("-1.00"))
+            JobFilter(min_budget=Decimal("-1.00"))
 
     def test_search_too_long_fails(self):
         with pytest.raises(ValidationError):

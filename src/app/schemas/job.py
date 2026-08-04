@@ -1,101 +1,82 @@
-"""
-Job Pydantic schemas for CRUD operations and API serialization.
-"""
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Annotated
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from pydantic.json_schema import SkipJsonSchema
+from pydantic import (
+    BaseModel, ConfigDict, Field,
+    model_validator, computed_field
+)
 
 from .trade_category import TradeCategoryRead
-from ..models import JobStatus
+from ..core.schemas import LocationBuilderMixin
+from ..models.job import JobStatus
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Base
-# ═══════════════════════════════════════════════════════════════════════════════
+# ─── Base ─────────────────────────────────────────────────────────────────────
 
 class JobBase(BaseModel):
-    """Shared fields for Job schemas."""
-
+    """Shared fields."""
     model_config = ConfigDict(extra="forbid")
 
-    title: str = Field(..., min_length=1, max_length=255)
+    title: Annotated[str, Field(min_length=1, max_length=255)]
     description: str | None = Field(default=None)
     trade_category_id: int | None = Field(default=None)
-    budget_min: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
-    budget_max: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
-    display_location: str | None = Field(default=None, max_length=255)
-    location: str | None = Field(default=None, examples=["POINT(-73.985703 40.748441)"])  # PostGIS point
-    status: JobStatus = Field(default=JobStatus.OPEN)
+    budget_min: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)]
+    budget_max: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)]
+    display_location: Annotated[str | None, Field(max_length=255, default=None)]
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Create
-# ═══════════════════════════════════════════════════════════════════════════════
+# ─── Create ───────────────────────────────────────────────────────────────────
 
 class JobCreate(JobBase):
-    """Client-facing schema for creating a Job.
-    No user_id — set from JWT token in the API layer.
-    """
+    """Client-facing create schema — lat/lng accepted, user_id from JWT."""
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
 
-
-class JobCreateInternal(JobCreate):
-    """Schema for creating a new Job (service layer)."""
-    user_id: int
-    latitude: SkipJsonSchema[Annotated[float, Field(ge=-90, le=90)] | None] = Field(default=None, exclude=True)
-    longitude: SkipJsonSchema[Annotated[float, Field(ge=-180, le=180)] | None] = Field(default=None, exclude=True)
-
     @model_validator(mode='after')
-    def build_location(self):
-        """Build location from latitude and longitude."""
-        if self.latitude is not None and self.longitude is not None:
-            self.location = f"POINT({self.longitude} {self.latitude})"
+    def validate_coordinates(self):
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Both latitude and longitude must be provided together.")
         return self
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Update
-# ═══════════════════════════════════════════════════════════════════════════════
+class JobCreateInternal(LocationBuilderMixin, JobCreate):
+    """Service layer schema — adds user_id and builds WKT location."""
+    location: str | None = Field(default=None)  # built by LocationBuilderMixin
+    user_id: int
+    status: JobStatus = Field(default=JobStatus.OPEN)
+
+
+# ─── Update ───────────────────────────────────────────────────────────────────
 
 class JobUpdate(JobBase):
-    """Schema for updating a Job (partial update, all fields optional)."""
-    title: str | None = Field(min_length=1, max_length=255, default=None)
+    """Client-facing partial update — all fields optional."""
+    title: Annotated[str | None, Field(min_length=1, max_length=255, default=None)] = None
     status: JobStatus | None = Field(default=None)
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
 
-
-class JobUpdateInternal(JobUpdate):
-    """Internal update schema — includes fields the service layer may set."""
-    user_id: int
-    latitude: SkipJsonSchema[Annotated[float, Field(ge=-90, le=90)] | None] = Field(default=None, exclude=True)
-    longitude: SkipJsonSchema[Annotated[float, Field(ge=-180, le=180)] | None] = Field(default=None, exclude=True)
-
     @model_validator(mode='after')
-    def build_location(self):
-        """Build location from latitude and longitude."""
-        if self.latitude is not None and self.longitude is not None:
-            self.location = f"POINT({self.longitude} {self.latitude})"
+    def validate_coordinates(self):
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Both latitude and longitude must be provided together.")
         return self
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Read / Response
-# ═══════════════════════════════════════════════════════════════════════════════
+class JobUpdateInternal(LocationBuilderMixin, JobUpdate):
+    """Service layer update — adds user_id and updated_at."""
+    location: str | None = Field(default=None)
+    user_id: Annotated[int, Field(gt=0)]
+    updated_at: datetime | None = Field(default=None)  # ✅ set by CRUD layer
+
+
+# ─── Read ─────────────────────────────────────────────────────────────────────
 
 class JobRead(BaseModel):
-    """Full read schema for Job — returned by API."""
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        use_enum_values=True,
-        extra="forbid",
-    )
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True, extra="forbid")
 
     id: int
     uuid: UUID
@@ -106,30 +87,30 @@ class JobRead(BaseModel):
     budget_min: Decimal | None
     budget_max: Decimal | None
     display_location: str | None
-    location: Any | None
-    status: str  # use_enum_values=True serializes enum to its string value
+    location: str | None = Field(default=None, exclude=True)  # raw WKT — hidden
+    status: str
     created_at: datetime
     updated_at: datetime | None
     deleted_at: datetime | None
     is_deleted: bool
-
-    # ─── Nested relationships ─────────────────────────────────────────────
     trade_category: TradeCategoryRead | None = None
 
+    @computed_field
+    def coordinates(self) -> dict[str, float] | None:
+        """Parse WKT POINT to lat/lng for frontend consumption."""
+        if not self.location:
+            return None
+        try:
+            coords = self.location.replace("POINT(", "").replace(")", "").split()
+            return {"longitude": float(coords[0]), "latitude": float(coords[1])}
+        except (ValueError, IndexError):
+            return None
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Delete
-# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─── Delete ───────────────────────────────────────────────────────────────────
 
 class JobDelete(BaseModel):
-    """Response schema after a successful soft-delete."""
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        use_enum_values=True,
-        extra="forbid",
-    )
-
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
     id: int
     uuid: UUID
     title: str
@@ -137,23 +118,20 @@ class JobDelete(BaseModel):
     deleted_at: datetime | None
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Filters (for list/query endpoints)
-# ═══════════════════════════════════════════════════════════════════════════════
+# ─── Filter + Pagination ──────────────────────────────────────────────────────
+
+class PaginationParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=20, ge=1, le=100)
+
 
 class JobFilter(BaseModel):
-    """Query filter schema for listing/searching jobs."""
-
     model_config = ConfigDict(extra="forbid")
-
     status: JobStatus | None = Field(default=None)
     trade_category_id: int | None = Field(default=None)
     user_id: int | None = Field(default=None)
-    budget_min: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
-    budget_max: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
+    min_budget: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
+    max_budget: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
     search: str | None = Field(default=None, max_length=255)
-    is_deleted: bool | None = Field(default=None)
-
-    # ─── Pagination ───────────────────────────────────────────────────────
-    offset: int = Field(default=0, ge=0)
-    limit: int = Field(default=20, ge=1, le=100)
+    is_deleted: bool = Field(default=False)  # ✅ never expose deleted by default
