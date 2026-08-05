@@ -118,3 +118,6 @@ class CRUDJob(
             **filter_kwargs
         )
         return [JobRead.model_validate(job) for job in jobs]
+
+
+crud_jobs = CRUDJob(Job)
