@@ -1,6 +1,7 @@
 from decimal import Decimal
+from typing import Any
 
-mock_jobs = [
+mock_jobs: list[dict[str, Any]] = [
     {
         "title": "Fix Leaking Kitchen Sink",
         "description": "Kitchen sink has been leaking under the cabinet for two days.",

@@ -39,7 +39,13 @@ class CRUDJob(
             return_as_model=True
         )
 
-    async def update_job(self, db: AsyncSession, object: JobUpdate, user_id: int, job_id: int) -> JobRead:
+    async def update_job(
+            self,
+            db: AsyncSession,
+            object: JobUpdate,
+            user_id: int,
+            job_id: int
+    ) -> JobRead:
         # verify job exists and belongs to user
         job = await db.get(Job, job_id)
         if job is None:
@@ -56,7 +62,7 @@ class CRUDJob(
             raise BadRequestException(f"Only OPEN jobs can be edited. Current status: {job.status}")
 
         data = object.model_dump(mode="json", exclude_unset=True)
-        internal = JobUpdateInternal(**data, updated_at=datetime.now(UTC).replace(tzinfo=None))
+        internal = JobUpdateInternal(**data, updated_at=datetime.now(UTC).replace(tzinfo=None), user_id=user_id)
         await super().update(db=db, object=internal, id=job_id)
         updated_job = await db.get(Job, job_id)
         return JobRead.model_validate(updated_job)
