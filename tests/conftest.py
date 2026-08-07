@@ -467,6 +467,11 @@ async def test_trade_category(async_session: AsyncSession) -> TradeCategory:
     return await create_test_trade_category(async_session)
 
 
+@pytest_asyncio.fixture
+async def other_trade_category(async_session: AsyncSession) -> TradeCategory:
+    return await create_test_trade_category(async_session)
+
+
 async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> TradeCategory:
     name = kwargs.get('name', fake.word())
     display_name = kwargs.get('display_name', fake.word())

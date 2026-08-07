@@ -131,7 +131,7 @@ class JobFilter(BaseModel):
     status: JobStatus | None = Field(default=None)
     trade_category_id: int | None = Field(default=None)
     user_id: int | None = Field(default=None)
-    min_budget: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
-    max_budget: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
+    budget_min: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
+    budget_max: Decimal | None = Field(default=None, ge=Decimal("0.00"), decimal_places=2)
     search: str | None = Field(default=None, max_length=255)
     is_deleted: bool = Field(default=False)  # ✅ never expose deleted by default

@@ -1,6 +1,7 @@
 from datetime import datetime, UTC
 
 from fastcrud import FastCRUD
+from fastcrud.types import GetMultiResponseDict, GetMultiResponseModel
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -81,7 +82,13 @@ class CRUDJob(
         job.updated_at = datetime.now(UTC).replace(tzinfo=None)
         await db.commit()
 
-    async def get_multi_jobs(self, db: AsyncSession, filters: JobFilter, offset: int = 0, limit: int = 20) -> list[JobRead]:
+    async def get_multi_jobs(
+            self,
+            db: AsyncSession,
+            filters: JobFilter,
+            offset: int = 0,
+            limit: int = 20
+    ) -> GetMultiResponseModel | GetMultiResponseDict:
         # build filter kwargs for FastCRUD
         filter_kwargs: dict = {"is_deleted": False}  # never show deleted, by default
         if filters.status is not None:
@@ -92,10 +99,10 @@ class CRUDJob(
             filter_kwargs["user_id"] = filters.user_id
 
         # range filters using fastCRUD __ syntax
-        if filters.min_budget is not None:
-            filter_kwargs["max_budget__gte"] = filters.min_budget
-        if filters.max_budget is not None:
-            filter_kwargs["min_budget__lte"] = filters.max_budget
+        if filters.budget_min is not None:
+            filter_kwargs["budget_max__gte"] = filters.budget_min
+        if filters.budget_max is not None:
+            filter_kwargs["budget_min__lte"] = filters.budget_max
 
         # search — requires raw SQL for ILIKE
         if filters.search:
@@ -113,7 +120,11 @@ class CRUDJob(
             )
             result = await db.execute(stmt)
             jobs = result.scalars().all()
-            return [JobRead.model_validate(job) for job in jobs]
+            result: GetMultiResponseModel = {
+                'data': [JobRead.model_validate(job) for job in jobs],
+                'total_count': len(jobs)
+            }
+            return result
 
         jobs = await super().get_multi(
             db=db,
@@ -123,7 +134,7 @@ class CRUDJob(
             return_as_model=True,
             **filter_kwargs
         )
-        return [JobRead.model_validate(job) for job in jobs]
+        return jobs
 
 
 crud_jobs = CRUDJob(Job)

@@ -11,26 +11,6 @@ from src.app.models import User, Job, TradeCategory, JobStatus
 from src.app.schemas.job import JobUpdate, JobRead
 
 
-def create_job_update_payload(**overrides):
-    return {
-        "title": "Updated title",
-        "description": "Updated description",
-        **overrides
-    }
-
-
-def create_job_instance(user_id: int, trade_category_id: int, **kwargs) -> Job:
-    return Job(
-        title="Test job",
-        description="description",
-        user_id=user_id,
-        trade_category_id=trade_category_id,
-        budget_min=Decimal(100),
-        budget_max=Decimal(200),
-        **kwargs
-    )
-
-
 @pytest.mark.unit
 class TestJobUpdate:
     async def test_update_job_successful(self, async_session: AsyncSession, test_user: User, test_job: Job):
@@ -147,3 +127,23 @@ async def help_test_update_job_with_given_status(
     payload = create_job_update_payload()
     with pytest.raises(exception, match=message):
         await crud_jobs.update_job(db=async_session, object=JobUpdate(**payload), user_id=user_id, job_id=job.id)
+
+
+def create_job_update_payload(**overrides):
+    return {
+        "title": "Updated title",
+        "description": "Updated description",
+        **overrides
+    }
+
+
+def create_job_instance(user_id: int, trade_category_id: int, **kwargs) -> Job:
+    return Job(
+        title="Test job",
+        description="description",
+        user_id=user_id,
+        trade_category_id=trade_category_id,
+        budget_min=Decimal(100),
+        budget_max=Decimal(200),
+        **kwargs
+    )
