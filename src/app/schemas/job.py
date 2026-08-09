@@ -7,8 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
-from ..models.job import JobStatus
 from .trade_category import TradeCategoryRead
+from ..models.job import JobStatus
+
 
 # ─── Base ─────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,12 @@ class JobCreate(JobBase):
     """Client-facing create schema — lat/lng accepted, user_id from JWT."""
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
+
+    @model_validator(mode='after')
+    def validate_budget_range(self):
+        if self.budget_min is not None and self.budget_max is not None and self.budget_max < self.budget_min:
+            raise ValueError("Budget max must be greater than or equal to budget min.")
+        return self
 
     @model_validator(mode='after')
     def validate_coordinates(self):
@@ -62,6 +69,12 @@ class JobUpdate(BaseModel):
     status: JobStatus | None = Field(default=None)
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
+
+    @model_validator(mode='after')
+    def validate_budget_range(self):
+        if self.budget_min is not None and self.budget_max is not None and self.budget_max < self.budget_min:
+            raise ValueError("Budget max must be greater than or equal to budget min.")
+        return self
 
     @model_validator(mode='after')
     def validate_coordinates(self):

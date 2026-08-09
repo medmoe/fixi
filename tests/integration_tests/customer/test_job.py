@@ -20,6 +20,19 @@ def create_user_read_internal_schema() -> UserReadInternal:
 
 
 @pytest.fixture
+def job_filters(**overrides):
+    return {
+        "status": None,
+        "trade_category_id": None,
+        "user_id": None,
+        "budget_min": None,
+        "budget_max": None,
+        "search": None,
+        **overrides
+    }
+
+
+@pytest.fixture
 def job_create_payload(test_trade_category):
     return {
         "title": "Need a plumber urgently",
@@ -54,8 +67,30 @@ async def many_jobs(async_session, customer_test_user, test_trade_category):
     return jobs
 
 
-# ─── Test Job Creation ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+@pytest.fixture
+async def test_job(async_session, customer_test_user, test_trade_category):
+    job = Job(user_id=customer_test_user.id, trade_category_id=test_trade_category.id,
+        title="test job", status=JobStatus.OPEN,
+        budget_min=Decimal(100), budget_max=Decimal(300), description="description")
+    async_session.add(job)
+    await async_session.commit()
+    await async_session.refresh(job)
+    return job
 
+
+@pytest.fixture
+async def deleted_job(async_session, customer_test_user, test_trade_category):
+    job = Job(user_id=customer_test_user.id, trade_category_id=test_trade_category.id,
+        title="test job", status=JobStatus.OPEN,
+        budget_min=Decimal(100), budget_max=Decimal(300), description="description")
+    job.is_deleted = True
+    async_session.add(job)
+    await async_session.commit()
+    await async_session.refresh(job)
+    return job
+
+
+# ─── Test Job Creation ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 class TestCreateJob:
     """POST /api/v1/jobs"""
@@ -83,7 +118,7 @@ class TestCreateJob:
         )
         assert response.status_code == 201
         data = response.json()
-        assert "location" in data
+        assert "coordinates" in data
 
     async def test_create_job_lat_without_lng_fails(self, async_client: AsyncClient, customer_auth_headers, job_create_payload):
         job_create_payload["latitude"] = 40.7128
@@ -107,11 +142,11 @@ class TestCreateJob:
         response = await async_client.post("/api/v1/jobs", json=job_create_payload)
         assert response.status_code == 401
 
-    async def test_create_job_non_customer_role_returns_403(self, async_client: AsyncClient, tradesperson_token_headers, job_create_payload):
+    async def test_create_job_non_customer_role_returns_403(self, async_client: AsyncClient, worker_profile_auth_headers, job_create_payload):
         response = await async_client.post(
             "/api/v1/jobs",
             json=job_create_payload,
-            headers=tradesperson_token_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 403
 
@@ -160,7 +195,7 @@ class TestCreateJob:
         )
         data = response.json()
         assert "hashed_password" not in data
-        assert "is_deleted" not in data
+        assert "location" not in data
 
 
 # ─── Test Job retrival ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -257,11 +292,11 @@ class TestUpdateJob:
         )
         assert response.status_code == 404
 
-    async def test_update_job_tradesperson_role_returns_403(self, async_client: AsyncClient, tradesperson_token_headers, test_job):
+    async def test_update_job_tradesperson_role_returns_403(self, async_client: AsyncClient, worker_profile_auth_headers, test_job):
         response = await async_client.patch(
             f"/api/v1/jobs/{test_job.id}",
             json={"title": "Trade Update"},
-            headers=tradesperson_token_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 403
 
@@ -283,7 +318,7 @@ class TestDeleteJob:
             f"/api/v1/jobs/{test_job.id}",
             headers=customer_auth_headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == 204
 
     async def test_delete_job_is_soft_delete(self, async_client: AsyncClient, customer_auth_headers, test_job, async_session):
         await async_client.delete(
@@ -327,10 +362,10 @@ class TestDeleteJob:
         )
         assert response.status_code == 404
 
-    async def test_delete_job_tradesperson_role_returns_403(self, async_client: AsyncClient, tradesperson_token_headers, test_job):
+    async def test_delete_job_tradesperson_role_returns_403(self, async_client: AsyncClient, worker_profile_auth_headers, test_job):
         response = await async_client.delete(
             f"/api/v1/jobs/{test_job.id}",
-            headers=tradesperson_token_headers,
+            headers=worker_profile_auth_headers,
         )
         assert response.status_code == 403
 
@@ -341,6 +376,7 @@ class TestListJobs:
 
     async def test_list_jobs_public(self, async_client: AsyncClient, test_job):
         response = await async_client.get("/api/v1/jobs")
+        print(response.json())
         assert response.status_code == 200
 
     async def test_list_jobs_response_shape(self, async_client: AsyncClient, test_job):

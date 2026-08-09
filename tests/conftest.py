@@ -176,7 +176,7 @@ async def async_client_with_rate_limit(
 
 @pytest_asyncio.fixture
 async def test_user(async_session: AsyncSession) -> User:
-    return await create_test_user(async_session)
+    return await create_test_user(async_session, role_type=UserRole.WORKER)
 
 
 @pytest_asyncio.fixture

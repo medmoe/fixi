@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import cast
+from typing import cast, Any
 
 from fastcrud import FastCRUD
 from fastcrud.types import GetMultiResponseDict, GetMultiResponseModel
@@ -37,7 +37,6 @@ class CRUDJob(
         latitude = data.pop('latitude', None)
         longitude = data.pop('longitude', None)
         internal = JobCreateInternal(**data, user_id=user_id, location=build_wkt_point(latitude, longitude))
-        print(f"FIND ME: internal: {internal}")
         return await super().create(
             db=db,
             object=internal,
@@ -51,7 +50,7 @@ class CRUDJob(
             object: JobUpdate,
             user_id: int,
             job_id: int
-    ) -> JobRead:
+    ) -> Any:
         # verify job exists and belongs to user
         job = await db.get(Job, job_id)
         if job is None:
@@ -76,9 +75,7 @@ class CRUDJob(
             user_id=user_id,
             location=build_wkt_point(latitude, longitude)
         )
-        await super().update(db=db, object=internal, id=job_id)
-        updated_job = await db.get(Job, job_id)
-        return JobRead.model_validate(updated_job)
+        return await super().update(db=db, object=internal, id=job_id, schema_to_select=JobRead, return_as_model=True)
 
     async def delete_job(self, db: AsyncSession, user_id: int, job_id: int):
         """ Soft delete job"""

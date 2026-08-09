@@ -46,8 +46,8 @@ class Job(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     location: Mapped[str | None] = mapped_column(PostGISPoint(), default=None)
 
     # ─── Relationship ──────────────────────────────────────────────────────────
-    user: Mapped["User"] = relationship("User", back_populates="jobs", lazy='noload', init=False)
-    trade_category: Mapped["TradeCategory"] = relationship("TradeCategory", back_populates="jobs", lazy='noload', init=False)
+    user: Mapped["User"] = relationship("User", back_populates="jobs", lazy='raise', init=False)
+    trade_category: Mapped["TradeCategory"] = relationship("TradeCategory", back_populates="jobs", lazy='raise', init=False)
 
     # ─── Job status ──────────────────────────────────────────────────────────
     status: Mapped[JobStatus] = mapped_column(
