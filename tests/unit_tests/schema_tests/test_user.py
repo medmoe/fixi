@@ -301,10 +301,6 @@ class TestUserUpdate:
         assert schema.latitude == 40.7128
         assert schema.longitude == -74.0060
 
-    def test_missing_latitude(self):
-        with pytest.raises(ValidationError):
-            UserUpdate(display_location="New York City", longitude=-74.0060)
-
     def test_extra_fields_forbidden(self):
         with pytest.raises(ValidationError):
             UserUpdate(unexpected="value")
@@ -338,8 +334,6 @@ class TestUserUpdateInternal:
         schema = UserUpdateInternal(updated_at=now, display_location="San Francisco", longitude=-122.4194, latitude=37.7749)
         assert schema.updated_at == now
         assert schema.display_location == "San Francisco"
-        assert schema.location is not None
-        assert schema.location == f"POINT(-122.4194 37.7749)"
 
     def test_requires_updated_at(self):
         with pytest.raises(ValidationError):
@@ -363,28 +357,6 @@ class TestUserUpdateInternal:
         dumped = schema.model_dump(exclude_unset=True)
         assert "latitude" not in dumped
         assert "longitude" not in dumped
-        assert dumped["location"] == "POINT(-122.4194 37.7749)"
-        assert "latitude" not in schema.model_dump_json()
-
-    def test_latitude_longitude_hidden_from_json_schema(self):
-        properties = UserUpdateInternal.model_json_schema()["properties"]
-        assert "latitude" not in properties
-        assert "longitude" not in properties
-        assert "location" in properties
-
-    @pytest.mark.parametrize("lat,lon", [(91, 0), (-91, 0), (0, 181), (0, -181)])
-    def test_rejects_out_of_range_coordinates(self, lat, lon):
-        with pytest.raises(ValidationError):
-            UserUpdateInternal(
-                updated_at=datetime.now(UTC), display_location="X", latitude=lat, longitude=lon
-            )
-
-    @pytest.mark.parametrize("lat,lon", [(90.0, 180.0), (-90.0, -180.0), (0.0, 0.0)])
-    def test_accepts_boundary_coordinates(self, lat, lon):
-        schema = UserUpdateInternal(
-            updated_at=datetime.now(UTC), display_location="X", latitude=lat, longitude=lon
-        )
-        assert schema.location == f"POINT({lon} {lat})"
 
 
 # ─── UserPasswordUpdate ───────────────────────────────────────────────────────

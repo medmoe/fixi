@@ -33,15 +33,15 @@ class Job(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text())
 
-    # ─── Foreign key ──────────────────────────────────────────────────────────
+    # ─── Foreign key ────────────────────────────────────────────────────────────────────────────────────────
     trade_category_id: Mapped[int | None] = mapped_column(ForeignKey("trade_categories.id", ondelete='SET NULL'), nullable=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), index=True)
 
-    # ─── Budget ──────────────────────────────────────────────────────────
+    # ─── Budget ──────────────────────────────────────────────────────────────────────────────────────────────
     budget_min: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     budget_max: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
 
-    # ─── Location ──────────────────────────────────────────────────────────
+    # ─── Location ──────────────────────────────────────────────────────────────────────────────────────────────
     display_location: Mapped[str | None] = mapped_column(String(255), default=None)
     location: Mapped[str | None] = mapped_column(PostGISPoint(), default=None)
 

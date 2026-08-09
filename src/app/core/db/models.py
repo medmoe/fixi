@@ -9,7 +9,7 @@ from uuid6 import uuid7
 
 class UUIDMixin(MappedAsDataclass):
     uuid: Mapped[uuid_pkg.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default_factory=uuid7, init=False, server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True), default_factory=uuid7, init=False, server_default=text("gen_random_uuid()")
     )
 
 

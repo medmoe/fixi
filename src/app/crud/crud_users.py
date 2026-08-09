@@ -18,6 +18,7 @@ from ..schemas.user import (
     UserUpdate,
     UserUpdateInternal,
 )
+from ..schemas.utils import build_wkt_point
 
 
 class CRUDUser(FastCRUD[
@@ -60,9 +61,12 @@ class CRUDUser(FastCRUD[
             else object.model_dump(exclude_unset=True, mode="json")
         )
 
+        latitude = update_data.pop('latitude', None)
+        longitude = update_data.pop('longitude', None)
         internal = UserUpdateInternal(
             **update_data,
             updated_at=datetime.now(UTC).replace(tzinfo=None),
+            location=build_wkt_point(latitude, longitude),
         )
 
         # fastcrud builds its RETURNING clause from bare column names, so

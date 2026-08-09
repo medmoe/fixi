@@ -2,7 +2,8 @@ import uuid as uuid_pkg
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, model_validator
+from pydantic.json_schema import SkipJsonSchema
 from uuid6 import uuid7
 
 
@@ -75,3 +76,19 @@ class TokenBlacklistCreate(TokenBlacklistBase):
 
 class TokenBlacklistUpdate(TokenBlacklistBase):
     pass
+
+
+# ————— Location ———————————————————————————————————————————————————————————————————————————————————————————————————
+class LocationBuilderMixin(BaseModel):
+    """Converts lat/lng to WKT POINT string for PostGIS storage."""
+    latitude: SkipJsonSchema[float | None] = Field(default=None, exclude=True)
+    longitude: SkipJsonSchema[float | None] = Field(default=None, exclude=True)
+
+    @model_validator(mode='after')
+    def build_location(self):
+        lat, lon = self.latitude, self.longitude
+        if (lat is None) != (lon is None):
+            raise ValueError("Both latitude and longitude must be provided together.")
+        if lat is not None and lon is not None:
+            self.location = f"POINT({lon} {lat})"
+        return self
