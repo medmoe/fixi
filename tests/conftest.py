@@ -10,6 +10,7 @@ from PIL import Image
 from faker import Faker
 from fastapi import Request, Depends
 from httpx import AsyncClient, ASGITransport
+from redis import Redis
 from sqlalchemy import text, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -179,6 +180,16 @@ async def test_user(async_session: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
+async def customer_test_user(async_session: AsyncSession) -> User:
+    return await create_test_user(async_session, role_type=UserRole.CUSTOMER)
+
+
+@pytest_asyncio.fixture
+async def other_customer_test_user(async_session: AsyncSession) -> User:
+    return await create_test_user(async_session, role_type=UserRole.CUSTOMER)
+
+
+@pytest_asyncio.fixture
 async def test_admin_user(async_session: AsyncSession) -> User:
     return await create_test_user(async_session, is_superuser=True)
 
@@ -199,7 +210,7 @@ async def test_other_worker_profile(async_session: AsyncSession, other_user: Use
 
 
 @pytest_asyncio.fixture
-async def auth_headers(async_client_with_redis: AsyncClient, test_user: User) -> dict:
+async def auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], test_user: User) -> dict:
     """ Get authentication headers for a test user."""
     client, _ = async_client_with_redis
     login_data = {
@@ -210,12 +221,10 @@ async def auth_headers(async_client_with_redis: AsyncClient, test_user: User) ->
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-@pytest_asyncio.fixture
-async def worker_profile_auth_headers(async_client_with_redis: AsyncClient, test_user: User) -> dict:
-    """ Get authentication headers for a test user."""
+async def generate_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], user: User) -> dict:
     client, _ = async_client_with_redis
     login_data = {
-        "username_or_email": test_user.username,
+        "username_or_email": user.username,
         "password": TEST_PASSWORD
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
@@ -223,28 +232,33 @@ async def worker_profile_auth_headers(async_client_with_redis: AsyncClient, test
 
 
 @pytest_asyncio.fixture
-async def other_auth_headers(async_client_with_redis: AsyncClient, other_user: User) -> dict:
+async def worker_profile_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], test_user: User) -> dict:
     """ Get authentication headers for a test user."""
-    client, _ = async_client_with_redis
-    login_data = {
-        "username_or_email": other_user.username,
-        "password": TEST_PASSWORD
-    }
-    response = await client.post("/api/v1/auth/login", json=login_data)
-    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+    return await generate_auth_headers(async_client_with_redis, test_user)
 
 
 @pytest_asyncio.fixture
-async def admin_auth_headers(async_client_with_redis: AsyncClient, test_admin_user: User) -> dict:
+async def other_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], other_user: User) -> dict:
     """ Get authentication headers for a test user."""
-    client, _ = async_client_with_redis
-    login_data = {
-        "username_or_email": test_admin_user.username,
-        "password": TEST_PASSWORD
-    }
+    return await generate_auth_headers(async_client_with_redis, other_user)
 
-    response = await client.post("/api/v1/auth/login", json=login_data)
-    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+@pytest_asyncio.fixture
+async def admin_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], test_admin_user: User) -> dict:
+    """ Get authentication headers for a test user."""
+    return await generate_auth_headers(async_client_with_redis, test_admin_user)
+
+
+@pytest_asyncio.fixture
+async def customer_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], customer_test_user: User) -> dict:
+    """ Get authenticated header for a user with customer role type """
+    return await generate_auth_headers(async_client_with_redis, customer_test_user)
+
+
+@pytest_asyncio.fixture
+async def other_customer_auth_headers(async_client_with_redis: tuple[AsyncClient, Redis], other_customer_test_user: User) -> dict:
+    """ Get authenticated header for a user with customer role type """
+    return await generate_auth_headers(async_client_with_redis, other_customer_test_user)
 
 
 @pytest.fixture
@@ -352,7 +366,7 @@ async def create_bulk_test_worker_profiles(async_session: AsyncSession, paramete
     result = await async_session.execute(
         select(User).where(User.email.in_(emails))
     )
-    users: list[User] = result.scalars().all()
+    users: list[User] = list(result.scalars().all())
 
     # create worker profiles
     worker_rows = [
@@ -367,7 +381,7 @@ async def create_bulk_test_worker_profiles(async_session: AsyncSession, paramete
     result = await async_session.execute(
         select(WorkerProfile).where(WorkerProfile.user_id.in_(user_ids))
     )
-    workers: list[WorkerProfile] = result.scalars().all()
+    workers: list[WorkerProfile] = list(result.scalars().all())
     return workers
 
 
@@ -447,6 +461,7 @@ def sample_user_read():
         username=fake.user_name(),
         email=fake.email(),
         profile_image_url=fake.image_url(),
+        role_type=UserRole.WORKER
     )
 
 
