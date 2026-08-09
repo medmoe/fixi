@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.models import Job, TradeCategory, User
 from src.app.models import JobStatus
-from tests.unit_tests.crud_tests.job.mocks import mock_jobs
 
 
 async def create_test_job(
@@ -14,13 +13,13 @@ async def create_test_job(
         test_user: User
 ) -> Job:
     job = Job(
-        title=mock_jobs[0]["title"],
-        description=mock_jobs[0]["description"],
+        title="Fix Leaking Kitchen Sink",
+        description="Kitchen sink has been leaking under the cabinet for two days.",
         trade_category_id=test_trade_category.id,
         user_id=test_user.id,
-        budget_min=mock_jobs[0]['budget_min'],
-        budget_max=mock_jobs[0]['budget_max'],
-        display_location=mock_jobs[0]['display_location'],
+        budget_min=Decimal("75.00"),
+        budget_max=Decimal("200.00"),
+        display_location="New York, NY",
         location="POINT(0 0)"
     )
     async_session.add(job)
@@ -142,9 +141,15 @@ async def exact_boundary_job(async_session, test_user, test_trade_category):
 
 @pytest_asyncio.fixture
 async def job_with_title_plumber(async_session, test_user, test_trade_category):
-    job = Job(user_id=test_user.id, trade_category_id=test_trade_category.id,
-        title="Plumber needed urgently", status=JobStatus.OPEN,
-        budget_min=Decimal(100), budget_max=Decimal(300), description="test description")
+    job = Job(
+        user_id=test_user.id,
+        trade_category_id=test_trade_category.id,
+        title="Plumber needed urgently",
+        status=JobStatus.OPEN,
+        budget_min=Decimal(100),
+        budget_max=Decimal(300),
+        description="test description"
+    )
     async_session.add(job)
     await async_session.commit()
     await async_session.refresh(job)

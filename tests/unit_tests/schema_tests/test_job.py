@@ -139,7 +139,6 @@ class TestJobCreateInternal:
             longitude=-74.0060,
         )
         assert req.title == "Fix leaky faucet"
-        assert req.location is not None and req.location.startswith("POINT")
 
     def test_no_latitude_longitude_fields(self):
         req = JobCreateInternal(title="Test", user_id=42)
@@ -159,10 +158,6 @@ class TestJobCreateInternal:
         assert req.budget_max is None
         assert req.display_location is None
         assert req.location is None
-
-    def test_location_is_set(self):
-        job_update = JobCreateInternal(latitude=12.02, longitude=12.02, user_id=42, title="Test")
-        assert job_update.location == "POINT(12.02 12.02)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -224,11 +219,6 @@ class TestJobUpdateInternal:
     def test_inherits_job_update_validation(self):
         with pytest.raises(ValidationError):
             JobUpdateInternal(title="", budget_min=Decimal("-5.00"))
-
-    def test_location_is_set(self):
-        job_update = JobUpdateInternal(latitude=12.02, longitude=12.02, user_id=42)
-        assert job_update.location == "POINT(12.02 12.02)"
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TradeCategoryRead
@@ -400,8 +390,8 @@ class TestJobFilter:
             status=JobStatus.OPEN,
             trade_category_id=1,
             user_id=42,
-            min_budget=Decimal("100.00"),
-            max_budget=Decimal("500.00"),
+            budget_min=Decimal("100.00"),
+            budget_max=Decimal("500.00"),
             search="plumber",
             is_deleted=False,
         )
@@ -425,7 +415,7 @@ class TestJobFilter:
 
     def test_budget_min_negative_fails(self):
         with pytest.raises(ValidationError):
-            JobFilter(min_budget=Decimal("-1.00"))
+            JobFilter(budget_min=Decimal("-1.00"))
 
     def test_search_too_long_fails(self):
         with pytest.raises(ValidationError):

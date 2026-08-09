@@ -5,15 +5,10 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import (
-    BaseModel, ConfigDict, Field,
-    model_validator, computed_field
-)
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
-from .trade_category import TradeCategoryRead
-from ..core.schemas import LocationBuilderMixin
 from ..models.job import JobStatus
-
+from .trade_category import TradeCategoryRead
 
 # ─── Base ─────────────────────────────────────────────────────────────────────
 
@@ -43,18 +38,27 @@ class JobCreate(JobBase):
         return self
 
 
-class JobCreateInternal(LocationBuilderMixin, JobCreate):
+class JobCreateInternal(JobCreate):
     """Service layer schema — adds user_id and builds WKT location."""
     location: str | None = Field(default=None)  # built by LocationBuilderMixin
     user_id: int
     status: JobStatus = Field(default=JobStatus.OPEN)
+    latitude: Annotated[float | None, Field(default=None, exclude=True)] = None
+    longitude: Annotated[float | None, Field(default=None, exclude=True)] = None
 
 
 # ─── Update ───────────────────────────────────────────────────────────────────
 
-class JobUpdate(JobBase):
+class JobUpdate(BaseModel):
     """Client-facing partial update — all fields optional."""
+    model_config = ConfigDict(extra='forbid')
     title: Annotated[str | None, Field(min_length=1, max_length=255, default=None)] = None
+    description: Annotated[str | None, Field(default=None)] = None
+    trade_category_id: str | None = None
+    budget_min: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)] = None
+    budget_max: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)] = None
+    display_location: Annotated[str | None, Field(max_length=255, default=None)] = None
+
     status: JobStatus | None = Field(default=None)
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
@@ -66,11 +70,13 @@ class JobUpdate(JobBase):
         return self
 
 
-class JobUpdateInternal(LocationBuilderMixin, JobUpdate):
+class JobUpdateInternal(JobUpdate):
     """Service layer update — adds user_id and updated_at."""
     location: str | None = Field(default=None)
     user_id: Annotated[int, Field(gt=0)]
     updated_at: datetime | None = Field(default=None)  # ✅ set by CRUD layer
+    latitude: Annotated[float | None, Field(default=None, exclude=True)] = None
+    longitude: Annotated[float | None, Field(default=None, exclude=True)] = None
 
 
 # ─── Read ─────────────────────────────────────────────────────────────────────

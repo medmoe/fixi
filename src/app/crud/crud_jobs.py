@@ -1,13 +1,15 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+from typing import cast
 
 from fastcrud import FastCRUD
 from fastcrud.types import GetMultiResponseDict, GetMultiResponseModel
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.exceptions.http_exceptions import BadRequestException, NotFoundException, ForbiddenException
+from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ..models import Job, JobStatus
-from ..schemas.job import JobCreate, JobUpdate, JobRead, JobCreateInternal, JobUpdateInternal, JobDelete, JobFilter
+from ..schemas.job import JobCreate, JobCreateInternal, JobDelete, JobFilter, JobRead, JobUpdate, JobUpdateInternal
+from ..schemas.utils import build_wkt_point
 
 
 class CRUDJob(
@@ -32,7 +34,10 @@ class CRUDJob(
             raise BadRequestException("Maximum number of active jobs reached")
 
         data = object.model_dump(mode="json", exclude_unset=True)
-        internal = JobCreateInternal(**data, user_id=user_id)
+        latitude = data.pop('latitude', None)
+        longitude = data.pop('longitude', None)
+        internal = JobCreateInternal(**data, user_id=user_id, location=build_wkt_point(latitude, longitude))
+        print(f"FIND ME: internal: {internal}")
         return await super().create(
             db=db,
             object=internal,
@@ -53,7 +58,7 @@ class CRUDJob(
             raise NotFoundException(f"Job with id {job_id} not found")
 
         if job.user_id != user_id:
-            raise ForbiddenException(f"You do not have permission to update this job")
+            raise ForbiddenException("You do not have permission to update this job")
 
         if job.is_deleted:
             raise NotFoundException(f"Job with id {job_id} has been deleted")
@@ -63,7 +68,14 @@ class CRUDJob(
             raise BadRequestException(f"Only OPEN jobs can be edited. Current status: {job.status}")
 
         data = object.model_dump(mode="json", exclude_unset=True)
-        internal = JobUpdateInternal(**data, updated_at=datetime.now(UTC).replace(tzinfo=None), user_id=user_id)
+        latitude = data.pop('latitude', None)
+        longitude = data.pop('longitude', None)
+        internal = JobUpdateInternal(
+            **data,
+            updated_at=datetime.now(UTC).replace(tzinfo=None),
+            user_id=user_id,
+            location=build_wkt_point(latitude, longitude)
+        )
         await super().update(db=db, object=internal, id=job_id)
         updated_job = await db.get(Job, job_id)
         return JobRead.model_validate(updated_job)
@@ -75,7 +87,7 @@ class CRUDJob(
             raise NotFoundException(f"Job with id {job_id} not found")
 
         if job.user_id != user_id:
-            raise ForbiddenException(f"You do not have permission to delete this job")
+            raise ForbiddenException("You do not have permission to delete this job")
 
         job.is_deleted = True
         job.deleted_at = datetime.now(UTC).replace(tzinfo=None)
@@ -114,19 +126,19 @@ class CRUDJob(
                         Job.description.ilike(f"%{filters.search}%"),
                     )
                 )
-                .where(Job.is_deleted == False)
+                .where(Job.is_deleted == False)  # noqa: E712
                 .offset(offset)
                 .limit(limit)
             )
             result = await db.execute(stmt)
             jobs = result.scalars().all()
-            result: GetMultiResponseModel = {
+            response: GetMultiResponseModel = {
                 'data': [JobRead.model_validate(job) for job in jobs],
                 'total_count': len(jobs)
             }
-            return result
+            return response
 
-        jobs = await super().get_multi(
+        response = await super().get_multi(
             db=db,
             offset=offset,
             limit=limit,
@@ -134,7 +146,7 @@ class CRUDJob(
             return_as_model=True,
             **filter_kwargs
         )
-        return jobs
+        return cast(GetMultiResponseModel, response)
 
 
 crud_jobs = CRUDJob(Job)
