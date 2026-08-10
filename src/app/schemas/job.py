@@ -32,6 +32,12 @@ class JobCreate(JobBase):
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
 
     @model_validator(mode='after')
+    def validate_budget_range(self):
+        if self.budget_min is not None and self.budget_max is not None and self.budget_max < self.budget_min:
+            raise ValueError("Budget max must be greater than or equal to budget min.")
+        return self
+
+    @model_validator(mode='after')
     def validate_coordinates(self):
         if (self.latitude is None) != (self.longitude is None):
             raise ValueError("Both latitude and longitude must be provided together.")
@@ -62,6 +68,12 @@ class JobUpdate(BaseModel):
     status: JobStatus | None = Field(default=None)
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
+
+    @model_validator(mode='after')
+    def validate_budget_range(self):
+        if self.budget_min is not None and self.budget_max is not None and self.budget_max < self.budget_min:
+            raise ValueError("Budget max must be greater than or equal to budget min.")
+        return self
 
     @model_validator(mode='after')
     def validate_coordinates(self):
@@ -131,9 +143,7 @@ class PaginationParams(BaseModel):
     offset: int = Field(default=0, ge=0)
     limit: int = Field(default=20, ge=1, le=100)
 
-
 class JobFilter(BaseModel):
-    model_config = ConfigDict(extra="forbid")
     status: JobStatus | None = Field(default=None)
     trade_category_id: int | None = Field(default=None)
     user_id: int | None = Field(default=None)

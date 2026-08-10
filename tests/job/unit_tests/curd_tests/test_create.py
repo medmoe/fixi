@@ -8,8 +8,8 @@ from src.app.core.exceptions.http_exceptions import BadRequestException
 from src.app.crud.crud_jobs import crud_jobs
 from src.app.models import Job, JobStatus, User, TradeCategory
 from src.app.schemas.job import JobCreate
-from tests.unit_tests.crud_tests.job.helpers import bulk_job_create
-from tests.unit_tests.crud_tests.job.mocks import mock_jobs
+from tests.job.helpers import bulk_job_create
+from tests.job.mocks import mock_jobs
 
 
 @pytest.mark.unit

@@ -24,7 +24,6 @@ class TestGetMultiJobs:
         """Deleted jobs must never appear in results regardless of other filters."""
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        result = result['data']
         ids = [j.id for j in result]
         assert test_job.id in ids
         assert deleted_job.id not in ids
@@ -33,13 +32,12 @@ class TestGetMultiJobs:
         """Fresh session with no seeded jobs → empty list."""
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert result['data'] == []
-        assert result['total_count'] == 0
+        assert result == []
 
     async def test_returns_list_of_job_read_instances(self, async_session, test_job):
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert all(isinstance(j, JobRead) for j in result['data'])
+        assert all(isinstance(j, JobRead) for j in result)
 
     # ------------------------------------------------------------------ #
     #  Status filter                                                       #
@@ -49,7 +47,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(status=JobStatus.OPEN)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert open_job.id in ids
         assert closed_job.id not in ids
 
@@ -57,7 +55,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(status=JobStatus.COMPLETED)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert closed_job.id in ids
         assert open_job.id not in ids
 
@@ -65,7 +63,7 @@ class TestGetMultiJobs:
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert open_job.id in ids
         assert closed_job.id in ids
 
@@ -79,33 +77,33 @@ class TestGetMultiJobs:
         filters = self._make_filter(trade_category_id=test_job.trade_category_id)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert test_job.id in ids
         assert job_with_different_trade_category.id not in ids
 
     async def test_trade_category_filter_no_match_returns_empty(self, async_session, test_job):
         filters = self._make_filter(trade_category_id=99999)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert result['data'] == []
+        assert result == []
 
     # ------------------------------------------------------------------ #
     #  User filter                                                         #
     # ------------------------------------------------------------------ #
 
     async def test_user_id_filter_returns_only_that_users_jobs(
-            self, async_session, test_job, test_user, job_other_user
+            self, async_session, test_job, customer_test_user, job_other_user
     ):
-        filters = self._make_filter(user_id=test_user.id)
+        filters = self._make_filter(user_id=customer_test_user.id)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert test_job.id in ids
         assert job_other_user.id not in ids
 
     async def test_user_id_filter_no_match_returns_empty(self, async_session):
         filters = self._make_filter(user_id=99999)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert result['data'] == []
+        assert result == []
 
     # ------------------------------------------------------------------ #
     #  Budget range filters                                                #
@@ -118,7 +116,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(budget_min=500)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert high_budget_job.id in ids
         assert low_budget_job.id not in ids
 
@@ -129,7 +127,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(budget_max=300)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert low_budget_job.id in ids
         assert high_budget_job.id not in ids
 
@@ -140,7 +138,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(budget_min=400, budget_max=600)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert mid_budget_job.id in ids
         assert low_budget_job.id not in ids
         assert high_budget_job.id not in ids
@@ -152,7 +150,7 @@ class TestGetMultiJobs:
         filters = self._make_filter(budget_min=500, budget_max=500)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert exact_boundary_job.id in ids
 
     # ------------------------------------------------------------------ #
@@ -163,46 +161,46 @@ class TestGetMultiJobs:
         filters = self._make_filter(search="plumber")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert job_with_title_plumber.id in ids
 
     async def test_search_matches_description(self, async_session, job_with_desc_keyword):
         filters = self._make_filter(search="urgent repair")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert job_with_desc_keyword.id in ids
 
     async def test_search_is_case_insensitive(self, async_session, job_with_title_plumber):
         for term in ("PLUMBER", "Plumber", "pLuMbEr"):
             filters = self._make_filter(search=term)
             result = await crud_jobs.get_multi_jobs(async_session, filters)
-            ids = [j.id for j in result['data']]
+            ids = [j.id for j in result]
             assert job_with_title_plumber.id in ids, f"Failed for search term: {term!r}"
 
     async def test_search_excludes_deleted_jobs(self, async_session, deleted_job_with_keyword):
         filters = self._make_filter(search="deleted_keyword")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert deleted_job_with_keyword.id not in ids
 
     async def test_search_no_match_returns_empty(self, async_session, test_job):
         filters = self._make_filter(search="zzz_no_match_xyz_123")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert result['data'] == []
+        assert result == []
 
     async def test_search_partial_match(self, async_session, job_with_title_plumber):
         filters = self._make_filter(search="plumb")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert job_with_title_plumber.id in ids
 
     async def test_search_returns_job_read_instances(self, async_session, job_with_title_plumber):
         filters = self._make_filter(search="plumber")
         result = await crud_jobs.get_multi_jobs(async_session, filters)
-        assert all(isinstance(j, JobRead) for j in result['data'])
+        assert all(isinstance(j, JobRead) for j in result)
 
     # ------------------------------------------------------------------ #
     #  Pagination                                                          #
@@ -212,47 +210,47 @@ class TestGetMultiJobs:
         # many_jobs fixture creates 10 jobs
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters, limit=3)
-        assert len(result['data']) == 3
+        assert len(result) == 3
 
     async def test_offset_skips_records(self, async_session, many_jobs):
         filters = self._make_filter()
-        all_results = await crud_jobs.get_multi_jobs(async_session, filters, limit=10)
-        offset_results = await crud_jobs.get_multi_jobs(async_session, filters, offset=2, limit=10)
+        all_results = await crud_jobs.get_multi_jobs(async_session, filters, limit=60)
+        offset_results = await crud_jobs.get_multi_jobs(async_session, filters, offset=2, limit=60)
 
-        assert len(offset_results['data']) == len(all_results['data']) - 2
-        assert all_results['data'][0].id not in [j.id for j in offset_results['data']]
-        assert all_results['data'][1].id not in [j.id for j in offset_results['data']]
+        assert len(offset_results) == len(all_results) - 2
+        assert all_results[0].id not in [j.id for j in offset_results]
+        assert all_results[1].id not in [j.id for j in offset_results]
 
     async def test_offset_beyond_total_returns_empty(self, async_session, many_jobs):
         filters = self._make_filter()
         result = await crud_jobs.get_multi_jobs(async_session, filters, offset=9999)
-        assert result['data'] == []
+        assert result == []
 
     async def test_search_limit_restricts_result_count(self, async_session, many_plumber_jobs):
         # many_plumber_jobs fixture creates 10 jobs with "plumber" in title
         filters = self._make_filter(search="plumber")
         result = await crud_jobs.get_multi_jobs(async_session, filters, limit=3)
-        assert len(result['data']) == 3
+        assert len(result) == 3
 
     async def test_search_offset_skips_records(self, async_session, many_plumber_jobs):
         filters = self._make_filter(search="plumber")
-        all_results = await crud_jobs.get_multi_jobs(async_session, filters, limit=10)
-        offset_results = await crud_jobs.get_multi_jobs(async_session, filters, offset=2, limit=10)
+        all_results = await crud_jobs.get_multi_jobs(async_session, filters, limit=30)
+        offset_results = await crud_jobs.get_multi_jobs(async_session, filters, offset=2, limit=30)
 
-        assert len(offset_results['data']) == len(all_results['data']) - 2
+        assert len(offset_results) == len(all_results) - 2
 
     # ------------------------------------------------------------------ #
     #  Combined filters                                                    #
     # ------------------------------------------------------------------ #
 
     async def test_status_and_user_combined(
-            self, async_session, test_user, open_job, closed_job, job_other_user
+            self, async_session, customer_test_user, open_job, closed_job, job_other_user
     ):
         # open_job and closed_job both belong to test_user
-        filters = self._make_filter(status=JobStatus.OPEN, user_id=test_user.id)
+        filters = self._make_filter(status=JobStatus.OPEN, user_id=customer_test_user.id)
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert open_job.id in ids
         assert closed_job.id not in ids
         assert job_other_user.id not in ids
@@ -268,6 +266,6 @@ class TestGetMultiJobs:
         )
         result = await crud_jobs.get_multi_jobs(async_session, filters)
 
-        ids = [j.id for j in result['data']]
+        ids = [j.id for j in result]
         assert matching_job.id in ids
         assert non_matching_job.id not in ids
