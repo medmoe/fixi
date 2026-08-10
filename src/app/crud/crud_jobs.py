@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
-from typing import cast, Any
+from typing import Any
 
 from fastcrud import FastCRUD
-from fastcrud.types import GetMultiResponseDict, GetMultiResponseModel
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ..models import Job, JobStatus
@@ -91,59 +91,44 @@ class CRUDJob(
         job.updated_at = datetime.now(UTC).replace(tzinfo=None)
         await db.commit()
 
-    async def get_multi_jobs(
-            self,
-            db: AsyncSession,
-            filters: JobFilter,
-            offset: int = 0,
-            limit: int = 20
-    ) -> GetMultiResponseModel | GetMultiResponseDict:
-        # build filter kwargs for FastCRUD
-        filter_kwargs: dict = {"is_deleted": False}  # never show deleted, by default
+    def _apply_filters(self, stmt, filters: JobFilter):
+        """Applies WHERE clauses only — no SELECT, no joinedload, no offset/limit."""
+        stmt = stmt.where(Job.is_deleted == False)  # noqa: E712
         if filters.status is not None:
-            filter_kwargs["status"] = filters.status.value
+            stmt = stmt.where(Job.status == filters.status)
         if filters.trade_category_id is not None:
-            filter_kwargs["trade_category_id"] = filters.trade_category_id
+            stmt = stmt.where(Job.trade_category_id == filters.trade_category_id)
         if filters.user_id is not None:
-            filter_kwargs["user_id"] = filters.user_id
-
-        # range filters using fastCRUD __ syntax
+            stmt = stmt.where(Job.user_id == filters.user_id)
         if filters.budget_min is not None:
-            filter_kwargs["budget_max__gte"] = filters.budget_min
+            stmt = stmt.where(Job.budget_max >= filters.budget_min)
         if filters.budget_max is not None:
-            filter_kwargs["budget_min__lte"] = filters.budget_max
-
-        # search — requires raw SQL for ILIKE
+            stmt = stmt.where(Job.budget_min <= filters.budget_max)
         if filters.search:
-            stmt = (
-                select(Job)
-                .where(
-                    or_(
-                        Job.title.ilike(f"%{filters.search}%"),
-                        Job.description.ilike(f"%{filters.search}%"),
-                    )
+            stmt = stmt.where(
+                or_(
+                    Job.title.ilike(f"%{filters.search}%"),
+                    Job.description.ilike(f"%{filters.search}%"),
                 )
-                .where(Job.is_deleted == False)  # noqa: E712
-                .offset(offset)
-                .limit(limit)
             )
-            result = await db.execute(stmt)
-            jobs = result.scalars().all()
-            response: GetMultiResponseModel = {
-                'data': [JobRead.model_validate(job) for job in jobs],
-                'total_count': len(jobs)
-            }
-            return response
+        return stmt
 
-        response = await super().get_multi(
-            db=db,
-            offset=offset,
-            limit=limit,
-            schema_to_select=JobRead,
-            return_as_model=True,
-            **filter_kwargs
+    async def get_multi_jobs(self, db: AsyncSession, filters: JobFilter, offset: int = 0, limit: int = 50) -> list[JobRead]:
+        stmt = self._apply_filters(
+            select(Job).options(
+                joinedload(Job.trade_category),
+                joinedload(Job.user)
+            ),
+            filters
         )
-        return cast(GetMultiResponseModel, response)
+        stmt = stmt.offset(offset).limit(limit)
+        result = await db.execute(stmt)
+        return [JobRead.model_validate(j) for j in result.scalars().unique().all()]
+
+    async def count_jobs(self, db: AsyncSession, filters: JobFilter) -> Any:
+        stmt = self._apply_filters(select(func.count(Job.id)), filters)
+        result = await db.execute(stmt)
+        return result.scalar_one()
 
 
 crud_jobs = CRUDJob(Job)

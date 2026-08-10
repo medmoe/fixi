@@ -397,10 +397,6 @@ class TestJobFilter:
         )
         assert f.status == JobStatus.OPEN
 
-    def test_extra_fields_forbidden(self):
-        with pytest.raises(ValidationError):
-            JobFilter(unexpected="bad")
-
     def test_offset_negative_fails(self):
         with pytest.raises(ValidationError):
             PaginationParams(offset=-1)

@@ -7,9 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
-from .trade_category import TradeCategoryRead
 from ..models.job import JobStatus
-
+from .trade_category import TradeCategoryRead
 
 # ─── Base ─────────────────────────────────────────────────────────────────────
 
@@ -144,9 +143,7 @@ class PaginationParams(BaseModel):
     offset: int = Field(default=0, ge=0)
     limit: int = Field(default=20, ge=1, le=100)
 
-
 class JobFilter(BaseModel):
-    model_config = ConfigDict(extra="forbid")
     status: JobStatus | None = Field(default=None)
     trade_category_id: int | None = Field(default=None)
     user_id: int | None = Field(default=None)

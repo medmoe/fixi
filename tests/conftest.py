@@ -83,8 +83,8 @@ async def async_client(async_session: AsyncSession) -> AsyncGenerator[AsyncClien
     """Create an async HTTP client for testing."""
 
     # Override dependency to use test DB
-    def get_test_db():
-        return async_session
+    async def get_test_db():
+        yield async_session
 
     app.dependency_overrides[async_get_db] = get_test_db
     app.dependency_overrides[rate_limiter_dependency] = lambda: None  # disable rate limiter

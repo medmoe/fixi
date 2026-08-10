@@ -6,12 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..dependencies import get_current_user
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import NotFoundException, ForbiddenException
+from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException
 from ...crud.crud_jobs import crud_jobs
-from ...models import UserRole, Job
-from ...schemas.job import JobRead, JobCreate, JobUpdate, JobFilter
+from ...models import Job, UserRole
+from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
+from ..dependencies import get_current_user
 
 router = APIRouter(tags=["jobs"])
 
@@ -22,7 +22,7 @@ async def get_job(db: Annotated[AsyncSession, Depends(async_get_db)], job_id: in
     """ Public endpoint to get a job by id."""
     stmt = (
         select(Job)
-        .options(joinedload(Job.trade_category))
+        .options(joinedload(Job.trade_category), joinedload(Job.user))
         .where(Job.id == job_id)
         .where(Job.is_deleted == False)  # noqa: E712
     )
@@ -58,19 +58,10 @@ async def update_job(
         current_user: Annotated[dict, Depends(get_current_user)]
 ):
     """ private endpoint to update a job — customers only and owner only """
-
-    if current_user['role_type'] == UserRole.CUSTOMER.value:
+    if current_user['role_type'] != UserRole.CUSTOMER.value:
         raise ForbiddenException("Only customers can update jobs")
 
-    job = await db.get(Job, job_id)
-    if job is None:
-        raise NotFoundException(f"Job with id {job_id} not found")
-
-    user_id = current_user["id"]
-    if job.user_id != user_id:
-        raise ForbiddenException("Only the owner of the job can update it")
-
-    return await crud_jobs.update_job(db=db, object=payload, user_id=user_id, job_id=job_id)
+    return await crud_jobs.update_job(db=db, object=payload, user_id=current_user["id"], job_id=job_id)
 
 
 # ─── DELETE /jobs/{job_id} ─────────────────────────────────────────────────────────────
@@ -82,31 +73,23 @@ async def delete_job(
 ):
     """ private endpoint to delete a job — customers only and owner only """
 
-    job = await db.get(Job, job_id)
-    if job is None:
-        raise NotFoundException(f"Job with id {job_id} not found")
-
-    if current_user['role_type'] == UserRole.CUSTOMER.value:
+    if current_user['role_type'] != UserRole.CUSTOMER.value:
         raise ForbiddenException("Only customers can delete jobs")
 
-    user_id = current_user["id"]
-    if job.user_id != user_id:
-        raise ForbiddenException("Only the owner of the job can delete it")
-
-    await crud_jobs.delete_job(db=db, user_id=user_id, job_id=job_id)
+    await crud_jobs.delete_job(db=db, user_id=current_user["id"], job_id=job_id)
 
 
 @router.get("/jobs", response_model=PaginatedListResponse[JobRead], status_code=200)
 async def get_jobs(
         db: Annotated[AsyncSession, Depends(async_get_db)],
-        filters: JobFilter,
+        filters: Annotated[JobFilter, Depends()],
         page: int = 1,
         page_size: int = 50,
 ):
     """ public endpoint to get jobs with pagination """
     offset = (page - 1) * page_size
     jobs = await crud_jobs.get_multi_jobs(db=db, filters=filters, offset=offset, limit=page_size)
-    total = await crud_jobs.count(db=db)
+    total = await crud_jobs.count_jobs(db=db, filters=filters)
     pages = (total + page_size - 1) // page_size
 
     return PaginatedListResponse(
