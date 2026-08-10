@@ -30,19 +30,21 @@ class TestCreateJob:
         assert "coordinates" in data
 
     async def test_create_job_lat_without_lng_fails(self, async_client: AsyncClient, customer_auth_headers, job_create_payload):
-        job_create_payload["latitude"] = 40.7128
+        payload = job_create_payload.copy()
+        payload.pop("longitude")
         response = await async_client.post(
             "/api/v1/jobs",
-            json=job_create_payload,
+            json=payload,
             headers=customer_auth_headers,
         )
         assert response.status_code == 422
 
     async def test_create_job_lng_without_lat_fails(self, async_client: AsyncClient, customer_auth_headers, job_create_payload):
-        job_create_payload["longitude"] = -74.0060
+        payload = job_create_payload.copy()
+        payload.pop("latitude")
         response = await async_client.post(
             "/api/v1/jobs",
-            json=job_create_payload,
+            json=payload,
             headers=customer_auth_headers,
         )
         assert response.status_code == 422
@@ -105,3 +107,31 @@ class TestCreateJob:
         data = response.json()
         assert "hashed_password" not in data
         assert "location" not in data
+
+    async def test_customer_cannot_create_more_than_10_active_jobs(self, async_client: AsyncClient, customer_auth_headers, job_create_payload, customer_test_user, many_jobs):
+        response = await async_client.post(
+            "/api/v1/jobs",
+            json=job_create_payload,
+            headers=customer_auth_headers,
+        )
+        assert response.status_code == 400
+
+    async def test_job_must_have_valid_trade_category_id(self, async_client: AsyncClient, customer_auth_headers, job_create_payload):
+        job_create_payload["trade_category_id"] = 99
+        response = await async_client.post(
+            "/api/v1/jobs",
+            json=job_create_payload,
+            headers=customer_auth_headers,
+        )
+        assert response.status_code == 404
+
+    async def test_job_location_required_on_create(self, async_client: AsyncClient, customer_auth_headers, job_create_payload):
+        payload = job_create_payload.copy()
+        payload.pop("latitude")
+        payload.pop("longitude")
+        response = await async_client.post(
+            "/api/v1/jobs",
+            json=payload,
+            headers=customer_auth_headers,
+        )
+        assert response.status_code == 422

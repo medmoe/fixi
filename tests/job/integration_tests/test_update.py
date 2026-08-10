@@ -77,3 +77,19 @@ class TestUpdateJob:
             headers=customer_auth_headers,
         )
         assert response.status_code == 422
+
+    async def test_update_job_must_have_valid_trade_category_id(self, async_client: AsyncClient, customer_auth_headers, test_job):
+        response = await async_client.patch(
+            f"/api/v1/jobs/{test_job.id}",
+            json={"trade_category_id": 99},
+            headers=customer_auth_headers,
+        )
+        assert response.status_code == 404
+
+    async def test_only_open_jobs_can_be_updated(self, async_client: AsyncClient, customer_auth_headers, closed_job):
+        response = await async_client.patch(
+            f"/api/v1/jobs/{closed_job.id}",
+            json={"title": "Trade Update"},
+            headers=customer_auth_headers,
+        )
+        assert response.status_code == 400

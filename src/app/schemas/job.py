@@ -28,8 +28,8 @@ class JobBase(BaseModel):
 
 class JobCreate(JobBase):
     """Client-facing create schema — lat/lng accepted, user_id from JWT."""
-    latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
-    longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
+    latitude: Annotated[float, Field(ge=-90, le=90)]
+    longitude: Annotated[float, Field(ge=-180, le=180)]
 
     @model_validator(mode='after')
     def validate_budget_range(self):
@@ -44,13 +44,11 @@ class JobCreate(JobBase):
         return self
 
 
-class JobCreateInternal(JobCreate):
+class JobCreateInternal(JobBase):
     """Service layer schema — adds user_id and builds WKT location."""
-    location: str | None = Field(default=None)  # built by LocationBuilderMixin
+    location: str | None = Field(default=None)
     user_id: int
     status: JobStatus = Field(default=JobStatus.OPEN)
-    latitude: Annotated[float | None, Field(default=None, exclude=True)] = None
-    longitude: Annotated[float | None, Field(default=None, exclude=True)] = None
 
 
 # ─── Update ───────────────────────────────────────────────────────────────────
@@ -60,7 +58,7 @@ class JobUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
     title: Annotated[str | None, Field(min_length=1, max_length=255, default=None)] = None
     description: Annotated[str | None, Field(default=None)] = None
-    trade_category_id: str | None = None
+    trade_category_id: int | None = None
     budget_min: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)] = None
     budget_max: Annotated[Decimal | None, Field(ge=Decimal("0.00"), decimal_places=2, default=None)] = None
     display_location: Annotated[str | None, Field(max_length=255, default=None)] = None
@@ -142,6 +140,7 @@ class PaginationParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     offset: int = Field(default=0, ge=0)
     limit: int = Field(default=20, ge=1, le=100)
+
 
 class JobFilter(BaseModel):
     status: JobStatus | None = Field(default=None)
