@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
+from ..crud.crud_trade_categories import crud_trade_category
 from ..models import Job, JobStatus
 from ..schemas.job import JobCreate, JobCreateInternal, JobDelete, JobFilter, JobRead, JobUpdate, JobUpdateInternal
 from ..schemas.utils import build_wkt_point
@@ -22,6 +23,13 @@ class CRUDJob(
         JobRead,
     ]
 ):
+    async def _validate_trade_category(self, db: AsyncSession, trade_category_id: int | None):
+        if trade_category_id is None:
+            return
+        exists = await crud_trade_category.exists(db=db, id=trade_category_id)
+        if not exists:
+            raise NotFoundException("Trade category does not exist")
+
     async def create_job(self, db: AsyncSession, object: JobCreate, user_id: int) -> JobRead:
         # max 10 active jobs per customer
         active_count = await self.count(
@@ -33,9 +41,12 @@ class CRUDJob(
         if active_count >= 10:
             raise BadRequestException("Maximum number of active jobs reached")
 
+        await self._validate_trade_category(db=db, trade_category_id=object.trade_category_id)
+
         data = object.model_dump(mode="json", exclude_unset=True)
         latitude = data.pop('latitude', None)
         longitude = data.pop('longitude', None)
+
         internal = JobCreateInternal(**data, user_id=user_id, location=build_wkt_point(latitude, longitude))
         return await super().create(
             db=db,
@@ -65,6 +76,8 @@ class CRUDJob(
         # Only open jobs can be edited
         if job.status != JobStatus.OPEN:
             raise BadRequestException(f"Only OPEN jobs can be edited. Current status: {job.status}")
+
+        await self._validate_trade_category(db=db, trade_category_id=object.trade_category_id)
 
         data = object.model_dump(mode="json", exclude_unset=True)
         latitude = data.pop('latitude', None)

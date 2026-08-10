@@ -103,10 +103,9 @@ class TestJobCreate:
         assert job.latitude == 47.01
         assert job.longitude == -122.01
 
-    def test_latitude_longitude_are_optional(self):
-        job = JobCreate(**_valid_job_base_kwargs())
-        assert job.latitude is None
-        assert job.longitude is None
+    def test_latitude_longitude_are_not_optional(self):
+        with pytest.raises(ValidationError):
+            job = JobCreate(**_valid_job_base_kwargs())
 
     def test_latitude_longitude_must_be_given_together(self):
         with pytest.raises(ValidationError):
@@ -135,15 +134,11 @@ class TestJobCreateInternal:
             budget_min=Decimal("100.00"),
             budget_max=Decimal("500.00"),
             display_location="123 Main St",
-            latitude=40.7128,
-            longitude=-74.0060,
         )
         assert req.title == "Fix leaky faucet"
 
     def test_no_latitude_longitude_fields(self):
         req = JobCreateInternal(title="Test", user_id=42)
-        assert req.latitude is None
-        assert req.longitude is None
         assert req.location is None
 
     def test_extra_fields_forbidden(self):

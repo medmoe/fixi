@@ -229,4 +229,6 @@ def job_create_payload(test_trade_category):
         "trade_category_id": test_trade_category.id,
         "budget_min": 100.00,
         "budget_max": 500.00,
+        "latitude": 40.7128,
+        "longitude": -74.0060
     }
