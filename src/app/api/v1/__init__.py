@@ -2,10 +2,10 @@ from fastapi import APIRouter
 
 from .auth import router as auth_v2_router
 from .files import router as files_router
+from .jobs import router as jobs_router
 from .trade_category import router as trade_category_router
 from .users import router as users_router
 from .worker_profile import router as worker_profiles_router
-from .jobs import router as jobs_router
 
 # from .worker_profile import router as worker_router
 
