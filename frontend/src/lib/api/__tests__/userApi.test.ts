@@ -1,7 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {userApi} from '../userApi'
+import {userApi} from '@/lib'
 import apiClient from '../apiClient'
-
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('../apiClient', () => ({
