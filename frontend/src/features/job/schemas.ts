@@ -1,6 +1,6 @@
 import {z} from "zod";
 
-export const JobPostSchema = z.object({
+export const jobPostSchema = z.object({
     title: z
         .string()
         .min(1, 'Title must be at least 1 character long')
@@ -49,4 +49,4 @@ export const JobPostSchema = z.object({
     {message: "Budget max must be greater than or equal to budget min.", path: ["budget_max"]}
 )
 
-export type JobPostFormValues = z.input<typeof JobPostSchema>
+export type JobPostFormValues = z.input<typeof jobPostSchema>;
