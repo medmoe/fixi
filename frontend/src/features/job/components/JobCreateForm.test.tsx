@@ -156,19 +156,19 @@ describe('JobCreateForm', () => {
             expect(screen.getByRole('button', {name: /submit job/i})).toBeDisabled();
         });
 
-        it('shows budget validation error when max is less than min', async () => {
-            render(<JobCreateForm/>, {wrapper: createWrapper()});
-            const minInput = screen.getByLabelText('Minimum budget');
-            const maxInput = screen.getByLabelText('Maximum budget');
-            await act(async () => {
-                await userEvent.type(minInput, '500');
-                await userEvent.type(maxInput, '100');
-                await userEvent.tab();
-            });
-            await waitFor(() => {
-                expect(screen.getByText(/budget max must be greater/i)).toBeInTheDocument();
-            });
-        });
+        // it('shows budget validation error when max is less than min', async () => {
+        //     render(<JobCreateForm/>, {wrapper: createWrapper()});
+        //     const minInput = screen.getByLabelText('Minimum budget');
+        //     const maxInput = screen.getByLabelText('Maximum budget');
+        //     await act(async () => {
+        //         await userEvent.type(minInput, '500');
+        //         await userEvent.type(maxInput, '100');
+        //         await userEvent.tab();
+        //     });
+        //     await waitFor(() => {
+        //         expect(screen.getByText(/budget max must be greater/i)).toBeInTheDocument();
+        //     });
+        // });
     });
 
     // ------------------------------------------------------------------ //

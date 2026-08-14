@@ -14,6 +14,12 @@ export interface JobCreateRequest extends JobBase {
     longitude: number;
 }
 
+export interface JobUpdateRequest extends JobBase {
+    // latitude and longitude are optional for updates
+    latitude?: number;
+    longitude?: number;
+}
+
 export interface JobRead {
     id: number;
     uuid: string;

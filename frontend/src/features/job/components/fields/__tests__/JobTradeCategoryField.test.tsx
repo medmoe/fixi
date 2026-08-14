@@ -87,7 +87,15 @@ describe('JobTradeCategoryField', () => {
 
         it('hides trade list when a trade is selected', () => {
             render(<Wrapper defaultValues={{trade_category_id: 1}}/>);
-            expect(screen.queryByRole('button', {name: /plumbing/i})).not.toBeInTheDocument();
+
+            // The selected trade display should be visible
+            expect(screen.getByText(/plumbing/i)).toBeInTheDocument();
+
+            // The "Remove" button should be visible
+            expect(screen.getByRole('button', {name: /remove plumbing/i})).toBeInTheDocument();
+
+            // The selectable trade buttons should NOT be visible
+            expect(screen.queryByRole('button', {name: /^plumbing$/i})).not.toBeInTheDocument();
             expect(screen.queryByRole('button', {name: /electrical/i})).not.toBeInTheDocument();
         });
     });
@@ -152,10 +160,19 @@ describe('JobTradeCategoryField', () => {
 
         it('removes the selected trade display after clearing', async () => {
             render(<Wrapper defaultValues={{trade_category_id: 1}}/>);
-            await act(async () => {
-                await userEvent.click(screen.getByRole('button', {name: /remove plumbing/i}));
-            });
-            expect(screen.queryByText('Plumbing')).not.toBeInTheDocument();
+
+            // Verify selected trade is initially shown
+            const selectedDisplay = screen.getByText('Plumbing');
+            expect(selectedDisplay).toBeInTheDocument();
+
+            // Click remove
+            await act(async () => await userEvent.click(screen.getByRole('button', {name: /remove plumbing/i})));
+
+            // The selected trade display should be gone
+            expect(screen.queryByLabelText(/remove plumbing/i)).not.toBeInTheDocument();
+
+            // But the selectable Plumbing button should now be visible
+            expect(screen.getByRole('button', {name: /plumbing/i})).toBeInTheDocument();
         });
 
         it('removes the clear button after clearing', async () => {
