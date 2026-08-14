@@ -37,12 +37,6 @@ class JobCreate(JobBase):
             raise ValueError("Budget max must be greater than or equal to budget min.")
         return self
 
-    @model_validator(mode='after')
-    def validate_coordinates(self):
-        if (self.latitude is None) != (self.longitude is None):
-            raise ValueError("Both latitude and longitude must be provided together.")
-        return self
-
 
 class JobCreateInternal(JobBase):
     """Service layer schema — adds user_id and builds WKT location."""

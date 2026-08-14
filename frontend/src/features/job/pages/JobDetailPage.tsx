@@ -1,0 +1,124 @@
+import React from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useQuery} from '@tanstack/react-query';
+import {ArrowLeft, Calendar, DollarSign, MapPin, User, Wrench} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Separator} from '@/components/ui/separator';
+import {Skeleton} from '@/components/ui/skeleton';
+import {jobApi} from '@/lib';
+import {JobRead, JobStatus} from '@/features/job';
+
+const statusColors: Record<JobStatus, string> = {
+    open: 'bg-green-100 text-green-800',
+    assigned: 'bg-blue-100 text-blue-800',
+    in_progress: 'bg-yellow-100 text-yellow-800',
+    completed: 'bg-gray-100 text-gray-800',
+    cancelled: 'bg-red-100 text-red-800',
+};
+
+export const JobDetailPage: React.FC = () => {
+    const {id} = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const jobId = Number(id);
+
+    const {data: job, isLoading, isError, error} = useQuery<JobRead>({
+        queryKey: ['job', jobId],
+        queryFn: () => jobApi.getJob(jobId),
+        enabled: !isNaN(jobId),
+    });
+
+    if (isLoading) {
+        return (
+            <div className="max-w-3xl mx-auto p-6 space-y-6">
+                <Skeleton className="h-8 w-3/4"/>
+                <Skeleton className="h-4 w-1/2"/>
+                <Skeleton className="h-32 w-full"/>
+            </div>
+        );
+    }
+
+    if (isError || !job) {
+        return (
+            <div className="max-w-3xl mx-auto p-6 text-center">
+                <p className="text-destructive mb-4">
+                    {error instanceof Error ? error.message : 'Job not found'}
+                </p>
+                <Button onClick={() => navigate('/jobs')} variant="outline">
+                    <ArrowLeft className="mr-2 h-4 w-4"/>
+                    Back to Jobs
+                </Button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-3xl mx-auto p-6 space-y-6">
+            {/* Header */}
+            <div className="flex items-start justify-between">
+                <div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/jobs')}
+                        className="mb-2 -ml-2"
+                    >
+                        <ArrowLeft className="mr-1 h-4 w-4"/>
+                        Back
+                    </Button>
+                    <h1 className="text-2xl font-bold">{job.title}</h1>
+                </div>
+                <Badge className={statusColors[job.status]}>
+                    {job.status.replace('_', ' ')}
+                </Badge>
+            </div>
+
+            <Separator/>
+
+            {/* Meta info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                {job.trade_category && (
+                    <div className="flex items-center gap-2">
+                        <Wrench className="h-4 w-4"/>
+                        {job.trade_category.name}
+                    </div>
+                )}
+                {job.display_location && (
+                    <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4"/>
+                        {job.display_location}
+                    </div>
+                )}
+                {(job.budget_min || job.budget_max) && (
+                    <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4"/>
+                        {job.budget_min && `$${job.budget_min}`}
+                        {job.budget_min && job.budget_max && ' - '}
+                        {job.budget_max && `$${job.budget_max}`}
+                    </div>
+                )}
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4"/>
+                    Posted {new Date(job.created_at).toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2">
+                    <User className="h-4 w-4"/>
+                    Customer #{job.user_id}
+                </div>
+            </div>
+
+            {/* Description */}
+            {job.description && (
+                <>
+                    <Separator/>
+                    <div>
+                        <h2 className="text-lg font-semibold mb-2">Description</h2>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                            {job.description}
+                        </p>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
