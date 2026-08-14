@@ -32,6 +32,7 @@ class WorkerProfileRead(WorkerProfileBase):
     is_verified: bool
     available_since: Annotated[datetime | None, Field(default=None)] = None
 
+
 class WorkerProfileCreate(WorkerProfileBase):
     """Used by workers to create their profile"""
     model_config = ConfigDict(extra="forbid", from_attributes=True)  # tells pydantic to read data from object attributes instead of only from dictionaries
@@ -106,3 +107,15 @@ class AvailabilityToggleRequest(BaseModel):
     """ PATCH body for toggling availability """
     model_config = ConfigDict(extra="forbid")
     is_available: bool
+
+
+class WorkerProfileFilter(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    trade_category_id: int | None = None
+    min_hourly_rate: Decimal | None = None
+    max_hourly_rate: Decimal | None = None
+    min_years_of_experience: int | None = None
+    max_years_of_experience: int | None = None
+    service_radius_km: int | None = None
+    is_available: bool | None = None
+    is_verified: bool | None = None
