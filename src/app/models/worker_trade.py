@@ -1,11 +1,15 @@
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.db.database import Base
-from ..models import TradeCategory, WorkerProfile
+
+if TYPE_CHECKING:
+    from .worker_profile import WorkerProfile
+    from .trade_category import TradeCategory
 
 
 class SkillLevel(enum.Enum):

@@ -90,6 +90,11 @@ class UserBase(BaseModel):
 # Public output
 # -------------------------------------------------------------------------
 #
+class UserPublicRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
+    name: Name
+    location: Location = None
+    display_location: DisplayLocation = None
 
 class UserRead(UserBase, UUIDSchema):
     id: int
