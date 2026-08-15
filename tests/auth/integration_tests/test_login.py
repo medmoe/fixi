@@ -2,7 +2,7 @@ import jwt
 import pytest
 from httpx import AsyncClient
 
-from .helpers import customer_payload, login_payload, worker_payload
+from ..helpers import customer_payload, login_payload, worker_payload
 
 
 @pytest.mark.integration

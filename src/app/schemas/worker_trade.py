@@ -1,4 +1,3 @@
-# src/app/schemas/worker_trade.py
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field

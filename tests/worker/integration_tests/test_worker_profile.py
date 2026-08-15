@@ -50,7 +50,7 @@ class TestGetWorkerProfile:
         assert "bio" in data
         assert "is_verified" in data
         assert "trade_categories" in data
-        assert "user" not in data
+        assert "user" in data
 
     async def test_trades_nested_with_trade_details(
             self,

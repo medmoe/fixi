@@ -2,9 +2,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .trade_category import TradeCategoryRead
+from .user import UserPublicRead
 
 
 class WorkerProfileBase(BaseModel):
@@ -31,6 +32,7 @@ class WorkerProfileRead(WorkerProfileBase):
     user_id: int
     is_verified: bool
     available_since: Annotated[datetime | None, Field(default=None)] = None
+
 
 class WorkerProfileCreate(WorkerProfileBase):
     """Used by workers to create their profile"""
@@ -100,9 +102,41 @@ class WorkerTradeNestedRead(BaseModel):
 class WorkerProfileWithTradesRead(WorkerProfileRead):
     """Profile response with embedded trades list."""
     trade_categories: list[WorkerTradeNestedRead] = []
+    user: UserPublicRead | None = None
 
 
 class AvailabilityToggleRequest(BaseModel):
     """ PATCH body for toggling availability """
     model_config = ConfigDict(extra="forbid")
     is_available: bool
+
+
+class WorkerProfileFilter(BaseModel):
+    trade_category_id: int | None = Field(default=None)
+    min_hourly_rate: Decimal | None = Field(default=None, ge=0)
+    max_hourly_rate: Decimal | None = Field(default=None, ge=0)
+    min_years_of_experience: int | None = Field(default=None, ge=0, le=100)
+    max_years_of_experience: int | None = Field(default=None, ge=0, le=100)
+    service_radius_km: int | None = Field(default=None, ge=0)
+    is_available: bool | None = Field(default=None)
+    is_verified: bool | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def validate_hourly_rate_range(self):
+        if (
+                self.min_hourly_rate is not None
+                and self.max_hourly_rate is not None
+                and self.max_hourly_rate < self.min_hourly_rate
+        ):
+            raise ValueError("max_hourly_rate must be greater than or equal to min_hourly_rate")
+        return self
+
+    @model_validator(mode="after")
+    def validate_experience_range(self):
+        if (
+                self.min_years_of_experience is not None
+                and self.max_years_of_experience is not None
+                and self.max_years_of_experience < self.min_years_of_experience
+        ):
+            raise ValueError("max_years_of_experience must be greater than or equal to min_years_of_experience")
+        return self

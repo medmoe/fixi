@@ -1,10 +1,15 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Numeric, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.db.database import Base
+
+if TYPE_CHECKING:
+    from .user import User
+    from .worker_trade import WorkerTrade
 
 
 class WorkerProfile(Base):
@@ -26,6 +31,10 @@ class WorkerProfile(Base):
     is_available: Mapped[bool] = mapped_column(default=True)
     available_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_verified: Mapped[bool] = mapped_column(default=False)
+
+    # relationships
+    user: Mapped["User"] = relationship("User", lazy="raise", init=False)
+    worker_trades: Mapped[list["WorkerTrade"]] = relationship("WorkerTrade", back_populates="worker_profile", lazy="raise", init=False, passive_deletes=True)
 
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)

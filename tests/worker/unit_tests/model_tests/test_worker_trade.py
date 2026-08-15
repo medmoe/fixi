@@ -12,7 +12,7 @@ class TestWorkerTrade:
         await async_session.commit()
         await async_session.refresh(trade_category)
 
-        worker_trade = WorkerTrade(worker_profile_id=test_worker_profile.id, trade_category_id=trade_category.id, worker_profile=test_worker_profile, trade_category=trade_category)
+        worker_trade = WorkerTrade(worker_profile_id=test_worker_profile.id, trade_category_id=trade_category.id)
         async_session.add(worker_trade)
         await async_session.commit()
         await async_session.refresh(worker_trade)

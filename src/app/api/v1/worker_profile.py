@@ -2,7 +2,8 @@ import os
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastcrud import PaginatedListResponse
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,7 @@ from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
-from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
+from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
@@ -300,3 +301,23 @@ async def delete_portfolio_image(
         await crud_portfolio_images.delete(db=db, id=portfolio_image_id, worker_profile_id=worker_profile.id)
     except NoResultFound:
         raise NotFoundException("Portfolio image not found")
+
+
+# ————— GET /worker-profile/search ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+@router.get("/search", response_model=PaginatedListResponse[WorkerProfileWithTradesRead])
+async def search_workers(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        filters: Annotated[WorkerProfileFilter, Depends()],
+        offset: int = Query(0, ge=0, description="Pagination offset"),
+        limit: int = Query(20, ge=1, le=100, description="Pagination limit"),
+) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
+    """
+    Public search endpoint for finding workers by multiple criteria.
+    All filters are optional. Returns paginated list of workers with their trades.
+    """
+    return await crud_worker_profiles.search_workers(
+        db=db,
+        filters=filters,
+        offset=offset,
+        limit=limit,
+    )
