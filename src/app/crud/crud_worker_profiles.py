@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from fastcrud import FastCRUD
-from sqlalchemy import and_, select, func
+from fastcrud import FastCRUD, PaginatedListResponse
+from sqlalchemy import and_, func, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,10 +12,10 @@ from ..models import User, WorkerProfile, WorkerTrade
 from ..schemas.worker_profile import (
     WorkerProfileCreate,
     WorkerProfileDelete,
+    WorkerProfileFilter,
     WorkerProfileRead,
     WorkerProfileUpdate,
     WorkerProfileUpdateInternal,
-    WorkerProfileFilter,
     WorkerProfileWithTradesRead,
 )
 
@@ -82,7 +82,7 @@ class CRUDWorker(FastCRUD[
             filters: WorkerProfileFilter,
             offset: int = 0,
             limit: int = 20,
-    ) -> dict:
+    ) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
         """
         Public search endpoint for finding workers by multiple criteria.
         Returns paginated response with WorkerProfileWithTradesRead shape,
@@ -151,12 +151,12 @@ class CRUDWorker(FastCRUD[
 
         data = [WorkerProfileWithTradesRead.model_validate(w) for w in workers]
 
-        return {
-            "data": data,
-            "total_count": total_count,
-            "has_more": (offset + len(data)) < total_count,
-            "items_per_page": limit,
-        }
+        return PaginatedListResponse(
+            data=data,
+            total_count=total_count,
+            has_more=(offset + len(data)) < total_count,
+            items_per_page=limit,
+        )
 
 
 crud_worker_profiles = CRUDWorker(WorkerProfile)

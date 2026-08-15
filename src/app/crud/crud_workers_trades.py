@@ -43,7 +43,7 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         if existing:
             raise DuplicateValueException(f"Worker {object.worker_profile_id} is already assigned to trade {object.trade_category_id}.")
 
-        db_obj = WorkerTrade(worker_profile_id=object.worker_profile_id, trade_category_id=object.trade_category_id, skill_level=object.skill_level, worker_profile=worker, trade_category=trade)
+        db_obj = WorkerTrade(worker_profile_id=object.worker_profile_id, trade_category_id=object.trade_category_id, skill_level=object.skill_level)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -151,8 +151,6 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
         db_obj = WorkerTrade(
             worker_profile_id=worker_profile_id,
             trade_category_id=trade_category_id,
-            worker_profile=worker_profile,
-            trade_category=trade,
             skill_level=skill_level
         )
         db.add(db_obj)
@@ -242,8 +240,6 @@ class CRUDWorkerTrade(FastCRUD[WorkerTrade, WorkerTradeCreate, WorkerTradeUpdate
                     worker_profile_id=worker_profile.id,
                     trade_category_id=trade_category.id,
                     skill_level=SkillLevel.junior,
-                    worker_profile=worker_profile,
-                    trade_category=trade_category,
                 )
                 for trade_category in new_trade_categories
             ]

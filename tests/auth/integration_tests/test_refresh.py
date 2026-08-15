@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
-from tests.integration_tests.auth.helpers import (
+from ..helpers import (
     customer_payload,
     login_payload,
     create_valid_refresh_token,

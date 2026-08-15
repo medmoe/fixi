@@ -2,7 +2,7 @@ from httpx import AsyncClient
 
 
 class TestSearchWorkers:
-    """GET /api/v1/workers/search"""
+    """GET /api/v1/worker-profile/search"""
 
     def _make_params(self, **kwargs) -> dict:
         """Build query params — only include explicitly passed filters."""
@@ -13,18 +13,18 @@ class TestSearchWorkers:
     # ------------------------------------------------------------------ #
 
     async def test_search_workers_returns_200(self, async_client: AsyncClient):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         assert response.status_code == 200
 
     async def test_search_workers_unauthenticated_succeeds(self, async_client: AsyncClient):
         """Public endpoint — no token required."""
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         assert response.status_code == 200
 
     async def test_search_workers_response_shape(
             self, async_client: AsyncClient, test_worker_profile
     ):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         data = response.json()
         assert "data" in data
         assert "total_count" in data
@@ -33,7 +33,7 @@ class TestSearchWorkers:
     async def test_search_workers_no_filters_returns_all(
             self, async_client: AsyncClient, many_worker_profiles
     ):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         data = response.json()
         assert data["total_count"] == len(many_worker_profiles)
 
@@ -41,7 +41,7 @@ class TestSearchWorkers:
             self, async_client: AsyncClient, test_worker_profile
     ):
         """Each item must match WorkerProfileWithTradesRead shape."""
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         worker = response.json()["data"][0]
         assert "id" in worker
         assert "user_id" in worker
@@ -57,7 +57,7 @@ class TestSearchWorkers:
     async def test_search_workers_empty_db_returns_empty_list(
             self, async_client: AsyncClient
     ):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         data = response.json()
         assert data["data"] == []
         assert data["total_count"] == 0
@@ -74,7 +74,7 @@ class TestSearchWorkers:
             test_trade_category_plumbing,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(trade_category_id=test_trade_category_plumbing.id),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -85,7 +85,7 @@ class TestSearchWorkers:
             self, async_client: AsyncClient, test_worker_profile
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(trade_category_id=99999),
         )
         assert response.json()["data"] == []
@@ -98,7 +98,7 @@ class TestSearchWorkers:
             test_trade_category_plumbing,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(trade_category_id=test_trade_category_plumbing.id),
         )
         assert response.json()["total_count"] == 1
@@ -114,7 +114,7 @@ class TestSearchWorkers:
             worker_high_rate,  # hourly_rate=150.00
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_hourly_rate="50.00"),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -128,7 +128,7 @@ class TestSearchWorkers:
             worker_high_rate,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(max_hourly_rate="50.00"),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -143,7 +143,7 @@ class TestSearchWorkers:
             worker_high_rate,  # 150.00
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_hourly_rate="50.00", max_hourly_rate="100.00"),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -157,7 +157,7 @@ class TestSearchWorkers:
             worker_mid_rate,  # hourly_rate=75.00
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_hourly_rate="75.00", max_hourly_rate="75.00"),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -174,7 +174,7 @@ class TestSearchWorkers:
             worker_senior,  # years_of_experience=10
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_years_of_experience=5),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -188,7 +188,7 @@ class TestSearchWorkers:
             worker_senior,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(max_years_of_experience=5),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -203,7 +203,7 @@ class TestSearchWorkers:
             worker_senior,  # 10
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_years_of_experience=3, max_years_of_experience=7),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -217,7 +217,7 @@ class TestSearchWorkers:
             worker_mid,  # years_of_experience=5
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(min_years_of_experience=5, max_years_of_experience=5),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -234,7 +234,7 @@ class TestSearchWorkers:
             worker_large_radius,  # service_radius_km=100
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(service_radius_km=50),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -247,7 +247,7 @@ class TestSearchWorkers:
             worker_small_radius,  # service_radius_km=10
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(service_radius_km=10),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -264,7 +264,7 @@ class TestSearchWorkers:
             worker_unavailable,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_available=True),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -278,7 +278,7 @@ class TestSearchWorkers:
             worker_unavailable,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_available=False),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -291,7 +291,7 @@ class TestSearchWorkers:
             worker_available,
             worker_unavailable,
     ):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         ids = [w["id"] for w in response.json()["data"]]
         assert worker_available.id in ids
         assert worker_unavailable.id in ids
@@ -307,7 +307,7 @@ class TestSearchWorkers:
             worker_unverified,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_verified=True),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -321,7 +321,7 @@ class TestSearchWorkers:
             worker_unverified,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_verified=False),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -334,7 +334,7 @@ class TestSearchWorkers:
             worker_verified,
             worker_unverified,
     ):
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         ids = [w["id"] for w in response.json()["data"]]
         assert worker_verified.id in ids
         assert worker_unverified.id in ids
@@ -347,14 +347,14 @@ class TestSearchWorkers:
             self, async_client: AsyncClient, many_worker_profiles
     ):
         """Default limit should cap results — assuming default is 20."""
-        response = await async_client.get("/api/v1/workers/search")
+        response = await async_client.get("/api/v1/worker-profile/search")
         assert len(response.json()["data"]) <= 20
 
     async def test_pagination_custom_limit(
             self, async_client: AsyncClient, many_worker_profiles
     ):
         response = await async_client.get(
-            "/api/v1/workers/search", params={"limit": 3}
+            "/api/v1/worker-profile/search", params={"limit": 3}
         )
         assert len(response.json()["data"]) == 3
 
@@ -362,10 +362,10 @@ class TestSearchWorkers:
             self, async_client: AsyncClient, many_worker_profiles
     ):
         all_response = await async_client.get(
-            "/api/v1/workers/search", params={"limit": 10, "offset": 0}
+            "/api/v1/worker-profile/search", params={"limit": 10, "offset": 0}
         )
         offset_response = await async_client.get(
-            "/api/v1/workers/search", params={"limit": 10, "offset": 2}
+            "/api/v1/worker-profile/search", params={"limit": 10, "offset": 2}
         )
         all_ids = [w["id"] for w in all_response.json()["data"]]
         offset_ids = [w["id"] for w in offset_response.json()["data"]]
@@ -376,7 +376,7 @@ class TestSearchWorkers:
             self, async_client: AsyncClient, many_worker_profiles
     ):
         response = await async_client.get(
-            "/api/v1/workers/search", params={"limit": 10, "offset": 9999}
+            "/api/v1/worker-profile/search", params={"limit": 10, "offset": 9999}
         )
         assert response.json()["data"] == []
 
@@ -388,7 +388,7 @@ class TestSearchWorkers:
     ):
         """total_count must reflect the filtered set, not all workers."""
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_available=True),
         )
         assert response.json()["total_count"] == 1
@@ -400,7 +400,7 @@ class TestSearchWorkers:
     ):
         """total_count should reflect all matches, not just the current page."""
         response = await async_client.get(
-            "/api/v1/workers/search", params={"limit": 3, "offset": 0}
+            "/api/v1/worker-profile/search", params={"limit": 3, "offset": 0}
         )
         data = response.json()
         assert data["total_count"] == len(many_worker_profiles)
@@ -418,7 +418,7 @@ class TestSearchWorkers:
             test_trade_category_plumbing,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(
                 trade_category_id=test_trade_category_plumbing.id,
                 is_available=True,
@@ -436,7 +436,7 @@ class TestSearchWorkers:
             worker_senior_low_rate,  # years=10, rate=20.00
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(
                 min_years_of_experience=5,
                 min_hourly_rate="100.00",
@@ -455,7 +455,7 @@ class TestSearchWorkers:
             worker_unverified_large_radius,  # verified=False, radius=100
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(is_verified=True, service_radius_km=50),
         )
         ids = [w["id"] for w in response.json()["data"]]
@@ -471,7 +471,7 @@ class TestSearchWorkers:
             test_trade_category_plumbing,
     ):
         response = await async_client.get(
-            "/api/v1/workers/search",
+            "/api/v1/worker-profile/search",
             params=self._make_params(
                 trade_category_id=test_trade_category_plumbing.id,
                 min_hourly_rate="40.00",

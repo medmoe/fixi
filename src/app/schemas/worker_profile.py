@@ -102,7 +102,7 @@ class WorkerTradeNestedRead(BaseModel):
 class WorkerProfileWithTradesRead(WorkerProfileRead):
     """Profile response with embedded trades list."""
     trade_categories: list[WorkerTradeNestedRead] = []
-    user: UserPublicRead
+    user: UserPublicRead | None = None
 
 
 class AvailabilityToggleRequest(BaseModel):

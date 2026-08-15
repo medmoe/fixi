@@ -34,7 +34,7 @@ class WorkerProfile(Base):
 
     # relationships
     user: Mapped["User"] = relationship("User", lazy="raise", init=False)
-    worker_trades: Mapped[list["WorkerTrade"]] = relationship("WorkerTrade", lazy="raise", init=False)
+    worker_trades: Mapped[list["WorkerTrade"]] = relationship("WorkerTrade", back_populates="worker_profile", lazy="raise", init=False, passive_deletes=True)
 
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)

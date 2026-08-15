@@ -1,4 +1,3 @@
-# tests/unit_tests/crud_tests/test_worker_trade.py
 from decimal import Decimal
 
 import pytest

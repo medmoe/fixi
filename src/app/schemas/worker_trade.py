@@ -2,9 +2,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..models.worker_trade import SkillLevel
 from .trade_category import TradeCategoryRead
 from .worker_profile import WorkerProfileRead
-from ..models.worker_trade import SkillLevel
 
 
 class WorkerTradeBase(BaseModel):

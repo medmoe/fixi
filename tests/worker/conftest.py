@@ -1,3 +1,5 @@
+# tests/worker/conftest.py — fixtures (unchanged signatures, only the helper changed)
+
 from decimal import Decimal
 
 import pytest_asyncio

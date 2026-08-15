@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, UTC
 from decimal import Decimal
 from io import BytesIO
@@ -25,7 +26,7 @@ from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.core.utils.rate_limit import RateLimiter
 from src.app.main import app
-from src.app.models import User, UserRole, WorkerProfile, TradeCategory, PortfolioImage
+from src.app.models import User, UserRole, WorkerProfile, TradeCategory, PortfolioImage, WorkerTrade, SkillLevel
 from tests.helpers.fakes import FakeRateLimiter
 
 fake = Faker()
@@ -201,7 +202,7 @@ async def other_user(async_session: AsyncSession) -> User:
 
 @pytest_asyncio.fixture
 async def test_worker_profile(async_session: AsyncSession, test_user: User) -> WorkerProfile:
-    return await create_test_worker_profile(async_session, test_user)
+    return await create_test_worker_profile(async_session, test_user, hourly_rate=Decimal(25.00))
 
 
 @pytest_asyncio.fixture
@@ -315,30 +316,74 @@ async def cleanup_minio_bucket():
     )
 
 
-async def create_test_user(async_session: AsyncSession, **kwargs) -> User:
-    """Create a test user."""
-    user = User(
-        name=fake.name(),
-        username=fake.user_name(),
-        email=fake.email(),
-        hashed_password=get_password_hash(TEST_PASSWORD),
-        **kwargs
-    )
+async def create_test_user(async_session, **kwargs):
+    unique_suffix = uuid.uuid4().hex[:10]
+    defaults = {
+        "name": "Test User",
+        "username": f"user_{unique_suffix}",  # guaranteed unique, fits VARCHAR(20)
+        "email": f"{unique_suffix}@example.com",  # guaranteed unique
+        "hashed_password": get_password_hash(TEST_PASSWORD),
+        "role_type": UserRole.CUSTOMER,
+        "is_superuser": False,
+        "is_deleted": False,
+        "token_version": 1,
+    }
+    defaults.update(kwargs)
+    user = User(**defaults)
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
     return user
 
 
-async def create_test_worker_profile(async_session: AsyncSession, user: User | None = None, **kwargs) -> WorkerProfile:
-    """ Create a test worker """
+async def create_test_worker_profile(
+        async_session,
+        user=None,
+        trade_category: TradeCategory | None = None,
+        trade_categories: list[TradeCategory] | None = None,
+        hourly_rate: Decimal | None = None,
+        years_of_experience: int | None = None,
+        service_radius_km: int | None = None,
+        is_available: bool = True,
+        is_verified: bool = False,
+        bio: str | None = None,
+) -> WorkerProfile:
+    """
+    Creates a WorkerProfile and optionally links it to one or more
+    TradeCategory rows via the WorkerTrade junction table.
+    """
     if user is None:
         user = await create_test_user(async_session)
-    worker = WorkerProfile(user_id=user.id, hourly_rate=Decimal(25.00), **kwargs)
-    async_session.add(worker)
+
+    profile = WorkerProfile(
+        user_id=user.id,
+        bio=bio,
+        hourly_rate=hourly_rate,
+        years_of_experience=years_of_experience,
+        service_radius_km=service_radius_km,
+        is_available=is_available,
+        is_verified=is_verified,
+    )
+    async_session.add(profile)
     await async_session.commit()
-    await async_session.refresh(worker)
-    return worker
+    await async_session.refresh(profile)
+
+    # normalize single trade_category into the list form
+    categories_to_link = trade_categories or ([trade_category] if trade_category else [])
+
+    for category in categories_to_link:
+        worker_trade = WorkerTrade(
+            worker_profile_id=profile.id,
+            trade_category_id=category.id,
+            skill_level=SkillLevel.junior,
+        )
+        async_session.add(worker_trade)
+
+    if categories_to_link:
+        await async_session.commit()
+        await async_session.refresh(profile)
+
+    return profile
 
 
 async def create_bulk_test_worker_profiles(async_session: AsyncSession, parameters: list[dict]) -> list[WorkerProfile]:

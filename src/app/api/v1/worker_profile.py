@@ -2,7 +2,7 @@ import os
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, UploadFile, status, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from fastcrud import PaginatedListResponse
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,15 +16,7 @@ from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
-from ...schemas.worker_profile import (
-    AvailabilityToggleRequest,
-    WorkerProfileRead,
-    WorkerProfileUpdate,
-    WorkerProfileUpdateInternal,
-    WorkerProfileWithTradesRead,
-    WorkerTradeNestedRead,
-    WorkerProfileFilter
-)
+from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
 
