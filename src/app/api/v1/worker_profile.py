@@ -306,18 +306,16 @@ async def delete_portfolio_image(
 # ————— GET /worker-profile/search ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 @router.get("/search", response_model=PaginatedListResponse[WorkerProfileWithTradesRead])
 async def search_workers(
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        filters: Annotated[WorkerProfileFilter, Depends()],
-        offset: int = Query(0, ge=0, description="Pagination offset"),
-        limit: int = Query(20, ge=1, le=100, description="Pagination limit"),
+    # NOTE: intentionally public — no auth dependency.
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    filters: Annotated[WorkerProfileFilter, Depends()],
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(20, ge=1, le=100, description="Pagination limit"),
 ) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
     """
     Public search endpoint for finding workers by multiple criteria.
-    All filters are optional. Returns paginated list of workers with their trades.
+    All filters are optional. When latitude and longitude are both provided,
+    additionally filters to workers whose service radius covers that location.
+    Returns paginated list of workers with their trades.
     """
-    return await crud_worker_profiles.search_workers(
-        db=db,
-        filters=filters,
-        offset=offset,
-        limit=limit,
-    )
+    return await crud_worker_profiles.search_workers(db=db, filters=filters, offset=offset, limit=limit)

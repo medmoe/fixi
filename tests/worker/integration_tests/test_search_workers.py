@@ -486,3 +486,152 @@ class TestSearchWorkers:
         ids = [w["id"] for w in response.json()["data"]]
         assert perfect_match_worker.id in ids
         assert partial_match_worker.id not in ids
+
+
+class TestSearchWorkersGeo:
+    """GET /api/v1/worker-profile/search — geo filtering via latitude/longitude/radius_km"""
+
+    def _make_params(self, **kwargs) -> dict:
+        return {k: v for k, v in kwargs.items() if v is not None}
+
+    # ------------------------------------------------------------------ #
+    #  Validation                                                          #
+    # ------------------------------------------------------------------ #
+
+    async def test_only_latitude_provided_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params=self._make_params(latitude=36.7538),  # Algiers latitude
+        )
+        assert response.status_code == 422
+
+    async def test_only_longitude_provided_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params=self._make_params(longitude=3.0588),  # Algiers longitude
+        )
+        assert response.status_code == 422
+
+    async def test_no_lat_lng_falls_back_to_non_geo_search(
+            self, async_client: AsyncClient, worker_in_algiers, worker_in_oran
+    ):
+        """Without coordinates, geo filtering is skipped — all matching workers returned."""
+        response = await async_client.get("/api/v1/worker-profile/search")
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_in_algiers.id in ids
+        assert worker_in_oran.id in ids
+
+    async def test_latitude_out_of_range_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 95.0, "longitude": 3.0588},
+        )
+        assert response.status_code == 422
+
+    async def test_longitude_out_of_range_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 200.0},
+        )
+        assert response.status_code == 422
+
+    # ------------------------------------------------------------------ #
+    #  Geo filtering                                                       #
+    # ------------------------------------------------------------------ #
+
+    async def test_worker_within_radius_is_included(
+            self, async_client: AsyncClient, worker_in_algiers_covers_customer
+    ):
+        """
+        worker_in_algiers_covers_customer: located in central Algiers,
+        service_radius_km=20 — customer point is ~5km away, well within range.
+        """
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7600, "longitude": 3.0500},  # nearby point in Algiers
+        )
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_in_algiers_covers_customer.id in ids
+
+    async def test_worker_outside_radius_is_excluded(
+            self, async_client: AsyncClient, worker_in_oran_small_radius
+    ):
+        """
+        worker_in_oran_small_radius: located in Oran, service_radius_km=10.
+        Oran and Algiers are ~350km apart — far outside a 10km radius.
+        """
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},  # Algiers
+        )
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_in_oran_small_radius.id not in ids
+
+    async def test_worker_with_no_location_excluded_from_geo_search(
+            self, async_client: AsyncClient, worker_no_location
+    ):
+        """A worker whose User.location is NULL must never match a geo search."""
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_no_location.id not in ids
+
+    async def test_worker_with_no_location_included_in_non_geo_search(
+            self, async_client: AsyncClient, worker_no_location
+    ):
+        """The same worker IS visible when no lat/lng filter is applied."""
+        response = await async_client.get("/api/v1/worker-profile/search")
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_no_location.id in ids
+
+    async def test_worker_exactly_at_radius_boundary_is_included(
+            self, async_client: AsyncClient, worker_at_exact_boundary
+    ):
+        """
+        worker_at_exact_boundary: service_radius_km set so the customer point
+        sits exactly on the boundary of ST_DWithin's <= comparison.
+        """
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.1088},  # ~5km east of worker's location
+        )
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_at_exact_boundary.id in ids
+
+    async def test_geo_search_combined_with_other_filters(
+            self,
+            async_client: AsyncClient,
+            worker_in_algiers_covers_customer,  # matches geo + is_verified=True
+            worker_in_algiers_unverified,  # matches geo but is_verified=False
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={
+                "latitude": 36.7600,
+                "longitude": 3.0500,
+                "is_verified": True,
+            },
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert worker_in_algiers_covers_customer.id in ids
+        assert worker_in_algiers_unverified.id not in ids
+
+    async def test_geo_search_total_count_reflects_geo_filter(
+            self,
+            async_client: AsyncClient,
+            worker_in_algiers_covers_customer,
+            worker_in_oran_small_radius,
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7600, "longitude": 3.0500},
+        )
+        assert response.json()["total_count"] == 1

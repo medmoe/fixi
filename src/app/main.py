@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from .api import router
 from .core.config import settings
+from .core.exceptions.handlers import register_validation_exception_handlers
 from .core.setup import create_application, lifespan_factory
 
 # admin = create_admin_interface()
@@ -42,6 +43,7 @@ async def lifespan_with_admin(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = create_application(router=router, settings=settings, lifespan=lifespan_with_admin)
+register_validation_exception_handlers(app)
 
 # Mount admin interface if enabled
 # if admin:

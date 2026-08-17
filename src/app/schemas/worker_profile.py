@@ -121,6 +121,11 @@ class WorkerProfileFilter(BaseModel):
     is_available: bool | None = Field(default=None)
     is_verified: bool | None = Field(default=None)
 
+    # ─── Geo search params ──────────────────────────────────────────────
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    radius_km: int | None = Field(default=None, ge=1, le=200)
+
     @model_validator(mode="after")
     def validate_hourly_rate_range(self):
         if (
@@ -140,3 +145,15 @@ class WorkerProfileFilter(BaseModel):
         ):
             raise ValueError("max_years_of_experience must be greater than or equal to min_years_of_experience")
         return self
+
+    @model_validator(mode="after")
+    def validate_geo_coordinates_provided_together(self):
+        # requires both latitude AND longitude — 422 if only one provided
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Both latitude and longitude must be provided together for geo search.")
+        return self
+
+    @property
+    def is_geo_search(self) -> bool:
+        """True when the caller supplied coordinates and wants a geo-filtered search."""
+        return self.latitude is not None and self.longitude is not None

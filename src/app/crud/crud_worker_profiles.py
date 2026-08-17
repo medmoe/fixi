@@ -2,6 +2,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastcrud import FastCRUD, PaginatedListResponse
+from geoalchemy2 import Geography
+from geoalchemy2.functions import ST_DWithin, ST_MakePoint, ST_SetSRID
 from sqlalchemy import and_, func, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
@@ -85,15 +87,16 @@ class CRUDWorker(FastCRUD[
     ) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
         """
         Public search endpoint for finding workers by multiple criteria.
-        Returns paginated response with WorkerProfileWithTradesRead shape,
-        including user info (name, email) and nested trade categories.
+        When latitude/longitude are provided, additionally filters to workers
+        whose service_radius_km covers the given customer location, using
+        PostGIS ST_DWithin against User.location (geography column).
+        Falls back to non-geo search when latitude/longitude are absent.
         """
         stmt = (
             select(WorkerProfile)
             .options(
-                joinedload(WorkerProfile.user),  # one-to-one — safe with joinedload
-                selectinload(WorkerProfile.worker_trades)
-                .selectinload(WorkerTrade.trade_category),  # one-to-many — separate query, no duplication
+                joinedload(WorkerProfile.user),
+                selectinload(WorkerProfile.worker_trades).selectinload(WorkerTrade.trade_category),
             )
         )
 
@@ -113,8 +116,6 @@ class CRUDWorker(FastCRUD[
         if filters.is_verified is not None:
             where_clauses.append(WorkerProfile.is_verified == filters.is_verified)
 
-        # trade_category_id filter — join only when needed, filtered inline so it
-        # doesn't require WorkerTrade to also appear in where_clauses separately
         if filters.trade_category_id is not None:
             stmt = stmt.join(
                 WorkerTrade,
@@ -124,12 +125,30 @@ class CRUDWorker(FastCRUD[
                 ),
             )
 
+        # ─── Geo search ──────────────────────────────────────────────────
+        # Joins to User to access location, and filters to workers whose own
+        # service_radius_km reaches the customer's point. A worker with no
+        # location set is excluded (ST_DWithin against NULL geography is NULL,
+        # which is falsy in a WHERE clause — no special-casing needed).
+        if filters.is_geo_search:
+            stmt = stmt.join(User, User.id == WorkerProfile.user_id)
+            customer_point = ST_SetSRID(
+                ST_MakePoint(filters.longitude, filters.latitude), 4326
+            )
+            where_clauses.append(
+                ST_DWithin(
+                    User.location.cast(Geography),
+                    customer_point.cast(Geography),
+                    WorkerProfile.service_radius_km * 1000,  # km → meters
+                )
+            )
+
         if where_clauses:
             stmt = stmt.where(and_(*where_clauses))
 
         stmt = stmt.order_by(WorkerProfile.id.asc())
 
-        # ── count query — mirrors filters, no eager loads, deduplicated ──
+        # ─── Count query — mirrors filters, no eager loads ────────────────
         count_stmt = select(func.count(WorkerProfile.id.distinct())).select_from(WorkerProfile)
         if filters.trade_category_id is not None:
             count_stmt = count_stmt.join(
@@ -139,6 +158,8 @@ class CRUDWorker(FastCRUD[
                     WorkerTrade.trade_category_id == filters.trade_category_id,
                 ),
             )
+        if filters.is_geo_search:
+            count_stmt = count_stmt.join(User, User.id == WorkerProfile.user_id)
         if where_clauses:
             count_stmt = count_stmt.where(and_(*where_clauses))
 
@@ -147,7 +168,7 @@ class CRUDWorker(FastCRUD[
 
         stmt = stmt.offset(offset).limit(limit)
         result = await db.execute(stmt)
-        workers = result.scalars().unique().all()  # unique() dedupes rows from the trade_category_id join
+        workers = result.scalars().unique().all()
 
         data = [WorkerProfileWithTradesRead.model_validate(w) for w in workers]
 
@@ -157,6 +178,5 @@ class CRUDWorker(FastCRUD[
             has_more=(offset + len(data)) < total_count,
             items_per_page=limit,
         )
-
 
 crud_worker_profiles = CRUDWorker(WorkerProfile)
