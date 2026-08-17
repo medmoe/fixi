@@ -201,29 +201,22 @@ async def test_trade_category_electrical(async_session):
 # ─── Reference points used across fixtures ──────────────────────────────────
 # Algiers city center: 36.7538 N, 3.0588 E
 # Oran city center:    35.6971 N, -0.6337 E  (~350km from Algiers)
+# WKT format is POINT(longitude latitude) — note the order: lon first, lat second
 
-ALGIERS_LAT, ALGIERS_LNG = 36.7538, 3.0588
-ORAN_LAT, ORAN_LNG = 35.6971, -0.6337
+ALGIERS_LOCATION = "POINT(3.0588 36.7538)"
+ORAN_LOCATION = "POINT(-0.6337 35.6971)"
 
 
 @pytest_asyncio.fixture
 async def worker_in_algiers(async_session):
     """Worker located in Algiers, no specific radius assertion needed for non-geo tests."""
-    user = await create_test_user(
-        async_session,
-        latitude=ALGIERS_LAT,
-        longitude=ALGIERS_LNG,
-    )
+    user = await create_test_user(async_session, location=ALGIERS_LOCATION)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=20)
 
 
 @pytest_asyncio.fixture
 async def worker_in_oran(async_session):
-    user = await create_test_user(
-        async_session,
-        latitude=ORAN_LAT,
-        longitude=ORAN_LNG,
-    )
+    user = await create_test_user(async_session, location=ORAN_LOCATION)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=20)
 
 
@@ -233,11 +226,7 @@ async def worker_in_algiers_covers_customer(async_session):
     Located in central Algiers with a 20km radius — comfortably covers a
     customer point ~5km away (36.7600, 3.0500 in the tests above).
     """
-    user = await create_test_user(
-        async_session,
-        latitude=ALGIERS_LAT,
-        longitude=ALGIERS_LNG,
-    )
+    user = await create_test_user(async_session, location=ALGIERS_LOCATION)
     return await create_test_worker_profile(
         async_session, user=user, service_radius_km=20, is_verified=True
     )
@@ -245,11 +234,7 @@ async def worker_in_algiers_covers_customer(async_session):
 
 @pytest_asyncio.fixture
 async def worker_in_algiers_unverified(async_session):
-    user = await create_test_user(
-        async_session,
-        latitude=ALGIERS_LAT,
-        longitude=ALGIERS_LNG,
-    )
+    user = await create_test_user(async_session, location=ALGIERS_LOCATION)
     return await create_test_worker_profile(
         async_session, user=user, service_radius_km=20, is_verified=False
     )
@@ -261,18 +246,14 @@ async def worker_in_oran_small_radius(async_session):
     Located in Oran with only a 10km radius — far outside range of an
     Algiers-based customer search (~350km away).
     """
-    user = await create_test_user(
-        async_session,
-        latitude=ORAN_LAT,
-        longitude=ORAN_LNG,
-    )
+    user = await create_test_user(async_session, location=ORAN_LOCATION)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=10)
 
 
 @pytest_asyncio.fixture
 async def worker_no_location(async_session):
     """User with location=None — must be excluded from any geo search."""
-    user = await create_test_user(async_session, latitude=None, longitude=None)
+    user = await create_test_user(async_session, location=None)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=50)
 
 
@@ -284,9 +265,5 @@ async def worker_at_exact_boundary(async_session):
     inclusivity of ST_DWithin (<=), not to hit an exact meter-perfect edge
     (floating point distance math makes an exact edge test flaky).
     """
-    user = await create_test_user(
-        async_session,
-        latitude=ALGIERS_LAT,
-        longitude=ALGIERS_LNG,
-    )
+    user = await create_test_user(async_session, location=ALGIERS_LOCATION)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=6)
