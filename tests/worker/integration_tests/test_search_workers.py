@@ -635,3 +635,191 @@ class TestSearchWorkersGeo:
             params={"latitude": 36.7600, "longitude": 3.0500},
         )
         assert response.json()["total_count"] == 1
+
+
+class TestSearchWorkersRanking:
+    """GET /api/v1/worker-profile/search — composite ranking (distance + availability + verification)"""
+
+    def _make_params(self, **kwargs) -> dict:
+        return {k: v for k, v in kwargs.items() if v is not None}
+
+    # ------------------------------------------------------------------ #
+    #  Default sort — distance ASC                                        #
+    # ------------------------------------------------------------------ #
+
+    async def test_default_sort_is_distance_ascending(
+        self,
+        async_client: AsyncClient,
+        worker_near_customer,   # ~2km away
+        worker_mid_distance,    # ~8km away
+        worker_far_distance,    # ~15km away
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_near_customer.id) < ids.index(worker_mid_distance.id)
+        assert ids.index(worker_mid_distance.id) < ids.index(worker_far_distance.id)
+
+    async def test_explicit_sort_by_distance_matches_default(
+        self,
+        async_client: AsyncClient,
+        worker_near_customer,
+        worker_far_distance,
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588, "sort_by": "distance"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_near_customer.id) < ids.index(worker_far_distance.id)
+
+    # ------------------------------------------------------------------ #
+    #  Availability boost                                                  #
+    # ------------------------------------------------------------------ #
+
+    async def test_available_worker_ranked_above_unavailable_at_similar_distance(
+        self,
+        async_client: AsyncClient,
+        worker_available_near,      # available, ~3km away
+        worker_unavailable_nearer,  # unavailable, ~1km away (closer, but should rank lower)
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_available_near.id) < ids.index(worker_unavailable_nearer.id)
+
+    # ------------------------------------------------------------------ #
+    #  Verification boost                                                  #
+    # ------------------------------------------------------------------ #
+
+    async def test_verified_worker_ranked_above_unverified_within_same_availability(
+        self,
+        async_client: AsyncClient,
+        worker_verified_available,     # available + verified
+        worker_unverified_available,   # available + unverified, closer distance
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_verified_available.id) < ids.index(worker_unverified_available.id)
+
+    async def test_availability_boost_outranks_verification_boost(
+        self,
+        async_client: AsyncClient,
+        worker_available_unverified,   # available, NOT verified
+        worker_unavailable_verified,   # unavailable, verified
+    ):
+        """Availability is the primary tier — an available-but-unverified
+        worker must still rank above an unavailable-but-verified one."""
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_available_unverified.id) < ids.index(worker_unavailable_verified.id)
+
+    # ------------------------------------------------------------------ #
+    #  sort_by=hourly_rate                                                 #
+    # ------------------------------------------------------------------ #
+
+    async def test_sort_by_hourly_rate_ascending(
+        self,
+        async_client: AsyncClient,
+        worker_low_rate,    # 20.00
+        worker_mid_rate,    # 75.00
+        worker_high_rate,   # 150.00
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "hourly_rate"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_low_rate.id) < ids.index(worker_mid_rate.id)
+        assert ids.index(worker_mid_rate.id) < ids.index(worker_high_rate.id)
+
+    async def test_sort_by_hourly_rate_respects_availability_boost(
+        self,
+        async_client: AsyncClient,
+        worker_available_high_rate,     # available, 150.00
+        worker_unavailable_low_rate,    # unavailable, 20.00
+    ):
+        """Even sorting by hourly_rate, availability remains the primary tier."""
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "hourly_rate"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_available_high_rate.id) < ids.index(worker_unavailable_low_rate.id)
+
+    # ------------------------------------------------------------------ #
+    #  sort_by=experience                                                  #
+    # ------------------------------------------------------------------ #
+
+    async def test_sort_by_experience_descending(
+        self,
+        async_client: AsyncClient,
+        worker_junior,   # 1 year
+        worker_mid,      # 5 years
+        worker_senior,   # 10 years
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "experience"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_senior.id) < ids.index(worker_mid.id)
+        assert ids.index(worker_mid.id) < ids.index(worker_junior.id)
+
+    # ------------------------------------------------------------------ #
+    #  sort_by=distance without coordinates                                #
+    # ------------------------------------------------------------------ #
+
+    async def test_sort_by_distance_without_coordinates_falls_back_gracefully(
+        self, async_client: AsyncClient, worker_available, worker_unavailable
+    ):
+        """No lat/lng provided — distance can't be computed, but the request
+        must still succeed rather than error, falling back to a deterministic order."""
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "distance"},
+        )
+        assert response.status_code == 200
+        ids = [w["id"] for w in response.json()["data"]]
+        # availability boost still applies even without distance
+        assert ids.index(worker_available.id) < ids.index(worker_unavailable.id)
+
+    # ------------------------------------------------------------------ #
+    #  Invalid sort_by                                                     #
+    # ------------------------------------------------------------------ #
+
+    async def test_invalid_sort_by_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "popularity"},  # not a valid WorkerSortBy value
+        )
+        assert response.status_code == 422
+
+    # ------------------------------------------------------------------ #
+    #  Combined ranking with pagination                                    #
+    # ------------------------------------------------------------------ #
+
+    async def test_ranking_order_stable_across_pages(
+        self, async_client: AsyncClient, many_ranked_workers
+    ):
+        """The same worker must never appear on two different pages, and the
+        overall order (by id, as final tiebreaker) must be consistent."""
+        page_1 = await async_client.get(
+            "/api/v1/worker-profile/search", params={"limit": 5, "offset": 0}
+        )
+        page_2 = await async_client.get(
+            "/api/v1/worker-profile/search", params={"limit": 5, "offset": 5}
+        )
+        page_1_ids = [w["id"] for w in page_1.json()["data"]]
+        page_2_ids = [w["id"] for w in page_2.json()["data"]]
+        assert not set(page_1_ids) & set(page_2_ids)

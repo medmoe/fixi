@@ -3,23 +3,15 @@ from typing import Any
 
 from fastcrud import FastCRUD, PaginatedListResponse
 from geoalchemy2 import Geography
-from geoalchemy2.functions import ST_DWithin, ST_MakePoint, ST_SetSRID
-from sqlalchemy import and_, func, select
+from geoalchemy2.functions import ST_Distance, ST_DWithin, ST_MakePoint, ST_SetSRID
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from ..models import User, WorkerProfile, WorkerTrade
-from ..schemas.worker_profile import (
-    WorkerProfileCreate,
-    WorkerProfileDelete,
-    WorkerProfileFilter,
-    WorkerProfileRead,
-    WorkerProfileUpdate,
-    WorkerProfileUpdateInternal,
-    WorkerProfileWithTradesRead,
-)
+from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerSortBy
 
 
 class CRUDWorker(FastCRUD[
@@ -87,10 +79,22 @@ class CRUDWorker(FastCRUD[
     ) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
         """
         Public search endpoint for finding workers by multiple criteria.
-        When latitude/longitude are provided, additionally filters to workers
-        whose service_radius_km covers the given customer location, using
-        PostGIS ST_DWithin against User.location (geography column).
-        Falls back to non-geo search when latitude/longitude are absent.
+
+        Ranking (ORDER BY built with SQLAlchemy Core expressions — case(),
+        func.ST_Distance — rather than ORM-mapped properties, per AC):
+
+          1. Availability boost   — is_available=True workers rank above
+                                     is_available=False, always first.
+          2. Verification boost   — within the same availability tier,
+                                     is_verified=True ranks above unverified.
+          3. sort_by tiebreaker   — distance (default), hourly_rate, or
+                                     experience, applied last as the final
+                                     ordering key within tiers 1 and 2.
+
+        When latitude/longitude are absent, distance cannot be computed —
+        sort_by=distance (the default) silently falls back to id ASC for
+        determinism, and hourly_rate/experience sort_by values still work
+        without coordinates.
         """
         stmt = (
             select(WorkerProfile)
@@ -125,11 +129,9 @@ class CRUDWorker(FastCRUD[
                 ),
             )
 
-        # ─── Geo search ──────────────────────────────────────────────────
-        # Joins to User to access location, and filters to workers whose own
-        # service_radius_km reaches the customer's point. A worker with no
-        # location set is excluded (ST_DWithin against NULL geography is NULL,
-        # which is falsy in a WHERE clause — no special-casing needed).
+        needs_user_join = filters.is_geo_search  # only geo search needs User.location
+        distance_expr = None
+
         if filters.is_geo_search:
             stmt = stmt.join(User, User.id == WorkerProfile.user_id)
             customer_point = ST_SetSRID(
@@ -139,16 +141,48 @@ class CRUDWorker(FastCRUD[
                 ST_DWithin(
                     User.location.cast(Geography),
                     customer_point.cast(Geography),
-                    WorkerProfile.service_radius_km * 1000,  # km → meters
+                    WorkerProfile.service_radius_km * 1000,
                 )
+            )
+            # distance in km, used both for sort_by=distance and available for
+            # future response inclusion if the frontend wants to display it
+            distance_expr = (
+                    ST_Distance(User.location.cast(Geography), customer_point.cast(Geography)) / 1000
             )
 
         if where_clauses:
             stmt = stmt.where(and_(*where_clauses))
 
-        stmt = stmt.order_by(WorkerProfile.id.asc())
+        # ─── Composite ORDER BY — built with Core case()/func(), not ORM ──
+        availability_boost = case(
+            (WorkerProfile.is_available.is_(True), 0),
+            else_=1,
+        )
+        verification_boost = case(
+            (WorkerProfile.is_verified.is_(True), 0),
+            else_=1,
+        )
 
-        # ─── Count query — mirrors filters, no eager loads ────────────────
+        order_by_clauses = [availability_boost.asc(), verification_boost.asc()]
+
+        if filters.sort_by == WorkerSortBy.distance:
+            if distance_expr is not None:
+                order_by_clauses.append(distance_expr.asc())
+            else:
+                # no coordinates supplied — nothing to sort by distance,
+                # fall back to a deterministic order
+                order_by_clauses.append(WorkerProfile.id.asc())
+        elif filters.sort_by == WorkerSortBy.hourly_rate:
+            order_by_clauses.append(WorkerProfile.hourly_rate.asc())
+        elif filters.sort_by == WorkerSortBy.experience:
+            order_by_clauses.append(WorkerProfile.years_of_experience.desc())
+
+        # final deterministic tiebreaker so pagination never reorders ties
+        order_by_clauses.append(WorkerProfile.id.asc())
+
+        stmt = stmt.order_by(*order_by_clauses)
+
+        # ─── Count query — mirrors filters, no ordering/eager loads ──────
         count_stmt = select(func.count(WorkerProfile.id.distinct())).select_from(WorkerProfile)
         if filters.trade_category_id is not None:
             count_stmt = count_stmt.join(
@@ -158,7 +192,7 @@ class CRUDWorker(FastCRUD[
                     WorkerTrade.trade_category_id == filters.trade_category_id,
                 ),
             )
-        if filters.is_geo_search:
+        if needs_user_join:
             count_stmt = count_stmt.join(User, User.id == WorkerProfile.user_id)
         if where_clauses:
             count_stmt = count_stmt.where(and_(*where_clauses))
@@ -178,5 +212,6 @@ class CRUDWorker(FastCRUD[
             has_more=(offset + len(data)) < total_count,
             items_per_page=limit,
         )
+
 
 crud_worker_profiles = CRUDWorker(WorkerProfile)
