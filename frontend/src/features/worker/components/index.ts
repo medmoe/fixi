@@ -8,4 +8,7 @@ export {ServiceRadiusField} from './fields/ServiceRadiusField';
 export {SkillLevelSelect} from './trades/SkillLevelSelect';
 export {TradeCategoryPicker} from './trades/TradeCategoryPicker';
 export {TradesPicker} from './trades/TradesPicker';
+export {FilterPanel} from './FilterPanel';
+export {WorkerCard, WorkerSearchEmptyState} from './WorkerCard';
+export {WorkerCardSkeleton, WorkerCardSkeletonGrid} from './WorkerCardSkeleton';
 

@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {workerProfileSchema} from '../workerProfileSchema';
+import {workerProfileSchema} from '../../../schemas/workerProfileSchema.ts';
 
 // ——————— Helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

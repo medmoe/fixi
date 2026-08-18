@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
 import {geocodingApi} from '@/lib/api/geocodingApi'
-import {createQueryClient, createWrapper} from '@/features/worker/hooks/__tests__/helpers'
+import {createQueryClient, createWrapper} from '@/features/worker/tests/helpers.tsx'
 import {LOCATION_SEARCH_QUERY_KEY, type LocationSuggestion, useLocationSearch} from '@/features/user'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

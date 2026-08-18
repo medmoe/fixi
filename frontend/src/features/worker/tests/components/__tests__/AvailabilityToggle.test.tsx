@@ -3,8 +3,8 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {AvailabilityToggle} from '@/features/worker/components/AvailabilityToggle'
-import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle'
+import {AvailabilityToggle} from '@/features/worker/components/AvailabilityToggle.tsx'
+import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle.ts'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 

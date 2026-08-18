@@ -5,7 +5,7 @@ import {useUpdateJob} from '@/features/job/hooks/useUpdateJob';
 import {jobApi} from '@/lib';
 import {JobRead, JobStatus} from '@/features/job';
 import {toast} from 'sonner';
-import {createQueryClient, createWrapper} from "@/features/worker/hooks/__tests__/helpers.tsx";
+import {createQueryClient, createWrapper} from "@/features/worker/tests/helpers.tsx";
 
 // Mock dependencies
 vi.mock('@/lib', () => ({

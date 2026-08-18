@@ -1,9 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {renderHook, waitFor} from '@testing-library/react'
-import {workerApi} from '@/lib/api/workerApi';
+import {workerApi} from '@/lib/api/workerApi.ts';
 import {QueryClient} from '@tanstack/react-query'
-import {createQueryClient, createWrapper} from './helpers';
-import {useTrades} from '../useTrades';
+import {createQueryClient, createWrapper} from '../../helpers.tsx';
+import {useTrades} from '../../../hooks/useTrades.ts';
 import {TradeCategoryWithChildren} from "@/features/worker";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

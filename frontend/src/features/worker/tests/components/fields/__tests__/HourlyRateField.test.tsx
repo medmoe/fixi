@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import {FormProvider, useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
-import {HourlyRateField} from '@/features/worker/components/fields/HourlyRateField'
+import {HourlyRateField} from '@/features/worker/components/fields/HourlyRateField.tsx'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 

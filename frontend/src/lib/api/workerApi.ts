@@ -1,6 +1,6 @@
-import {UpdateWorkerProfilePayload, WorkerProfileRead, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
-import {TradeCategoryRead, TradeCategoryWithChildren, WorkerTradeNestedRead} from "@/features/worker";
+import {TradeCategoryRead, TradeCategoryWithChildren, UpdateWorkerProfilePayload, WorkerProfileRead, WorkerProfileWithTradesRead, WorkerSearchFilters, WorkerTradeNestedRead} from "@/features/worker";
 import apiClient from "@/lib/api/apiClient";
+import {PaginatedListResponse} from "@/features/types";
 
 export const workerApi = {
     createWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileWithTradesRead> => {
@@ -47,4 +47,9 @@ export const workerApi = {
         )
         return data
     },
+    searchWorkers: async (filters: WorkerSearchFilters, offset: number, limit: number): Promise<PaginatedListResponse<WorkerProfileWithTradesRead>> => {
+        const params = {...filters, offset, limit}
+        const {data} = await apiClient.get<PaginatedListResponse<WorkerProfileWithTradesRead>>(`/worker-profile/search`, {params})
+        return data
+    }
 }

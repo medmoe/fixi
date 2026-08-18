@@ -11,7 +11,15 @@ export const mockProfile: WorkerProfileWithTradesRead = {
     is_available: false,
     is_verified: true,
     available_since: null,
-    trade_categories: []
+    trade_categories: [],
+    user: {
+        id: 1,
+        name: "Test user",
+        location: null,
+        display_location: "New York"
+    },
+    years_of_experience: 10,
+    avatar_url: null
 }
 
 export const createWrapper = (queryClient: QueryClient) => {

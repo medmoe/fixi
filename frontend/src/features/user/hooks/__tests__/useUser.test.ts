@@ -2,7 +2,7 @@ import {vi} from 'vitest'
 import {renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
 import {userApi} from '@/lib/api/userApi'
-import {createQueryClient, createWrapper} from "@/features/worker/hooks/__tests__/helpers";
+import {createQueryClient, createWrapper} from "@/features/worker/tests/helpers.tsx";
 import {USER_QUERY_KEY, UserRead, useUser} from '@/features/user'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

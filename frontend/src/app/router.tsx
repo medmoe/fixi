@@ -1,13 +1,10 @@
 // src/app/router.tsx
 import {createBrowserRouter, RouteObject} from 'react-router-dom'
-import {LoginPage, RegisterPage} from '@/features/auth'
+import {AuthInitializer, LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
-import {WorkerDashboardPage} from "@/features/worker/pages/WorkerDashboardPage.tsx";
-import {AuthInitializer} from "@/features/auth/components/AuthInitializer.tsx";
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
-import {MyJobsPage} from "@/features/job/pages/MyJobsPage.tsx";
-import {JobDetailPage} from "@/features/job/pages/JobDetailPage.tsx";
-import {JobEditForm} from "@/features/job/components/JobEditForm.tsx";
+import {JobDetailPage, JobEditForm, MyJobsPage} from "@/features/job";
+import {WorkerDashboardPage, WorkerSearchPage} from "@/features/worker";
 
 export const routes: RouteObject[] = [
     {
@@ -52,6 +49,10 @@ export const routes: RouteObject[] = [
                         <JobEditForm/>
                     </ProtectedRoute>
                 )
+            },
+            {
+                path: '/workers/search',
+                element: <WorkerSearchPage/>
             }
         ]
     }

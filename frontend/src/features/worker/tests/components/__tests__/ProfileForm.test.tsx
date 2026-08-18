@@ -3,9 +3,9 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {ProfileForm} from '@/features/worker/components/ProfileForm'
-import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile'
-import {useAssignTrades} from '@/features/worker/hooks/useAssignTrades'
+import {ProfileForm} from '@/features/worker/components/ProfileForm.tsx'
+import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile.ts'
+import {useAssignTrades} from '@/features/worker/hooks/useAssignTrades.ts'
 import type {WorkerProfileWithTradesRead} from '@/features/worker/types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -60,6 +60,14 @@ const mockProfile: WorkerProfileWithTradesRead = {
             }
         }
     ],
+    years_of_experience: 10,
+    avatar_url: null,
+    user: {
+        id: 1,
+        name: "test name",
+        location: null,
+        display_location: null
+    }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -76,7 +84,7 @@ const renderComponent = async (profile: WorkerProfileWithTradesRead = mockProfil
     return result!
 }
 
-const getSubmitButton = (name='Update Profile') => screen.getByRole('button', {name: name})
+const getSubmitButton = (name = 'Update Profile') => screen.getByRole('button', {name: name})
 
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -137,9 +145,9 @@ describe('ProfileForm', () => {
         it('renders without crashing when optional fields are undefined', async () => {
             await renderComponent({
                 ...mockProfile,
-                bio: undefined,
-                hourly_rate: undefined,
-                service_radius_km: undefined,
+                bio: null,
+                hourly_rate: null,
+                service_radius_km: null,
                 trade_categories: []
             })
             expect(getSubmitButton()).toBeInTheDocument()
