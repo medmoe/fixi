@@ -4,11 +4,15 @@ import userEvent from "@testing-library/user-event";
 import {act} from "react";
 import {FilterPanel, TradeCategoryRead, TradeCategoryWithChildren} from "@/features/worker";
 import {workerApi} from "@/lib";
-import {createQueryClient, createWrapper} from "../../helpers";
-import type {WorkerSearchFilters} from "../../../types";
+import {createQueryClient, createWrapper} from "../helpers.tsx";
+import type {WorkerSearchFilters} from "../../types";
 import {QueryClient} from "@tanstack/react-query";
 
-vi.mock("../../api/workerApi");
+vi.mock("@/lib", () => ({
+    workerApi: {
+        getTrades: vi.fn()
+    }
+}))
 
 const mockCategories: TradeCategoryRead[] | TradeCategoryWithChildren[] = [
     {id: 1, name: "plumbing", display_name: "Plumbing", icon_name: "wrench", created_at: '2025-01-01', parent_id: null},

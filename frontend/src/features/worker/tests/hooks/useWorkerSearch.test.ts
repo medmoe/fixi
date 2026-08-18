@@ -3,10 +3,14 @@ import {act, renderHook, waitFor} from "@testing-library/react";
 import {QueryClient} from "@tanstack/react-query";
 import {useWorkerSearch, WorkerProfileWithTradesRead} from "@/features/worker";
 import {workerApi} from "@/lib";
-import type {PaginatedListResponse} from "@/features/types";
-import {createQueryClient, createWrapper} from "../../helpers.tsx"
+import type {PaginatedListResponse} from "@/features/types.ts";
+import {createQueryClient, createWrapper} from "../helpers.tsx"
 
-vi.mock("../../api/workerApi");
+vi.mock("@/lib", () => ({
+    workerApi: {
+        searchWorkers: vi.fn()
+    }
+}))
 
 const mockWorker = (id: number): WorkerProfileWithTradesRead => ({
     id,
@@ -55,7 +59,10 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1], 1, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(
+                queryClient,
+                ['/workers/search?is_verified=true&trade_category_id=2']
+                )
         });
 
         expect(result.current.filters.is_verified).toBe(true);
@@ -66,7 +73,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1, 2], 2, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -82,7 +89,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1], 1, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -100,7 +107,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1], 1, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -123,7 +130,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1], 1, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -159,7 +166,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([1], 5, true));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -172,7 +179,7 @@ describe("useWorkerSearch", () => {
             .mockResolvedValueOnce(makePage([3, 4], 4, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -194,7 +201,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockRejectedValue(new Error("Network error"));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isError).toBe(true));
@@ -209,7 +216,7 @@ describe("useWorkerSearch", () => {
         vi.mocked(workerApi.searchWorkers).mockResolvedValue(makePage([], 0, false));
 
         const {result} = renderHook(() => useWorkerSearch(), {
-            wrapper: createWrapper(queryClient),
+            wrapper: createWrapper(queryClient, ["/workers/search"]),
         });
 
         await waitFor(() => expect(result.current.isLoading).toBe(false));

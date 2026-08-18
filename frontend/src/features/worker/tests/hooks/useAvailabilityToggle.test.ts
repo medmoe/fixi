@@ -5,7 +5,7 @@ import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityTogg
 import {workerApi} from '@/lib/api/workerApi.ts'
 import {toast} from 'sonner'
 import type {WorkerProfileWithTradesRead} from '@/features/worker/types/worker.types.ts'
-import {createQueryClient, createWrapper, mockProfile} from '../../helpers.tsx'
+import {createQueryClient, createWrapper, mockProfile} from '../helpers.tsx'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 

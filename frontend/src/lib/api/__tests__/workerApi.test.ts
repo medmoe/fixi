@@ -1,6 +1,8 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {workerApi} from '../workerApi'
+import {workerApi} from '@/lib'
 import apiClient from '../apiClient'
+import {WorkerProfileWithTradesRead, WorkerSearchFilters} from "@/features/worker";
+import {PaginatedListResponse} from "@/features/types";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +38,47 @@ const mockTradeCategories = [
     {id: 1, name: 'Plumbing', description: 'Plumbing services'},
     {id: 2, name: 'Electrical', description: 'Electrical services'},
 ]
+
+const mockWorkersWithTradeReads: WorkerProfileWithTradesRead = {
+    id: 1,
+    bio: 'Experienced plumber',
+    hourly_rate: 75.00,
+    service_radius_km: 20,
+    years_of_experience: 10,
+    avatar_url: null,
+    is_available: true,
+    is_verified: false,
+    available_since: null,
+    trade_categories: [{id: 1, skill_level: 'junior', worker_profile_id: 1, trade_category_id: 1, trade_category: null}],
+    user_id: 1,
+    user: {
+        id: 1,
+        name: 'John Doe',
+        location: null,
+        display_location: null,
+    }
+}
+const mockFilters: WorkerSearchFilters = {
+    trade_category_id: 1,
+    min_hourly_rate: 20,
+    max_hourly_rate: 50,
+    min_years_of_experience: 2,
+    max_years_of_experience: 10,
+    service_radius_km: 25,
+    is_available: true,
+    is_verified: true,
+    latitude: 40.7128,
+    longitude: -74.006,
+}
+
+const mockResponse: PaginatedListResponse<WorkerProfileWithTradesRead> = {
+    data: [mockWorkersWithTradeReads],
+    total_count: 1,
+    has_more: false,
+    page: 1,
+    items_per_page: 20
+}
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -260,6 +303,107 @@ describe('workerApi', () => {
             mockGet.mockResolvedValueOnce({data: mockTradeCategories})
             await workerApi.getTrades()
             expect(mockGet).toHaveBeenCalledTimes(1)
+        })
+    })
+
+    // ─── searchWorkers ────────────────────────────────────────────────────────────
+
+    describe('searchWorkers', () => {
+
+
+        it('calls GET /worker-profile/search with filters and pagination params', async () => {
+            mockGet.mockResolvedValueOnce({data: mockResponse})
+
+            await workerApi.searchWorkers(mockFilters, 0, 20)
+
+            expect(mockGet).toHaveBeenCalledWith(
+                '/worker-profile/search',
+                {
+                    params: {
+                        ...mockFilters,
+                        offset: 0,
+                        limit: 20,
+                    },
+                },
+            )
+        })
+
+        it('returns paginated worker search results', async () => {
+            mockGet.mockResolvedValueOnce({data: mockResponse})
+
+            const result = await workerApi.searchWorkers(mockFilters, 0, 20)
+
+            expect(result).toEqual(mockResponse)
+            expect(result.data).toHaveLength(1)
+            expect(result.total_count).toBe(1)
+        })
+
+        it('returns empty results when no workers match', async () => {
+            const emptyResponse: PaginatedListResponse<WorkerProfileWithTradesRead> = {
+                data: [],
+                total_count: 0,
+                has_more: false,
+                page: 0,
+                items_per_page: 20,
+            }
+
+            mockGet.mockResolvedValueOnce({data: emptyResponse})
+
+            const result = await workerApi.searchWorkers(mockFilters, 0, 20)
+
+            expect(result).toEqual(emptyResponse)
+            expect(result.data).toEqual([])
+            expect(result.total_count).toBe(0)
+        })
+
+        it('propagates errors from apiClient', async () => {
+            const error = new Error('Failed to search workers')
+            mockGet.mockRejectedValueOnce(error)
+
+            await expect(
+                workerApi.searchWorkers(mockFilters, 0, 20),
+            ).rejects.toThrow('Failed to search workers')
+        })
+
+        it('calls apiClient.get exactly once', async () => {
+            mockGet.mockResolvedValueOnce({data: mockResponse})
+
+            await workerApi.searchWorkers(mockFilters, 0, 20)
+
+            expect(mockGet).toHaveBeenCalledTimes(1)
+        })
+
+        it('passes the correct pagination parameters', async () => {
+            mockGet.mockResolvedValueOnce({data: mockResponse})
+
+            await workerApi.searchWorkers(mockFilters, 40, 10)
+
+            expect(mockGet).toHaveBeenCalledWith(
+                '/worker-profile/search',
+                {
+                    params: {
+                        ...mockFilters,
+                        offset: 40,
+                        limit: 10,
+                    },
+                },
+            )
+        })
+
+        it('works with an empty filter object', async () => {
+            mockGet.mockResolvedValueOnce({data: mockResponse})
+
+            await workerApi.searchWorkers({}, 0, 20)
+
+            expect(mockGet).toHaveBeenCalledWith(
+                '/worker-profile/search',
+                {
+                    params: {
+                        offset: 0,
+                        limit: 20,
+                    },
+                },
+            )
         })
     })
 

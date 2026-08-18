@@ -20,7 +20,7 @@ vi.mock('sonner', () => ({
         success: vi.fn(),
     }
 }))
-const {trade_categories, ...workerProfileRead} = mockProfile
+const {trade_categories, avatar_url, ...workerProfileRead} = mockProfile
 
 describe('useUploadAvatar', () => {
     let queryClient: QueryClient

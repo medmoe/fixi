@@ -3,7 +3,7 @@ import {act, renderHook, waitFor} from "@testing-library/react";
 import {QueryClient} from "@tanstack/react-query";
 import {workerApi} from "@/lib/api/workerApi.ts";
 import {useUpdateWorkerProfile, WorkerProfileWithTradesRead} from "@/features/worker";
-import {createQueryClient, createWrapper, mockProfile} from "../../helpers.tsx";
+import {createQueryClient, createWrapper, mockProfile} from "../helpers.tsx";
 import {toast} from "sonner";
 
 

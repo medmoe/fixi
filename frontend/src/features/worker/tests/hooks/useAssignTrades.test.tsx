@@ -4,7 +4,7 @@ import {QueryClient} from "@tanstack/react-query"
 import {useAssignTrades, type WorkerTradeNestedRead} from '@/features/worker'
 import {workerApi} from '@/lib/api/workerApi.ts'
 import {toast} from 'sonner'
-import {createQueryClient, createWrapper} from '../../helpers.tsx'
+import {createQueryClient, createWrapper} from '../helpers.tsx'
 
 vi.mock('@/lib/api/workerApi', () => ({
     workerApi: {

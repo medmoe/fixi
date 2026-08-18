@@ -1,6 +1,7 @@
 import {WorkerProfileWithTradesRead} from '@/features/worker'
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import type {ReactNode} from "react";
+import {MemoryRouter} from "react-router-dom";
 
 export const mockProfile: WorkerProfileWithTradesRead = {
     id: 1,
@@ -22,12 +23,14 @@ export const mockProfile: WorkerProfileWithTradesRead = {
     avatar_url: null
 }
 
-export const createWrapper = (queryClient: QueryClient) => {
+export const createWrapper = (queryClient: QueryClient, initialEntries: string[] = ['/']) => {
     // Return a stable component reference
     const Wrapper = ({children}: { children: ReactNode }) => (
-        <QueryClientProvider client={queryClient}>
-            {children}
-        </QueryClientProvider>
+        <MemoryRouter future={{v7_relativeSplatPath: true, v7_startTransition: true}} initialEntries={initialEntries}>
+            <QueryClientProvider client={queryClient}>
+                {children}
+            </QueryClientProvider>
+        </MemoryRouter>
     )
     Wrapper.displayName = 'TestWrapper'
     return Wrapper

@@ -1,6 +1,6 @@
 // src/app/router.test.tsx
 import {render, screen} from '@testing-library/react'
-import {createMemoryRouter, RouterProvider, Outlet} from 'react-router-dom'
+import {createMemoryRouter, Outlet, RouterProvider} from 'react-router-dom'
 import {describe, expect, it, vi} from 'vitest'
 import {routes} from './router'
 
@@ -9,14 +9,11 @@ vi.mock('@/features/landing', () => ({LandingPage: () => <div>Landing Page</div>
 vi.mock('@/features/auth', () => ({
     LoginPage: () => <div>Login Page</div>,
     RegisterPage: () => <div>Register Page</div>,
-}))
-vi.mock('@/features/worker/pages/WorkerDashboardPage.tsx', () => ({
-    WorkerDashboardPage: () => <div>Worker Dashboard</div>,
-}))
-
-// 2. Mock AuthInitializer to pass through children during routing tests
-vi.mock('@/features/auth/components/AuthInitializer.tsx', () => ({
     AuthInitializer: () => <div data-testid="auth-initializer"><Outlet/></div>,
+}))
+vi.mock('@/features/worker', () => ({
+    WorkerDashboardPage: () => <div>Worker Dashboard</div>,
+    WorkerSearchPage: () => <div>Worker Search Page</div>,
 }))
 
 // 3. Mock ProtectedRoute based on your app's auth state
@@ -50,5 +47,11 @@ describe('App Router', () => {
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
         expect(screen.getByText('Worker Dashboard')).toBeInTheDocument()
+    })
+
+    it('renders WorkerSearchPage at "/workers/search"', () => {
+        renderWithRouter(['/workers/search'])
+
+        expect(screen.getByText('Worker Search Page')).toBeInTheDocument()
     })
 })
