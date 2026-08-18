@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -111,6 +112,14 @@ class AvailabilityToggleRequest(BaseModel):
     is_available: bool
 
 
+class WorkerSortBy(str, Enum):
+    distance = "distance"
+    hourly_rate = "hourly_rate"
+    experience = "experience"
+    # rating intentionally omitted — no rating column exists on WorkerProfile yet.
+    # Add here once that schema/migration lands.
+
+
 class WorkerProfileFilter(BaseModel):
     trade_category_id: int | None = Field(default=None)
     min_hourly_rate: Decimal | None = Field(default=None, ge=0)
@@ -125,6 +134,9 @@ class WorkerProfileFilter(BaseModel):
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     radius_km: int | None = Field(default=None, ge=1, le=200)
+
+    # ─── Sorting ────────────────────────────────────────────────────────
+    sort_by: WorkerSortBy = Field(default=WorkerSortBy.distance)
 
     @model_validator(mode="after")
     def validate_hourly_rate_range(self):

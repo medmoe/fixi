@@ -267,3 +267,127 @@ async def worker_at_exact_boundary(async_session):
     """
     user = await create_test_user(async_session, location=ALGIERS_LOCATION)
     return await create_test_worker_profile(async_session, user=user, service_radius_km=6)
+
+
+# ─── Reference customer point used throughout: 36.7538, 3.0588 (Algiers) ───
+# Nearby WKT points at increasing distance from that reference, all still
+# within Algiers so no country/region boundary issues arise.
+
+CUSTOMER_LOCATION = "POINT(3.0588 36.7538)"
+NEAR_LOCATION = "POINT(3.0620 36.7550)"  # ~2km away
+MID_LOCATION = "POINT(3.1200 36.7900)"  # ~8km away
+FAR_LOCATION = "POINT(3.2200 36.8300)"  # ~15km away
+CLOSER_THAN_NEAR = "POINT(3.0600 36.7545)"  # ~1km away — closer than NEAR
+
+
+@pytest_asyncio.fixture
+async def worker_near_customer(async_session):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_mid_distance(async_session):
+    user = await create_test_user(async_session, location=MID_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_far_distance(async_session):
+    user = await create_test_user(async_session, location=FAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_available_near(async_session):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_unavailable_nearer(async_session):
+    """Closer than worker_available_near, but unavailable — must rank lower."""
+    user = await create_test_user(async_session, location=CLOSER_THAN_NEAR)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=False
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_verified_available(async_session):
+    user = await create_test_user(async_session, location=MID_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        service_radius_km=20,
+        is_available=True,
+        is_verified=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_unverified_available(async_session):
+    """Closer than worker_verified_available, but unverified — must rank lower."""
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        service_radius_km=20,
+        is_available=True,
+        is_verified=False,
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_available_unverified(async_session):
+    user = await create_test_user(async_session, location=FAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        service_radius_km=20,
+        is_available=True,
+        is_verified=False,
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_unavailable_verified(async_session):
+    """Closer than worker_available_unverified, but unavailable — must rank lower."""
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        service_radius_km=20,
+        is_available=False,
+        is_verified=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_available_high_rate(async_session):
+    return await create_test_worker_profile(
+        async_session, hourly_rate=Decimal("150.00"), is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_unavailable_low_rate(async_session):
+    return await create_test_worker_profile(
+        async_session, hourly_rate=Decimal("20.00"), is_available=False
+    )
+
+
+@pytest_asyncio.fixture
+async def many_ranked_workers(async_session):
+    return [
+        await create_test_worker_profile(async_session, is_available=(i % 2 == 0))
+        for i in range(10)
+    ]
