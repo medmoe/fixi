@@ -2,7 +2,7 @@ import React from 'react'
 import {describe, expect, it, vi} from 'vitest'
 import {act, render, screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {SkillLevelSelect} from '@/features/worker/components/trades/SkillLevelSelect'
+import {SkillLevelSelect} from '@/features/worker/components/trades/SkillLevelSelect.tsx'
 import {type SkillLevel} from '@/features/worker/types'
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────

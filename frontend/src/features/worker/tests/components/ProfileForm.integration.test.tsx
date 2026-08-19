@@ -1,102 +1,96 @@
-// src/features/worker/components/__tests__/ProfileForm.integration.test.tsx
-
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, render, screen, waitFor} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {useFormContext} from 'react-hook-form'
-import {ProfileForm} from '@/features/worker/components/ProfileForm'
-import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile'
-import {useAssignTrades} from '@/features/worker/hooks/useAssignTrades'
-import {useTrades} from '@/features/worker/hooks/useTrades'
-import type {TradeCategoryRead, WorkerProfileWithTradesRead, WorkerTradeNestedRead} from '@/features/worker/types'
-
-// ─── Mocks ────────────────────────────────────────────────────────────────────
-
-vi.mock('@/features/worker/hooks/useUpdateWorkerProfile')
-vi.mock('@/features/worker/hooks/useAssignTrades')
-vi.mock('@/features/worker/hooks/useTrades')
+import {ProfileForm, useAssignTrades, useTrades, useUpdateWorkerProfile, WorkerProfileWithTradesRead, WorkerTradeNestedRead} from "@/features/worker";
+import {mockAssignedTrades, mockTradeCategories, mockWorker} from "../mocks"
 
 // Mock BioField to actually register with react-hook-form so isDirty works
-vi.mock('@/features/worker/components/fields/BioField', () => ({
-    BioField: () => {
-        const {register} = useFormContext()
-        return <textarea {...register('bio')} aria-label="Bio" data-testid="bio-field"/>
-    },
+vi.mock("@/features/worker/hooks/useUpdateWorkerProfile")
+vi.mock("@/features/worker/hooks/useAssignTrades")
+vi.mock("@/features/worker/hooks/useTrades")
+vi.mock("@/features/worker/hooks/useUploadAvatar")
+
+vi.mock("@/features/worker/components/fields/AvatarUploadField", () => ({
+    AvatarUploadField: () => <div data-testid="avatar-upload-field"/>
 }))
 
-vi.mock('@/features/worker/components/fields/HourlyRateField', () => ({
-    HourlyRateField: () => {
-        const {register} = useFormContext()
-        return <input {...register('hourly_rate', {valueAsNumber: true})} type="number" aria-label="Hourly rate" data-testid="hourly-rate-field"/>
-    },
-}))
+vi.mock("@/features/worker", async () => {
+        const actual = await vi.importActual<typeof import("@/features/worker")>(
+            "@/features/worker",
+        )
 
-vi.mock('@/features/worker/components/fields/ServiceRadiusField', () => ({
-    ServiceRadiusField: () => {
-        const {register} = useFormContext()
-        return <input {...register('service_radius_km', {valueAsNumber: true})} type="number" aria-label="Service radius" data-testid="service-radius-field"/>
-    },
-}))
+        return {
+            ...actual,
+            BioField: () => {
+                const {register} = useFormContext()
 
-vi.mock('@/features/worker/components/fields/AvatarUploadField', () => ({
-    AvatarUploadField: () => <div data-testid="avatar-upload-field"/>,
-}))
+                return (
+                    <textarea
+                        {...register("bio")}
+                        aria-label="Bio"
+                        data-testid="bio-field"
+                    />
+                )
+            },
 
-// ─── Fixtures ─────────────────────────────────────────────────────────────────
+            HourlyRateField: () => {
+                const {register} = useFormContext()
 
-const mockTradeCategories: TradeCategoryRead[] = [
-    {id: 1, name: 'plumbing', display_name: 'Plumbing', icon_name: 'wrench', parent_id: null, created_at: '2026-01-01T00:00:00.000Z'},
-    {id: 2, name: 'electrical', display_name: 'Electrical', icon_name: 'zap', parent_id: null, created_at: '2026-01-01T00:00:00.000Z'},
-    {id: 3, name: 'carpentry', display_name: 'Carpentry', icon_name: 'hammer', parent_id: null, created_at: '2026-01-01T00:00:00.000Z'},
-]
+                return (
+                    <input
+                        {...register("hourly_rate", {valueAsNumber: true})}
+                        type="number"
+                        aria-label="Hourly rate"
+                        data-testid="hourly-rate-field"
+                    />
+                )
+            },
 
-const mockAssignedTrades: WorkerTradeNestedRead[] = [
-    {
-        id: 1,
-        worker_profile_id: 1,
-        trade_category_id: 1,
-        skill_level: 'mid',
-        trade_category: mockTradeCategories[0],
+            ServiceRadiusField: () => {
+                const {register} = useFormContext()
+
+                return (
+                    <input
+                        {...register("service_radius_km", {valueAsNumber: true})}
+                        type="number"
+                        aria-label="Service radius"
+                        data-testid="service-radius-field"
+                    />
+                )
+            },
+        }
     }
-]
-
-const mockProfile: WorkerProfileWithTradesRead = {
-    id: 1,
-    user_id: 1,
-    bio: 'Experienced plumber',
-    hourly_rate: 75.00,
-    service_radius_km: 20,
-    is_available: true,
-    is_verified: false,
-    available_since: null,
-    trade_categories: mockAssignedTrades,
-}
+)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 let mockUpdateMutate: ReturnType<typeof vi.fn>
 let mockAssignMutate: ReturnType<typeof vi.fn>
 let mockRemoveMutate: ReturnType<typeof vi.fn>
-let mockAssignOnSuccess: ((data: WorkerTradeNestedRead[]) => void) | undefined
+
+let mockAssignOnSuccess: | ((data: WorkerTradeNestedRead[]) => void) | undefined
+
 let mockAssignOnError: (() => void) | undefined
 
-const setupMocks = (opts: {
-    assignPending?: boolean
-} = {}) => {
+const setupMocks = (
+    opts: {
+        updatePending?: boolean
+        assignPending?: boolean
+    } = {},
+) => {
+    mockAssignOnSuccess = undefined
+    mockAssignOnError = undefined
+
     mockUpdateMutate = vi.fn((_payload: any, options?: any) => {
-        // Simulate async mutation — call onSuccess after a tick
         if (options?.onSuccess) {
             setTimeout(() => options.onSuccess(), 0)
         }
     })
 
     mockAssignMutate = vi.fn((_ids: number[], options?: any) => {
-        if (options?.onSuccess) {
-            mockAssignOnSuccess = options.onSuccess
-        }
-        if (options?.onError) {
-            mockAssignOnError = options.onError
-        }
+        mockAssignOnSuccess = options?.onSuccess
+        mockAssignOnError = options?.onError
     })
 
     mockRemoveMutate = vi.fn((_id: number, options?: any) => {
@@ -107,7 +101,7 @@ const setupMocks = (opts: {
 
     vi.mocked(useUpdateWorkerProfile).mockReturnValue({
         mutate: mockUpdateMutate,
-        isPending: opts.assignPending ?? false,
+        isPending: opts.updatePending ?? false,
     } as any)
 
     vi.mocked(useAssignTrades).mockReturnValue({
@@ -119,9 +113,10 @@ const setupMocks = (opts: {
             isError: false,
             data: undefined,
             error: null,
-            status: 'idle',
+            status: "idle",
             reset: vi.fn(),
         } as any,
+
         removeTrade: {
             mutate: mockRemoveMutate,
             mutateAsync: vi.fn(),
@@ -130,7 +125,7 @@ const setupMocks = (opts: {
             isError: false,
             data: undefined,
             error: null,
-            status: 'idle',
+            status: "idle",
             reset: vi.fn(),
         } as any,
     })
@@ -141,19 +136,13 @@ const setupMocks = (opts: {
         isError: false,
         error: null,
         isSuccess: true,
-        status: 'success',
-        fetchStatus: 'idle',
+        status: "success",
+        fetchStatus: "idle",
     } as any)
 }
-
-const renderComponent = async (profile: WorkerProfileWithTradesRead = mockProfile) => {
-    let result: ReturnType<typeof render>
-    await act(async () => {
-        result = render(<ProfileForm profile={profile}/>)
-    })
-    return result!
+const renderComponent = (profile: WorkerProfileWithTradesRead = mockWorker(1)) => {
+    return render(<ProfileForm profile={profile}/>)
 }
-
 const getSubmitButton = () => screen.getByRole('button', {name: /update profile/i})
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -167,7 +156,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
     describe('fires assignTrades after updateProfile when pendingIds exist', () => {
         it('selects a trade via TradeCategoryPicker and submits both profile + trades', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Verify initial state — Plumbing is already assigned
             expect(screen.getByText('Plumbing')).toBeInTheDocument()
@@ -194,7 +183,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             })
 
             // Submit the form
-            await user.click(getSubmitButton())
+            await act(async() => await user.click(getSubmitButton()))
 
             // Assert: both mutations were called
             await waitFor(() => {
@@ -225,7 +214,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
         it('only fires assignTrades, not updateProfile, when form is pristine but trades are pending', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Select a trade without touching any form field
             const electricalButton = screen.getByRole('button', {name: /electrical/i})
@@ -237,7 +226,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             })
 
             // Submit
-            await user.click(getSubmitButton())
+            await act(async () => await user.click(getSubmitButton()))
 
             // Assert: assignTrades called, updateProfile NOT called (form is pristine)
             await waitFor(() => {
@@ -250,7 +239,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
     describe('does not fire assignTrades when pendingIds is empty', () => {
         it('only updates profile when no trades are pending', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Change bio to make form dirty
             const bioField = screen.getByLabelText(/bio/i)
@@ -274,14 +263,14 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
         it('does nothing when form is pristine and no trades pending', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Button should be disabled initially
             const submitButton = getSubmitButton()
             expect(submitButton).toBeDisabled()
 
             // Even if we force click, nothing should happen
-            await user.click(submitButton)
+            await act(async () => await user.click(submitButton))
 
             expect(mockUpdateMutate).not.toHaveBeenCalled()
             expect(mockAssignMutate).not.toHaveBeenCalled()
@@ -291,7 +280,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
     describe('clears pendingIds after successful assign', () => {
         it('pending trades move to assigned after onSuccess fires', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Select Electrical
             const electricalButton = screen.getByRole('button', {name: /electrical/i})
@@ -310,7 +299,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             await waitFor(() => expect(getSubmitButton()).not.toBeDisabled())
 
             // Submit
-            await user.click(getSubmitButton())
+            await act(async () => await user.click(getSubmitButton()))
 
             // Assert assignTrades was called
             await waitFor(() => {
@@ -349,7 +338,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
         it('pending trades are preserved when assign fails', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Select Electrical
             const electricalButton = screen.getByRole('button', {name: /electrical/i})
@@ -365,7 +354,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             await act(async () => await user.type(bioField, 'Updated'))
             await waitFor(() => expect(getSubmitButton()).not.toBeDisabled())
 
-            await user.click(getSubmitButton())
+            await act(async() => await user.click(getSubmitButton()))
 
             await waitFor(() => {
                 expect(mockAssignMutate).toHaveBeenCalledTimes(1)
@@ -385,7 +374,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
     describe('remove trade — immediate, no save needed', () => {
         it('removes assigned trade immediately via onRemove callback', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             // Click the X button on the assigned Plumbing trade
             const removeButton = screen.getByRole('button', {name: /remove plumbing/i})
@@ -403,7 +392,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
         it('updates assigned trades list after successful removal', async () => {
             const user = userEvent.setup()
-            await renderComponent()
+            renderComponent()
 
             const removeButton = screen.getByRole('button', {name: /remove plumbing/i})
             await act(async () => await user.click(removeButton))
@@ -431,7 +420,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
 
             // Profile with 5 trades already assigned
             const maxedProfile: WorkerProfileWithTradesRead = {
-                ...mockProfile,
+                ...mockWorker(1),
                 trade_categories: [
                     {id: 1, worker_profile_id: 1, trade_category_id: 1, skill_level: 'mid', trade_category: {id: 1, name: 'plumbing', display_name: 'Plumbing', icon_name: 'wrench', parent_id: null, created_at: ''}},
                     {id: 2, worker_profile_id: 1, trade_category_id: 2, skill_level: 'mid', trade_category: {id: 2, name: 'electrical', display_name: 'Electrical', icon_name: 'zap', parent_id: null, created_at: ''}},
@@ -451,7 +440,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
                 isLoading: false,
             } as any)
 
-            await renderComponent(maxedProfile)
+            await act(async () => renderComponent(maxedProfile))
 
             // Badge shows 5/5 with destructive variant
             const badge = screen.getByText('5/5 Selected')

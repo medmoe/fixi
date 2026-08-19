@@ -1,21 +1,23 @@
-import React from 'react'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {act, render, screen} from '@testing-library/react'
+import {act, render, screen, waitFor} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {useUser} from '@/features/user'
-import {useWorkerProfile, WorkerDashboardPage, WorkerProfileWithTradesRead} from "@/features/worker";
+import {useWorkerProfile, WorkerDashboardPage} from "@/features/worker";
+import {mockAvailableWorkerProfile, mockUser, mockWorker} from "@/features/worker/tests/mocks.ts";
+import {createQueryClient, createWrapper} from "@/features/worker/tests/helpers.tsx";
+import {QueryClient} from "@tanstack/react-query";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
-
 vi.mock('@/features/user', () => ({
     useUser: vi.fn(),
-    AccountTab: () => <div data-testid="account-tab">AccountTab</div>,
+    AccountTab: () => <div data-testid="account-tab"/>,
 }))
 
-vi.mock('../components/ProfileTab', () => ({
-    ProfileTab: () => <div data-testid="profile-tab">ProfileTab</div>,
+vi.mock("@/features/worker/hooks/useWorkerProfile")
+vi.mock("@/features/worker/components/ProfileTab", () => ({
+    ProfileTab: () => <div data-testid="profile-tab">ProfileTab</div>
 }))
+
 
 vi.mock('@/components/LogoutButton', () => ({
     LogoutButton: () => <button>Logout</button>,
@@ -27,61 +29,32 @@ vi.mock('@/features/worker/components/AvailabilityToggle', () => ({
     ),
 }))
 
-vi.mock('@/features/worker/hooks/useWorkerProfile', () => ({
-    useWorkerProfile: vi.fn(),
-}))
-
-// ─── Fixtures ─────────────────────────────────────────────────────────────────
-
-const mockUser = {
-    id: 1,
-    name: 'John Doe',
-    username: 'john_doe',
-    email: 'john@example.com',
-    role_type: 'worker',
-}
-
-const mockWorkerProfile: WorkerProfileWithTradesRead = {
-    id: 1,
-    user_id: 1,
-    bio: 'Bio text test.',
-    hourly_rate: 100,
-    years_of_experience: 10,
-    is_available: false,
-    is_verified: true,
-    available_since: null,
-    trade_categories: []
-}
-
-const mockAvailableWorkerProfile: WorkerProfileWithTradesRead = {
-    ...mockWorkerProfile,
-    is_available: true,
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const createTestQueryClient = () => new QueryClient({
-    defaultOptions: {
-        queries: {retry: false},
-        mutations: {retry: false},
-    }
-})
-
-const renderWithClient = (ui: React.ReactElement) => {
-    const queryClient = createTestQueryClient()
-    return render(
-        <QueryClientProvider client={queryClient}>
-            {ui}
-        </QueryClientProvider>
-    )
-}
-
-const renderComponent = () => renderWithClient(<WorkerDashboardPage/>)
+// vi.mocked(useUser).mockReturnValue({
+//     data: mockUser,
+//     isLoading: false,
+//     isError: false,
+//     error: null,
+//     isSuccess: true,
+//     status: "success",
+//     fetchStatus: 'idle',
+// } as any)
+//
+// vi.mocked(useWorkerProfile).mockReturnValue({
+//     data: mockWorker(1),
+//     isLoading: false,
+//     isError: false,
+//     error: null,
+//     isSuccess: true,
+//     status: "success",
+//     fetchStatus: 'idle',
+// } as any)
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('WorkerDashboardPage', () => {
+    let queryClient: QueryClient
     beforeEach(() => {
+        queryClient = createQueryClient()
         vi.clearAllMocks()
     })
 
@@ -99,7 +72,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: true,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByText('Loading your dashboard...')).toBeInTheDocument()
             expect(document.querySelector('.animate-spin')).toBeInTheDocument()
         })
@@ -111,11 +84,11 @@ describe('WorkerDashboardPage', () => {
                 error: null,
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker,
                 isLoading: false,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.queryByText('Loading your dashboard...')).toBeInTheDocument()
             expect(document.querySelector('.animate-spin')).toBeInTheDocument()
         })
@@ -131,7 +104,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: true,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.queryByTestId('profile-tab')).not.toBeInTheDocument()
             expect(screen.queryByTestId('account-tab')).not.toBeInTheDocument()
         })
@@ -151,7 +124,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: false,
                 error: new Error('API error'),
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByText('System Synchronization Failure')).toBeInTheDocument()
             expect(screen.getByText(/We ran into trouble loading/)).toBeInTheDocument()
         })
@@ -167,7 +140,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: false,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByText('System Synchronization Failure')).toBeInTheDocument()
         })
 
@@ -178,11 +151,11 @@ describe('WorkerDashboardPage', () => {
                 error: new Error('API error'),
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker,
                 isLoading: false,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.queryByText('System Synchronization Failure')).toBeInTheDocument()
         })
 
@@ -193,11 +166,11 @@ describe('WorkerDashboardPage', () => {
                 error: null,
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker,
                 isLoading: false,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByText('System Synchronization Failure')).toBeInTheDocument()
             expect(screen.getByText(/We ran into trouble loading/)).toBeInTheDocument()
         })
@@ -213,7 +186,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: false,
                 error: new Error('API error'),
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.queryByTestId('profile-tab')).not.toBeInTheDocument()
             expect(screen.queryByTestId('account-tab')).not.toBeInTheDocument()
         })
@@ -229,43 +202,40 @@ describe('WorkerDashboardPage', () => {
                 error: null,
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker(1),
                 isLoading: false,
                 error: null,
             } as any)
         })
 
-        it('renders user avatar with first initial', () => {
-            renderComponent()
-            const avatars = screen.getAllByText('J')
-            expect(avatars).toHaveLength(2)
+        it('renders user avatar with first initial', async () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            await waitFor(() => expect(screen.getAllByText('J')).toHaveLength(2))
         })
 
-        it('renders user name in sidebar', () => {
-            renderComponent()
-            const usernames = screen.getAllByText('John Doe')
-            expect(usernames).toHaveLength(2)
+        it('renders user name in sidebar', async () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            await waitFor(() => expect(screen.getAllByText('John Doe')).toHaveLength(2))
         })
 
-        it('renders user role in sidebar', () => {
-            renderComponent()
-            expect(screen.getByText(/Worker/i)).toBeInTheDocument()
+        it('renders user role in sidebar', async () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            await waitFor(() => expect(screen.getByText('worker')).toBeInTheDocument())
         })
 
-        it('renders logout button', () => {
-            renderComponent()
-            const buttons = screen.getAllByRole('button', {name: /logout/i})
-            expect(buttons).toHaveLength(2)
+        it('renders logout button', async () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            await waitFor(() => expect(screen.getAllByRole('button', {name: /logout/i})).toHaveLength(2))
         })
 
         it('renders Profile tab by default', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByTestId('profile-tab')).toBeInTheDocument()
-            expect(screen.queryByTestId('account-tab')).not.toBeInTheDocument()
+            expect(screen.queryByTestId('account-tab')).not.toBeInTheDocument() // we use queryByTestId for elements that we expect to be absent.
         })
 
         it('renders navigation tabs', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const profiles = screen.getAllByRole('button', {name: /profile/i})
             expect(profiles).toHaveLength(2)
             const accounts = screen.getAllByRole('button', {name: /account/i})
@@ -273,19 +243,19 @@ describe('WorkerDashboardPage', () => {
         })
 
         it('renders availability toggle in sidebar', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByTestId('availability-section')).toBeInTheDocument()
             expect(screen.getByTestId('availability-section')).toContainElement(screen.getAllByTestId('availability-toggle')[0])
         })
 
         it('renders availability toggle in mobile view', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByTestId('mobile-availability')).toBeInTheDocument()
             expect(screen.getByTestId('mobile-availability')).toContainElement(screen.getAllByTestId('availability-toggle')[1])
         })
 
         it('passes isAvailable=false to AvailabilityToggle when worker is unavailable', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const toggles = screen.getAllByText('Unavailable')
             expect(toggles).toHaveLength(2)
         })
@@ -296,7 +266,7 @@ describe('WorkerDashboardPage', () => {
                 isLoading: false,
                 error: null,
             } as any)
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const toggles = screen.getAllByText('Available')
             expect(toggles).toHaveLength(2)
         })
@@ -312,14 +282,14 @@ describe('WorkerDashboardPage', () => {
                 error: null,
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker,
                 isLoading: false,
                 error: null,
             } as any)
         })
 
         it('switches to Account tab when clicked', async () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const accountButton = screen.getAllByRole('button', {name: /account/i})[0]
             await act(async () => await userEvent.click(accountButton))
             expect(screen.getByTestId('account-tab')).toBeInTheDocument()
@@ -327,7 +297,7 @@ describe('WorkerDashboardPage', () => {
         })
 
         it('switches back to Profile tab when clicked', async () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const accountButton = screen.getAllByRole('button', {name: /account/i})[0]
             await act(async () => await userEvent.click(accountButton))
             const profileButton = screen.getAllByRole('button', {name: /profile/i})[0]
@@ -337,7 +307,7 @@ describe('WorkerDashboardPage', () => {
         })
 
         it('highlights active tab', async () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const accountButton = screen.getAllByRole('button', {name: /account/i})[0]
             await act(async () => await userEvent.click(accountButton))
             expect(accountButton.className).toContain('bg-primary/10')
@@ -354,26 +324,26 @@ describe('WorkerDashboardPage', () => {
                 error: null,
             } as any)
             vi.mocked(useWorkerProfile).mockReturnValue({
-                data: mockWorkerProfile,
+                data: mockWorker,
                 isLoading: false,
                 error: null,
             } as any)
         })
 
         it('renders sidebar', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByTestId('sidebar-header')).toBeInTheDocument()
             expect(screen.getByTestId('sidebar-header')).toHaveTextContent('John Doe')
         })
 
         it('renders mobile header', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             expect(screen.getByTestId('mobile-header')).toBeInTheDocument()
             expect(screen.getByTestId('mobile-header')).toHaveTextContent('John Doe')
         })
 
         it('renders mobile tab switcher', () => {
-            renderComponent()
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const mobileTabs = screen.getAllByRole('button', {name: /profile/i})
             expect(mobileTabs.length).toBeGreaterThanOrEqual(1)
         })

@@ -1,5 +1,6 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {JobCreateRequest, JobRead, PaginatedListResponse} from "@/features/job";
+import {JobCreateRequest, JobRead} from "@/features/job";
+import {PaginatedListResponse} from "@/features/types";
 import {jobApi} from "@/lib";
 import {toast} from "sonner";
 import {AxiosError} from "axios";

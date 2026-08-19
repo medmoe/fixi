@@ -1,11 +1,11 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
-import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle'
-import {workerApi} from '@/lib/api/workerApi'
+import {useAvailabilityToggle} from '@/features/worker/hooks/useAvailabilityToggle.ts'
+import {workerApi} from '@/lib/api/workerApi.ts'
 import {toast} from 'sonner'
-import type {WorkerProfileWithTradesRead} from '@/features/worker/types/worker.types'
-import {createQueryClient, createWrapper, mockProfile} from './helpers'
+import type {WorkerProfileWithTradesRead} from '@/features/worker/types/worker.types.ts'
+import {createQueryClient, createWrapper, mockProfile} from '../helpers.tsx'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 

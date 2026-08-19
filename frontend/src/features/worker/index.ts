@@ -1,4 +1,5 @@
 export {WorkerDashboardPage} from './pages/WorkerDashboardPage'
+export {WorkerSearchPage} from './pages/WorkerSearchPage'
 export {
     useAvailabilityToggle,
     useTrades,
@@ -6,6 +7,7 @@ export {
     useUploadAvatar,
     useWorkerProfile,
     useAssignTrades,
+    useWorkerSearch
 } from './hooks'
 export {
     AvailabilityToggle,
@@ -17,7 +19,12 @@ export {
     ProfileTab,
     ProfileForm,
     SkillLevelSelect,
-    TradesPicker
+    TradesPicker,
+    FilterPanel,
+    WorkerCard,
+    WorkerCardSkeleton,
+    WorkerCardSkeletonGrid,
+    WorkerSearchEmptyState
 } from './components'
 export type {
     WorkerProfileRead,
@@ -28,5 +35,7 @@ export type {
     PaginatedResult,
     WorkerTradeNestedRead,
     TradeCategoryWithChildren,
-    TradeCategoryRead
+    TradeCategoryRead,
+    WorkerSearchFilters,
+    WorkerSortBy
 } from './types'

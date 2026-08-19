@@ -16,7 +16,13 @@ export interface UserRead {
     deleted_at: string | null,
     created_at: string | null,
     updated_at: string | null,
+}
 
+export interface UserPublicRead {
+    id: number,
+    name: string,
+    location: string | null,
+    display_location: string | null,
 }
 
 export interface UserUpdate {

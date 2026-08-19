@@ -1,4 +1,3 @@
-
 import React, {useState} from 'react'
 import {SubmitHandler, useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
@@ -6,7 +5,10 @@ import {Loader2, Save} from 'lucide-react'
 import {Form} from '@/components/ui/form'
 import {Button} from '@/components/ui/button'
 import {type WorkerProfileFormValues, workerProfileSchema} from '../schemas/workerProfileSchema'
-import {AvatarUploadField, BioField, HourlyRateField, ServiceRadiusField, TradeCategoryPicker, type UpdateWorkerProfilePayload, useAssignTrades, useUpdateWorkerProfile, type WorkerProfileWithTradesRead} from '@/features/worker'
+import {useAssignTrades} from '@/features/worker/hooks/useAssignTrades'
+import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile'
+
+import {AvatarUploadField, BioField, HourlyRateField, ServiceRadiusField, TradeCategoryPicker, UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from '@/features/worker'
 
 interface ProfileFormProps {
     profile: WorkerProfileWithTradesRead

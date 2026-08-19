@@ -1,10 +1,11 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from "@tanstack/react-query"
-import {useAssignTrades, type WorkerTradeNestedRead} from '@/features/worker'
-import {workerApi} from '@/lib/api/workerApi'
+import {useAssignTrades} from '@/features/worker'
+import {workerApi} from '@/lib/api/workerApi.ts'
 import {toast} from 'sonner'
-import {createQueryClient, createWrapper} from './helpers'
+import {createQueryClient, createWrapper} from '../helpers.tsx'
+import {mockTrades} from '../mocks.ts'
 
 vi.mock('@/lib/api/workerApi', () => ({
     workerApi: {
@@ -17,15 +18,6 @@ vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
 }))
 
-const mockTrades: WorkerTradeNestedRead[] = [
-    {
-        id: 1,
-        worker_profile_id: 1,
-        trade_category_id: 10,
-        skill_level: 'junior',
-        trade_category: {id: 10, name: 'plumbing', display_name: 'Plumbing', icon_name: null, parent_id: null, created_at: null},
-    },
-]
 
 describe('useAssignTrades', () => {
     let queryClient: QueryClient

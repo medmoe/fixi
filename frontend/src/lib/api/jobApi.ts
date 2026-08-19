@@ -1,4 +1,5 @@
-import {JobCreateRequest, JobRead, JobUpdateRequest, PaginatedListResponse} from "@/features/job";
+import {JobCreateRequest, JobRead, JobUpdateRequest} from "@/features/job";
+import {PaginatedListResponse} from "@/features/types";
 import apiClient from "./apiClient";
 
 

@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import {FormProvider, useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
-import {ServiceRadiusField} from '../ServiceRadiusField.tsx'
+import {ServiceRadiusField} from '../../../components/fields/ServiceRadiusField.tsx'
 
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────

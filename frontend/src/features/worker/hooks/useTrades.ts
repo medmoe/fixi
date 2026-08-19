@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query';
-import {workerApi} from "@/lib/api/workerApi.ts";
+import {workerApi} from "@/lib";
 
 export const useTrades = () => {
     return useQuery({

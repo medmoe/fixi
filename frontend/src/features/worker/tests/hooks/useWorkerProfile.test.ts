@@ -1,8 +1,8 @@
 import {vi} from 'vitest'
 import {renderHook, waitFor} from '@testing-library/react'
 import {QueryClient} from '@tanstack/react-query'
-import {workerApi} from '@/lib/api/workerApi'
-import {createQueryClient, createWrapper, mockProfile} from "./helpers";
+import {workerApi} from '@/lib/api/workerApi.ts'
+import {createQueryClient, createWrapper, mockProfile} from "../helpers.tsx";
 import {useWorkerProfile, WorkerProfileWithTradesRead} from '@/features/worker'
 
 

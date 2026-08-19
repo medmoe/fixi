@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {render, screen} from '@testing-library/react'
-import {ProfileTab} from '@/features/worker/components/ProfileTab'
+import {ProfileTab} from '@/features/worker/components/ProfileTab.tsx'
 import {useWorkerProfile} from '@/features/worker'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

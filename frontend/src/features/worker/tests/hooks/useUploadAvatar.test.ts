@@ -1,9 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {QueryClient} from '@tanstack/react-query'
-import {createQueryClient, createWrapper, mockProfile} from "@/features/worker/hooks/__tests__/helpers.tsx";
+import {createQueryClient, createWrapper, mockProfile} from "@/features/worker/tests/helpers.tsx";
 import {act, renderHook, waitFor} from '@testing-library/react'
 import {useUploadAvatar, type WorkerProfileWithTradesRead} from "@/features/worker";
-import {workerApi} from "@/lib/api/workerApi";
+import {workerApi} from "@/lib/api/workerApi.ts";
 import {toast} from "sonner";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ vi.mock('sonner', () => ({
         success: vi.fn(),
     }
 }))
-const {trade_categories, ...workerProfileRead} = mockProfile
+const {trade_categories, avatar_url, ...workerProfileRead} = mockProfile
 
 describe('useUploadAvatar', () => {
     let queryClient: QueryClient

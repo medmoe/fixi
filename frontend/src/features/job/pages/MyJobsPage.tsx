@@ -7,7 +7,8 @@ import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Skeleton} from '@/components/ui/skeleton';
 import {jobApi} from '@/lib';
-import {JobRead, JobStatus, PaginatedListResponse} from '@/features/job';
+import {JobRead, JobStatus} from '@/features/job';
+import {PaginatedListResponse} from "@/features/types"
 import {useUser} from '@/features/user';
 
 const statusColors: Record<JobStatus, string> = {
@@ -98,7 +99,7 @@ export const MyJobsPage: React.FC = () => {
                 </Card>
             ) : (
                 <div className="space-y-4">
-                    {jobs.map((job) => (
+                    {jobs.map((job: JobRead) => (
                         <Card key={job.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">

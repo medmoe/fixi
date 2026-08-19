@@ -3,7 +3,9 @@ export type {
     WorkerProfileWithTradesRead,
     UpdateWorkerProfilePayload,
     PaginatedResult,
-    WorkerProfileCreateRequest
+    WorkerProfileCreateRequest,
+    WorkerSearchFilters,
+    WorkerSortBy
 } from './worker.types'
 export type {
     TradeCategoryRead,

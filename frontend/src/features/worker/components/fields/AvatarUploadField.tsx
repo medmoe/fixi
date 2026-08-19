@@ -5,7 +5,7 @@ import {Button} from '@/components/ui/button.tsx';
 import {Loader2, Upload} from 'lucide-react';
 
 interface AvatarUploadFieldProps {
-    currentAvatarUrl?: string;
+    currentAvatarUrl: string | null;
 }
 
 export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvatarUrl}) => {
@@ -28,12 +28,12 @@ export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvat
     };
 
     const triggerFileInput = () => fileInputRef.current?.click();
-
+    const src: string | undefined = localPreview ? localPreview : currentAvatarUrl ? currentAvatarUrl : undefined;
     return (
         <div className="flex items-center space-x-6 bg-card border p-4 rounded-xl">
             <div className="relative">
                 <Avatar className="h-24 w-24 border-2 border-border">
-                    <AvatarImage src={localPreview || currentAvatarUrl} alt="Avatar profile graphic"/>
+                    <AvatarImage src={src} alt="Avatar profile graphic"/>
                     <AvatarFallback className="text-lg font-bold">WP</AvatarFallback>
                 </Avatar>
                 {isPending && (
