@@ -18,7 +18,7 @@ export const mockWorker = (id: number): WorkerProfileWithTradesRead => ({
     hourly_rate: 75.00,
     years_of_experience: 5,
     service_radius_km: 20,
-    is_available: true,
+    is_available: false,
     is_verified: false,
     trade_categories: [{
         id: 1,
@@ -50,3 +50,16 @@ export const mockAssignedTrades: WorkerTradeNestedRead[] = [
         trade_category: mockTradeCategories[0],
     }
 ]
+
+export const mockUser = {
+    id: 1,
+    name: 'John Doe',
+    username: 'john_doe',
+    email: 'john@example.com',
+    role_type: 'worker',
+}
+
+export const mockAvailableWorkerProfile: WorkerProfileWithTradesRead = {
+    ...mockWorker(1),
+    is_available: true,
+}

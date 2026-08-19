@@ -2,7 +2,9 @@ import React, {useState} from 'react'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {AlertCircle, Briefcase, Loader2, UserCircle} from 'lucide-react'
-import {AvailabilityToggle, ProfileTab, useWorkerProfile} from "@/features/worker";
+import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
+import {ProfileTab} from "@/features/worker/components/ProfileTab"
+import {AvailabilityToggle} from "@/features/worker/components/AvailabilityToggle";
 
 type Tab = 'profile' | 'account'
 
