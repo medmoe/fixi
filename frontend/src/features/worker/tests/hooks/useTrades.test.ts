@@ -65,7 +65,7 @@ describe('useTrades', () => {
             )
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
-            expect(result.current.data).toHaveLength(2)
+            expect(result.current.data).toHaveLength(3)
         })
 
         it('returns empty array when no trades exist', async () => {

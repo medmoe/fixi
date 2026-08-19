@@ -21,7 +21,7 @@ vi.mock("@/features/worker", () => ({
     )),
     WorkerCard: vi.fn(({worker}) => (
         <div data-testid="worker-card">
-            {worker.name}
+            {worker.user.name}
         </div>
     )),
     WorkerCardSkeletonGrid: vi.fn(() => (
@@ -205,11 +205,11 @@ describe("WorkerSearchPage", () => {
         ).toHaveLength(2);
 
         expect(
-            screen.getByText("John Doe"),
+            screen.getByText("Worker 1"),
         ).toBeInTheDocument();
 
         expect(
-            screen.getByText("Jane Smith"),
+            screen.getByText("Worker 2"),
         ).toBeInTheDocument();
     });
 
@@ -225,8 +225,8 @@ describe("WorkerSearchPage", () => {
         render(<WorkerSearchPage/>);
 
         expect(
-            screen.queryByTestId("worker-card"),
-        ).not.toBeInTheDocument();
+            screen.queryAllByTestId("worker-card"),
+        ).toHaveLength(0)
     });
 
     it("shows the Load more button when more workers are available", () => {

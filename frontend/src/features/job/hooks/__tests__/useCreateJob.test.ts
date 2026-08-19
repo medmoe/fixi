@@ -6,7 +6,8 @@ import {useCreateJob} from "../useCreateJob";
 import {toast} from "sonner";
 import {mockJob} from "@/mocks";
 import {jobApi} from "../../../../lib/api/jobApi";
-import {JobRead, PaginatedListResponse} from "@/features/job";
+import {JobRead} from "@/features/job";
+import {PaginatedListResponse} from "@/features/types";
 
 vi.mock("../../../../lib/api/jobApi");
 vi.mock("sonner");
