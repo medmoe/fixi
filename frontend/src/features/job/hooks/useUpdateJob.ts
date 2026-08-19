@@ -21,7 +21,7 @@ export const useUpdateJob = () => {
                     if (!old) return old;
                     return {
                         ...old,
-                        data: old.data.map((job) =>
+                        data: old.data.map((job: JobRead) =>
                             job.id === updatedJob.id ? updatedJob : job
                         ),
                     };

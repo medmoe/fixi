@@ -1,14 +1,13 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {renderHook, waitFor} from '@testing-library/react'
-import {workerApi} from '@/lib/api/workerApi.ts';
+import {workerApi} from '@/lib';
 import {QueryClient} from '@tanstack/react-query'
 import {createQueryClient, createWrapper} from '../helpers.tsx';
-import {useTrades} from '../../hooks/useTrades.ts';
-import {TradeCategoryWithChildren} from "@/features/worker";
-
+import {useTrades} from '@/features/worker';
+import {mockTradeCategories} from "../mocks.ts";
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('@/lib/api/workerApi', () => ({
+vi.mock('@/lib', () => ({
     workerApi: {
         getTrades: vi.fn(),
     }
@@ -21,10 +20,6 @@ vi.mock('sonner', () => ({
     }
 }))
 
-const mockTrades: TradeCategoryWithChildren[] = [
-    {id: 1, name: 'plumbing', display_name: 'Plumbing', icon_name: 'wrench', parent_id: null, created_at: '2026-01-01', children: []},
-    {id: 2, name: 'electrical', display_name: 'Electrical', icon_name: 'bolt', parent_id: null, created_at: '2026-01-01', children: []},
-]
 
 describe('useTrades', () => {
     let queryClient: QueryClient
@@ -38,7 +33,7 @@ describe('useTrades', () => {
 
     describe('query behavior', () => {
         it('calls getTrades on mount', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result} = renderHook(
                 () => useTrades(),
@@ -50,7 +45,7 @@ describe('useTrades', () => {
         })
 
         it('returns trades data on success', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result} = renderHook(
                 () => useTrades(),
@@ -58,11 +53,11 @@ describe('useTrades', () => {
             )
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true))
-            expect(result.current.data).toEqual(mockTrades)
+            expect(result.current.data).toEqual(mockTradeCategories)
         })
 
         it('returns correct number of trades', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result} = renderHook(
                 () => useTrades(),
@@ -86,7 +81,7 @@ describe('useTrades', () => {
         })
 
         it('uses correct query key', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result} = renderHook(
                 () => useTrades(),
@@ -97,11 +92,11 @@ describe('useTrades', () => {
 
             // verify data is cached under the correct key
             const cached = queryClient.getQueryData(['trades'])
-            expect(cached).toEqual(mockTrades)
+            expect(cached).toEqual(mockTradeCategories)
         })
 
         it('uses 1-hour stale time — does not refetch if data is fresh', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result: result1} = renderHook(
                 () => useTrades(),
@@ -140,7 +135,7 @@ describe('useTrades', () => {
         })
 
         it('is not loading after successful fetch', async () => {
-            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTrades)
+            vi.mocked(workerApi.getTrades).mockResolvedValue(mockTradeCategories)
 
             const {result} = renderHook(
                 () => useTrades(),

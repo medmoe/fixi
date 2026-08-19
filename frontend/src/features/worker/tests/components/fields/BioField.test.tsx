@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import {FormProvider, useController, useForm, useFormContext} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
-import {BioField} from '../../../../components/fields/BioField.tsx'
+import {BioField} from '../../../components/fields/BioField.tsx'
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 //

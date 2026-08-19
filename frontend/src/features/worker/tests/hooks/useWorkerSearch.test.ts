@@ -5,6 +5,7 @@ import {useWorkerSearch, WorkerProfileWithTradesRead} from "@/features/worker";
 import {workerApi} from "@/lib";
 import type {PaginatedListResponse} from "@/features/types.ts";
 import {createQueryClient, createWrapper} from "../helpers.tsx"
+import {mockWorker} from "../mocks"
 
 vi.mock("@/lib", () => ({
     workerApi: {
@@ -12,20 +13,6 @@ vi.mock("@/lib", () => ({
     }
 }))
 
-const mockWorker = (id: number): WorkerProfileWithTradesRead => ({
-    id,
-    user_id: id,
-    user: {id, name: `Worker ${id}`, location: null, display_location: null},
-    bio: null,
-    hourly_rate: 75.00,
-    years_of_experience: 5,
-    service_radius_km: 20,
-    is_available: true,
-    is_verified: false,
-    trade_categories: [],
-    avatar_url: null,
-    available_since: null
-});
 
 const makePage = (
     ids: number[],
@@ -62,7 +49,7 @@ describe("useWorkerSearch", () => {
             wrapper: createWrapper(
                 queryClient,
                 ['/workers/search?is_verified=true&trade_category_id=2']
-                )
+            )
         });
 
         expect(result.current.filters.is_verified).toBe(true);

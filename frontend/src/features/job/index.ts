@@ -1,5 +1,5 @@
 // +++++++++ Types & Schemas +++++++++++++++++++++++++++++++
-export {type JobCreateRequest, type JobRead, type JobStatus, type PaginatedListResponse, type JobUpdateRequest} from "./types"
+export type { JobCreateRequest, JobRead, JobStatus, JobUpdateRequest} from "./types"
 export {jobPostSchema, jobUpdateSchema, type JobPostFormValues, type JobUpdateFormValues} from "./schemas"
 
 // +++++++++ Components +++++++++++++++++++++++++++++++++++
