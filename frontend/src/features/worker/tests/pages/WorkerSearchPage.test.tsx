@@ -80,6 +80,7 @@ const createSearchState = (
     isError: false,
     isFetching: false,
     error: null,
+    isUsingStoredLocation: false,
     ...overrides,
 });
 

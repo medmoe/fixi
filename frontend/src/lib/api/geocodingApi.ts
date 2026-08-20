@@ -51,4 +51,15 @@ export const geocodingApi = {
             .map(toSuggestion)
             .filter((suggestion): suggestion is LocationSuggestion => suggestion !== null)
     },
+    reverseGeocode: async (latitude: number, longitude: number): Promise<string> => {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+            {headers: {"Accept-Language": "en"}}
+        );
+        if (!response.ok) {
+            throw new Error("Reverse geocoding failed");
+        }
+        const data = await response.json();
+        return data.display_name ?? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    },
 }
