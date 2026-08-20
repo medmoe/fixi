@@ -7,7 +7,7 @@ interface LocationState {
     longitude?: number | null,
 }
 
-const initialLocationState: LocationState = {
+export const initialLocationState: LocationState = {
     displayLocation: null,
     latitude: null,
     longitude: null

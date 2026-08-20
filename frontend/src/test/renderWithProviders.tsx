@@ -7,15 +7,17 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {Provider} from 'react-redux'
 import {configureStore} from '@reduxjs/toolkit'
 import authReducer, {initialAuthState} from '@/features/auth/store/authSlice'
+import userReducer, {initialLocationState} from '@/features/user/userSlice'
 import type {RootState} from '@/store'
 
 // ─── create isolated store per test ──────────────────────────────────────────
 const defaultState: RootState = {
-    auth: initialAuthState
+    auth: initialAuthState,
+    user: initialLocationState
 }
 export const createTestStore = (preloadedState?: Partial<RootState>) =>
     configureStore({
-        reducer: {auth: authReducer},
+        reducer: {auth: authReducer, user: userReducer},
         preloadedState: {
             ...defaultState,
             ...preloadedState,
