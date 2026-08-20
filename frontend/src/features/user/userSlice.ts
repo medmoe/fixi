@@ -1,4 +1,4 @@
-import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
+import {createSlice, type PayloadAction, createSelector} from "@reduxjs/toolkit";
 import {RootState} from "@/store";
 
 interface LocationState {
@@ -32,11 +32,12 @@ const userSlice = createSlice({
         }
     }
 })
-export const selectUserLocation = (state: RootState) => ({
-    displayLocation: state.user.displayLocation,
-    latitude: state.user.latitude,
-    longitude: state.user.longitude
-})
+export const selectUserLocation = createSelector(
+    [(state: { user: LocationState }) => state.user.displayLocation,
+     (state: { user: LocationState }) => state.user.latitude,
+     (state: { user: LocationState }) => state.user.longitude],
+    (displayLocation, latitude, longitude) => ({ displayLocation, latitude, longitude })
+);
 
 export const selectHasLocation = (state: RootState) => state.user.latitude !== null && state.user.longitude !== null
 

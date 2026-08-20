@@ -67,31 +67,35 @@ describe('LocationPicker', () => {
     // ------------------------------------------------------------------ //
 
     describe('rendering', () => {
-        it('renders the Use my location button', () => {
+        it('renders the Use my location button', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            expect(screen.getByRole('button', {name: /use my location/i})).toBeInTheDocument();
+            await waitFor(() => expect(screen.getByRole('button', {name: /use my location/i})).toBeInTheDocument())
         });
 
-        it('renders the manual search field', () => {
+        it('renders the manual search field', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            expect(screen.getByRole('combobox')).toBeInTheDocument();
+            await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument())
         });
 
-        it('renders hidden latitude and longitude fields', () => {
+        it('renders hidden latitude and longitude fields', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            expect(screen.getByTestId('latitude-field')).toBeInTheDocument();
-            expect(screen.getByTestId('longitude-field')).toBeInTheDocument();
+            await waitFor(() => {
+                expect(screen.getByTestId('latitude-field')).toBeInTheDocument();
+                expect(screen.getByTestId('longitude-field')).toBeInTheDocument();
+            })
         });
 
-        it('hidden fields start empty', () => {
+        it('hidden fields start empty', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            expect(screen.getByTestId('latitude-field')).toHaveValue('');
-            expect(screen.getByTestId('longitude-field')).toHaveValue('');
+            await waitFor(() => {
+                expect(screen.getByTestId('latitude-field')).toHaveValue('');
+                expect(screen.getByTestId('longitude-field')).toHaveValue('');
+            })
         });
 
-        it('submit button is disabled when no location is set', () => {
+        it('submit button is disabled when no location is set', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            expect(screen.getByRole('button', {name: /confirm location/i})).toBeDisabled();
+            await waitFor(() => expect(screen.getByRole('button', {name: /confirm location/i})).toBeDisabled());
         });
     });
 
