@@ -54,7 +54,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfi
         setGeoError(null);
         setIsLocating(true);
 
-        if (!('geolocation' in navigator)) {
+        if (!navigator.geolocation) {
             setGeoError('unavailable');
             setIsLocating(false);
             return;

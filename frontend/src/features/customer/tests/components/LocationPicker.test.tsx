@@ -7,14 +7,13 @@ import {configureStore} from '@reduxjs/toolkit';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {LocationPicker} from '@/features/customer/components/LocationPicker';
 import {useReverseGeocode} from '../../hooks/useReverseGeocode';
-import {useUpdateUser} from '@/features/user/hooks/useUpdateUser';
-import {useLocationSearch} from '@/features/user';
+import {useLocationSearch, useUpdateUser} from '@/features/user';
 import userReducer from '@/features/user/userSlice';
 
 vi.mock('../../hooks/useReverseGeocode');
-vi.mock('@/features/user/hooks/useUpdateUser');
 vi.mock('@/features/user', () => ({
     useLocationSearch: vi.fn(),
+    useUpdateUser: vi.fn()
 }));
 
 const mockSuggestions = [
@@ -312,21 +311,24 @@ describe('LocationPicker', () => {
             });
         });
 
-        it('shows saving state while the mutation is pending', () => {
+        it('shows saving state while the mutation is pending', async () => {
             vi.mocked(useUpdateUser).mockReturnValue({
                 mutate: mutateMock,
                 isPending: true,
             } as never);
 
-            render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
+            await act(async () => render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()}))
             expect(screen.getByText(/saving/i)).toBeInTheDocument();
         });
 
         it('does not submit when location is not set', async () => {
             render(<LocationPicker username="john_doe"/>, {wrapper: createWrapper()});
-            const submitButton = screen.getByRole('button', {name: /confirm location/i});
-            expect(submitButton).toBeDisabled();
-            expect(mutateMock).not.toHaveBeenCalled();
+            await waitFor(() => {
+                const submitButton = screen.getByRole('button', {name: /confirm location/i});
+                expect(submitButton).toBeDisabled();
+                expect(mutateMock).not.toHaveBeenCalled();
+            })
+
         });
     });
 });
