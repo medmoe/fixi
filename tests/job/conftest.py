@@ -4,8 +4,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.models import Job, TradeCategory, User
-from src.app.models import JobStatus
+from src.app.models import Job, TradeCategory, User, JobStatus, JobApplication
 from tests.job.helpers import create_test_job
 
 
@@ -206,6 +205,15 @@ async def non_matching_job(async_session, customer_test_user, test_trade_categor
     await async_session.commit()
     await async_session.refresh(job)
     return job
+
+
+@pytest_asyncio.fixture
+async def test_job_application(async_session, test_worker_profile, test_job):
+    job_application = JobApplication(job_id=test_job.id, worker_profile_id=test_worker_profile.id)
+    async_session.add(job_application)
+    await async_session.commit()
+    await async_session.refresh(job_application)
+    return job_application
 
 
 @pytest.fixture
