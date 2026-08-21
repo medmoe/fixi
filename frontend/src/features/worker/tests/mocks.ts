@@ -27,13 +27,13 @@ export const mockWorker = (id: number, overrides: Partial<WorkerProfileWithTrade
         trade_category: {display_name: "Plumbing", created_at: "2020-01-01", parent_id: null, icon_name: "wrench", id: 1, name: "plumbing"},
         skill_level: "junior"
     },
-        {
-            id: 2,
-            trade_category_id: 2,
-            worker_profile_id: 1,
-            trade_category: {display_name: "Electrical", created_at: "2020-01-01", parent_id: null, icon_name: "bolt", id: 2, name: "electrical"},
-            skill_level: "junior"
-        }
+    {
+        id: 2,
+        trade_category_id: 2,
+        worker_profile_id: 1,
+        trade_category: {display_name: "Electrical", created_at: "2020-01-01", parent_id: null, icon_name: "bolt", id: 2, name: "electrical"},
+        skill_level: "junior"
+    }
     ],
     avatar_url: null,
     available_since: null,

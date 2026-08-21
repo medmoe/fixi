@@ -10,7 +10,7 @@ vi.mock("lucide-react", () => ({
 
 const renderFooter = () =>
     render(
-        <MemoryRouter>
+        <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
             <Footer/>
         </MemoryRouter>,
     )

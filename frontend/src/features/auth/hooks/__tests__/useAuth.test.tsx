@@ -52,7 +52,7 @@ const createWrapper = (preloadedState = {}) => {
         wrapper: ({children}: { children: ReactNode }) => (
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
-                    <MemoryRouter>
+                    <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
                         {children}
                     </MemoryRouter>
                 </QueryClientProvider>

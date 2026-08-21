@@ -101,3 +101,12 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
         </Link>
     );
 };
+
+export const WorkerSearchEmptyState: React.FC = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+        <p className="text-lg font-medium">No workers found</p>
+        <p className="text-sm text-muted-foreground mt-1">
+            Try adjusting your filters to see more results.
+        </p>
+    </div>
+);

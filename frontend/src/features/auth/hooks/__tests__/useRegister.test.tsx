@@ -32,7 +32,7 @@ const createWrapper = () => {
     const queryClient = createTestQueryClient()
     return ({children}: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-            <MemoryRouter>{children}</MemoryRouter>
+            <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>{children}</MemoryRouter>
         </QueryClientProvider>
     )
 }

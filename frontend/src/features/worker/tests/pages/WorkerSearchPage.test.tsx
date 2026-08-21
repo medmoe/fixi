@@ -19,9 +19,9 @@ vi.mock("@/features/worker", () => ({
             </button>
         </div>
     )),
-    WorkerCard: vi.fn(({worker}) => (
+    WorkerCard: vi.fn(({profile}) => (
         <div data-testid="worker-card">
-            {worker.user.name}
+            {profile.user.name}
         </div>
     )),
     WorkerCardSkeletonGrid: vi.fn(() => (
