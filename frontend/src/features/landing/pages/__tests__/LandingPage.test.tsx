@@ -6,7 +6,7 @@ import {MemoryRouter} from 'react-router-dom';
 describe('LandingPage Integration', () => {
     it('renders the layout landmarks correctly', () => {
         render(
-            <MemoryRouter future={{v7_startTransition: true}}>
+            <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
                 <LandingPage/>
             </MemoryRouter>
         );

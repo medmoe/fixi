@@ -13,13 +13,14 @@ vi.mock("@/lib", () => ({
     }
 }))
 
+const workers: WorkerProfileWithTradesRead[] = [mockWorker(1), mockWorker(2)]
 
 const makePage = (
     ids: number[],
     total_count: number,
     has_more: boolean
 ): PaginatedListResponse<WorkerProfileWithTradesRead> => ({
-    data: ids.map(mockWorker),
+    data: ids.map(id => workers.find(worker => worker.id === id)!),
     total_count,
     has_more,
     items_per_page: 20,

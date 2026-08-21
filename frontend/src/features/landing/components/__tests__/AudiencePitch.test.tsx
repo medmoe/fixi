@@ -20,7 +20,7 @@ vi.mock("@/components/ui/button", () => ({
 
 const renderAudiencePitch = () =>
     render(
-        <MemoryRouter>
+        <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
             <AudiencePitch/>
         </MemoryRouter>,
     )

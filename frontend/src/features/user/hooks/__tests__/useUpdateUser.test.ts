@@ -84,7 +84,7 @@ describe('useUpdateUser', () => {
     // ─── Loading state ────────────────────────────────────────────────────────────────────
 
     describe('loading state', () => {
-        it('is loading initially when mutating', () => {
+        it('is loading initially when mutating', async () => {
             vi.mocked(userApi.updateUser).mockImplementation(() => new Promise(() => {
             })) // never resolves
             const {result} = renderHook(
@@ -92,7 +92,7 @@ describe('useUpdateUser', () => {
                 {wrapper: createWrapper(queryClient)}
             )
             result.current.mutate(mockUpdatePayload)
-            waitFor(() => expect(result.current.isPending).toBe(true))
+            await waitFor(() => expect(result.current.isPending).toBe(true))
         })
         it('is not loading after successful mutation', async () => {
             vi.mocked(userApi.updateUser).mockResolvedValue(mockUser)
