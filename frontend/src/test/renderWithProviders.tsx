@@ -53,7 +53,7 @@ export const renderWithProviders = (
     const Wrapper = ({children}: { children: React.ReactNode }) => (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                <MemoryRouter {...routerProps}>
+                <MemoryRouter {...routerProps} future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
                     {children}
                 </MemoryRouter>
             </QueryClientProvider>

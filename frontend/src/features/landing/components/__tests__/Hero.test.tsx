@@ -22,7 +22,7 @@ vi.mock("@/components/ui/button", () => ({
 
 const renderHero = () =>
     render(
-        <MemoryRouter>
+        <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
             <Hero/>
         </MemoryRouter>,
     )

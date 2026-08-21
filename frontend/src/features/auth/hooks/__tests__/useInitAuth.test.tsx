@@ -46,7 +46,7 @@ const createWrapper = () => {
     return ({children}: { children: ReactNode }) => (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                <MemoryRouter>{children}</MemoryRouter>
+                <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>{children}</MemoryRouter>
             </QueryClientProvider>
         </Provider>
     )

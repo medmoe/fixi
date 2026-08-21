@@ -62,7 +62,7 @@ const renderWithRouter = (
     vi.mocked(useUser).mockReturnValue(userState as any)
 
     return render(
-        <MemoryRouter initialEntries={[initialRoute]}>
+        <MemoryRouter initialEntries={[initialRoute]} future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
             <Routes>
                 <Route
                     path="/dashboard"

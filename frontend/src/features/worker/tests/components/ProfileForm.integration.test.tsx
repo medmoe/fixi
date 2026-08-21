@@ -140,7 +140,18 @@ const setupMocks = (
         fetchStatus: "idle",
     } as any)
 }
-const renderComponent = (profile: WorkerProfileWithTradesRead = mockWorker(1)) => {
+const renderComponent = (
+    profile: WorkerProfileWithTradesRead = mockWorker(1, {
+        trade_categories: [
+            {
+                id: 1,
+                trade_category_id: 1,
+                worker_profile_id: 1,
+                trade_category: {display_name: "Plumbing", created_at: "2020-01-01", parent_id: null, icon_name: "wrench", id: 1, name: "plumbing"},
+                skill_level: "junior"
+            }
+        ]
+    })) => {
     return render(<ProfileForm profile={profile}/>)
 }
 const getSubmitButton = () => screen.getByRole('button', {name: /update profile/i})
@@ -157,7 +168,6 @@ describe('ProfileForm — Trade Assignment Integration', () => {
         it('selects a trade via TradeCategoryPicker and submits both profile + trades', async () => {
             const user = userEvent.setup()
             renderComponent()
-
             // Verify initial state — Plumbing is already assigned
             expect(screen.getByText('Plumbing')).toBeInTheDocument()
             expect(screen.getByText('Assigned')).toBeInTheDocument()
@@ -183,7 +193,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             })
 
             // Submit the form
-            await act(async() => await user.click(getSubmitButton()))
+            await act(async () => await user.click(getSubmitButton()))
 
             // Assert: both mutations were called
             await waitFor(() => {
@@ -354,7 +364,7 @@ describe('ProfileForm — Trade Assignment Integration', () => {
             await act(async () => await user.type(bioField, 'Updated'))
             await waitFor(() => expect(getSubmitButton()).not.toBeDisabled())
 
-            await act(async() => await user.click(getSubmitButton()))
+            await act(async () => await user.click(getSubmitButton()))
 
             await waitFor(() => {
                 expect(mockAssignMutate).toHaveBeenCalledTimes(1)
