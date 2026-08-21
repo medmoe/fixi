@@ -1,0 +1,204 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WorkerCard > snapshot > matches snapshot for skeleton loading state 1`] = `
+<div>
+  <div
+    aria-label="Loading worker profile"
+    class="p-4 space-y-3 rounded-lg border h-full flex flex-col"
+    role="status"
+  >
+    <div
+      class="flex items-start gap-3"
+    >
+      <div
+        class="animate-pulse bg-accent h-12 w-12 rounded-full shrink-0"
+        data-slot="skeleton"
+      />
+      <div
+        class="flex-1 space-y-2"
+      >
+        <div
+          class="animate-pulse rounded-md bg-accent h-4 w-2/3"
+          data-slot="skeleton"
+        />
+        <div
+          class="animate-pulse rounded-md bg-accent h-3 w-1/3"
+          data-slot="skeleton"
+        />
+      </div>
+    </div>
+    <div
+      class="flex gap-1"
+    >
+      <div
+        class="animate-pulse rounded-md bg-accent h-5 w-16"
+        data-slot="skeleton"
+      />
+      <div
+        class="animate-pulse rounded-md bg-accent h-5 w-20"
+        data-slot="skeleton"
+      />
+    </div>
+    <div
+      class="animate-pulse rounded-md bg-accent h-3 w-full"
+      data-slot="skeleton"
+    />
+    <div
+      class="animate-pulse rounded-md bg-accent h-3 w-2/3"
+      data-slot="skeleton"
+    />
+    <div
+      class="mt-auto flex justify-between pt-2 border-t"
+    >
+      <div
+        class="animate-pulse rounded-md bg-accent h-3 w-20"
+        data-slot="skeleton"
+      />
+      <div
+        class="animate-pulse rounded-md bg-accent h-3 w-16"
+        data-slot="skeleton"
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WorkerCard > snapshot > matches snapshot with full profile data 1`] = `
+<div>
+  <a
+    class="block rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    href="/workers/1"
+  >
+    <article
+      aria-label="Worker profile for Worker 1"
+      class="p-4 space-y-3 h-full flex flex-col"
+    >
+      <div
+        class="flex items-start gap-3"
+      >
+        <span
+          class="group/avatar relative flex size-8 overflow-hidden rounded-full select-none data-[size=lg]:size-10 data-[size=sm]:size-6 h-12 w-12 shrink-0"
+          data-size="default"
+          data-slot="avatar"
+        >
+          <span
+            class="flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs"
+            data-slot="avatar-fallback"
+          >
+            W1
+          </span>
+        </span>
+        <div
+          class="flex-1 min-w-0"
+        >
+          <div
+            class="flex items-center gap-1.5"
+          >
+            <p
+              class="font-medium truncate"
+            >
+              Worker 1
+            </p>
+            <svg
+              aria-label="Verified worker"
+              class="lucide lucide-circle-check h-4 w-4 text-primary shrink-0"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m9 12 2 2 4-4"
+              />
+            </svg>
+          </div>
+          <div
+            class="flex items-center gap-1 text-xs text-muted-foreground"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-star h-3 w-3"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+              />
+            </svg>
+            <span>
+              New
+            </span>
+            <span>
+              · 
+              5
+               yrs exp
+            </span>
+          </div>
+        </div>
+        <span
+          class="text-xs font-medium shrink-0 text-green-600"
+        >
+          Available
+        </span>
+      </div>
+      <div
+        class="flex flex-wrap gap-1"
+      >
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80 text-xs"
+          data-slot="badge"
+          data-variant="secondary"
+        >
+          Plumbing
+        </span>
+        <span
+          class="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3! bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80 text-xs"
+          data-slot="badge"
+          data-variant="secondary"
+        >
+          Electrical
+        </span>
+      </div>
+      <p
+        class="text-sm text-muted-foreground line-clamp-2"
+      >
+        Experienced plumber with 5+ years fixing leaks and installing fixtures.
+      </p>
+      <div
+        class="mt-auto flex items-center justify-between text-sm pt-2 border-t"
+      >
+        <div
+          class="flex items-center gap-3 text-muted-foreground"
+        >
+          <span>
+            $
+            75.00
+            /hr
+          </span>
+          <span>
+            20
+             km radius
+          </span>
+        </div>
+      </div>
+    </article>
+  </a>
+</div>
+`;
