@@ -18,6 +18,7 @@ class JobApplicationBase(BaseModel):
 
 # ─── Job Application Read ─────────────────────────────────────────────────
 class JobApplicationRead(JobApplicationBase):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True, extra="forbid")
     id: int
     status: ApplicationStatus
     job: JobRead | None = None
@@ -39,7 +40,6 @@ class JobApplicationCreateInternal(JobApplicationBase):
     job_id: Annotated[int, Field(gt=0)]
     worker_profile_id: Annotated[int, Field(gt=0)]
     status: ApplicationStatus = Field(default=ApplicationStatus.PENDING)
-
 
 # ─── Job Application Update ────────────────────────────────────────────────
 class JobApplicationUpdate(BaseModel):

@@ -17,7 +17,7 @@ from ..schemas.job_application import (
 
 class CRUDJobApplication(FastCRUD[
     JobApplication,
-    JobApplicationCreate,
+    JobApplicationCreateInternal,
     JobApplicationUpdate,
     JobApplicationUpdateInternal,
     JobApplicationDelete,
@@ -43,11 +43,14 @@ class CRUDJobApplication(FastCRUD[
 
         data = object.model_dump(mode="json", exclude_unset=True)
         internal = JobApplicationCreateInternal(**data, job_id=job_id, worker_profile_id=worker_profile.id)
-        created = await super().create(db=db, object=internal, schema_to_select=JobApplicationRead, return_as_model=True)
+        new_application = JobApplication(**internal.model_dump())
+        db.add(new_application)
+        await db.flush()
+        await db.refresh(new_application)
 
         # re-fetch with eager-loaded relationships so JobApplicationRead can
         # validate `job` and `worker_profile` without a lazy-load error
-        return await self._get_with_relations(db=db, application_id=created.id)
+        return await self._get_with_relations(db=db, application_id=new_application.id)
 
     async def get_job_applications(
             self, db: AsyncSession, db_job_id: int, user_id: int, offset: int = 0, limit: int = 50
@@ -112,7 +115,8 @@ class CRUDJobApplication(FastCRUD[
         stmt = (
             select(JobApplication)
             .options(
-                joinedload(JobApplication.job),
+                joinedload(JobApplication.job).joinedload(Job.user),  # ← add .joinedload(Job.user)
+                joinedload(JobApplication.job).joinedload(Job.trade_category),  # ← if JobRead also needs this
                 joinedload(JobApplication.worker_profile).joinedload(WorkerProfile.user),
                 joinedload(JobApplication.worker_profile).selectinload(WorkerProfile.worker_trades),
             )
@@ -121,6 +125,5 @@ class CRUDJobApplication(FastCRUD[
         result = await db.execute(stmt)
         application = result.unique().scalar_one()
         return JobApplicationRead.model_validate(application)
-
 
 crud_job_application = CRUDJobApplication(JobApplication)

@@ -5,6 +5,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.models import Job, TradeCategory, User, JobStatus, JobApplication
+from tests.conftest import create_test_user, create_test_worker_profile
 from tests.job.helpers import create_test_job
 
 
@@ -214,6 +215,46 @@ async def test_job_application(async_session, test_worker_profile, test_job):
     await async_session.commit()
     await async_session.refresh(job_application)
     return job_application
+
+
+@pytest_asyncio.fixture
+async def job_application_factory(async_session):
+    """
+    Creates `count` JobApplication rows against the given job, each from a
+    distinct worker (a new User + WorkerProfile per application), since the
+    (job_id, worker_profile_id) pair is unique — the same worker can't apply
+    to the same job twice.
+
+    Usage:
+        [application] = await job_application_factory(job=other_job, count=1)
+        applications = await job_application_factory(job=test_job, count=5)
+    """
+
+    async def _create(job: Job, count: int = 1, **overrides) -> list[JobApplication]:
+        applications = []
+
+        for _ in range(count):
+            worker_user = await create_test_user(async_session)
+            worker_profile = await create_test_worker_profile(async_session, user=worker_user)
+
+            defaults = {
+                "job_id": job.id,
+                "worker_profile_id": worker_profile.id,
+                "message": None,
+            }
+            defaults.update(overrides)
+
+            application = JobApplication(**defaults)
+            async_session.add(application)
+            applications.append(application)
+
+        await async_session.commit()
+        for application in applications:
+            await async_session.refresh(application)
+
+        return applications
+
+    return _create
 
 
 @pytest.fixture
