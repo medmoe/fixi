@@ -239,9 +239,9 @@ class TestUpdateJobApplicationEndpoint:
         assert response.status_code == 404
 
     async def test_application_belonging_to_different_job_returns_404(
-            self, async_client: AsyncClient, customer_auth_headers, test_job, other_job, job_application_factory
+            self, async_client: AsyncClient, customer_auth_headers, test_job, job_other_user, job_application_factory
     ):
-        [application] = await job_application_factory(job=other_job, count=1)
+        [application] = await job_application_factory(job=job_other_user, count=1)
         response = await async_client.patch(
             f"/api/v1/jobs/{test_job.id}/applications/{application.id}",
             json={"status": "accepted"},

@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum as SAEnum, Text
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.db.database import Base

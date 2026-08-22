@@ -48,7 +48,7 @@ def main():
     run(build_tool_cmd("ruff", "check", "src"), "Linting (ruff)")
 
     # Step 2: tests
-    run(["docker", "compose", "-f", "docker-compose.test.yml", "run", "--rm", "tests", "pytest", "-x", "-v", "--no-cov"], "Running tests (pytest)")
+    run(["docker", "compose", "-f", "docker-compose.test.yml", "run", "--rm", "tests", "pytest", "-x", "-v"], "Running tests (pytest)")
     run(["docker", "compose", "-f", "docker-compose.test.yml", "down", "-v", "--remove-orphans"], "Removing test containers")
 
     # Step 3: type-checking

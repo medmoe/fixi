@@ -2,9 +2,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..models import ApplicationStatus
 from .job import JobRead
 from .worker_profile import WorkerProfileWithTradesRead
-from ..models import ApplicationStatus
 
 
 # ─── Job Application Base ─────────────────────────────────────────────────

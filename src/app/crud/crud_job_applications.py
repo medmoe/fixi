@@ -1,17 +1,17 @@
 from fastcrud import FastCRUD
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..core.exceptions.http_exceptions import NotFoundException, ForbiddenException, BadRequestException
-from ..models import JobApplication, WorkerProfile, Job, JobStatus
+from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
+from ..models import Job, JobApplication, JobStatus, WorkerProfile
 from ..schemas.job_application import (
     JobApplicationCreate,
+    JobApplicationCreateInternal,
+    JobApplicationDelete,
     JobApplicationRead,
     JobApplicationUpdate,
-    JobApplicationDelete,
     JobApplicationUpdateInternal,
-    JobApplicationCreateInternal,
 )
 
 
@@ -70,12 +70,14 @@ class CRUDJobApplication(FastCRUD[
             .where(and_(JobApplication.job_id == db_job_id, Job.user_id == user_id))
         )
 
-        count_stmt = select(func.count(JobApplication.id.distinct())).select_from(base_stmt.subquery())
+        count_subquery = base_stmt.with_only_columns(JobApplication.id).subquery()
+        count_stmt = select(func.count()).select_from(count_subquery)
         total_count = (await db.execute(count_stmt)).scalar() or 0
 
         stmt = (
             base_stmt.options(
-                joinedload(JobApplication.job),
+                joinedload(JobApplication.job).joinedload(Job.user),
+                joinedload(JobApplication.job).joinedload(Job.trade_category),
                 joinedload(JobApplication.worker_profile).joinedload(WorkerProfile.user),
                 joinedload(JobApplication.worker_profile).selectinload(WorkerProfile.worker_trades),
             )
@@ -107,7 +109,7 @@ class CRUDJobApplication(FastCRUD[
             raise NotFoundException(f"Job application with id {app_id} does not belong to job {job_id}")
 
         internal = JobApplicationUpdateInternal(status=object.status)
-        await super().update(db=db, object=internal, id=app_id)
+        await super().update(db=db, object=internal, id=app_id) # type: ignore[call-overload]
 
         return await self._get_with_relations(db=db, application_id=app_id)
 
@@ -115,8 +117,8 @@ class CRUDJobApplication(FastCRUD[
         stmt = (
             select(JobApplication)
             .options(
-                joinedload(JobApplication.job).joinedload(Job.user),  # ← add .joinedload(Job.user)
-                joinedload(JobApplication.job).joinedload(Job.trade_category),  # ← if JobRead also needs this
+                joinedload(JobApplication.job).joinedload(Job.user),
+                joinedload(JobApplication.job).joinedload(Job.trade_category),
                 joinedload(JobApplication.worker_profile).joinedload(WorkerProfile.user),
                 joinedload(JobApplication.worker_profile).selectinload(WorkerProfile.worker_trades),
             )
@@ -125,5 +127,6 @@ class CRUDJobApplication(FastCRUD[
         result = await db.execute(stmt)
         application = result.unique().scalar_one()
         return JobApplicationRead.model_validate(application)
+
 
 crud_job_application = CRUDJobApplication(JobApplication)
