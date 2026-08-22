@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
@@ -31,6 +32,10 @@ def register_validation_exception_handlers(app: FastAPI) -> None:
             # normalize the "loc" so it reads like a query-param error,
             # matching what FastAPI's native query validation would produce
             error["loc"] = ("query", *error.get("loc", ()))
+            if "input" in error:
+                # coerce any non-JSON-safe input value (datetime, Decimal, model
+                # instances, etc.) into something JSONResponse can actually encode
+                error["input"] = jsonable_encoder(error["input"])
         return JSONResponse(
             status_code=422,
             content={"detail": errors},
