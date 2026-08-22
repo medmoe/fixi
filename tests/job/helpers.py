@@ -21,16 +21,24 @@ def create_user_read_internal_schema() -> UserReadInternal:
     )
 
 
-async def create_test_job(async_session: AsyncSession, test_trade_category: TradeCategory, test_user: User) -> Job:
+async def create_test_job(
+        async_session: AsyncSession,
+        test_user: User,
+        test_trade_category: TradeCategory | None = None,
+        **overrides) -> Job:
+    defaults = {
+        "title": "Fix Leaking Kitchen Sink",
+        "description": "Kitchen sink has been leaking under the cabinet for two days.",
+        "budget_min": Decimal("75.00"),
+        "budget_max": Decimal("200.00"),
+        "display_location": "New York, NY",
+        "location": "POINT(0 0)",
+    }
+    defaults.update(overrides)
     job = Job(
-        title="Fix Leaking Kitchen Sink",
-        description="Kitchen sink has been leaking under the cabinet for two days.",
-        trade_category_id=test_trade_category.id,
+        trade_category_id=test_trade_category.id if test_trade_category else None,
         user_id=test_user.id,
-        budget_min=Decimal("75.00"),
-        budget_max=Decimal("200.00"),
-        display_location="New York, NY",
-        location="POINT(0 0)"
+        **defaults
     )
     async_session.add(job)
     await async_session.commit()

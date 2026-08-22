@@ -11,7 +11,7 @@ from tests.job.helpers import create_test_job
 
 @pytest_asyncio.fixture
 async def test_job(async_session: AsyncSession, test_trade_category: TradeCategory, customer_test_user: User) -> Job:
-    return await create_test_job(async_session, test_trade_category, customer_test_user)
+    return await create_test_job(async_session, customer_test_user, test_trade_category=test_trade_category)
 
 
 @pytest_asyncio.fixture
@@ -281,3 +281,129 @@ def job_create_payload(test_trade_category):
         "latitude": 40.7128,
         "longitude": -74.0060
     }
+
+
+# —————— conftest nearby workers ——————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ALGIERS_LOCATION = "POINT(3.0588 36.7538)"
+NEAR_LOCATION = "POINT(3.0620 36.7550)"  # ~2km from Algiers
+MID_LOCATION = "POINT(3.1200 36.7900)"  # ~8km from Algiers
+FAR_LOCATION = "POINT(-0.6337 35.6971)"  # Oran — ~350km from Algiers
+
+
+@pytest_asyncio.fixture
+async def job_in_algiers(async_session, customer_test_user, test_trade_category):
+    return await create_test_job(
+        async_session, test_trade_category=test_trade_category, test_user=customer_test_user, location=ALGIERS_LOCATION
+    )
+
+
+@pytest_asyncio.fixture
+async def job_in_algiers_plumbing(async_session, customer_test_user, test_trade_category_plumbing):
+    return await create_test_job(
+        async_session, test_user=customer_test_user, test_trade_category=test_trade_category_plumbing, location=ALGIERS_LOCATION
+    )
+
+
+@pytest_asyncio.fixture
+async def job_in_algiers_no_category(async_session, customer_test_user):
+    return await create_test_job(
+        async_session, test_user=customer_test_user, test_trade_category=None, location=ALGIERS_LOCATION
+    )
+
+
+@pytest_asyncio.fixture
+async def job_with_no_location(async_session, customer_test_user, test_trade_category):
+    return await create_test_job(
+        async_session, test_user=customer_test_user, test_trade_category=test_trade_category, location=None
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_covers_job_location(async_session):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_covers_job_location_unavailable(async_session):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=False
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_far_away_small_radius(async_session):
+    user = await create_test_user(async_session, location=FAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=10, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_no_location(async_session):
+    user = await create_test_user(async_session, location=None)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=50, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_near_job(async_session):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_mid_distance_from_job(async_session):
+    user = await create_test_user(async_session, location=MID_LOCATION)
+    return await create_test_worker_profile(
+        async_session, user=user, service_radius_km=20, is_available=True
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_plumbing_covers_job(async_session, test_trade_category_plumbing):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        trade_category=test_trade_category_plumbing,
+        service_radius_km=20,
+        is_available=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def worker_electrical_covers_job(async_session, test_trade_category_electrical):
+    user = await create_test_user(async_session, location=NEAR_LOCATION)
+    return await create_test_worker_profile(
+        async_session,
+        user=user,
+        trade_category=test_trade_category_electrical,
+        service_radius_km=20,
+        is_available=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def test_trade_category_plumbing(async_session):
+    category = TradeCategory(name="plumbing", display_name="Plumbing")
+    async_session.add(category)
+    await async_session.commit()
+    await async_session.refresh(category)
+    return category
+
+
+@pytest_asyncio.fixture
+async def test_trade_category_electrical(async_session):
+    category = TradeCategory(name="electrical", display_name="Electrical")
+    async_session.add(category)
+    await async_session.commit()
+    await async_session.refresh(category)
+    return category
