@@ -1,19 +1,22 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastcrud import PaginatedListResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from ..dependencies import get_current_user
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException
+from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException, BadRequestException
 from ...crud.crud_job_applications import crud_job_application
 from ...crud.crud_jobs import crud_jobs
+from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...models import Job, UserRole
 from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
 from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
-from ..dependencies import get_current_user
+from ...schemas.utils import parse_wkt_point
+from ...schemas.worker_profile import WorkerProfileWithTradesRead, WorkerProfileFilter, WorkerSortBy
 
 router = APIRouter(tags=["jobs"])
 
@@ -150,7 +153,7 @@ async def get_job_applications(
     )
 
 
-# ─── PATCH /jobs/{job_id}/applications/{app_id} ─────────────────────────────
+# ─── PATCH /jobs/{job_id}/applications/{app_id} ────────────────────────────────────────────────────────────────────────────────────────────
 @router.patch("/jobs/{job_id}/applications/{app_id}", response_model=JobApplicationRead, status_code=200)
 async def update_job_application(
         db: Annotated[AsyncSession, Depends(async_get_db)],
@@ -164,3 +167,43 @@ async def update_job_application(
     return await crud_job_application.update_job_application(
         db=db, job_id=job_id, app_id=app_id, user_id=current_user["id"], object=payload
     )
+
+
+# ─── PATCH /jobs/{job_id}/nearby-workers ────────────────────────────────────────────────────────────────────────────────────────────
+@router.get(
+    "/jobs/{job_id}/nearby-workers",
+    response_model=PaginatedListResponse[WorkerProfileWithTradesRead],
+    status_code=200,
+)
+async def get_nearby_workers(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        offset: int = Query(0, ge=0, description="Pagination offset"),
+        limit: int = Query(20, ge=1, le=100, description="Pagination limit"),
+) -> PaginatedListResponse[WorkerProfileWithTradesRead]:
+    """
+    Suggests nearby, available workers for a job — owner only. Uses the
+    job's own stored location as the search center and its trade_category_id
+    as an automatic filter. Results are sorted by distance and respect each
+    worker's own service_radius_km (via the existing geo search machinery).
+    """
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+    if job.user_id != current_user["id"]:
+        raise ForbiddenException("Only the owner of this job can view nearby workers")
+    if job.location is None:
+        raise BadRequestException("This job has no location set — cannot search for nearby workers")
+
+    longitude, latitude = parse_wkt_point(job.location)
+
+    filters = WorkerProfileFilter(
+        trade_category_id=job.trade_category_id,  # None is fine — no category filter applied
+        latitude=latitude,
+        longitude=longitude,
+        is_available=True,
+        sort_by=WorkerSortBy.distance,
+    )
+
+    return await crud_worker_profiles.search_workers(db=db, filters=filters, offset=offset, limit=limit)
