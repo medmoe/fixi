@@ -1,4 +1,5 @@
 import {TradeCategoryRead} from "@/features/worker";
+import {UserPublicRead} from "@/features/user";
 
 export interface JobBase {
     title: string;
@@ -37,6 +38,7 @@ export interface JobRead {
     updated_at: string | null;
     deleted_at: string | null;
     trade_category: TradeCategoryRead | null;
+    user: UserPublicRead | null;
 }
 
 export interface Coordinates {

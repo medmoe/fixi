@@ -1,5 +1,6 @@
 export {WorkerDashboardPage} from './pages/WorkerDashboardPage'
 export {WorkerSearchPage} from './pages/WorkerSearchPage'
+export {WorkerDetailPage} from './pages/WorkerDetailPage'
 export {
     useAvailabilityToggle,
     useTrades,
@@ -7,7 +8,8 @@ export {
     useUploadAvatar,
     useWorkerProfile,
     useAssignTrades,
-    useWorkerSearch
+    useWorkerSearch,
+    useWorkerProfilePublic
 } from './hooks'
 export {
     AvailabilityToggle,

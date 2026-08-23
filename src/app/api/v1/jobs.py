@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..dependencies import get_current_user
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ...crud.crud_job_applications import crud_job_application
@@ -17,6 +16,7 @@ from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
 from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
 from ...schemas.utils import parse_wkt_point
 from ...schemas.worker_profile import WorkerProfileFilter, WorkerProfileWithTradesRead, WorkerSortBy
+from ..dependencies import get_current_user
 
 router = APIRouter(tags=["jobs"])
 

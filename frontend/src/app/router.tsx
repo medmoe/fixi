@@ -4,7 +4,7 @@ import {AuthInitializer, LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 import {JobCreateForm, JobDetailPage, JobEditForm, MyJobsPage} from "@/features/job";
-import {WorkerDashboardPage, WorkerSearchPage} from "@/features/worker";
+import {WorkerDashboardPage, WorkerDetailPage, WorkerSearchPage} from "@/features/worker";
 
 export const routes: RouteObject[] = [
     {
@@ -61,6 +61,10 @@ export const routes: RouteObject[] = [
             {
                 path: '/workers/search',
                 element: <WorkerSearchPage/>
+            },
+            {
+                path: '/workers/:workerId',
+                element: <WorkerDetailPage/>
             }
         ]
     }

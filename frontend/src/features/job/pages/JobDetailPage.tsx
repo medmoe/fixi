@@ -103,7 +103,7 @@ export const JobDetailPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <User className="h-4 w-4"/>
-                    Customer #{job.user_id}
+                    Customer #{job.user?.name}
                 </div>
             </div>
 

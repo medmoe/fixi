@@ -4,8 +4,10 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from fastcrud import PaginatedListResponse
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
 from ...api.dependencies import get_current_user, rate_limiter_dependency
 from ...core.config import settings
@@ -15,6 +17,7 @@ from ...core.exceptions.http_exceptions import HTTPException, NotFoundException
 from ...crud.crud_portfolio_images import crud_portfolio_images
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
+from ...models import WorkerProfile, WorkerTrade
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
@@ -71,7 +74,7 @@ async def get_worker_profile(
         db: Annotated[AsyncSession, Depends(async_get_db)],
         current_user: Annotated[dict, Depends(get_current_user)],
 ) -> WorkerProfileWithTradesRead:
-    """ Public endpoint — returns worker profile with nested trades. """
+    """ Private endpoint — returns worker profile with nested trades. """
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
     worker_trades = await crud_worker_trades.get_trade_categories_for_worker_profile(db=db, worker_profile_id=worker_profile.id)
     nested_trades = [WorkerTradeNestedRead.model_validate(wt) for wt in worker_trades]
@@ -321,3 +324,24 @@ async def search_workers(
     by sort_by (distance | hourly_rate | experience — default: distance).
     """
     return await crud_worker_profiles.search_workers(db=db, filters=filters, offset=offset, limit=limit)
+
+
+# ————— GET /worker-profile/{worker_profile_id} —————————————————————————
+@router.get("/{worker_profile_id}", response_model=WorkerProfileWithTradesRead, status_code=200)
+async def get_worker_profile_public(db: Annotated[AsyncSession, Depends(async_get_db)], worker_profile_id: int):
+    """Public endpoint for getting a worker profile."""
+    stmt = (
+        select(WorkerProfile)
+        .options(
+            joinedload(WorkerProfile.user),
+            selectinload(WorkerProfile.worker_trades).joinedload(WorkerTrade.trade_category),
+        )
+        .where(WorkerProfile.id == worker_profile_id)
+    )
+    result = await db.execute(stmt)
+    worker_profile = result.unique().scalar_one_or_none()
+
+    if worker_profile is None:
+        raise NotFoundException(f"Worker with id {worker_profile_id} not found.")
+
+    return WorkerProfileWithTradesRead.model_validate(worker_profile)

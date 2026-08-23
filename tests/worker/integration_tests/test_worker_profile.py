@@ -145,3 +145,92 @@ class TestUploadAvatar:
         assert url.startswith("http")
         assert "avatars/" in url
         assert str(test_worker_profile.id) in url
+
+
+class TestGetWorkerProfilePublic:
+    """GET /worker-profile/{worker_profile_id} — Public endpoint"""
+
+    async def test_get_worker_profile_success(self, async_client: AsyncClient, worker_available):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_available.id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == worker_available.id
+
+    async def test_get_worker_profile_unauthenticated_succeeds(
+            self, async_client: AsyncClient, worker_available
+    ):
+        """Public endpoint — no token required."""
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_available.id}")
+        assert response.status_code == 200
+
+    async def test_get_nonexistent_worker_profile_returns_404(self, async_client: AsyncClient):
+        response = await async_client.get("/api/v1/worker-profile/999999")
+        assert response.status_code == 404
+
+    async def test_response_includes_user_info(self, async_client: AsyncClient, worker_available):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_available.id}")
+        data = response.json()
+        assert "user" in data
+        assert "name" in data["user"]
+
+    async def test_response_includes_trade_categories(
+            self, async_client: AsyncClient, worker_with_plumbing
+    ):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_with_plumbing.id}")
+        data = response.json()
+        assert "trade_categories" in data
+        assert len(data["trade_categories"]) == 1
+        assert data["trade_categories"][0]["trade_category"]["display_name"] == "Plumbing"
+
+    async def test_response_with_no_trade_categories_returns_empty_list(
+            self, async_client: AsyncClient, worker_available
+    ):
+        """worker_available has no WorkerTrade rows — trade_categories should be []."""
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_available.id}")
+        data = response.json()
+        assert data["trade_categories"] == []
+
+    async def test_response_reflects_availability(
+            self, async_client: AsyncClient, worker_with_plumbing, worker_with_plumbing_unavailable
+    ):
+        response_available = await async_client.get(f"/api/v1/worker-profile/{worker_with_plumbing.id}")
+        response_unavailable = await async_client.get(
+            f"/api/v1/worker-profile/{worker_with_plumbing_unavailable.id}"
+        )
+        assert response_available.json()["is_available"] is True
+        assert response_unavailable.json()["is_available"] is False
+
+    async def test_response_reflects_verification_status(
+            self, async_client: AsyncClient, worker_verified, worker_unverified
+    ):
+        response_verified = await async_client.get(f"/api/v1/worker-profile/{worker_verified.id}")
+        response_unverified = await async_client.get(f"/api/v1/worker-profile/{worker_unverified.id}")
+        assert response_verified.json()["is_verified"] is True
+        assert response_unverified.json()["is_verified"] is False
+
+    async def test_response_includes_hourly_rate(self, async_client: AsyncClient, worker_mid_rate):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_mid_rate.id}")
+        data = response.json()
+        assert Decimal(data["hourly_rate"]) == Decimal("75.00")
+
+    async def test_response_includes_years_of_experience(
+            self, async_client: AsyncClient, worker_senior
+    ):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_senior.id}")
+        data = response.json()
+        assert data["years_of_experience"] == 10
+
+    async def test_response_includes_service_radius(
+            self, async_client: AsyncClient, worker_large_radius
+    ):
+        response = await async_client.get(f"/api/v1/worker-profile/{worker_large_radius.id}")
+        data = response.json()
+        assert data["service_radius_km"] == 100
+
+    async def test_negative_id_returns_404(self, async_client: AsyncClient):
+        response = await async_client.get("/api/v1/worker-profile/-1")
+        assert response.status_code == 404
+
+    async def test_non_integer_id_returns_422(self, async_client: AsyncClient):
+        response = await async_client.get("/api/v1/worker-profile/not-a-number")
+        assert response.status_code == 422

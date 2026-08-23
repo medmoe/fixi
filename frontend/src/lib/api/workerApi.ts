@@ -11,6 +11,10 @@ export const workerApi = {
         const {data} = await apiClient.get<WorkerProfileWithTradesRead>(`/worker-profile`);
         return data;
     },
+    getWorkerProfilePublic: async (workerId: number): Promise<WorkerProfileWithTradesRead> => {
+        const response = await apiClient.get(`/worker-profile/${workerId}`);
+        return response.data;
+    },
     updateWorkerProfile: async (payload: UpdateWorkerProfilePayload): Promise<WorkerProfileRead> => {
         const {data} = await apiClient.patch<WorkerProfileRead>(`/worker-profile`, payload);
         return data;

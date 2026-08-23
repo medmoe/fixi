@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validat
 
 from ..models.job import JobStatus
 from .trade_category import TradeCategoryRead
+from .user import UserPublicRead
 
 # ─── Base ─────────────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ class JobRead(BaseModel):
     deleted_at: datetime | None
     is_deleted: bool
     trade_category: TradeCategoryRead | None = None
+    user: UserPublicRead | None = None
 
     @computed_field
     def coordinates(self) -> dict[str, float] | None:
