@@ -6,7 +6,7 @@ export interface WorkerProfileRead {
     user_id: number;
     user: UserPublicRead
     bio: string | null;
-    hourly_rate: number | null;
+    hourly_rate: string | null;
     years_of_experience: number | null;
     service_radius_km: number | null;
     avatar_url: string | null;

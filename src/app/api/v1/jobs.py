@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from ..dependencies import get_current_user
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ...crud.crud_job_applications import crud_job_application
@@ -16,9 +17,72 @@ from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
 from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
 from ...schemas.utils import parse_wkt_point
 from ...schemas.worker_profile import WorkerProfileFilter, WorkerProfileWithTradesRead, WorkerSortBy
-from ..dependencies import get_current_user
 
 router = APIRouter(tags=["jobs"])
+
+
+# ─── helpers ─────────────────────────────────────────────────────────────
+async def _build_paginated_jobs_response(
+        db: AsyncSession,
+        filters: JobFilter,
+        page: int = 1,
+        page_size: int = 50,
+) -> PaginatedListResponse[JobRead]:
+    offset = (page - 1) * page_size
+    jobs = await crud_jobs.get_multi_jobs(db=db, filters=filters, offset=offset, limit=page_size)
+    total = await crud_jobs.count_jobs(db=db, filters=filters)
+    pages = (total + page_size - 1) // page_size
+
+    return PaginatedListResponse(
+        total_count=total,
+        has_more=page < pages,
+        page=page,
+        items_per_page=page_size,
+        data=jobs
+    )
+
+
+# ─── POST /jobs ─────────────────────────────────────────────────────────────
+@router.post("/jobs", response_model=JobRead, status_code=201)
+async def create_job(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job: JobCreate,
+        current_user: Annotated[dict, Depends(get_current_user)]
+):
+    """ private endpoint to create a job only for customers """
+
+    if current_user['role_type'] != UserRole.CUSTOMER.value:
+        raise ForbiddenException("Only customers can create jobs")
+
+    return await crud_jobs.create_job(db=db, object=job, user_id=current_user["id"])
+
+
+# ─── GET /jobs ────────────────────────────────────────────────────────────────────────────────────────────────────
+@router.get("/jobs", response_model=PaginatedListResponse[JobRead], status_code=200)
+async def get_jobs(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        filters: Annotated[JobFilter, Depends()],
+        page: int = 1,
+        page_size: int = 50
+):
+    """ public endpoint to get jobs with pagination """
+    return await _build_paginated_jobs_response(db=db, filters=filters, page=page, page_size=page_size)
+
+
+# ─── GET /jobs/my ────────────────────────────────────────────────────────────────────────────────────────────────────
+@router.get("/jobs/my", response_model=PaginatedListResponse[JobRead], status_code=200)
+async def get_my_jobs(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)],
+        page: int = 1,
+        page_size: int = 50,
+) -> PaginatedListResponse[JobRead]:
+    """ private endpoint that retrieves posted jobs of the current customer user """
+
+    if current_user["role_type"] != UserRole.CUSTOMER.value:
+        raise ForbiddenException("Only customers can access this endpoint")
+    filters = JobFilter(user_id=current_user['id'])
+    return await _build_paginated_jobs_response(db=db, filters=filters, page=page, page_size=page_size)
 
 
 # ─── GET /jobs/{job_id} ─────────────────────────────────────────────────────────────
@@ -37,21 +101,6 @@ async def get_job(db: Annotated[AsyncSession, Depends(async_get_db)], job_id: in
         raise NotFoundException(f"Job with id {job_id} not found")
 
     return JobRead.model_validate(job)
-
-
-# ─── POST /jobs ─────────────────────────────────────────────────────────────
-@router.post("/jobs", response_model=JobRead, status_code=201)
-async def create_job(
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        job: JobCreate,
-        current_user: Annotated[dict, Depends(get_current_user)]
-):
-    """ private endpoint to create a job only for customers """
-
-    if current_user['role_type'] != UserRole.CUSTOMER.value:
-        raise ForbiddenException("Only customers can create jobs")
-
-    return await crud_jobs.create_job(db=db, object=job, user_id=current_user["id"])
 
 
 # ─── PATCH /jobs/{job_id} ───────────────────────────────────────────────────────────────────────────────────────
@@ -82,29 +131,6 @@ async def delete_job(
         raise ForbiddenException("Only customers can delete jobs")
 
     await crud_jobs.delete_job(db=db, user_id=current_user["id"], job_id=job_id)
-
-
-# ─── GET /jobs ────────────────────────────────────────────────────────────────────────────────────────────────────
-@router.get("/jobs", response_model=PaginatedListResponse[JobRead], status_code=200)
-async def get_jobs(
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        filters: Annotated[JobFilter, Depends()],
-        page: int = 1,
-        page_size: int = 50,
-):
-    """ public endpoint to get jobs with pagination """
-    offset = (page - 1) * page_size
-    jobs = await crud_jobs.get_multi_jobs(db=db, filters=filters, offset=offset, limit=page_size)
-    total = await crud_jobs.count_jobs(db=db, filters=filters)
-    pages = (total + page_size - 1) // page_size
-
-    return PaginatedListResponse(
-        total_count=total,
-        has_more=page < pages,
-        page=page,
-        items_per_page=page_size,
-        data=jobs
-    )
 
 
 # ─── POST /jobs/{job_id}/apply ──────────────────────────────────────────────
@@ -153,23 +179,7 @@ async def get_job_applications(
     )
 
 
-# ─── PATCH /jobs/{job_id}/applications/{app_id} ────────────────────────────────────────────────────────────────────────────────────────────
-@router.patch("/jobs/{job_id}/applications/{app_id}", response_model=JobApplicationRead, status_code=200)
-async def update_job_application(
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        job_id: int,
-        app_id: int,
-        current_user: Annotated[dict, Depends(get_current_user)],
-        payload: JobApplicationUpdate,
-) -> JobApplicationRead:
-    if current_user["role_type"] != UserRole.CUSTOMER.value:
-        raise ForbiddenException("Only customers can access this endpoint")
-    return await crud_job_application.update_job_application(
-        db=db, job_id=job_id, app_id=app_id, user_id=current_user["id"], object=payload
-    )
-
-
-# ─── PATCH /jobs/{job_id}/nearby-workers ────────────────────────────────────────────────────────────────────────────────────────────
+# ─── GET /jobs/{job_id}/nearby-workers ────────────────────────────────────────────────────────────────────────────────────────────
 @router.get(
     "/jobs/{job_id}/nearby-workers",
     response_model=PaginatedListResponse[WorkerProfileWithTradesRead],
@@ -207,3 +217,19 @@ async def get_nearby_workers(
     )
 
     return await crud_worker_profiles.search_workers(db=db, filters=filters, offset=offset, limit=limit)
+
+
+# ─── PATCH /jobs/{job_id}/applications/{app_id} ────────────────────────────────────────────────────────────────────────────────────────────
+@router.patch("/jobs/{job_id}/applications/{app_id}", response_model=JobApplicationRead, status_code=200)
+async def update_job_application(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        app_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        payload: JobApplicationUpdate,
+) -> JobApplicationRead:
+    if current_user["role_type"] != UserRole.CUSTOMER.value:
+        raise ForbiddenException("Only customers can access this endpoint")
+    return await crud_job_application.update_job_application(
+        db=db, job_id=job_id, app_id=app_id, user_id=current_user["id"], object=payload
+    )
