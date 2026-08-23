@@ -52,7 +52,7 @@ describe('useUpdateWorkerProfile', () => {
             expect(workerApi.updateWorkerProfile).toHaveBeenCalledTimes(1)
         })
         it('calls updateWorkerProfile with partial payload', async () => {
-            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead, hourly_rate: 90})
+            vi.mocked(workerApi.updateWorkerProfile).mockResolvedValue({...workerProfileRead, hourly_rate: "90"})
 
             const {result} = renderHook(
                 () => useUpdateWorkerProfile(),

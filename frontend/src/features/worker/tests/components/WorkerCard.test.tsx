@@ -53,7 +53,7 @@ describe("WorkerCard", () => {
         });
 
         it("renders the hourly rate formatted to two decimals", () => {
-            renderCard({profile: mockWorker(1, {hourly_rate: 75})});
+            renderCard({profile: mockWorker(1, {hourly_rate: "75"})});
             expect(screen.getByText("$75.00/hr")).toBeInTheDocument();
         });
 
