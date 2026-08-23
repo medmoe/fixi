@@ -9,7 +9,7 @@ export const mockProfile: WorkerProfileWithTradesRead = {
     id: 1,
     user_id: 1,
     bio: 'Experienced plumber',
-    hourly_rate: 75.00,
+    hourly_rate: "75.00",
     service_radius_km: 20,
     is_available: false,
     is_verified: true,

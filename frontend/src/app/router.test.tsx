@@ -14,6 +14,7 @@ vi.mock('@/features/auth', () => ({
 vi.mock('@/features/worker', () => ({
     WorkerDashboardPage: () => <div>Worker Dashboard</div>,
     WorkerSearchPage: () => <div>Worker Search Page</div>,
+    WorkerDetailPage: () => <div>Worker Detail Page</div>
 }))
 
 // 3. Mock ProtectedRoute based on your app's auth state

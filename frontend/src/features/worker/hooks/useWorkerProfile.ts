@@ -15,5 +15,6 @@ export const useWorkerProfilePublic = (workerId: number) => {
         queryKey: ["worker-profile", workerId],
         queryFn: () => workerApi.getWorkerProfilePublic(workerId),
         enabled: !!workerId,
+        staleTime: 5 * 60 * 1000,
     });
 };

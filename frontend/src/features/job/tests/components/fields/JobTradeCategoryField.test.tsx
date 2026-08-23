@@ -4,7 +4,7 @@ import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {FormProvider, useForm} from 'react-hook-form';
 import {JobTradeCategoryField} from '@/features/job';
-import {useTrades} from '@/features/worker/hooks/useTrades';
+import {useTrades} from '@/features/worker/hooks/useTrades.ts';
 
 vi.mock('@/features/worker/hooks/useTrades');
 

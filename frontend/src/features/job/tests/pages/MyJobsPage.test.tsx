@@ -3,12 +3,13 @@ import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import {MyJobsPage} from '@/features/job/pages/MyJobsPage';
+import {MyJobsPage} from '@/features/job/pages/MyJobsPage.tsx';
 import {jobApi} from '@/lib';
 import {JobRead, JobStatus} from '@/features/job';
 import {useUser} from '@/features/user';
 
 import {mockUseUser} from '@/mocks';
+import {useDeleteJob} from '@/features/job/hooks/useDeleteJob';
 
 vi.mock('@/lib', () => ({
     jobApi: {
@@ -20,6 +21,9 @@ vi.mock('@/lib', () => ({
 vi.mock('@/features/user', () => ({
     useUser: vi.fn(),
 }));
+
+vi.mock('@/features/job/hooks/useDeleteJob')
+const mockDeleteJob = vi.fn();
 
 const createWrapper = () => {
     const queryClient = new QueryClient({
@@ -58,12 +62,17 @@ const createMockJob = (overrides: Partial<JobRead> = {}): JobRead => ({
     updated_at: null,
     deleted_at: null,
     trade_category: null,
+    user: null,
     ...overrides,
 });
 
 describe('MyJobsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.mocked(useDeleteJob).mockReturnValue({
+            mutate: mockDeleteJob,
+            isPending: false,
+        } as unknown as ReturnType<typeof useDeleteJob>);
     });
 
     it('renders user loading state initially', () => {
@@ -274,14 +283,27 @@ describe('MyJobsPage', () => {
         expect(screen.getByText('Job Detail')).toBeInTheDocument();
     });
 
-    it('calls deleteJob when delete is confirmed', async () => {
-        vi.stubGlobal('confirm', vi.fn(() => true));
+    it('calls deleteJob when deletion is confirmed', async () => {
+        const user = userEvent.setup();
+
         vi.mocked(useUser).mockReturnValue({
             data: mockUser,
             isLoading: false,
             error: null,
         } as ReturnType<typeof useUser>);
-        const job = createMockJob({id: 1, title: 'Deletable Job'});
+
+        const deleteJob = vi.fn();
+
+        vi.mocked(useDeleteJob).mockReturnValue({
+            mutate: deleteJob,
+            isPending: false,
+        } as unknown as ReturnType<typeof useDeleteJob>);
+
+        const job = createMockJob({
+            id: 1,
+            title: 'Deletable Job',
+        });
+
         vi.mocked(jobApi.getMyJobs).mockResolvedValue({
             data: [job],
             total_count: 1,
@@ -289,20 +311,42 @@ describe('MyJobsPage', () => {
             page: 1,
             items_per_page: 20,
         });
-        vi.mocked(jobApi.deleteJob).mockResolvedValue(undefined);
 
-        render(<MyJobsPage/>, {wrapper: createWrapper()});
-
-        await waitFor(() => {
-            expect(screen.getByText('Deletable Job')).toBeInTheDocument();
+        render(<MyJobsPage/>, {
+            wrapper: createWrapper(),
         });
 
-        const deleteButton = screen.getByRole('button', {name: /delete job/i});
-        await act(async () => await userEvent.click(deleteButton));
+        // Wait for the job to appear
+        expect(await screen.findByText('Deletable Job')).toBeInTheDocument();
 
-        expect(jobApi.deleteJob).toHaveBeenCalledWith(1);
-        vi.unstubAllGlobals();
-    });
+        // Open confirmation dialog
+        await act(async () => await user.click(
+            screen.getByRole('button', {
+                name: 'Delete job Deletable Job',
+            })
+        ))
+
+        // Verify confirmation dialog appeared
+        expect(
+            screen.getByRole('heading', {name: 'Delete this job?'})
+        ).toBeInTheDocument();
+
+        expect(
+            screen.getByText(/permanently remove.*Deletable Job/i)
+        ).toBeInTheDocument();
+
+        // Confirm deletion
+        await act(async () => await user.click(
+            screen.getByRole('button', {name: 'Delete'})
+        ))
+
+        expect(deleteJob).toHaveBeenCalledWith(
+            1,
+            expect.objectContaining({
+                onSuccess: expect.any(Function),
+            })
+        );
+    })
 
     it('does not call deleteJob when cancelled', async () => {
         vi.stubGlobal('confirm', vi.fn(() => false));
