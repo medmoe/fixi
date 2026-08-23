@@ -1,6 +1,5 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {JobCreateRequest, JobRead} from "@/features/job";
-import {PaginatedListResponse} from "@/features/types";
 import {jobApi} from "@/lib";
 import {toast} from "sonner";
 import {AxiosError} from "axios";
@@ -12,17 +11,7 @@ export const useCreateJob = () => {
     return useMutation({
         mutationFn: (payload: JobCreateRequest) => jobApi.createJob(payload),
         onSuccess: (createdJob: JobRead) => {
-            queryClient.setQueryData(
-                ['jobs'],
-                (old: PaginatedListResponse<JobRead> | undefined) => {
-                    if (!old) return old;
-                    return {
-                        ...old,
-                        data: [createdJob, ...old.data],
-                        total_count: old.total_count + 1
-                    }
-                }
-            )
+            queryClient.invalidateQueries({queryKey: ['jobs']});
             queryClient.setQueryData(['job', createdJob.id], createdJob);
             toast.success('Job created successfully')
         },

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
-import {Eye, Pencil, Plus, Trash2} from 'lucide-react';
+import {Eye, Loader2, Pencil, Plus, Trash2} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
@@ -10,6 +10,8 @@ import {jobApi} from '@/lib';
 import {JobRead, JobStatus} from '@/features/job';
 import {PaginatedListResponse} from "@/features/types"
 import {useUser} from '@/features/user';
+import {useDeleteJob} from "@/features/job/hooks/useDeleteJob";
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,} from "@/components/ui/alert-dialog";
 
 const statusColors: Record<JobStatus, string> = {
     open: 'bg-green-100 text-green-800',
@@ -22,18 +24,23 @@ const statusColors: Record<JobStatus, string> = {
 export const MyJobsPage: React.FC = () => {
     const navigate = useNavigate();
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser();
+    const {mutate: deleteJob, isPending: isDeleting} = useDeleteJob();
+    // tracks which job the confirmation dialog is currently open for -- null means closed
+    const [jobPendingDeletion, setJobPendingDeletion] = useState<JobRead | null>(null);
 
     const {data, isLoading, isError} = useQuery<PaginatedListResponse<JobRead>>({
         queryKey: ['jobs', {user_id: user?.id}],
         queryFn: () => jobApi.getMyJobs(),
         enabled: !!user,
+        staleTime: 1000 * 60 * 5,
     });
 
-    const handleDelete = async (jobId: number) => {
-        if (window.confirm('Are you sure you want to delete this job?')) {
-            await jobApi.deleteJob(jobId);
-        }
-    };
+    const handleConfirmDelete = () => {
+        if (!jobPendingDeletion) return;
+        deleteJob(jobPendingDeletion.id, {
+            onSuccess: () => setJobPendingDeletion(null),
+        });
+    }
 
     if (isLoadingUser) {
         return (
@@ -145,7 +152,7 @@ export const MyJobsPage: React.FC = () => {
                                             variant="ghost"
                                             size="icon"
                                             className="text-destructive hover:text-destructive"
-                                            onClick={() => handleDelete(job.id)}
+                                            onClick={() => setJobPendingDeletion(job)}
                                             aria-label={`Delete job ${job.title}`}
                                         >
                                             <Trash2 className="h-4 w-4"/>
@@ -164,6 +171,39 @@ export const MyJobsPage: React.FC = () => {
                     ))}
                 </div>
             )}
+            <AlertDialog
+                open={jobPendingDeletion !== null}
+                onOpenChange={(open) => !open && setJobPendingDeletion(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {jobPendingDeletion && (
+                                <>This will permanently remove &ldquo;{jobPendingDeletion.title}&rdquo;. This action cannot be undone.</>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    Deleting...
+                                </>
+                            ) : (
+                                'Delete'
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+
+            </AlertDialog>
         </div>
     );
 };

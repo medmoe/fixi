@@ -3,7 +3,7 @@ import {createBrowserRouter, RouteObject} from 'react-router-dom'
 import {AuthInitializer, LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
-import {JobDetailPage, JobEditForm, MyJobsPage} from "@/features/job";
+import {JobCreateForm, JobDetailPage, JobEditForm, MyJobsPage} from "@/features/job";
 import {WorkerDashboardPage, WorkerSearchPage} from "@/features/worker";
 
 export const routes: RouteObject[] = [
@@ -35,6 +35,14 @@ export const routes: RouteObject[] = [
                 element: (
                     <ProtectedRoute allowedRoles={['customer']}>
                         <MyJobsPage/>
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: '/jobs/create',
+                element: (
+                    <ProtectedRoute allowedRoles={['customer']}>
+                        <JobCreateForm/>
                     </ProtectedRoute>
                 )
             },
