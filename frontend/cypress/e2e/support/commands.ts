@@ -77,3 +77,36 @@ declare global {
 }
 
 export {}
+
+
+
+// ─── Geolocation Command ─────────────────────────────────────────────────
+// Stubs navigator.geolocation.getCurrentPosition before the page loads, so
+// any "use my location" trigger resolves with the given coordinates instead
+// of prompting for real browser permission (which Cypress can't grant).
+//
+// NOTE: not currently wired into WorkerSearchPage — ready for use once a
+// geolocation trigger is added there. See useWorkerSearch's Redux-based
+// stored-location fallback for the alternate path currently in use.
+
+Cypress.Commands.add('mockGeolocation', (latitude: number, longitude: number) => {
+    cy.window().then((win) => {
+        cy.stub(win.navigator.geolocation, 'getCurrentPosition').callsFake((success) => {
+            success({
+                coords: {
+                    latitude,
+                    longitude,
+                    accuracy: 10,
+                },
+            })
+        })
+    })
+})
+
+declare global {
+    namespace Cypress {
+        interface Chainable {
+            mockGeolocation(latitude: number, longitude: number): Chainable<void>
+        }
+    }
+}
