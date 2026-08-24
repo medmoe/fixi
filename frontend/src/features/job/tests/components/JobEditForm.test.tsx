@@ -68,6 +68,7 @@ const createMockJob = (overrides: Partial<JobRead> = {}): JobRead => ({
     updated_at: '2024-01-16T10:00:00Z',
     deleted_at: null,
     trade_category: {id: 3, name: 'Plumbing', display_name: 'Plumbing Services', icon_name: 'plumbing', parent_id: null, created_at: '2026-01-01'},
+    user: null,
     ...overrides,
 });
 

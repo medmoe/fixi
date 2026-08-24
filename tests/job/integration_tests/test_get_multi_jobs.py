@@ -135,3 +135,102 @@ class TestListJobs:
     async def test_list_jobs_unauthenticated_succeeds(self, async_client: AsyncClient, test_job):
         response = await async_client.get("/api/v1/jobs")
         assert response.status_code == 200
+
+
+class TestGetMyJobs:
+    """GET /api/v1/jobs/my"""
+
+    async def test_customer_can_list_own_jobs(
+            self, async_client: AsyncClient, customer_auth_headers, customer_test_user, test_job
+    ):
+        response = await async_client.get("/api/v1/jobs/my", headers=customer_auth_headers)
+        assert response.status_code == 200
+        ids = [j["id"] for j in response.json()["data"]]
+        assert test_job.id in ids
+
+    async def test_only_returns_current_users_jobs(
+            self, async_client: AsyncClient, customer_auth_headers, customer_test_user, test_job, job_other_user
+    ):
+        response = await async_client.get("/api/v1/jobs/my", headers=customer_auth_headers)
+        ids = [j["id"] for j in response.json()["data"]]
+        assert test_job.id in ids
+        assert job_other_user.id not in ids
+
+    async def test_worker_cannot_access(self, async_client: AsyncClient, worker_profile_auth_headers):
+        response = await async_client.get("/api/v1/jobs/my", headers=worker_profile_auth_headers)
+        assert response.status_code == 403
+
+    async def test_unauthenticated_returns_401(self, async_client: AsyncClient):
+        response = await async_client.get("/api/v1/jobs/my")
+        assert response.status_code == 401
+
+    async def test_returns_empty_list_when_no_jobs(
+            self, async_client: AsyncClient, customer_auth_headers
+    ):
+        response = await async_client.get("/api/v1/jobs/my", headers=customer_auth_headers)
+        data = response.json()
+        assert data["data"] == []
+        assert data["total_count"] == 0
+
+    async def test_excludes_deleted_jobs(
+            self, async_client: AsyncClient, customer_auth_headers, test_job, deleted_job
+    ):
+        """deleted_job must belong to the same test_customer for this to be a meaningful test."""
+        response = await async_client.get("/api/v1/jobs/my", headers=customer_auth_headers)
+        ids = [j["id"] for j in response.json()["data"]]
+        assert test_job.id in ids
+        assert deleted_job.id not in ids
+
+    async def test_pagination_page_size(
+            self, async_client: AsyncClient, customer_auth_headers, many_jobs_same_customer
+    ):
+        response = await async_client.get(
+            "/api/v1/jobs/my", params={"page_size": 3}, headers=customer_auth_headers
+        )
+        assert len(response.json()["data"]) == 3
+
+    async def test_pagination_page_2_returns_different_jobs(
+            self, async_client: AsyncClient, customer_auth_headers, many_jobs_same_customer
+    ):
+        page_1 = await async_client.get(
+            "/api/v1/jobs/my", params={"page": 1, "page_size": 5}, headers=customer_auth_headers
+        )
+        page_2 = await async_client.get(
+            "/api/v1/jobs/my", params={"page": 2, "page_size": 5}, headers=customer_auth_headers
+        )
+        page_1_ids = {j["id"] for j in page_1.json()["data"]}
+        page_2_ids = {j["id"] for j in page_2.json()["data"]}
+        assert not page_1_ids & page_2_ids
+
+    async def test_has_more_true_when_additional_pages_exist(
+            self, async_client: AsyncClient, customer_auth_headers, many_jobs_same_customer
+    ):
+        response = await async_client.get(
+            "/api/v1/jobs/my", params={"page": 1, "page_size": 5}, headers=customer_auth_headers
+        )
+        assert response.json()["has_more"] is True
+
+    async def test_has_more_false_on_last_page(
+            self, async_client: AsyncClient, customer_auth_headers, many_jobs_same_customer
+    ):
+        # many_jobs_same_customer creates 10 jobs — page 2 of size 5 is the last page
+        response = await async_client.get(
+            "/api/v1/jobs/my", params={"page": 2, "page_size": 5}, headers=customer_auth_headers
+        )
+        assert response.json()["has_more"] is False
+
+    async def test_total_count_reflects_all_owned_jobs_not_just_current_page(
+            self, async_client: AsyncClient, customer_auth_headers, many_jobs_same_customer
+    ):
+        response = await async_client.get(
+            "/api/v1/jobs/my", params={"page_size": 3}, headers=customer_auth_headers
+        )
+        assert response.json()["total_count"] == 10
+
+    async def test_does_not_match_job_id_route(
+            self, async_client: AsyncClient, customer_auth_headers
+    ):
+        """Regression test for route ordering — /jobs/my must not be
+        swallowed by /jobs/{job_id} and attempt to parse 'my' as an int."""
+        response = await async_client.get("/api/v1/jobs/my", headers=customer_auth_headers)
+        assert response.status_code != 422

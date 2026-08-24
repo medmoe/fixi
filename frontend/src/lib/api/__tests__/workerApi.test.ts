@@ -42,7 +42,7 @@ const mockTradeCategories = [
 const mockWorkersWithTradeReads: WorkerProfileWithTradesRead = {
     id: 1,
     bio: 'Experienced plumber',
-    hourly_rate: 75.00,
+    hourly_rate: "75.00",
     service_radius_km: 20,
     years_of_experience: 10,
     avatar_url: null,

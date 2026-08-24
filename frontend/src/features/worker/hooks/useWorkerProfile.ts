@@ -8,3 +8,13 @@ export const useWorkerProfile = () => {
         staleTime: 5 * 60 * 1000,
     });
 }
+
+
+export const useWorkerProfilePublic = (workerId: number) => {
+    return useQuery({
+        queryKey: ["worker-profile", workerId],
+        queryFn: () => workerApi.getWorkerProfilePublic(workerId),
+        enabled: !!workerId,
+        staleTime: 5 * 60 * 1000,
+    });
+};

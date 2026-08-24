@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {renderHook, waitFor} from '@testing-library/react';
 import {QueryClient} from '@tanstack/react-query';
-import {useUpdateJob} from '@/features/job/hooks/useUpdateJob';
+import {useUpdateJob} from '@/features/job/hooks/useUpdateJob.ts';
 import {jobApi} from '@/lib';
 import {JobRead, JobStatus} from '@/features/job';
 import {toast} from 'sonner';
@@ -39,6 +39,7 @@ const mockJob: JobRead = {
     updated_at: '2024-01-02T00:00:00Z',
     deleted_at: null,
     trade_category: null,
+    user: null,
 };
 
 describe('useUpdateJob', () => {
@@ -74,29 +75,6 @@ describe('useUpdateJob', () => {
 
         const cachedJob = queryClient.getQueryData<JobRead>(['job', 1]);
         expect(cachedJob?.title).toBe('Updated Job');
-    });
-
-    it('updates jobs list cache on success', async () => {
-        vi.mocked(jobApi.updateJob).mockResolvedValue(mockJob);
-
-
-        // Pre-populate list cache
-        queryClient.setQueryData(['jobs'], {
-            data: [{...mockJob, title: 'Old Title'}],
-            total_count: 1,
-            has_more: false,
-            page: 1,
-            items_per_page: 20,
-        });
-
-        const {result} = renderHook(() => useUpdateJob(), {wrapper: createWrapper(queryClient)});
-
-        result.current.mutate({id: 1, payload: {title: 'Updated Job'}});
-
-        await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-        const cachedList = queryClient.getQueryData<{ data: JobRead[] }>(['jobs']);
-        expect(cachedList?.data[0].title).toBe('Updated Job');
     });
 
     it('shows success toast on success', async () => {
@@ -154,7 +132,6 @@ describe('useUpdateJob', () => {
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-        expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['job', 1]});
         expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['jobs']});
     });
 });

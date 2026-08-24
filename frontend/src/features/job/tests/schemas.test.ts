@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {jobPostSchema} from "./schemas";
+import {jobPostSchema} from "../schemas.ts";
 
 describe("JobPostSchema", () => {
 

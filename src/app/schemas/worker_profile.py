@@ -101,8 +101,9 @@ class WorkerTradeNestedRead(BaseModel):
 
 
 class WorkerProfileWithTradesRead(WorkerProfileRead):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     """Profile response with embedded trades list."""
-    trade_categories: list[WorkerTradeNestedRead] = []
+    trade_categories: list[WorkerTradeNestedRead] = Field(default_factory=list, validation_alias="worker_trades")
     user: UserPublicRead | None = None
 
 

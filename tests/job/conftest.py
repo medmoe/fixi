@@ -407,3 +407,22 @@ async def test_trade_category_electrical(async_session):
     await async_session.commit()
     await async_session.refresh(category)
     return category
+
+
+@pytest_asyncio.fixture
+async def many_jobs_same_customer(async_session, customer_test_user, test_trade_category):
+    jobs = [
+        Job(
+            user_id=customer_test_user.id,
+            trade_category_id=test_trade_category.id,
+            title=f"job {i}",
+            status=JobStatus.OPEN,
+            budget_min=Decimal("100.00"),
+            budget_max=Decimal("300.00"),
+            description="test description"
+        )
+        for i in range(10)
+    ]
+    async_session.add_all(jobs)
+    await async_session.commit()
+    return jobs

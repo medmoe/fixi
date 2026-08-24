@@ -84,7 +84,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                 {/* Footer — rate, radius, distance */}
                 <div className="mt-auto flex items-center justify-between text-sm pt-2 border-t">
                     <div className="flex items-center gap-3 text-muted-foreground">
-                        {profile.hourly_rate !== null && <span>${profile.hourly_rate.toFixed(2)}/hr</span>}
+                        {profile.hourly_rate !== null && <span>${Number(profile.hourly_rate).toFixed(2)}/hr</span>}
                         {profile.service_radius_km !== null && (
                             <span>{profile.service_radius_km} km radius</span>
                         )}

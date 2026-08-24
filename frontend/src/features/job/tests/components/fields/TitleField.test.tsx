@@ -3,7 +3,7 @@ import {describe, it, expect} from "vitest";
 import {render, screen, act} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {useForm, FormProvider} from "react-hook-form";
-import {TitleField} from "../TitleField";
+import {TitleField} from "../../../components/fields/TitleField.tsx";
 
 const Wrapper = ({defaultValues = {}}: { defaultValues?: Record<string, unknown> }) => {
     const methods = useForm({defaultValues});

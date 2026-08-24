@@ -305,6 +305,7 @@ class TestAssignTradeCategories:
             f"/api/v1/worker-profile",
             headers=worker_auth_headers,
         )
+        print(profile_response.json())
         assigned_ids = [t["trade_category_id"] for t in profile_response.json()['trade_categories']]
         assert len(assigned_ids) == 3
         assert all(t.id in assigned_ids for t in trade_categories[:3])

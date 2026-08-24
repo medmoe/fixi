@@ -6,10 +6,12 @@ import {Button} from '@/components/ui/button';
 import {Form} from '@/components/ui/form';
 import {BudgetRangeField, DescriptionField, JobCreateRequest, jobPostSchema, JobTradeCategoryField, TitleField, useCreateJob} from '@/features/job';
 import {LocationSearchField} from '@/features/user';
+import {useNavigate} from "react-router-dom";
 
 type JobCreateFormValues = JobCreateRequest;
 
 export const JobCreateForm: React.FC = () => {
+    const navigate = useNavigate();
     const {mutate: createJob, isPending} = useCreateJob();
 
     const form = useForm<JobCreateFormValues>({
@@ -31,7 +33,9 @@ export const JobCreateForm: React.FC = () => {
     const canSubmit = isDirty && isValid && !isPending;
 
     const onSubmit = (data: JobCreateFormValues) => {
-        createJob(data);
+        createJob(data, {
+            onSuccess: () => navigate("/jobs")
+        });
     };
 
     return (

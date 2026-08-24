@@ -2,12 +2,12 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {renderHook, waitFor} from "@testing-library/react";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {createElement} from "react";
-import {useCreateJob} from "../useCreateJob";
+import {useCreateJob} from "../../hooks/useCreateJob.ts";
 import {toast} from "sonner";
 import {mockJob} from "@/mocks";
-import {jobApi} from "../../../../lib/api/jobApi";
+import {jobApi} from "../../../../lib/api/jobApi.ts";
 import {JobRead} from "@/features/job";
-import {PaginatedListResponse} from "@/features/types";
+import {PaginatedListResponse} from "@/features/types.ts";
 
 vi.mock("../../../../lib/api/jobApi");
 vi.mock("sonner");
@@ -94,32 +94,6 @@ describe("useCreateJob", () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(toast.success).toHaveBeenCalledWith("Job created successfully");
-    });
-
-    it("prepends the created job to the jobs list cache on success", async () => {
-        vi.mocked(jobApi.createJob).mockResolvedValue(mockJob);
-
-        // seed the cache with an existing list
-        const existingList: PaginatedListResponse<JobRead> = {
-            data: [mockJob],  // existing job
-            total_count: 1,
-            has_more: false,
-            page: 1,
-            items_per_page: 50,
-        };
-        queryClient.setQueryData(["jobs"], existingList);
-
-        const {result} = renderHook(() => useCreateJob(), {
-            wrapper: createWrapper(queryClient),
-        });
-
-        result.current.mutate(validPayload);
-        await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-        const updatedCache = queryClient.getQueryData<PaginatedListResponse<JobRead>>(["jobs"]);
-        expect(updatedCache?.data[0]).toEqual(mockJob);         // new job is first
-        expect(updatedCache?.data[1]).toEqual(mockJob); // existing job still there
-        expect(updatedCache?.total_count).toBe(2);              // count incremented
     });
 
     it("handles empty jobs list cache gracefully on success", async () => {

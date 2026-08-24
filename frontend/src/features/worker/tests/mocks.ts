@@ -15,7 +15,7 @@ export const mockWorker = (id: number, overrides: Partial<WorkerProfileWithTrade
     user_id: id,
     user: {id, name: `Worker ${id}`, location: null, display_location: null},
     bio: "Experienced plumber with 5+ years fixing leaks and installing fixtures.",
-    hourly_rate: 75.00,
+    hourly_rate: "75.00",
     years_of_experience: 5,
     service_radius_km: 20,
     is_available: false,
