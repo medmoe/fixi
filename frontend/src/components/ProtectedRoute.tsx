@@ -88,12 +88,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return <Navigate to="/" replace/>
     }
 
-    // ─── Customer trying to access worker-only /dashboard ──────────────────
-    if (user.role_type === 'customer' && location.pathname === '/dashboard') {
-        // TODO: Once customer dashboard is built, redirect there instead
-        return <Navigate to="/" replace/>
-    }
-
     // ─── All checks passed — render the protected content ──────────────────
     return <>{children}</>
 }

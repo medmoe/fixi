@@ -4,7 +4,8 @@ import {AuthInitializer, LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 import {JobCreateForm, JobDetailPage, JobEditForm, MyJobsPage} from "@/features/job";
-import {WorkerDashboardPage, WorkerDetailPage, WorkerSearchPage} from "@/features/worker";
+import {WorkerDetailPage, WorkerSearchPage} from "@/features/worker";
+import {RoleBasedDashboard} from "@/features/auth/components/RoleBasedDashboard.tsx";
 
 export const routes: RouteObject[] = [
     {
@@ -25,8 +26,8 @@ export const routes: RouteObject[] = [
             {
                 path: '/dashboard',
                 element: (
-                    <ProtectedRoute allowedRoles={["worker"]}>
-                        <WorkerDashboardPage/>
+                    <ProtectedRoute>
+                        <RoleBasedDashboard/>
                     </ProtectedRoute>
                 )
             },
