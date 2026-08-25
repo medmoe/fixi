@@ -47,3 +47,12 @@ export interface Coordinates {
 }
 
 export type JobStatus = 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface JobFilters {
+    status?: JobStatus;
+    trade_category_id?: number;
+    user_id?: number;
+    budget_min?: number;
+    budget_max?: number;
+    search?: string;
+}

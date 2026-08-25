@@ -1,4 +1,4 @@
-import {JobCreateRequest, JobRead, JobUpdateRequest} from "@/features/job";
+import {JobCreateRequest, JobFilters, JobRead, JobUpdateRequest} from "@/features/job";
 import {PaginatedListResponse} from "@/features/types";
 import apiClient from "./apiClient";
 
@@ -23,4 +23,9 @@ export const jobApi = {
     deleteJob: async (id: number): Promise<void> => {
         await apiClient.delete(`/jobs/${id}`);
     },
+    getJobs: async (filters: JobFilters, offset: number, limit: number): Promise<PaginatedListResponse<JobRead>> => {
+        const params = {...filters, offset, limit}
+        const {data} = await apiClient.get<PaginatedListResponse<JobRead>>("/jobs", {params});
+        return data
+    }
 }

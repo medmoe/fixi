@@ -22,7 +22,7 @@ export {
     ProfileForm,
     SkillLevelSelect,
     TradesPicker,
-    FilterPanel,
+    WorkerFilterPanel,
     WorkerCard,
     WorkerCardSkeleton,
     WorkerCardSkeletonGrid,

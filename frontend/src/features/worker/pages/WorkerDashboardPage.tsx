@@ -1,12 +1,13 @@
 import React, {useState} from 'react'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
-import {AlertCircle, Briefcase, Loader2, UserCircle} from 'lucide-react'
+import {AlertCircle, Briefcase, Loader2, UserCircle, Search} from 'lucide-react'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
 import {AvailabilityToggle} from "@/features/worker/components/AvailabilityToggle";
+import {JobsTab} from "@/features/job";
 
-type Tab = 'profile' | 'account'
+type Tab = 'profile' | 'account' | 'jobs'
 
 export const WorkerDashboardPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('profile')
@@ -53,6 +54,11 @@ export const WorkerDashboardPage: React.FC = () => {
             label: 'Account',
             icon: <UserCircle className="h-4 w-4"/>,
         },
+        {
+            id: 'jobs',
+            label: 'Jobs',
+            icon: <Search className="h-4 w-4"/>,
+        }
     ]
 
     return (
@@ -143,6 +149,7 @@ export const WorkerDashboardPage: React.FC = () => {
                 <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
                     {activeTab === 'profile' && <ProfileTab/>}
                     {activeTab === 'account' && <AccountTab/>}
+                    {activeTab === 'jobs' && <JobsTab/>}
                 </main>
             </div>
         </div>

@@ -16,7 +16,7 @@ interface FilterPanelProps {
 const MAX_HOURLY_RATE = 500;
 const MAX_RADIUS_KM = 200;
 
-export const FilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
+export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useQuery({
         queryKey: ["trade-categories"],
         queryFn: workerApi.getTrades,

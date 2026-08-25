@@ -1,7 +1,7 @@
 import React from "react";
 import {Button} from "@/components/ui/button";
 import {Loader2} from "lucide-react";
-import {FilterPanel, useWorkerSearch, WorkerCard, WorkerCardSkeletonGrid, WorkerSearchEmptyState} from "@/features/worker";
+import {WorkerFilterPanel, useWorkerSearch, WorkerCard, WorkerCardSkeletonGrid, WorkerSearchEmptyState} from "@/features/worker";
 
 export const WorkerSearchPage: React.FC = () => {
     const {
@@ -19,7 +19,7 @@ export const WorkerSearchPage: React.FC = () => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 p-6">
             <aside>
-                <FilterPanel filters={filters} onChange={updateFilters}/>
+                <WorkerFilterPanel filters={filters} onChange={updateFilters}/>
             </aside>
 
             <main>
