@@ -9,7 +9,7 @@ import {mockWorkers} from "../mocks";
 
 vi.mock("@/features/worker", () => ({
     useWorkerSearch: vi.fn(),
-    FilterPanel: vi.fn(({onChange}) => (
+    WorkerFilterPanel: vi.fn(({onChange}) => (
         <div data-testid="filter-panel">
             <button
                 type="button"

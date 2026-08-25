@@ -1,13 +1,30 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
-import {render, screen, waitFor} from "@testing-library/react";
+import {act, render, screen, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {act} from "react";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {JobsFilterPanel} from "../../components/JobsFilterPanel";
 import {useTrades} from "@/features/worker";
 import type {JobFilters} from "../../types";
 
 vi.mock("@/features/worker", () => ({useTrades: vi.fn()}));
+
+vi.mock("@/components/ui/select", () => ({
+    Select: ({children, onValueChange, value}: any) => (
+        <select
+            data-testid="mocked-select"
+            value={value}
+            onChange={(e) => onValueChange?.(e.target.value)}
+        >
+            {children}
+        </select>
+    ),
+    SelectTrigger: ({children}: any) => <>{children}</>,
+    SelectValue: ({placeholder}: any) => <option>{placeholder}</option>,
+    SelectContent: ({children}: any) => <>{children}</>,
+    SelectItem: ({value, children}: any) => (
+        <option value={value}>{children}</option>
+    ),
+}));
 
 const mockCategories = [
     {id: 1, name: "plumbing", display_name: "Plumbing"},
@@ -55,33 +72,36 @@ describe("Job FilterPanel", () => {
     describe("status", () => {
         it("renders All statuses by default", () => {
             renderPanel();
-            expect(screen.getByLabelText("Job status")).toHaveTextContent("All statuses");
+            expect(screen.getByTestId("mocked-select")).toHaveTextContent("All statuses");
         });
 
         it("shows the active status when set", () => {
             renderPanel({status: "open"});
-            expect(screen.getByLabelText("Job status")).toHaveTextContent("Open");
+            expect(screen.getByTestId("mocked-select")).toHaveTextContent("Open");
         });
 
         it("calls onChange with the selected status", async () => {
             renderPanel();
-            await act(async () => {
-                await userEvent.click(screen.getByLabelText("Job status"));
-            });
-            await act(async () => {
-                await userEvent.click(screen.getByText("Open"));
-            });
+            const user = userEvent.setup();
+
+            await user.selectOptions(
+                screen.getByTestId("mocked-select"),
+                "open"
+            );
+
+            expect(onChange).toHaveBeenCalledTimes(1);
             expect(onChange).toHaveBeenCalledWith({status: "open"});
         });
 
         it("calls onChange with undefined when All statuses is selected", async () => {
             renderPanel({status: "open"});
-            await act(async () => {
-                await userEvent.click(screen.getByLabelText("Job status"));
-            });
-            await act(async () => {
-                await userEvent.click(screen.getByText("All statuses"));
-            });
+            const user = userEvent.setup();
+
+            await user.selectOptions(
+                screen.getByTestId("mocked-select"),
+                "all"
+            );
+
             expect(onChange).toHaveBeenCalledWith({status: undefined});
         });
     });
