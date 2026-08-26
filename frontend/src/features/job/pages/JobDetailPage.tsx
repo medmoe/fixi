@@ -56,18 +56,7 @@ export const JobDetailPage: React.FC = () => {
         <div className="max-w-3xl mx-auto p-6 space-y-6">
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate('/jobs')}
-                        className="mb-2 -ml-2"
-                    >
-                        <ArrowLeft className="mr-1 h-4 w-4"/>
-                        Back
-                    </Button>
-                    <h1 className="text-2xl font-bold">{job.title}</h1>
-                </div>
+                <h1 className="text-2xl font-bold">{job.title}</h1>
                 <Badge className={statusColors[job.status]}>
                     {job.status.replace('_', ' ')}
                 </Badge>

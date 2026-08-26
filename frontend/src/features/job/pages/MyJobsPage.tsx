@@ -87,7 +87,7 @@ export const MyJobsPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">My Jobs</h1>
-                <Button onClick={() => navigate('/jobs/create')}>
+                <Button onClick={() => navigate('create')}>
                     <Plus className="mr-2 h-4 w-4"/>
                     Post New Job
                 </Button>
@@ -98,7 +98,7 @@ export const MyJobsPage: React.FC = () => {
                 <Card>
                     <CardContent className="p-8 text-center text-muted-foreground">
                         <p className="mb-4">You haven&apos;t posted any jobs yet.</p>
-                        <Button onClick={() => navigate('/jobs/create')} variant="outline">
+                        <Button onClick={() => navigate('create')} variant="outline">
                             <Plus className="mr-2 h-4 w-4"/>
                             Post Your First Job
                         </Button>
@@ -133,7 +133,7 @@ export const MyJobsPage: React.FC = () => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => navigate(`/jobs/${job.id}`)}
+                                            onClick={() => navigate(`${job.id}`)}
                                             aria-label={`View job ${job.title}`}
                                         >
                                             <Eye className="h-4 w-4"/>
@@ -142,7 +142,7 @@ export const MyJobsPage: React.FC = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                                                onClick={() => navigate(`${job.id}/edit`)}
                                                 aria-label={`Edit job ${job.title}`}
                                             >
                                                 <Pencil className="h-4 w-4"/>

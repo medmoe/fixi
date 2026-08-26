@@ -1,36 +1,31 @@
-import React, { useState } from 'react'
-import { AccountTab, useUser } from '@/features/user'
-import { LogoutButton } from '@/components/LogoutButton'
-import { AlertCircle, Loader2, UserCircle, Search, Home } from 'lucide-react'
-import {MyJobsPage} from "@/features/job";
+// src/features/customer/components/DashboardLayout.tsx
+import React from 'react'
+import {useUser} from '@/features/user'
+import {LogoutButton} from '@/components/LogoutButton'
+import {AlertCircle, ArrowLeft, Home, Loader2, Search, UserCircle} from 'lucide-react'
+import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 
 type Tab = 'profile' | 'account' | 'jobs'
 
-// ─── Placeholder Tabs ──────────────────────────────────────────────────
+export const DashboardLayout: React.FC = () => {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const {data: user, isLoading: isLoadingUser, error: userError} = useUser()
 
-const CustomerProfileTab: React.FC = () => (
-    <div className="rounded-xl border bg-card p-8 text-center">
-        <Home className="mx-auto h-10 w-10 text-muted-foreground mb-3"/>
-        <h3 className="font-medium text-lg">Customer Profile</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-            Coming soon — manage your address, preferences, and account details.
-        </p>
-    </div>
-)
-// ─── Main Page ─────────────────────────────────────────────────────────
+    // Determine active tab from URL, or default to 'profile'
+    const path = location.pathname
+    const activeTab: Tab = path.startsWith('/dashboard/jobs') ? 'jobs'
+        : path === '/dashboard/account' ? 'account'
+            : 'profile'
 
-export const CustomerDashboardPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('profile')
-
-    const { data: user, isLoading: isLoadingUser, error: userError } = useUser()
+    // Check if we're in a nested job flow (view/edit/create)
+    const isJobFlow = path.startsWith('/dashboard/jobs/') && path !== '/dashboard/jobs'
 
     if (isLoadingUser) {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
-                <p className="text-sm font-medium text-muted-foreground">
-                    Loading your dashboard...
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Loading your dashboard...</p>
             </div>
         )
     }
@@ -40,61 +35,40 @@ export const CustomerDashboardPage: React.FC = () => {
             <div className="mx-auto max-w-md my-12 border-destructive/50 bg-destructive/10 text-destructive rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
-                    <h3 className="font-semibold text-sm">
-                        System Synchronization Failure
-                    </h3>
-                    <p className="text-xs opacity-90 mt-1">
-                        We ran into trouble loading your account data. Please try
-                        again later.
-                    </p>
+                    <h3 className="font-semibold text-sm">System Synchronization Failure</h3>
+                    <p className="text-xs opacity-90 mt-1">We ran into trouble loading your account data.</p>
                 </div>
             </div>
         )
     }
 
-    const navItems: { id: Tab; label: string; icon: React.ReactNode }[] = [
-        {
-            id: 'profile',
-            label: 'Profile',
-            icon: <Home className="h-4 w-4"/>,
-        },
-        {
-            id: 'account',
-            label: 'Account',
-            icon: <UserCircle className="h-4 w-4"/>,
-        },
-        {
-            id: 'jobs',
-            label: 'Jobs',
-            icon: <Search className="h-4 w-4"/>,
-        }
+    const navItems: { id: Tab; label: string; icon: React.ReactNode; path: string }[] = [
+        {id: 'profile', label: 'Profile', icon: <Home className="h-4 w-4"/>, path: '/dashboard'},
+        {id: 'account', label: 'Account', icon: <UserCircle className="h-4 w-4"/>, path: '/dashboard/account'},
+        {id: 'jobs', label: 'Jobs', icon: <Search className="h-4 w-4"/>, path: '/dashboard/jobs'},
     ]
 
     return (
         <div className="min-h-screen bg-background flex">
             {/* ═══ Sidebar ═══════════════════════════════════════════════════ */}
             <aside className="w-64 border-r bg-card hidden lg:flex flex-col">
-                {/* Sidebar Header — User Identity */}
                 <div data-testid="sidebar-header" className="p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                            {user?.name.charAt(0).toUpperCase()}
+                            {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                            <p className="font-medium text-sm truncate">{user?.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                                {user?.role_type}
-                            </p>
+                            <p className="font-medium text-sm truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{user.role_type}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar Navigation */}
                 <nav className="flex-1 p-4 space-y-1">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => setActiveTab(item.id)}
+                            onClick={() => navigate(item.path)}
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                                 activeTab === item.id
                                     ? 'bg-primary/10 text-primary font-medium'
@@ -107,21 +81,20 @@ export const CustomerDashboardPage: React.FC = () => {
                     ))}
                 </nav>
 
-                {/* Sidebar Footer: Logout */}
                 <div className="p-4 border-t">
                     <LogoutButton/>
                 </div>
             </aside>
 
-            {/* ═══ Mobile Header + Main Content ══════════════════════════════ */}
+            {/* ═══ Main Area ═════════════════════════════════════════════════ */}
             <div className="flex-1 flex flex-col">
-                {/* Mobile Top Bar */}
+                {/* Mobile Header */}
                 <header data-testid="mobile-header" className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
-                            {user?.name.charAt(0).toUpperCase()}
+                            {user.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium text-sm">{user?.name}</span>
+                        <span className="font-medium text-sm">{user.name}</span>
                     </div>
                     <LogoutButton/>
                 </header>
@@ -131,7 +104,7 @@ export const CustomerDashboardPage: React.FC = () => {
                     {navItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => setActiveTab(item.id)}
+                            onClick={() => navigate(item.path)}
                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                                 activeTab === item.id
                                     ? 'bg-primary/10 text-primary font-medium'
@@ -144,11 +117,22 @@ export const CustomerDashboardPage: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Main Content */}
-                <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
-                    {activeTab === 'profile' && <CustomerProfileTab/>}
-                    {activeTab === 'account' && <AccountTab/>}
-                    {activeTab === 'jobs' && <MyJobsPage/>}
+                {/* Back button for nested job flows (mobile + desktop) */}
+                {isJobFlow && (
+                    <div className="px-4 pt-4 lg:px-8">
+                        <button
+                            onClick={() => navigate('/dashboard/jobs')}
+                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4"/>
+                            Back to My Jobs
+                        </button>
+                    </div>
+                )}
+
+                {/* Content */}
+                <main className="flex-1 container mx-auto px-4 py-6 lg:px-8 max-w-5xl">
+                    <Outlet/>
                 </main>
             </div>
         </div>

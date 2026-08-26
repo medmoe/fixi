@@ -1,3 +1,6 @@
 export {CustomerDashboardPage} from './pages/CustomerDashboardPage'
 export {LocationPicker} from './components/LocationPicker'
 export {useReverseGeocode} from './hooks/useReverseGeocode'
+export {CustomerAccountPage} from './pages/CustomerAccountPage'
+export {CustomerProfilePage} from './pages/CustomerProfilePage'
+export {CustomerJobsPage} from './pages/CustomerJobsPage'
