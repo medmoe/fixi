@@ -46,6 +46,7 @@ class CRUDJobApplication(FastCRUD[
         new_application = JobApplication(**internal.model_dump())
         db.add(new_application)
         await db.flush()
+        await db.commit()
         await db.refresh(new_application)
 
         # re-fetch with eager-loaded relationships so JobApplicationRead can

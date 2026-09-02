@@ -1,10 +1,9 @@
 import React from "react";
+import {Link} from "react-router-dom";
 import {Loader2} from "lucide-react";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {JobRead, JobStatus} from "@/features/job";
-import {useGetJobs} from "../hooks/useGetJobs";
-import {JobsFilterPanel} from "./JobsFilterPanel.tsx";
+import {JobRead, JobsFilterPanel, JobStatus, useGetJobs} from "@/features/job";
 
 const statusColors: Record<JobStatus, string> = {
     open: "bg-green-100 text-green-800",
@@ -15,26 +14,31 @@ const statusColors: Record<JobStatus, string> = {
 };
 
 const JobCard: React.FC<{ job: JobRead }> = ({job}) => (
-    <article
-        aria-label={`Job posting: ${job.title}`}
-        className="p-4 border rounded-lg space-y-2"
+    <Link
+        to={`/jobs/${job.id}`}
+        className="block rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-        <div className="flex items-start justify-between gap-2">
-            <p className="font-medium">{job.title}</p>
-            <Badge className={statusColors[job.status]}>{job.status.replace("_", " ")}</Badge>
-        </div>
-        {job.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
-        )}
-        <div className="flex items-center justify-between text-sm pt-2 border-t text-muted-foreground">
-            <span>
-                {job.budget_min && job.budget_max
-                    ? `$${job.budget_min} – $${job.budget_max}`
-                    : "Budget not specified"}
-            </span>
-            {job.display_location && <span>{job.display_location}</span>}
-        </div>
-    </article>
+        <article
+            aria-label={`Job posting: ${job.title}`}
+            className="p-4 space-y-2"
+        >
+            <div className="flex items-start justify-between gap-2">
+                <p className="font-medium">{job.title}</p>
+                <Badge className={statusColors[job.status]}>{job.status.replace("_", " ")}</Badge>
+            </div>
+            {job.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
+            )}
+            <div className="flex items-center justify-between text-sm pt-2 border-t text-muted-foreground">
+                <span>
+                    {job.budget_min && job.budget_max
+                        ? `$${job.budget_min} – $${job.budget_max}`
+                        : "Budget not specified"}
+                </span>
+                {job.display_location && <span>{job.display_location}</span>}
+            </div>
+        </article>
+    </Link>
 );
 
 const JobCardSkeleton: React.FC = () => (

@@ -1,9 +1,8 @@
-// src/app/router.tsx
 import {createBrowserRouter, Navigate, RouteObject} from 'react-router-dom'
 import {AuthInitializer, LoginPage, RegisterPage} from '@/features/auth'
 import {LandingPage} from '@/features/landing'
 import ProtectedRoute from '@/components/ProtectedRoute.tsx'
-import {JobCreateForm, JobDetailPage, JobEditForm} from '@/features/job'
+import {JobCreateForm, JobDetailPage, JobEditForm, JobsTab} from '@/features/job'
 import {WorkerDetailPage, WorkerSearchPage} from '@/features/worker'
 import {RoleBasedDashboard} from '@/features/auth/components/RoleBasedDashboard.tsx'
 import {CustomerAccountPage, CustomerJobsPage, CustomerProfilePage} from "@/features/customer";
@@ -17,11 +16,6 @@ export const routes: RouteObject[] = [
             {path: '/register', element: <RegisterPage/>},
 
             // ═══ Single /dashboard entry — dispatches by role ═══════════
-            // RoleBasedDashboard renders WorkerDashboardPage (flat, no
-            // nested routes) or DashboardLayout (renders <Outlet/> for the
-            // customer children below). No allowedRoles restriction here —
-            // any authenticated user may hit /dashboard; the dispatcher
-            // itself decides what that means per-role.
             {
                 path: '/dashboard',
                 element: (
@@ -30,11 +24,6 @@ export const routes: RouteObject[] = [
                     </ProtectedRoute>
                 ),
                 children: [
-                    // Only ever rendered when RoleBasedDashboard renders
-                    // DashboardLayout (i.e. customer) — DashboardLayout's
-                    // own <Outlet/> is what displays these. For workers,
-                    // no Outlet exists in the tree, so these never render
-                    // regardless of URL.
                     {index: true, element: <CustomerProfilePage/>},
                     {path: 'account', element: <CustomerAccountPage/>},
                     {path: 'jobs', element: <CustomerJobsPage/>},
@@ -44,7 +33,15 @@ export const routes: RouteObject[] = [
                 ]
             },
 
-            // ═══ Standalone job routes (workers or public view) ═════════
+            // ═══ Public job routes — browse-all, open to everyone ═══════
+            // JobsTab has no auth coupling and works standalone here exactly
+            // as it does embedded in the worker dashboard. JobDetailPage
+            // internally branches on auth state (see its own logic) to show
+            // the right call to action — apply, log in to apply, or nothing.
+            {
+                path: '/jobs',
+                element: <JobsTab/>
+            },
             {
                 path: '/jobs/:id',
                 element: <JobDetailPage/>
@@ -59,7 +56,6 @@ export const routes: RouteObject[] = [
             },
 
             // ═══ Redirect old standalone customer routes ═════════════════
-            {path: '/jobs', element: <Navigate to="/dashboard/jobs" replace/>},
             {path: '/jobs/create', element: <Navigate to="/dashboard/jobs/create" replace/>},
             {path: '/jobs/:id/edit', element: <Navigate to="/dashboard/jobs/:id/edit" replace/>},
         ]

@@ -1,4 +1,4 @@
-import {TradeCategoryRead} from "@/features/worker";
+import {TradeCategoryRead, WorkerProfileWithTradesRead} from "@/features/worker";
 import {UserPublicRead} from "@/features/user";
 
 export interface JobBase {
@@ -55,4 +55,23 @@ export interface JobFilters {
     budget_min?: number;
     budget_max?: number;
     search?: string;
+}
+
+export type ApplicationStatus = "pending" | "accepted" | "rejected";
+
+export interface JobApplicationBase {
+    message?: string | null;
+}
+
+export interface JobApplicationRead extends JobApplicationBase {
+    id: number;
+    status: ApplicationStatus;
+    job: JobRead | null;
+    worker_profile: WorkerProfileWithTradesRead | null;
+}
+
+export interface JobApplicationCreate extends JobApplicationBase {}
+
+export interface JobApplicationUpdate {
+    status: ApplicationStatus;
 }

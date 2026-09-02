@@ -11,6 +11,7 @@ import {JobRead, JobStatus} from '@/features/job';
 import {PaginatedListResponse} from "@/features/types"
 import {useUser} from '@/features/user';
 import {useDeleteJob} from "@/features/job/hooks/useDeleteJob";
+import {JobApplicationsPanel} from "@/features/job/components/JobApplicationsPanel";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,} from "@/components/ui/alert-dialog";
 
 const statusColors: Record<JobStatus, string> = {
@@ -107,7 +108,7 @@ export const MyJobsPage: React.FC = () => {
             ) : (
                 <div className="space-y-4">
                     {jobs.map((job: JobRead) => (
-                        <Card key={job.id} className="hover:shadow-md transition-shadow">
+                        <Card key={job.id} className="hover:shadow-md transition-shadow overflow-hidden">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -161,12 +162,15 @@ export const MyJobsPage: React.FC = () => {
                                 </div>
                             </CardHeader>
                             {job.description && (
-                                <CardContent className="pt-0">
+                                <CardContent className="pt-0 pb-3">
                                     <p className="text-sm text-muted-foreground line-clamp-2">
                                         {job.description}
                                     </p>
                                 </CardContent>
                             )}
+
+                            {/* ─── Applications Panel ───────────────────────── */}
+                            <JobApplicationsPanel jobId={job.id} jobStatus={job.status}/>
                         </Card>
                     ))}
                 </div>

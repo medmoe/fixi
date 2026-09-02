@@ -109,6 +109,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     env_file:
       - ./src/.env
     working_dir: /app/src
