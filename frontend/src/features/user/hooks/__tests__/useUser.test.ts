@@ -10,10 +10,19 @@ import {USER_QUERY_KEY, UserRead, useUser} from '@/features/user'
 vi.mock('@/lib/api/userApi', () => ({
     userApi: {
         me: vi.fn(),
+        getUser: vi.fn(),
         updateUser: vi.fn(),
         changePassword: vi.fn(),
         deleteUser: vi.fn(),
     }
+}))
+
+// useUser guards on getAccessToken() — without a token the query is disabled
+// and userApi.me is never called.
+vi.mock('@/lib/api/apiClient.ts', () => ({
+    getAccessToken: vi.fn(() => 'test-token'),
+    setAccessToken: vi.fn(),
+    default: {get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn()},
 }))
 
 const mockUser: UserRead = {
@@ -51,7 +60,7 @@ describe('useUser', () => {
                 () => useUser(),
                 {wrapper: createWrapper(queryClient)}
             )
-            await waitFor(() => expect(userApi.me).toHaveBeenCalledWith())
+            await waitFor(() => expect(userApi.me).toHaveBeenCalled())
         })
         it('calls userApi.me exactly once on mount', async () => {
             vi.mocked(userApi.me).mockResolvedValue(mockUser)

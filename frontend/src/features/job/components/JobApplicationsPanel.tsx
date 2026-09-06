@@ -24,19 +24,36 @@ interface JobApplicationsPanelProps {
 export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId, jobStatus}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [appPendingAction, setAppPendingAction] = useState<{ app: JobApplicationRead; newStatus: ApplicationStatus } | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
-    const {data, isLoading, isError} = useJobApplications(isExpanded ? jobId : null);
+    const {data, isLoading, isError} = useJobApplications(jobId);
     const {mutate: updateApplication, isPending: isUpdating} = useUpdateJobApplication();
 
     const applications = data?.data ?? [];
     const pendingCount = applications.filter(a => a.status === "pending").length;
 
+    const openActionDialog = (app: JobApplicationRead, newStatus: ApplicationStatus) => {
+        setActionError(null);
+        setAppPendingAction({app, newStatus});
+    };
+
+    const closeActionDialog = () => {
+        setAppPendingAction(null);
+        setActionError(null);
+    };
+
     const handleConfirmAction = () => {
         if (!appPendingAction) return;
         const {app, newStatus} = appPendingAction;
+        setActionError(null);
         updateApplication(
             {jobId, appId: app.id, payload: {status: newStatus}},
-            {onSuccess: () => setAppPendingAction(null)}
+            {
+                onSuccess: () => closeActionDialog(),
+                onError: (error) => {
+                    setActionError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+                },
+            }
         );
     };
 
@@ -46,7 +63,13 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
         if (appPendingAction.newStatus === "accepted") {
             return {
                 title: "Accept Application?",
-                description: `You are about to accept ${workerName}'s application. This will reject all other pending applications for this job and the job status will change to "assigned".`,
+                // FIX: previous copy claimed this cascades to reject other
+                // applications and flips the job to "assigned" — the backend
+                // (crud_job_applications.update_job_application) doesn't do
+                // either of those, it only updates this one application's
+                // status. Update this copy again if/when that cascade is
+                // actually implemented server-side.
+                description: `Accept ${workerName}'s application for this job? You can still update other applications' statuses separately afterward.`,
                 confirmLabel: "Accept",
                 confirmClass: "bg-green-600 text-white hover:bg-green-700",
             };
@@ -129,7 +152,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                                     key={app.id}
                                     application={app}
                                     jobStatus={jobStatus}
-                                    onAction={(newStatus) => setAppPendingAction({app, newStatus})}
+                                    onAction={(newStatus) => openActionDialog(app, newStatus)}
                                     isUpdating={isUpdating}
                                 />
                             ))}
@@ -140,13 +163,21 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
 
             <AlertDialog
                 open={appPendingAction !== null}
-                onOpenChange={(open) => !open && setAppPendingAction(null)}
+                onOpenChange={(open) => !open && closeActionDialog()}
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{dialogContent?.title}</AlertDialogTitle>
                         <AlertDialogDescription>{dialogContent?.description}</AlertDialogDescription>
                     </AlertDialogHeader>
+
+                    {actionError && (
+                        <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-2">
+                            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0"/>
+                            <span>{actionError}</span>
+                        </div>
+                    )}
+
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
                         <AlertDialogAction
@@ -188,7 +219,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
 
     const initials = getInitials(user);
     const workerName = getWorkerName(application);
-    const trades = worker?.trade_categories?.map(t => t.trade_category?.name).join(", ") || null;
+    const trades = worker?.trade_categories
+        ?.map(t => t.trade_category?.name)
+        .filter((name): name is string => Boolean(name))
+        .join(", ") || null;
 
     return (
         <Card className="overflow-hidden">
@@ -294,9 +328,13 @@ function getWorkerName(app: JobApplicationRead): string {
 
 function getInitials(user?: UserPublicRead): string {
     if (!user) return "??";
-    const words = user.name.split(" ")
+    // FIX: guard against an empty/whitespace-only name, which previously
+    // produced a silent blank avatar fallback instead of the "??" default.
+    const trimmedName = user.name?.trim();
+    if (!trimmedName) return "??";
+    const words = trimmedName.split(" ").filter(Boolean);
     if (words.length === 1) {
         return words[0].charAt(0).toUpperCase();
     }
-    return words[0].charAt(0) + words[words.length - 1].charAt(0);
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
 }

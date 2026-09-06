@@ -7,10 +7,10 @@ export const useJobApplications = (jobId: number | null) => {
     return useQuery<PaginatedListResponse<JobApplicationRead>>({
         queryKey: ["job-applications", jobId],
         queryFn: () => {
-            if (!jobId) throw new Error("Job ID is required");
+            if (jobId === null) throw new Error("Job ID is required");
             return jobApi.getJobApplications(jobId);
         },
-        enabled: !!jobId,
+        enabled: jobId !== null,
         staleTime: 1000 * 30, // 30 seconds
     });
 };

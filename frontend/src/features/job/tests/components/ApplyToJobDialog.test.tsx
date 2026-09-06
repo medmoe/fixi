@@ -40,7 +40,8 @@ describe("ApplyToJobDialog", () => {
         await act(async () => {
             await userEvent.click(screen.getByRole("button", {name: /apply to this job/i}));
         });
-        expect(screen.getByText(/apply to "fix sink"/i)).toBeInTheDocument();
+        // The title uses &ldquo;/&rdquo; HTML entities which render as curly quotes.
+        expect(screen.getByText(/apply to “fix sink”/i)).toBeInTheDocument();
     });
 
     it("calls mutate with the typed message on submit", async () => {

@@ -1,10 +1,12 @@
 import {describe, expect, it, vi} from 'vitest';
 import {render, screen, waitFor} from '@testing-library/react';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {QueryClientProvider} from '@tanstack/react-query';
 import {JobDetailPage} from '@/features/job/pages/JobDetailPage.tsx';
 import {jobApi} from '@/lib';
 import {mockJob} from "@/mocks";
+import {createTestQueryClient, createTestStore} from "@/test/renderWithProviders";
+import {Provider} from "react-redux";
 
 vi.mock('@/lib', () => ({
     jobApi: {
@@ -12,19 +14,20 @@ vi.mock('@/lib', () => ({
     },
 }));
 
-const createWrapper = (initialEntries: string[]) => {
-    const queryClient = new QueryClient({
-        defaultOptions: {queries: {retry: false}},
-    });
+const createWrapper = (initialEntries: string[], preloadedState = {}) => {
+    const queryClient = createTestQueryClient();
+    const store = createTestStore(preloadedState)
     return ({}: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>
-            <MemoryRouter initialEntries={initialEntries} future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
-                <Routes>
-                    <Route path="/jobs/:id" element={<JobDetailPage/>}/>
-                    <Route path="/jobs" element={<div>Jobs List</div>}/>
-                </Routes>
-            </MemoryRouter>
-        </QueryClientProvider>
+        <Provider store={store}>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={initialEntries} future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
+                    <Routes>
+                        <Route path="/jobs/:id" element={<JobDetailPage/>}/>
+                        <Route path="/jobs" element={<div>Jobs List</div>}/>
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
+        </Provider>
     );
 };
 describe('JobDetailPage', () => {
