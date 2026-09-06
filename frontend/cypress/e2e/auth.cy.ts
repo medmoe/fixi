@@ -212,19 +212,15 @@ describe('Authentication E2E', () => {
         })
 
         it('should redirect authenticated workers from login to dashboard', () => {
-            // Simulate already logged in worker by intercepting the auth state check
-            // Since token is in memory, we need to login first
-            cy.intercept('POST', '**/api/v1/auth/login', {
+            // All intercepts must be registered BEFORE cy.visit() to avoid a race where
+            // the app fires requests before the interceptors are in place.
+            // We use the refresh-mock pattern to simulate an already-authenticated session:
+            // useInitAuth fires POST /auth/refresh on every fresh page load; a mocked 200
+            // sets the token in memory and the app skips the login form entirely.
+            cy.intercept('POST', '**/api/v1/auth/refresh', {
                 statusCode: 200,
-                body: {access_token: 'existing-token'},
-            }).as('autoLogin')
-
-
-            cy.visit('/login')
-            fillLoginForm({username_or_email: 'test@test.com', password: 'password123'})
-            submitLogin()
-            cy.wait('@autoLogin')
-
+                body: {access_token: 'worker-token'},
+            }).as('authRefresh')
             cy.intercept('GET', '**/api/v1/user/me', {
                 statusCode: 200,
                 body: {id: 1, role_type: 'worker', name: 'test', username: 'test', email: 'test@test.com'},
@@ -233,17 +229,15 @@ describe('Authentication E2E', () => {
                 statusCode: 200,
                 body: {id: 1, hourly_rate: 100, bio: 'Test worker bio', service_radius_km: 20},
             }).as('workerProfile')
-            cy.intercept('POST', '**/api/v1/auth/refresh', {
-                statusCode: 200,
-                body: {access_token: 'refreshed-token'},
-            }).as('refresh')
 
-            cy.wait('@refresh')
+            cy.visit('/login')
+            cy.wait('@authRefresh')
             cy.wait('@userMe')
             cy.wait('@workerProfile')
             cy.url().should('include', '/dashboard')
 
-            // Now try visiting login again — should redirect to dashboard
+            // Re-visiting /login should redirect again (cy.visit causes a full reload so
+            // useInitAuth fires refresh again — still caught by the persistent intercept).
             cy.visit('/login')
             cy.url().should('include', '/dashboard')
         })
