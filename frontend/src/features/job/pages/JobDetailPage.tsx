@@ -1,13 +1,15 @@
 import React from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
-import {ArrowLeft, Calendar, DollarSign, MapPin, User, Wrench} from 'lucide-react';
+import {ArrowLeft, Calendar, DollarSign, LogIn, MapPin, User, Wrench} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Skeleton} from '@/components/ui/skeleton';
 import {jobApi} from '@/lib';
-import {JobRead, JobStatus} from '@/features/job';
+import {ApplyToJobDialog, JobRead, JobStatus} from '@/features/job';
+import {useAuth} from '@/features/auth';
+import {useUser} from '@/features/user';
 
 const statusColors: Record<JobStatus, string> = {
     open: 'bg-green-100 text-green-800',
@@ -20,13 +22,22 @@ const statusColors: Record<JobStatus, string> = {
 export const JobDetailPage: React.FC = () => {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const jobId = Number(id);
+
+    const {isAuthenticated} = useAuth();
+    const {data: user} = useUser();
 
     const {data: job, isLoading, isError, error} = useQuery<JobRead>({
         queryKey: ['job', jobId],
         queryFn: () => jobApi.getJob(jobId),
         enabled: !isNaN(jobId),
     });
+
+    // Returns wherever the user actually came from — public /jobs listing,
+    // a worker's dashboard Jobs tab, or a shared direct link all "just
+    // work" without this page needing to know which one it was.
+    const handleBack = () => navigate(-1);
 
     if (isLoading) {
         return (
@@ -44,30 +55,27 @@ export const JobDetailPage: React.FC = () => {
                 <p className="text-destructive mb-4">
                     {error instanceof Error ? error.message : 'Job not found'}
                 </p>
-                <Button onClick={() => navigate('/jobs')} variant="outline">
+                <Button onClick={handleBack} variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Back to Jobs
+                    Back
                 </Button>
             </div>
         );
     }
 
+    const isWorker = user?.role_type === 'worker';
+    const isOpen = job.status === 'open';
+
     return (
         <div className="max-w-3xl mx-auto p-6 space-y-6">
+            <Button onClick={handleBack} variant="ghost" size="sm" className="-ml-2">
+                <ArrowLeft className="mr-2 h-4 w-4"/>
+                Back
+            </Button>
+
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate('/jobs')}
-                        className="mb-2 -ml-2"
-                    >
-                        <ArrowLeft className="mr-1 h-4 w-4"/>
-                        Back
-                    </Button>
-                    <h1 className="text-2xl font-bold">{job.title}</h1>
-                </div>
+                <h1 className="text-2xl font-bold">{job.title}</h1>
                 <Badge className={statusColors[job.status]}>
                     {job.status.replace('_', ' ')}
                 </Badge>
@@ -117,6 +125,44 @@ export const JobDetailPage: React.FC = () => {
                             {job.description}
                         </p>
                     </div>
+                </>
+            )}
+
+            {/* Apply — unauthenticated visitors get a login CTA, workers
+                get the real apply flow. Customers (and any other role) see
+                nothing here — applying isn't something they can do. */}
+            {!isAuthenticated && (
+                <>
+                    <Separator/>
+                    {isOpen ? (
+                        <Button
+                            className="w-full"
+                            onClick={() => navigate('/login', {state: {from: location.pathname}})}
+                        >
+                            <LogIn className="mr-2 h-4 w-4"/>
+                            Log in to Apply
+                        </Button>
+                    ) : (
+                        <p className="text-xs text-muted-foreground text-center">
+                            This job is no longer accepting applications.
+                        </p>
+                    )}
+                </>
+            )}
+
+            {isAuthenticated && isWorker && (
+                <>
+                    <Separator/>
+                    <ApplyToJobDialog
+                        jobId={job.id}
+                        jobTitle={job.title}
+                        disabled={!isOpen}
+                    />
+                    {!isOpen && (
+                        <p className="text-xs text-muted-foreground text-center">
+                            This job is no longer accepting applications.
+                        </p>
+                    )}
                 </>
             )}
         </div>

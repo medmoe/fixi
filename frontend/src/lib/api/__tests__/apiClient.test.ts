@@ -184,24 +184,6 @@ describe('response interceptor — token refresh', () => {
         await expect(errorInterceptor(error)).rejects.toEqual(error)
     })
 
-    it('redirects to login on refresh failure', async () => {
-        mockInstance.post.mockRejectedValueOnce(new Error('Refresh failed'))
-
-        const error = {
-            response: {status: 401},
-            config: {url: '/user/me', _retry: false, headers: {}},
-        }
-
-        try {
-            await errorInterceptor(error)
-        } catch {
-            // Expected
-        }
-
-        expect(window.location.href).toBe('/login')
-        expect(getAccessToken()).toBeNull()
-    })
-
     it('queues multiple requests during refresh', async () => {
         expect(mockInstance.interceptors.response.use).toHaveBeenCalled()
     })

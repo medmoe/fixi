@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from "vitest";
 import {render, screen, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {act} from "react";
-import {FilterPanel, TradeCategoryRead, TradeCategoryWithChildren} from "@/features/worker";
+import {WorkerFilterPanel, TradeCategoryRead, TradeCategoryWithChildren} from "@/features/worker";
 import {workerApi} from "@/lib";
 import {createQueryClient, createWrapper} from "../helpers.tsx";
 import type {WorkerSearchFilters} from "../../types";
@@ -31,7 +31,7 @@ describe("FilterPanel", () => {
     });
 
     const renderPanel = (filters: WorkerSearchFilters = {}) =>
-        render(<FilterPanel filters={filters} onChange={onChange}/>, {wrapper: createWrapper(queryClient)});
+        render(<WorkerFilterPanel filters={filters} onChange={onChange}/>, {wrapper: createWrapper(queryClient)});
 
     // ------------------------------------------------------------------ //
     //  Trade category                                                      //

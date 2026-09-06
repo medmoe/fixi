@@ -1,6 +1,10 @@
 // src/test/setup.ts
 import '@testing-library/jest-dom'
 import {vi} from 'vitest'
+
+const { getComputedStyle } = window
+window.getComputedStyle = (elt) => getComputedStyle(elt)
+
 // ResizeObserver — used by Radix Slider, Tooltip, Popover
 global.ResizeObserver = class ResizeObserver {
     observe() {

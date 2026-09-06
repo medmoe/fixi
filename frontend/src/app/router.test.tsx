@@ -17,6 +17,12 @@ vi.mock('@/features/worker', () => ({
     WorkerDetailPage: () => <div>Worker Detail Page</div>
 }))
 
+// RoleBasedDashboard calls useUser() which needs QueryClientProvider.
+// The router test only cares about routing structure, so mock it.
+vi.mock('@/features/auth/components/RoleBasedDashboard.tsx', () => ({
+    RoleBasedDashboard: () => <div>Role Based Dashboard</div>,
+}))
+
 // 3. Mock ProtectedRoute based on your app's auth state
 vi.mock('@/components/ProtectedRoute.tsx', () => ({
     default: ({children}: { children: React.ReactNode }) => <div data-testid="protected-route">{children}</div>,
@@ -43,11 +49,11 @@ describe('App Router', () => {
         expect(screen.getByText('Register Page')).toBeInTheDocument()
     })
 
-    it('wraps protected worker dashboard inside ProtectedRoute at "/dashboard"', () => {
+    it('wraps RoleBasedDashboard inside ProtectedRoute at "/dashboard"', () => {
         renderWithRouter(['/dashboard'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
-        expect(screen.getByText('Worker Dashboard')).toBeInTheDocument()
+        expect(screen.getByText('Role Based Dashboard')).toBeInTheDocument()
     })
 
     it('renders WorkerSearchPage at "/workers/search"', () => {

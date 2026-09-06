@@ -11,6 +11,7 @@ import {JobRead, JobStatus} from '@/features/job';
 import {PaginatedListResponse} from "@/features/types"
 import {useUser} from '@/features/user';
 import {useDeleteJob} from "@/features/job/hooks/useDeleteJob";
+import {JobApplicationsPanel} from "@/features/job/components/JobApplicationsPanel";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,} from "@/components/ui/alert-dialog";
 
 const statusColors: Record<JobStatus, string> = {
@@ -87,7 +88,7 @@ export const MyJobsPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">My Jobs</h1>
-                <Button onClick={() => navigate('/jobs/create')}>
+                <Button onClick={() => navigate('create')}>
                     <Plus className="mr-2 h-4 w-4"/>
                     Post New Job
                 </Button>
@@ -98,7 +99,7 @@ export const MyJobsPage: React.FC = () => {
                 <Card>
                     <CardContent className="p-8 text-center text-muted-foreground">
                         <p className="mb-4">You haven&apos;t posted any jobs yet.</p>
-                        <Button onClick={() => navigate('/jobs/create')} variant="outline">
+                        <Button onClick={() => navigate('create')} variant="outline">
                             <Plus className="mr-2 h-4 w-4"/>
                             Post Your First Job
                         </Button>
@@ -107,7 +108,7 @@ export const MyJobsPage: React.FC = () => {
             ) : (
                 <div className="space-y-4">
                     {jobs.map((job: JobRead) => (
-                        <Card key={job.id} className="hover:shadow-md transition-shadow">
+                        <Card key={job.id} className="hover:shadow-md transition-shadow overflow-hidden">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -133,7 +134,7 @@ export const MyJobsPage: React.FC = () => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => navigate(`/jobs/${job.id}`)}
+                                            onClick={() => navigate(`${job.id}`)}
                                             aria-label={`View job ${job.title}`}
                                         >
                                             <Eye className="h-4 w-4"/>
@@ -142,7 +143,7 @@ export const MyJobsPage: React.FC = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                                                onClick={() => navigate(`${job.id}/edit`)}
                                                 aria-label={`Edit job ${job.title}`}
                                             >
                                                 <Pencil className="h-4 w-4"/>
@@ -161,12 +162,15 @@ export const MyJobsPage: React.FC = () => {
                                 </div>
                             </CardHeader>
                             {job.description && (
-                                <CardContent className="pt-0">
+                                <CardContent className="pt-0 pb-3">
                                     <p className="text-sm text-muted-foreground line-clamp-2">
                                         {job.description}
                                     </p>
                                 </CardContent>
                             )}
+
+                            {/* ─── Applications Panel ───────────────────────── */}
+                            <JobApplicationsPanel jobId={job.id} jobStatus={job.status}/>
                         </Card>
                     ))}
                 </div>

@@ -1,0 +1,165 @@
+### ═══════════════════════════════════════════════════════════════════════
+### Job Application Workflow — worker applies, duplicate apply, customer views
+### ═══════════════════════════════════════════════════════════════════════
+
+### register worker
+POST http://localhost:8000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "wendy worker",
+  "username": "wendyworker",
+  "email": "wendy.worker@test.com",
+  "password": "1A123456",
+  "role_type": "worker"
+}
+
+### login worker and capture token
+POST http://localhost:8000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email": "wendy.worker@test.com",
+  "password": "1A123456"
+}
+
+> {% client.global.set("worker_token", response.body.access_token) %}
+
+### register customer
+POST http://localhost:8000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "carl customer",
+  "username": "carlcustomer",
+  "email": "carl.customer@test.com",
+  "password": "1A123456",
+  "role_type": "customer"
+}
+
+### login customer and capture token
+POST http://localhost:8000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username_or_email": "carl.customer@test.com",
+  "password": "1A123456"
+}
+
+> {% client.global.set("customer_token", response.body.access_token) %}
+
+### worker creates their worker profile — required before applying
+### (create_job_application 404s if no WorkerProfile exists for the user)
+PATCH http://localhost:8000/api/v1/worker-profile
+Content-Type: application/json
+Authorization: Bearer {{worker_token}}
+
+{
+  "bio": "Licensed plumber, 8 years experience.",
+  "service_radius_km": 25,
+  "years_of_experience": 20,
+  "hourly_rate": 200,
+  "is_available": true
+}
+
+### customer creates a job — capture job id for the rest of the flow
+POST http://localhost:8000/api/v1/jobs
+Content-Type: application/json
+Authorization: Bearer {{customer_token}}
+
+{
+  "title": "Fix leaking kitchen sink",
+  "description": "Sink has been dripping for a week, needs a plumber.",
+  "trade_category_id": 1,
+  "budget_min": 50.00,
+  "budget_max": 150.00,
+  "display_location": "Brooklyn, NY",
+  "latitude": 40.6782,
+  "longitude": -73.9442
+}
+
+> {% client.global.set("job_id", response.body.id) %}
+
+### ─── happy path: worker applies to the job ───────────────────────────────
+POST http://localhost:8000/api/v1/jobs/{{job_id}}/apply
+Content-Type: application/json
+Authorization: Bearer {{worker_token}}
+
+{
+  "message": "I'm a licensed plumber available this week, happy to help."
+}
+
+> {%
+    client.test("worker application created", function() {
+        client.assert(response.status === 201, "expected 201, got " + response.status);
+        client.assert(response.body.status === "pending", "expected status pending, got " + response.body.status);
+    });
+    client.global.set("application_id", response.body.id);
+%}
+
+### ─── duplicate apply: same worker applies to the same job again → should fail ───
+POST http://localhost:8000/api/v1/jobs/{{job_id}}/apply
+Content-Type: application/json
+Authorization: Bearer {{worker_token}}
+
+{
+  "message": "Just checking in again about this job."
+}
+
+> {%
+    client.test("duplicate application rejected with 400", function() {
+        client.assert(response.status === 400, "expected 400, got " + response.status);
+        client.assert(response.body.detail.includes("already applied"), "unexpected error message: " + response.body.detail);
+    });
+%}
+
+### ─── customer views applications for their job ───────────────────────────
+GET http://localhost:8000/api/v1/jobs/{{job_id}}/applications
+Authorization: Bearer {{customer_token}}
+
+> {%
+    client.test("customer can list applications", function() {
+        client.assert(response.status === 200, "expected 200, got " + response.status);
+        client.assert(response.body.total_count >= 1, "expected at least 1 application");
+        client.assert(response.body.data.some(a => a.id === client.global.get("application_id")), "created application not found in list");
+    });
+%}
+
+### ─── negative: worker (not the job owner) cannot view applications ───────
+GET http://localhost:8000/api/v1/jobs/{{job_id}}/applications
+Authorization: Bearer {{worker_token}}
+
+> {%
+    client.test("worker forbidden from viewing applications", function() {
+        client.assert(response.status === 403, "expected 403, got " + response.status);
+    });
+%}
+
+### ─── negative: customer cannot apply to a job (wrong role) ───────────────
+POST http://localhost:8000/api/v1/jobs/{{job_id}}/apply
+Content-Type: application/json
+Authorization: Bearer {{customer_token}}
+
+{
+  "message": "Can I apply to my own job?"
+}
+
+> {%
+    client.test("customer forbidden from applying", function() {
+        client.assert(response.status === 403, "expected 403, got " + response.status);
+    });
+%}
+
+### ─── negative: unauthenticated request is rejected ───────────────────────
+POST http://localhost:8000/api/v1/jobs/{{job_id}}/apply
+Content-Type: application/json
+
+{
+  "message": "No token attached."
+}
+
+> {%
+    client.test("unauthenticated apply rejected", function() {
+        client.assert(response.status === 401, "expected 401, got " + response.status);
+    });
+%}

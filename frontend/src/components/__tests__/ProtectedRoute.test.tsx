@@ -188,14 +188,16 @@ describe('ProtectedRoute', () => {
             expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
         })
 
-        it('redirects customer to landing when accessing worker-only /dashboard', () => {
+        it('renders children for customer when no allowedRoles restriction is set', () => {
+            // /dashboard no longer carries allowedRoles — RoleBasedDashboard
+            // handles per-role dispatching internally, so ProtectedRoute passes
+            // any authenticated user through.
             renderWithRouter({
                 initialRoute: '/dashboard',
                 authState: {isLoading: false, isAuthenticated: true},
                 userState: {data: mockCustomerUser, isLoading: false, error: null},
             })
-            expect(screen.getByTestId('landing-page')).toBeInTheDocument()
-            expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
+            expect(screen.getByTestId('protected-content')).toBeInTheDocument()
         })
 
         it('redirects customer to landing when role not in allowedRoles', () => {
