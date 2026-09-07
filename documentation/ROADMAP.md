@@ -1,274 +1,290 @@
-Here's a comprehensive system design for a **Worker Marketplace Platform** — think Uber but for skilled trades.
+# Fixi — Project Roadmap
+
+**Target market:** Algeria (DZ)
+**Currency:** Algerian Dinar (DZD / DA)
+**Languages:** Arabic (primary, RTL), French (secondary), Tamazight (future)
 
 ---
 
-## 🏗️ System Overview
+## System Overview
+
+Fixi is a worker marketplace platform — customers post skilled-trade jobs, workers apply, customers accept. Think Uber for Algerian tradespeople (plumbers, electricians, masons, carpenters, painters, HVAC technicians).
 
 ```
-Customer → Search/Book Worker → Worker Accepts → Job Done → Review
-```
-
----
-
-## 📁 Project Structure
-
-```
-worker-marketplace/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── routes/
-│   │   │       ├── auth.py
-│   │   │       ├── customers.py
-│   │   │       ├── workers.py
-│   │   │       ├── jobs.py
-│   │   │       ├── bookings.py
-│   │   │       └── reviews.py
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   └── security.py
-│   │   ├── models/
-│   │   │   ├── user.py
-│   │   │   ├── worker.py
-│   │   │   ├── job.py
-│   │   │   ├── booking.py
-│   │   │   └── review.py
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   │   ├── matching.py
-│   │   │   ├── notification.py
-│   │   │   └── payment.py
-│   │   └── main.py
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Home.tsx
-│   │   │   ├── Search.tsx
-│   │   │   ├── WorkerProfile.tsx
-│   │   │   ├── BookingFlow.tsx
-│   │   │   └── Dashboard/
-│   │   │       ├── CustomerDashboard.tsx
-│   │   │       └── WorkerDashboard.tsx
-│   │   ├── components/
-│   │   └── store/
-└── docker-compose.yml
+Customer → Post Job → Workers Apply → Customer Accepts → Job Done → Review
 ```
 
 ---
 
-## 🗄️ Database Schema
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI + SQLAlchemy 2.0 |
+| Database | PostgreSQL + PostGIS + Alembic |
+| Auth | JWT (access + refresh tokens) + SMS OTP |
+| Frontend | React + TypeScript + Vite |
+| Mobile | React Native (Expo) |
+| State | Redux Toolkit + React Query |
+| Real-time | WebSockets (job status, notifications) |
+| Payments | Chargily Pay (CIB + Edahabia) + cash-on-delivery |
+| Notifications | Mailjet (email) + Firebase (push) + SMS (Twilio/local aggregator) |
+| Maps | OpenStreetMap + Nominatim (free, no billing) |
+| File Storage | AWS S3 or OVH Object Storage (EU-West, low latency to DZ) |
+| Containerization | Docker + Docker Compose |
+| Hosting | OVH Roubaix (France) or AWS eu-south-1 (Milan) — best ping to Algeria |
+
+### Algeria-specific decisions
+
+- **Payments**: Stripe is not available in Algeria. We use [Chargily Pay](https://chargily.com/), which supports CIB (bank cards) and Edahabia (Algeria Poste digital wallet). Cash-on-delivery is supported as a fallback since it dominates Algeria's market.
+- **No Stripe escrow**: Platform commission is collected via a subscription or flat fee from workers, not per-transaction escrow.
+- **SMS OTP**: Phone-based verification is more reliable than email for the Algerian general public. Djezzy, Mobilis, and Ooredoo coverage must be tested.
+- **RTL support**: Full Arabic right-to-left layout required. French is left-to-right. The UI must switch direction dynamically.
+- **Maps**: Nominatim (OpenStreetMap) is already integrated — no Google Maps billing.
+- **Data compliance**: Algerian law 18-07 on personal data protection (equivalent to GDPR). Data stored in EU is acceptable; no requirement for local hosting yet.
+- **ID verification**: Workers are verified via CNI (Carte Nationale d'Identité) document upload — stored in S3 with restricted access.
+
+---
+
+## Database Schema
 
 ### Users & Roles
+
 ```sql
--- Base user (shared by customers and workers)
 users
-├── id (UUID)
+├── id
 ├── email
+├── phone              -- required for SMS OTP
 ├── password_hash
-├── phone
-├── role         -- "customer" | "worker" | "admin"
+├── role               -- "customer" | "worker" | "admin"
 ├── full_name
 ├── avatar_url
 ├── is_verified
+├── preferred_language -- "ar" | "fr"
 ├── created_at
 
--- Worker-specific profile
 worker_profiles
-├── id (UUID)
-├── user_id      → users.id
-├── trade        -- "bricklayer" | "carpenter" | "electrician" | "cook" ...
+├── id
+├── user_id            → users.id
+├── trade_category_id  → trade_categories.id
 ├── bio
-├── hourly_rate
+├── hourly_rate        -- in DZD
 ├── years_experience
-├── location     -- city/region
-├── lat / lng    -- for geo-based search
+├── display_location   -- city/commune text
+├── lat / lng
+├── service_radius_km
 ├── is_available
+├── is_verified        -- CNI checked by admin
 ├── avg_rating
 ├── total_jobs
 
--- Worker certifications/skills
-worker_skills
+worker_certifications
 ├── id
-├── worker_id    → worker_profiles.id
-├── skill_name
-├── certified    -- bool
-├── cert_doc_url
+├── worker_id          → worker_profiles.id
+├── cert_name
+├── cert_doc_url       -- S3 key
+├── verified_at
+
+trade_categories
+├── id
+├── name_ar            -- e.g. سباك
+├── name_fr            -- e.g. Plombier
+├── slug               -- "plumber"
 ```
 
-### Jobs & Bookings
+### Jobs & Applications
+
 ```sql
--- Job posted by customer
 jobs
-├── id (UUID)
-├── customer_id  → users.id
+├── id
+├── customer_id        → users.id
+├── trade_category_id  → trade_categories.id
 ├── title
 ├── description
-├── trade_needed -- "electrician" etc.
-├── location
+├── display_location
 ├── lat / lng
-├── budget
-├── status       -- "open" | "assigned" | "in_progress" | "completed" | "cancelled"
-├── scheduled_at
+├── budget_min / budget_max  -- in DZD
+├── status             -- "open" | "assigned" | "completed" | "cancelled"
 ├── created_at
 
--- Booking = worker assigned to job
-bookings
-├── id (UUID)
-├── job_id       → jobs.id
-├── worker_id    → users.id
-├── customer_id  → users.id
-├── status       -- "pending" | "accepted" | "rejected" | "completed"
-├── agreed_rate
-├── started_at
-├── completed_at
-├── payment_status -- "unpaid" | "paid" | "refunded"
+job_applications
+├── id
+├── job_id             → jobs.id
+├── worker_id          → worker_profiles.id
+├── status             -- "pending" | "accepted" | "rejected"
+├── message
+├── created_at
 
--- Reviews (both directions)
 reviews
-├── id (UUID)
-├── booking_id   → bookings.id
-├── reviewer_id  → users.id
-├── reviewee_id  → users.id
-├── rating       -- 1–5
+├── id
+├── job_id             → jobs.id
+├── reviewer_id        → users.id
+├── reviewee_id        → users.id
+├── rating             -- 1–5
 ├── comment
 ├── created_at
 ```
 
 ---
 
-## 🔌 API Endpoints
+## API Surface
 
 ### Auth
 ```
-POST   /auth/register          -- customer or worker signup
-POST   /auth/login             -- returns JWT
-POST   /auth/refresh           -- refresh token
+POST   /auth/register
+POST   /auth/login
+POST   /auth/refresh
+POST   /auth/logout
+POST   /auth/otp/send      -- SMS OTP to phone
+POST   /auth/otp/verify
 ```
 
 ### Workers
 ```
-GET    /workers                -- search workers (filter by trade, location, rating)
-GET    /workers/:id            -- worker public profile
-GET    /workers/me/profile     -- worker's own dashboard
-PUT    /workers/me/profile     -- update availability, rate, bio
-GET    /workers/me/bookings    -- incoming job requests
-PUT    /workers/me/bookings/:id/accept
-PUT    /workers/me/bookings/:id/reject
+GET    /workers                    -- search (trade, location, radius, rating)
+GET    /workers/:id
+GET    /worker-profile             -- own profile
+PUT    /worker-profile
 ```
 
 ### Jobs
 ```
-POST   /jobs                   -- customer posts a job
-GET    /jobs                   -- customer sees their jobs
+POST   /jobs
+GET    /jobs/my                    -- customer's own jobs
 GET    /jobs/:id
-PUT    /jobs/:id/cancel
-```
-
-### Bookings
-```
-POST   /bookings               -- customer books a worker
-PUT    /bookings/:id/complete  -- mark job done
+PATCH  /jobs/:id
+DELETE /jobs/:id
+GET    /jobs                       -- worker browse (open jobs near them)
+POST   /jobs/:id/apply
+GET    /jobs/:id/applications
+PATCH  /jobs/:id/applications/:appId   -- accept / reject
 ```
 
 ### Reviews
 ```
-POST   /reviews                -- submit review after job complete
-GET    /workers/:id/reviews    -- public reviews for a worker
+POST   /reviews
+GET    /workers/:id/reviews
 ```
 
 ---
 
-## ⚙️ Core Services
+## Matching Algorithm
 
-### 1. Matching Service
-```python
-# services/matching.py
-# When a customer searches, rank workers by:
+Worker search ranks results by:
 
-def rank_workers(trade, lat, lng, budget):
-    # 1. Filter by trade + availability
-        # 2. Filter by distance (PostGIS or Haversine formula)
-            # 3. Score by: rating (40%) + proximity (30%) + price fit (30%)
-                # 4. Return ranked list
-                ```
+1. **Trade match** — exact category filter
+2. **Distance** — PostGIS `ST_DWithin`, within worker's `service_radius_km`
+3. **Score** = `rating × 0.40 + proximity_score × 0.30 + price_fit × 0.30`
 
-### 2. Notification Service
+---
+
+## Payment Model (Algeria)
+
+No per-transaction escrow (Stripe not available).
+
 ```
-Trigger notifications for:
-- Worker: new booking request
-- Customer: worker accepted/rejected
-- Both: job status changes
-- Both: new review received
+Worker pays a monthly/quarterly subscription to be listed → platform revenue
+                    OR
+Platform takes a flat commission invoice after job completion (manual transfer via CIB)
 
-Channels: Email (SendGrid) + Push (Firebase) + In-app (WebSocket)
+Customer pays worker directly:
+  └── Cash (dominant in Algeria)
+  └── CIB card / Edahabia via Chargily Pay (online jobs)
+
+Future: Chargily Pay split payments when their marketplace API matures
 ```
 
-### 3. Payment Flow
-```
-Customer pays upfront → held in escrow
-    ↓
-    Job completed + confirmed
-        ↓
-        Funds released to worker (minus platform fee ~10–15%)
-            ↓
-            Receipt emailed to both
+---
 
-            Provider: Stripe Connect (handles marketplace payouts natively)
-            ```
+## Notification Channels
 
-            ---
-
-## 🔄 Core User Flows
-
-### Customer Flow
-```
-Register → Browse Workers (filter by trade/location/price)
-        → View Worker Profile (reviews, skills, rate)
-                → Post a Job OR Direct Book
-                        → Worker Accepts → Job In Progress
-                                → Mark Complete → Pay → Leave Review
-                                ```
-
-### Worker Flow
-```
-Register → Build Profile (trade, skills, certs, rate, location)
-         → Set Availability
-                  → Receive Booking Requests
-                           → Accept/Reject → Do the Job
-                                    → Get Paid → Receive Review
-                                    ```
-
-                                    ---
-
-## 🧱 Tech Stack Summary
-
-| Layer | Technology |
+| Event | Channel |
 |---|---|
-| Backend | FastAPI + SQLAlchemy 2.0 |
-| Database | PostgreSQL + Alembic migrations |
-| Auth | JWT (access + refresh tokens) |
-| Frontend | React + TypeScript + Vite |
-| State | Zustand |
-| Real-time | WebSockets (job status, chat) |
-| Payments | Stripe Connect |
-| Notifications | SendGrid (email) + Firebase (push) |
-| Search | PostGIS for geo queries |
-| Containerization | Docker + Docker Compose |
-| File Storage | AWS S3 (avatars, cert docs) |
+| New job application | In-app + push (Firebase) |
+| Application accepted/rejected | In-app + SMS + push |
+| Job status change | In-app + push |
+| New review received | In-app + email (Mailjet) |
+| Worker verification approved | SMS + email |
 
 ---
 
-## 🚀 Build Order
+## Build Timeline
 
-1. **Week 1** — Auth system (register/login for both roles), user profiles
-2. **Week 2** — Worker profiles, trade categories, availability toggling
-3. **Week 3** — Job posting, worker search + filtering, geo-based ranking
-4. **Week 4** — Booking flow (request → accept/reject → in progress)
-5. **Week 5** — Payments via Stripe Connect + escrow logic
-6. **Week 6** — Reviews, ratings, worker score recalculation
-7. **Week 7** — Notifications (email + real-time WebSocket)
-8. **Week 8** — Polish: dashboards, admin panel, testing, Docker prod setup
+### Phase 1 — Core Auth & Profiles `COMPLETE`
+- User registration / login (customer + worker roles)
+- JWT access + refresh token flow
+- Worker profile CRUD
+- Trade categories seed data (Arabic + French names)
+
+### Phase 2 — Jobs & Applications `COMPLETE`
+- Customer: post, edit, delete jobs
+- Worker: browse open jobs, apply
+- Customer: view applications, accept / reject
+- Optimistic UI updates on status change
+
+### Phase 3 — Search & Discovery `COMPLETE`
+- Worker search by trade category
+- Geo-based search with Nominatim + PostGIS radius filter
+- Customer and worker dashboards
+
+### Phase 4 — Testing & Stability `COMPLETE`
+- Vitest unit tests for all hooks and components
+- Cypress E2E tests: full job posting workflow, auth flows
+- GitHub Actions CI on pull requests (lint, type-check, unit tests, E2E)
+
+### Phase 5 — Reviews & Ratings `Oct 2026`
+- Post-job review form (customer reviews worker, worker reviews customer)
+- Star rating aggregation on worker profile
+- Review list on public worker profile page
+
+### Phase 6 — Notifications `Oct–Nov 2026`
+- In-app notification feed (WebSocket)
+- Firebase push notifications (web + mobile)
+- Email via Mailjet (Arabic + French templates)
+- SMS OTP for phone verification (Twilio with DZ number testing)
+
+### Phase 7 — i18n & RTL `Nov 2026`
+- Arabic (ar) + French (fr) language files
+- RTL layout switching for Arabic
+- Number and date formatting for DZ locale (e.g. DA currency symbol)
+- Trade category names displayed in user's preferred language
+
+### Phase 8 — Payments `Dec 2026`
+- Chargily Pay integration (CIB + Edahabia checkout)
+- Worker subscription billing
+- Invoice generation (PDF, Arabic + French)
+- Admin panel: subscription status, manual commission tracking
+
+### Phase 9 — Admin & Verification `Dec 2026–Jan 2027`
+- Admin panel: user management, worker CNI verification queue
+- Flagged review moderation
+- Platform analytics (jobs posted, applications, conversion rate)
+
+### Phase 10 — Production Deployment `Jan 2027`
+- OVH Roubaix VPS or AWS eu-south-1 (Milan)
+- Nginx reverse proxy + SSL (Let's Encrypt)
+- PostgreSQL with daily backups to S3
+- Docker Compose production config with secrets management
+- Domain: `.dz` TLD registration (via ANIC)
+- Load testing for Algerian peak hours (Ramadan traffic spikes)
+
+### Phase 11 — Mobile App Polish `Feb 2027`
+- React Native (Expo) — iOS + Android
+- Arabic RTL on mobile
+- Offline-tolerant (poor connectivity in rural wilayas)
+- App Store + Google Play submission
 
 ---
 
-Want me to go deeper on any specific part — like the database models in SQLAlchemy, the matching algorithm, the Stripe Connect integration, or the React booking flow?
+## Algeria Launch Checklist
+
+- [ ] All UI text available in Arabic (Darija-friendly MSA) and French
+- [ ] RTL layout fully tested on Arabic
+- [ ] Chargily Pay sandbox + production credentials configured
+- [ ] SMS OTP tested on Djezzy, Mobilis, and Ooredoo SIM cards
+- [ ] Trade category list reviewed by local tradespeople (wilaya coverage)
+- [ ] Privacy policy compliant with Algerian law 18-07
+- [ ] Terms of service in Arabic and French
+- [ ] `.dz` domain registered via ANIC
+- [ ] Support contact: local phone number (not +1/+44)
+- [ ] Load test simulating Algerian traffic patterns
