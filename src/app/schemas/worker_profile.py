@@ -33,6 +33,8 @@ class WorkerProfileRead(WorkerProfileBase):
     user_id: int
     is_verified: bool
     available_since: Annotated[datetime | None, Field(default=None)] = None
+    average_rating: Annotated[Decimal | None, Field(default=None)] = None
+    review_count: Annotated[int, Field(default=0)] = 0
 
 
 class WorkerProfileCreate(WorkerProfileBase):
@@ -117,8 +119,7 @@ class WorkerSortBy(str, Enum):
     distance = "distance"
     hourly_rate = "hourly_rate"
     experience = "experience"
-    # rating intentionally omitted — no rating column exists on WorkerProfile yet.
-    # Add here once that schema/migration lands.
+    # rating intentionally omitted — sorting by average_rating is a separate feature, not part of the schema/migration work.
 
 
 class WorkerProfileFilter(BaseModel):

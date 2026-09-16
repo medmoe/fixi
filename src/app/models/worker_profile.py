@@ -36,6 +36,10 @@ class WorkerProfile(Base):
     user: Mapped["User"] = relationship("User", lazy="raise", init=False)
     worker_trades: Mapped[list["WorkerTrade"]] = relationship("WorkerTrade", back_populates="worker_profile", lazy="raise", init=False, passive_deletes=True)
 
+    # rating
+    average_rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), default=None)
+    review_count: Mapped[int] = mapped_column(default=0)
+
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
 

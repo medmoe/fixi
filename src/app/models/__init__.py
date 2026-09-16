@@ -4,6 +4,7 @@ from .job import Job, JobStatus
 from .job_application import ApplicationStatus, JobApplication
 from .portfolio_image import PortfolioImage
 from .rate_limit import RateLimit
+from .review import Review
 from .tier import Tier
 from .trade_category import TradeCategory
 from .user import User, UserRole
