@@ -144,7 +144,7 @@ class TestUploadAvatar:
         url = response.json()["avatar_url"]
         assert url.startswith("http")
         assert "avatars/" in url
-        assert str(test_worker_profile.id) in url
+        assert str(test_worker_profile.user_id) in url  # _upload_image_file keys the file by user_id, not profile id
 
 
 class TestGetWorkerProfilePublic:
