@@ -176,7 +176,7 @@ services:
   #      retries: 20
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: minio
     command: server /data --console-address ":9001"
     env_file:
@@ -195,7 +195,7 @@ services:
 
   # One-shot container to ensure the uploads bucket exists on startup
   minio-setup:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: minio-setup
     depends_on:
       minio:
