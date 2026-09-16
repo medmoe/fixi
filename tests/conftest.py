@@ -14,7 +14,6 @@ from httpx import AsyncClient, ASGITransport
 from redis import Redis
 from sqlalchemy import text, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from uuid6 import uuid7
 
@@ -43,13 +42,18 @@ test_engine = create_async_engine(
     poolclass=NullPool,
     future=True
 )
-testSessionLocal = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
 
 TEST_PASSWORD = "testpassword123"
 
 
-@pytest_asyncio.fixture(scope="function")
-async def async_session() -> AsyncGenerator[AsyncSession, None]:
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def _test_db_schema() -> AsyncGenerator[None, None]:
+    """
+    Creates the test schema once per test session instead of per test function.
+    Dropping/recreating every table, index, and constraint on each of the
+    ~900 tests was the dominant cost in the suite — each test's isolation now
+    comes from `async_session` rolling back an outer transaction instead.
+    """
     async with test_engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.execute(
@@ -69,14 +73,27 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    async with testSessionLocal() as session:
+    yield
+
+    await test_engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def async_session(_test_db_schema) -> AsyncGenerator[AsyncSession, None]:
+    """
+    Wraps each test in an outer transaction that's rolled back at teardown,
+    instead of recreating the schema per test. `join_transaction_mode="create_savepoint"`
+    makes a `session.commit()` inside test/app code release a SAVEPOINT rather
+    than the outer transaction, so nothing a test does is ever actually persisted.
+    """
+    async with test_engine.connect() as conn:
+        outer_transaction = await conn.begin()
+        session = AsyncSession(bind=conn, expire_on_commit=False, autoflush=False, join_transaction_mode="create_savepoint")
         try:
             yield session
         finally:
-            await session.rollback()
             await session.close()
-
-    await test_engine.dispose()
+            await outer_transaction.rollback()
 
 
 @pytest_asyncio.fixture
