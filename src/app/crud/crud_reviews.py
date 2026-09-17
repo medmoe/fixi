@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 from ..models import Review, User, WorkerProfile
 from ..schemas.review import ReviewPublicRead, ReviewSortBy, WorkerReviewsMeta, WorkerReviewsResponse
@@ -48,6 +49,7 @@ class CRUDReview:
             cursor: str | None = None,
             sort_by: ReviewSortBy = ReviewSortBy.recent,
     ) -> WorkerReviewsResponse:
+        sort_column: InstrumentedAttribute[Any]
         if sort_by == ReviewSortBy.highest_rated:
             sort_column = Review.rating
         else:
