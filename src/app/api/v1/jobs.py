@@ -14,8 +14,10 @@ from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...models import Job, UserRole
 from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
 from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
+from ...schemas.review import ReviewEligibility
 from ...schemas.utils import parse_wkt_point
 from ...schemas.worker_profile import WorkerProfileFilter, WorkerProfileWithTradesRead, WorkerSortBy
+from ...services.review_eligibility_service import check_review_eligibility
 from ..dependencies import get_current_user
 
 router = APIRouter(tags=["jobs"])
@@ -101,6 +103,25 @@ async def get_job(db: Annotated[AsyncSession, Depends(async_get_db)], job_id: in
         raise NotFoundException(f"Job with id {job_id} not found")
 
     return JobRead.model_validate(job)
+
+
+# ─── GET /jobs/{job_id}/review-status ──────────────────────────────────────
+@router.get("/jobs/{job_id}/review-status", response_model=ReviewEligibility, status_code=200)
+async def get_job_review_status(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> ReviewEligibility:
+    """
+    Lightweight poll endpoint so the frontend can show/hide the review CTA
+    without attempting a real submission. Runs the same three guards the
+    review-submission endpoint enforces, read-only.
+    """
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+
+    return await check_review_eligibility(db=db, job=job, user_id=current_user["id"])
 
 
 # ─── PATCH /jobs/{job_id} ───────────────────────────────────────────────────────────────────────────────────────
