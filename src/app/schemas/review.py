@@ -33,3 +33,15 @@ class WorkerReviewsResponse(BaseModel):
     data: list[ReviewPublicRead]
     next_cursor: str | None
     meta: WorkerReviewsMeta
+
+
+class ReviewEligibilityReason(str, Enum):
+    already_submitted = "already_submitted"
+    job_not_complete = "job_not_complete"
+    not_a_participant = "not_a_participant"
+
+
+class ReviewEligibility(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    can_review: bool
+    reason: ReviewEligibilityReason | None = None
