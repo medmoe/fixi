@@ -15,10 +15,12 @@ from ...core.db.database import async_get_db
 from ...core.events import publish
 from ...core.exceptions.http_exceptions import HTTPException, NotFoundException
 from ...crud.crud_portfolio_images import crud_portfolio_images
+from ...crud.crud_reviews import crud_reviews
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...models import WorkerProfile, WorkerTrade
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
+from ...schemas.review import ReviewSortBy, WorkerReviewsResponse
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
@@ -324,6 +326,30 @@ async def search_workers(
     by sort_by (distance | hourly_rate | experience — default: distance).
     """
     return await crud_worker_profiles.search_workers(db=db, filters=filters, offset=offset, limit=limit)
+
+
+# ————— GET /worker-profile/{worker_profile_id}/reviews ——————————————————
+@router.get("/{worker_profile_id}/reviews", response_model=WorkerReviewsResponse, status_code=200)
+async def get_worker_reviews(
+        # NOTE: intentionally public — no auth dependency.
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        worker_profile_id: int,
+        cursor: str | None = Query(None, description="Opaque cursor from a previous page's next_cursor"),
+        limit: int = Query(10, ge=1, le=50, description="Page size"),
+        sort: ReviewSortBy = Query(ReviewSortBy.recent, description="recent (default) or highest_rated"),
+) -> WorkerReviewsResponse:
+    """Public review list for a worker's profile page. Flagged reviews are excluded."""
+    worker_profile = await db.scalar(select(WorkerProfile).where(WorkerProfile.id == worker_profile_id))
+    if worker_profile is None:
+        raise NotFoundException(f"Worker with id {worker_profile_id} not found.")
+
+    return await crud_reviews.get_public_reviews_for_worker(
+        db=db,
+        worker_profile=worker_profile,
+        limit=limit,
+        cursor=cursor,
+        sort_by=sort,
+    )
 
 
 # ————— GET /worker-profile/{worker_profile_id} —————————————————————————
