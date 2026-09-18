@@ -13,6 +13,8 @@ export interface WorkerProfileRead {
     is_available: boolean;
     is_verified: boolean;
     available_since: string | null;
+    average_rating: string | null;
+    review_count: number;
 }
 
 export interface WorkerProfileWithTradesRead extends WorkerProfileRead {

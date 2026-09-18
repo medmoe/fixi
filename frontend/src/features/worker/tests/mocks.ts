@@ -37,6 +37,8 @@ export const mockWorker = (id: number, overrides: Partial<WorkerProfileWithTrade
     ],
     avatar_url: null,
     available_since: null,
+    average_rating: null,
+    review_count: 0,
     ...overrides
 });
 

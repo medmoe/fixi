@@ -29,6 +29,7 @@ class WorkerReviewsMeta(BaseModel):
     average_rating: Decimal | None
     review_count: int
     total_pages: int
+    rating_breakdown: dict[int, int]
 
 
 class WorkerReviewsResponse(BaseModel):
@@ -66,3 +67,12 @@ class ReviewSubmitResponse(BaseModel):
     comment: str | None
     role: UserRole
     created_at: datetime
+
+
+class WorkerReviewEligibility(BaseModel):
+    """Powers the 'Leave a review' CTA on a worker's public profile page --
+    unlike ReviewEligibility (job-scoped), this aggregates across all of the
+    caller's jobs with this specific worker."""
+    model_config = ConfigDict(extra="forbid")
+    can_review: bool
+    job_id: int | None = None

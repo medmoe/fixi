@@ -4,7 +4,7 @@ import math
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
@@ -110,11 +110,19 @@ class CRUDReview:
             sort_value = last.rating if sort_by == ReviewSortBy.highest_rated else last.created_at
             next_cursor = _encode_cursor(sort_value, last.id)
 
+        breakdown_result = await db.execute(
+            select(Review.rating, func.count(Review.id))
+            .where(Review.reviewee_id == worker_profile.user_id, Review.is_flagged.is_(False))
+            .group_by(Review.rating)
+        )
+        counts_by_rating: dict[int, int] = dict(breakdown_result.tuples().all())
+
         review_count = worker_profile.review_count
         meta = WorkerReviewsMeta(
             average_rating=worker_profile.average_rating,
             review_count=review_count,
             total_pages=math.ceil(review_count / limit) if review_count else 0,
+            rating_breakdown={star: counts_by_rating.get(star, 0) for star in range(1, 6)},
         )
 
         return WorkerReviewsResponse(data=data, next_cursor=next_cursor, meta=meta)

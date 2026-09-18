@@ -6,6 +6,7 @@ import {QueryClient} from '@tanstack/react-query'
 import {mockWorker} from '@/features/worker/tests/mocks.ts'
 import {useWorkerProfilePublic} from '@/features/worker/hooks/useWorkerProfile'
 import {WorkerDetailPage} from '@/features/worker/pages/WorkerDetailPage'
+import {useWorkerReviewEligibility, useWorkerReviews} from '@/features/review'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,12 @@ vi.mock('@/features/worker/hooks/useWorkerProfile', async () => {
     }
 })
 
+// This page mounts <ReviewsSection>, which fetches reviews on its own —
+// mocked here so this file stays a pure WorkerDetailPage test, not an
+// integration test that hits the network.
+vi.mock('@/features/review/hooks/useWorkerReviews')
+vi.mock('@/features/review/hooks/useWorkerReviewEligibility')
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('WorkerDetailPage', () => {
@@ -43,6 +50,17 @@ describe('WorkerDetailPage', () => {
         vi.mocked(useParams).mockReturnValue({
             workerId: '123',
         })
+
+        vi.mocked(useWorkerReviews).mockReturnValue({
+            reviews: [],
+            meta: {average_rating: null, review_count: 0, total_pages: 0, rating_breakdown: {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}},
+            isLoading: false,
+            isError: false,
+            hasMore: false,
+            loadMore: vi.fn(),
+            isFetchingNextPage: false,
+        } as any)
+        vi.mocked(useWorkerReviewEligibility).mockReturnValue({data: undefined} as any)
     })
 
     // ─── Loading state ─────────────────────────────────────────────────────────
