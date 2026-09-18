@@ -1,7 +1,14 @@
 import {describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {act} from "react";
 import {StarRating} from "@/features/review";
+
+const focusStar = async (name: string) => {
+    await act(async () => {
+        screen.getByRole("radio", {name}).focus();
+    });
+};
 
 describe("StarRating", () => {
     it("renders 5 stars, each with its own aria-label", () => {
@@ -15,7 +22,9 @@ describe("StarRating", () => {
         const onChange = vi.fn();
         render(<StarRating value={0} onChange={onChange}/>);
 
-        await userEvent.click(screen.getByRole("radio", {name: "3 stars"}));
+        await act(async () => {
+            await userEvent.click(screen.getByRole("radio", {name: "3 stars"}));
+        });
 
         expect(onChange).toHaveBeenCalledWith(3);
     });
@@ -36,8 +45,10 @@ describe("StarRating", () => {
         const onChange = vi.fn();
         render(<StarRating value={2} onChange={onChange}/>);
 
-        screen.getByRole("radio", {name: "2 stars"}).focus();
-        await userEvent.keyboard("{ArrowRight}");
+        await focusStar("2 stars");
+        await act(async () => {
+            await userEvent.keyboard("{ArrowRight}");
+        });
 
         expect(onChange).toHaveBeenCalledWith(3);
     });
@@ -46,8 +57,10 @@ describe("StarRating", () => {
         const onChange = vi.fn();
         render(<StarRating value={2} onChange={onChange}/>);
 
-        screen.getByRole("radio", {name: "2 stars"}).focus();
-        await userEvent.keyboard("{ArrowLeft}");
+        await focusStar("2 stars");
+        await act(async () => {
+            await userEvent.keyboard("{ArrowLeft}");
+        });
 
         expect(onChange).toHaveBeenCalledWith(1);
     });
@@ -55,14 +68,21 @@ describe("StarRating", () => {
     it("does not go above 5 or below 1", async () => {
         const onChange = vi.fn();
         const {rerender} = render(<StarRating value={5} onChange={onChange}/>);
-        screen.getByRole("radio", {name: "5 stars"}).focus();
-        await userEvent.keyboard("{ArrowRight}");
+
+        await focusStar("5 stars");
+        await act(async () => {
+            await userEvent.keyboard("{ArrowRight}");
+        });
         expect(onChange).toHaveBeenCalledWith(5);
 
         onChange.mockClear();
-        rerender(<StarRating value={1} onChange={onChange}/>);
-        screen.getByRole("radio", {name: "1 star"}).focus();
-        await userEvent.keyboard("{ArrowLeft}");
+        await act(async () => {
+            rerender(<StarRating value={1} onChange={onChange}/>);
+        });
+        await focusStar("1 star");
+        await act(async () => {
+            await userEvent.keyboard("{ArrowLeft}");
+        });
         expect(onChange).toHaveBeenCalledWith(1);
     });
 

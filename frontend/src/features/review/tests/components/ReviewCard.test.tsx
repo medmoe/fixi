@@ -30,7 +30,11 @@ const clickSubmit = async () => {
 
 describe("ReviewCard", () => {
     beforeEach(() => {
-        vi.clearAllMocks();
+        // resetAllMocks (not clearAllMocks) — clearAllMocks only wipes call
+        // history, not a custom mockImplementation set by an earlier test
+        // (e.g. the API-failure test below), which would otherwise leak
+        // into whichever test runs next.
+        vi.resetAllMocks();
         vi.mocked(useSubmitReview).mockReturnValue({mutate: mutateMock} as never);
     });
 
