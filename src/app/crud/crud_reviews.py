@@ -8,8 +8,25 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from ..models import Review, User, WorkerProfile
-from ..schemas.review import ReviewPublicRead, ReviewSortBy, WorkerReviewsMeta, WorkerReviewsResponse
+from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException
+from ..models import Job, Review, User, UserRole, WorkerProfile
+from ..schemas.review import (
+    ReviewCreateRequest,
+    ReviewEligibilityReason,
+    ReviewPublicRead,
+    ReviewSortBy,
+    ReviewSubmitResponse,
+    WorkerReviewsMeta,
+    WorkerReviewsResponse,
+)
+from ..services.rating_service import recalculate_worker_rating
+from ..services.review_eligibility_service import check_review_eligibility, get_accepted_worker_user_id
+
+_ELIGIBILITY_ERROR_MESSAGES = {
+    ReviewEligibilityReason.not_a_participant: "You are not a participant in this job.",
+    ReviewEligibilityReason.job_not_complete: "This job is not yet complete.",
+    ReviewEligibilityReason.already_submitted: "You have already reviewed this job.",
+}
 
 
 def _encode_cursor(sort_value: Any, review_id: int) -> str:
@@ -35,10 +52,10 @@ def _format_display_name(full_name: str) -> str:
 
 class CRUDReview:
     """
-    Not a FastCRUD subclass -- there's no Review create/update schema yet
-    (that lands with the review-submission endpoint), and this query
-    (composite keyset cursor, reviewer-name join, privacy-filtered columns)
-    doesn't fit FastCRUD's generic verbs anyway.
+    Not a FastCRUD subclass -- submission needs the eligibility guards plus
+    an atomic rating-snapshot recalculation, and the public list needs a
+    composite keyset cursor, a reviewer-name join, and privacy-filtered
+    columns. None of that fits FastCRUD's generic verbs.
     """
 
     async def get_public_reviews_for_worker(
@@ -101,6 +118,61 @@ class CRUDReview:
         )
 
         return WorkerReviewsResponse(data=data, next_cursor=next_cursor, meta=meta)
+
+    async def submit_review(
+            self,
+            db: AsyncSession,
+            job: Job,
+            user_id: int,
+            payload: ReviewCreateRequest,
+    ) -> ReviewSubmitResponse:
+        """
+        Submits a review for a completed job, in whichever direction the
+        caller is entitled to (customer -> worker or worker -> customer,
+        inferred from the caller's relationship to the job -- never taken
+        from the client). Runs the same eligibility guards as the read-only
+        /review-status endpoint, then -- when the reviewee is the worker --
+        recalculates their rating snapshot in the same transaction as the
+        insert, per the atomicity requirement this was built for.
+        """
+        eligibility = await check_review_eligibility(db, job, user_id)
+        if not eligibility.can_review:
+            assert eligibility.reason is not None
+            message = _ELIGIBILITY_ERROR_MESSAGES[eligibility.reason]
+            if eligibility.reason == ReviewEligibilityReason.not_a_participant:
+                raise ForbiddenException(message)
+            raise BadRequestException(message)
+
+        is_customer = job.user_id == user_id
+        if is_customer:
+            role = UserRole.CUSTOMER
+            reviewee_id = await get_accepted_worker_user_id(db, job.id)
+        else:
+            role = UserRole.WORKER
+            reviewee_id = job.user_id
+
+        # eligibility already confirmed an accepted worker exists whenever is_customer is True
+        assert reviewee_id is not None
+
+        review = Review(
+            job_id=job.id,
+            reviewer_id=user_id,
+            reviewee_id=reviewee_id,
+            role=role,
+            rating=payload.rating,
+            comment=payload.comment,
+        )
+        db.add(review)
+
+        if role == UserRole.CUSTOMER:
+            # customer_profiles carries no rating snapshot -- only recalculate
+            # when the review is about a worker
+            await recalculate_worker_rating(db, worker_id=reviewee_id)
+
+        await db.commit()
+        await db.refresh(review)
+
+        return ReviewSubmitResponse.model_validate(review)
 
 
 crud_reviews = CRUDReview()
