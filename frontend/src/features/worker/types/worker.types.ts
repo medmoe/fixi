@@ -21,7 +21,7 @@ export interface WorkerProfileWithTradesRead extends WorkerProfileRead {
     trade_categories: WorkerTradeNestedRead[];
 }
 
-export type WorkerSortBy = "distance" | "hourly_rate" | "experience";
+export type WorkerSortBy = "distance" | "hourly_rate" | "experience" | "rating";
 
 export interface WorkerSearchFilters {
     trade_category_id?: number;
