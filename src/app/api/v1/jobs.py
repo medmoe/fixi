@@ -10,11 +10,12 @@ from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ...crud.crud_job_applications import crud_job_application
 from ...crud.crud_jobs import crud_jobs
+from ...crud.crud_reviews import crud_reviews
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...models import Job, UserRole
 from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
 from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
-from ...schemas.review import ReviewEligibility
+from ...schemas.review import ReviewCreateRequest, ReviewEligibility, ReviewSubmitResponse
 from ...schemas.utils import parse_wkt_point
 from ...schemas.worker_profile import WorkerProfileFilter, WorkerProfileWithTradesRead, WorkerSortBy
 from ...services.review_eligibility_service import check_review_eligibility
@@ -122,6 +123,29 @@ async def get_job_review_status(
         raise NotFoundException(f"Job with id {job_id} not found")
 
     return await check_review_eligibility(db=db, job=job, user_id=current_user["id"])
+
+
+# ─── POST /jobs/{job_id}/reviews ────────────────────────────────────────────
+@router.post("/jobs/{job_id}/reviews", response_model=ReviewSubmitResponse, status_code=201)
+async def submit_job_review(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        payload: ReviewCreateRequest,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> ReviewSubmitResponse:
+    """
+    Submit a review for a completed job — either direction (customer ->
+    worker or worker -> customer), inferred from the caller's relationship
+    to the job rather than taken from the request body. Enforces the same
+    three guards as GET .../review-status, then persists the review and
+    (when reviewing a worker) recalculates their rating snapshot in one
+    transaction.
+    """
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+
+    return await crud_reviews.submit_review(db=db, job=job, user_id=current_user["id"], payload=payload)
 
 
 # ─── PATCH /jobs/{job_id} ───────────────────────────────────────────────────────────────────────────────────────

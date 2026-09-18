@@ -1,8 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from ..models import UserRole
 
 
 class ReviewSortBy(str, Enum):
@@ -45,3 +48,21 @@ class ReviewEligibility(BaseModel):
     model_config = ConfigDict(extra="forbid")
     can_review: bool
     reason: ReviewEligibilityReason | None = None
+
+
+class ReviewCreateRequest(BaseModel):
+    """POST body -- job_id comes from the path, reviewer/reviewee/role are
+    determined server-side from the caller's relationship to the job, never
+    accepted from the client."""
+    model_config = ConfigDict(extra="forbid")
+    rating: Annotated[int, Field(ge=1, le=5)]
+    comment: Annotated[str | None, Field(max_length=1000, default=None)] = None
+
+
+class ReviewSubmitResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+    id: int
+    rating: int
+    comment: str | None
+    role: UserRole
+    created_at: datetime

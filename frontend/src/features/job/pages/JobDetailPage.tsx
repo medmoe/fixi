@@ -10,6 +10,7 @@ import {jobApi} from '@/lib';
 import {ApplyToJobDialog, JobRead, JobStatus} from '@/features/job';
 import {useAuth} from '@/features/auth';
 import {useUser} from '@/features/user';
+import {ReviewCard} from '@/features/review';
 
 const statusColors: Record<JobStatus, string> = {
     open: 'bg-green-100 text-green-800',
@@ -163,6 +164,16 @@ export const JobDetailPage: React.FC = () => {
                             This job is no longer accepting applications.
                         </p>
                     )}
+                </>
+            )}
+
+            {/* Review card — the query behind it enforces the three
+                eligibility guards server-side, so this just gates the
+                network call to when it could possibly be relevant. */}
+            {isAuthenticated && job.status === 'completed' && (
+                <>
+                    <Separator/>
+                    <ReviewCard jobId={job.id}/>
                 </>
             )}
         </div>
