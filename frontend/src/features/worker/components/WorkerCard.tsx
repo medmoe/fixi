@@ -46,10 +46,13 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                             )}
                         </div>
 
-                        {/* Rating placeholder — no rating data exists yet (see #86 follow-up) */}
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Star className="h-3 w-3" aria-hidden="true"/>
-                            <span>New</span>
+                            <span>
+                                {profile.average_rating !== null
+                                    ? `${Number(profile.average_rating).toFixed(1)} (${profile.review_count})`
+                                    : "New"}
+                            </span>
                             {profile.years_of_experience !== null && (
                                 <span>· {profile.years_of_experience} yrs exp</span>
                             )}

@@ -119,7 +119,7 @@ class WorkerSortBy(str, Enum):
     distance = "distance"
     hourly_rate = "hourly_rate"
     experience = "experience"
-    # rating intentionally omitted — sorting by average_rating is a separate feature, not part of the schema/migration work.
+    rating = "rating"
 
 
 class WorkerProfileFilter(BaseModel):

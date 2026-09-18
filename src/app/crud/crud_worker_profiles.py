@@ -87,9 +87,10 @@ class CRUDWorker(FastCRUD[
                                      is_available=False, always first.
           2. Verification boost   — within the same availability tier,
                                      is_verified=True ranks above unverified.
-          3. sort_by tiebreaker   — distance (default), hourly_rate, or
-                                     experience, applied last as the final
-                                     ordering key within tiers 1 and 2.
+          3. sort_by tiebreaker   — distance (default), hourly_rate,
+                                     experience, or rating, applied last as
+                                     the final ordering key within tiers 1
+                                     and 2.
 
         When latitude/longitude are absent, distance cannot be computed —
         sort_by=distance (the default) silently falls back to id ASC for
@@ -176,6 +177,9 @@ class CRUDWorker(FastCRUD[
             order_by_clauses.append(WorkerProfile.hourly_rate.asc())
         elif filters.sort_by == WorkerSortBy.experience:
             order_by_clauses.append(WorkerProfile.years_of_experience.desc())
+        elif filters.sort_by == WorkerSortBy.rating:
+            # workers with no reviews yet sort last, not first (NULLS FIRST is the DESC default)
+            order_by_clauses.append(WorkerProfile.average_rating.desc().nulls_last())
 
         # final deterministic tiebreaker so pagination never reorders ties
         order_by_clauses.append(WorkerProfile.id.asc())

@@ -777,6 +777,40 @@ class TestSearchWorkersRanking:
         assert ids.index(worker_mid.id) < ids.index(worker_junior.id)
 
     # ------------------------------------------------------------------ #
+    #  sort_by=rating                                                      #
+    # ------------------------------------------------------------------ #
+
+    async def test_sort_by_rating_descending(
+        self,
+        async_client: AsyncClient,
+        worker_low_rating,    # 2.50
+        worker_high_rating,   # 4.80
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "rating"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_high_rating.id) < ids.index(worker_low_rating.id)
+
+    async def test_sort_by_rating_puts_unrated_workers_last(
+        self,
+        async_client: AsyncClient,
+        worker_no_rating,
+        worker_low_rating,   # 2.50
+        worker_high_rating,  # 4.80
+    ):
+        """NULLS FIRST is Postgres's default for DESC — must be overridden so
+        workers with no reviews yet don't outrank rated ones."""
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"sort_by": "rating"},
+        )
+        ids = [w["id"] for w in response.json()["data"]]
+        assert ids.index(worker_high_rating.id) < ids.index(worker_no_rating.id)
+        assert ids.index(worker_low_rating.id) < ids.index(worker_no_rating.id)
+
+    # ------------------------------------------------------------------ #
     #  sort_by=distance without coordinates                                #
     # ------------------------------------------------------------------ #
 

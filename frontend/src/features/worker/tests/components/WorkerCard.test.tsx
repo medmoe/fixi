@@ -77,9 +77,15 @@ describe("WorkerCard", () => {
             expect(screen.queryByText(/experienced plumber/i)).not.toBeInTheDocument();
         });
 
-        it("renders a rating placeholder", () => {
-            renderCard({profile: mockWorker(1)});
+        it("renders 'New' when the worker has no rating yet", () => {
+            renderCard({profile: mockWorker(1, {average_rating: null, review_count: 0})});
             expect(screen.getByText("New")).toBeInTheDocument();
+        });
+
+        it("renders the real average rating and review count once the worker has reviews", () => {
+            renderCard({profile: mockWorker(1, {average_rating: "4.50", review_count: 12})});
+            expect(screen.getByText("4.5 (12)")).toBeInTheDocument();
+            expect(screen.queryByText("New")).not.toBeInTheDocument();
         });
 
         it("renders years of experience when present", () => {

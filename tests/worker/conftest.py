@@ -59,6 +59,29 @@ async def worker_high_rate(async_session):
 
 
 @pytest_asyncio.fixture
+async def worker_low_rating(async_session):
+    profile = await create_test_worker_profile(async_session)
+    profile.average_rating = Decimal("2.50")
+    profile.review_count = 5
+    await async_session.commit()
+    return profile
+
+
+@pytest_asyncio.fixture
+async def worker_high_rating(async_session):
+    profile = await create_test_worker_profile(async_session)
+    profile.average_rating = Decimal("4.80")
+    profile.review_count = 20
+    await async_session.commit()
+    return profile
+
+
+@pytest_asyncio.fixture
+async def worker_no_rating(async_session):
+    return await create_test_worker_profile(async_session)  # average_rating defaults to None
+
+
+@pytest_asyncio.fixture
 async def worker_junior(async_session):
     return await create_test_worker_profile(async_session, years_of_experience=1)
 
