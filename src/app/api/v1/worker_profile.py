@@ -20,10 +20,11 @@ from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...crud.crud_workers_trades import crud_worker_trades
 from ...models import WorkerProfile, WorkerTrade
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
-from ...schemas.review import ReviewSortBy, WorkerReviewsResponse
+from ...schemas.review import ReviewSortBy, WorkerReviewEligibility, WorkerReviewsResponse
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
+from ...services.review_eligibility_service import check_worker_review_eligibility
 
 router = APIRouter(tags=["workers"], prefix="/worker-profile")
 
@@ -350,6 +351,26 @@ async def get_worker_reviews(
         cursor=cursor,
         sort_by=sort,
     )
+
+
+# ————— GET /worker-profile/{worker_profile_id}/review-eligibility ———————
+@router.get("/{worker_profile_id}/review-eligibility", response_model=WorkerReviewEligibility, status_code=200)
+async def get_worker_review_eligibility(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        worker_profile_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> WorkerReviewEligibility:
+    """
+    Powers the 'Leave a review' CTA on the worker's public profile page —
+    auth required (unlike the reviews list itself), so the frontend should
+    only call this once a user is logged in, never gating the rest of the
+    section's initial render on it.
+    """
+    worker_profile_exists = await crud_worker_profiles.exists(db=db, id=worker_profile_id)
+    if not worker_profile_exists:
+        raise NotFoundException(f"Worker with id {worker_profile_id} not found.")
+
+    return await check_worker_review_eligibility(db=db, worker_profile_id=worker_profile_id, user_id=current_user["id"])
 
 
 # ————— GET /worker-profile/{worker_profile_id} —————————————————————————

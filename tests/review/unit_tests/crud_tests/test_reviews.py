@@ -117,3 +117,25 @@ class TestGetPublicReviewsForWorker:
         )
         assert [r.id for r in page2.data] == [first.id]
         assert page2.next_cursor is None
+
+    @pytest.mark.unit
+    async def test_rating_breakdown_counts_non_flagged_reviews_per_star(
+            self, async_session, test_worker_profile: WorkerProfile, test_trade_category: TradeCategory
+    ):
+        await leave_review(async_session, test_worker_profile, test_trade_category, rating=5)
+        await leave_review(async_session, test_worker_profile, test_trade_category, rating=5)
+        await leave_review(async_session, test_worker_profile, test_trade_category, rating=3)
+        # flagged reviews shouldn't count toward the breakdown either
+        await leave_review(async_session, test_worker_profile, test_trade_category, rating=1, is_flagged=True)
+
+        result = await crud_reviews.get_public_reviews_for_worker(async_session, test_worker_profile)
+
+        assert result.meta.rating_breakdown == {5: 2, 4: 0, 3: 1, 2: 0, 1: 0}
+
+    @pytest.mark.unit
+    async def test_rating_breakdown_is_all_zero_with_no_reviews(
+            self, async_session, test_worker_profile: WorkerProfile
+    ):
+        result = await crud_reviews.get_public_reviews_for_worker(async_session, test_worker_profile)
+
+        assert result.meta.rating_breakdown == {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}

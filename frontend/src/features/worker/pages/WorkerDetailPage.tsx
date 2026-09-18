@@ -5,7 +5,9 @@ import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
+import {Separator} from "@/components/ui/separator";
 import {useWorkerProfilePublic} from "@/features/worker";
+import {ReviewsSection} from "@/features/review";
 
 const getInitials = (name: string): string =>
     name
@@ -79,7 +81,11 @@ export const WorkerDetailPage: React.FC = () => {
 
                     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                         <Star className="h-4 w-4" aria-hidden="true" />
-                        <span>New</span>
+                        <span>
+                            {profile.average_rating !== null
+                                ? `${Number(profile.average_rating).toFixed(1)} (${profile.review_count} review${profile.review_count === 1 ? "" : "s"})`
+                                : "New"}
+                        </span>
                         {profile.years_of_experience !== null && (
                             <span>· {profile.years_of_experience} yrs experience</span>
                         )}
@@ -146,6 +152,9 @@ export const WorkerDetailPage: React.FC = () => {
                     Contact worker (coming soon)
                 </Button>
             </div>
+
+            <Separator />
+            <ReviewsSection workerProfileId={profile.id} />
         </div>
     );
 };

@@ -14,6 +14,8 @@ export const mockProfile: WorkerProfileWithTradesRead = {
     is_available: false,
     is_verified: true,
     available_since: null,
+    average_rating: null,
+    review_count: 0,
     trade_categories: [],
     user: {
         id: 1,

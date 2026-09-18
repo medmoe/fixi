@@ -67,6 +67,8 @@ const mockWorker: WorkerProfileWithTradesRead = {
     is_available: true,
     is_verified: true,
     available_since: null,
+    average_rating: null,
+    review_count: 0,
     trade_categories: [
         {
             id: 1,

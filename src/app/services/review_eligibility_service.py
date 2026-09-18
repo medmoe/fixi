@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import ApplicationStatus, Job, JobApplication, JobStatus, Review, WorkerProfile
-from ..schemas.review import ReviewEligibility, ReviewEligibilityReason
+from ..schemas.review import ReviewEligibility, ReviewEligibilityReason, WorkerReviewEligibility
 
 
 async def get_accepted_worker_user_id(db: AsyncSession, job_id: int) -> int | None:
@@ -42,3 +42,35 @@ async def check_review_eligibility(db: AsyncSession, job: Job, user_id: int) -> 
         return ReviewEligibility(can_review=False, reason=ReviewEligibilityReason.already_submitted)
 
     return ReviewEligibility(can_review=True)
+
+
+async def check_worker_review_eligibility(db: AsyncSession, worker_profile_id: int, user_id: int) -> WorkerReviewEligibility:
+    """
+    Powers the 'Leave a review' CTA on a worker's public profile page.
+    Unlike check_review_eligibility (scoped to one job the caller already
+    knows about), this aggregates across every job the caller has posted
+    with this specific worker to find one that's completed, was actually
+    accepted for this worker, and hasn't been reviewed by the caller yet --
+    the CTA links straight to that job.
+
+    Only customer -> worker review requests make sense here (this is a
+    read-only worker profile page); a worker looking at their own listing
+    isn't shown a CTA to review themselves.
+    """
+    already_reviewed_job_ids = select(Review.job_id).where(Review.reviewer_id == user_id)
+
+    job_id: int | None = await db.scalar(
+        select(Job.id)
+        .join(JobApplication, JobApplication.job_id == Job.id)
+        .where(
+            Job.user_id == user_id,
+            Job.status == JobStatus.COMPLETED,
+            JobApplication.worker_profile_id == worker_profile_id,
+            JobApplication.status == ApplicationStatus.ACCEPTED,
+            Job.id.not_in(already_reviewed_job_ids),
+        )
+        .order_by(Job.created_at.desc())
+        .limit(1)
+    )
+
+    return WorkerReviewEligibility(can_review=job_id is not None, job_id=job_id)

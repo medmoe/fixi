@@ -1,4 +1,4 @@
-import type {ReviewCreate, ReviewEligibility, ReviewRead} from "@/features/review";
+import type {ReviewCreate, ReviewEligibility, ReviewRead, ReviewSortBy, WorkerReviewEligibility, WorkerReviewsResponse} from "@/features/review";
 import apiClient from "./apiClient";
 
 export const reviewApi = {
@@ -8,6 +8,17 @@ export const reviewApi = {
     },
     submitReview: async (jobId: number, payload: ReviewCreate): Promise<ReviewRead> => {
         const {data} = await apiClient.post<ReviewRead>(`/jobs/${jobId}/reviews`, payload);
+        return data;
+    },
+    getWorkerReviews: async (
+        workerProfileId: number,
+        params: {cursor?: string; limit?: number; sort?: ReviewSortBy} = {}
+    ): Promise<WorkerReviewsResponse> => {
+        const {data} = await apiClient.get<WorkerReviewsResponse>(`/worker-profile/${workerProfileId}/reviews`, {params});
+        return data;
+    },
+    getWorkerReviewEligibility: async (workerProfileId: number): Promise<WorkerReviewEligibility> => {
+        const {data} = await apiClient.get<WorkerReviewEligibility>(`/worker-profile/${workerProfileId}/review-eligibility`);
         return data;
     },
 };
