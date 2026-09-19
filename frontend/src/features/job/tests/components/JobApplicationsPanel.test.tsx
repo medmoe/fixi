@@ -88,6 +88,9 @@ const mockApp = (id: number, status: JobApplicationRead['status'] = 'pending', m
     message: message ?? null,
     job: null,
     worker_profile: mockWorker,
+    accepted_at: null,
+    worker_confirmed_at: null,
+    decline_reason: null,
 });
 
 const makePage = (apps: JobApplicationRead[]) => ({

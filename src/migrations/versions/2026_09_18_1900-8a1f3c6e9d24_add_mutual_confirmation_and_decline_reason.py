@@ -28,6 +28,7 @@ def upgrade() -> None:
     op.add_column('jobs', sa.Column('customer_marked_complete_at', sa.DateTime(timezone=True), nullable=True))
     op.add_column('jobs', sa.Column('worker_marked_complete_at', sa.DateTime(timezone=True), nullable=True))
 
+    op.add_column('job_applications', sa.Column('accepted_at', sa.DateTime(timezone=True), nullable=True))
     op.add_column('job_applications', sa.Column('worker_confirmed_at', sa.DateTime(timezone=True), nullable=True))
     _decline_reason_enum.create(op.get_bind(), checkfirst=True)
     op.add_column(
@@ -47,6 +48,7 @@ def downgrade() -> None:
 
     op.drop_column('job_applications', 'decline_reason')
     op.drop_column('job_applications', 'worker_confirmed_at')
+    op.drop_column('job_applications', 'accepted_at')
 
     op.drop_column('jobs', 'worker_marked_complete_at')
     op.drop_column('jobs', 'customer_marked_complete_at')

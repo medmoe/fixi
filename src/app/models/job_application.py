@@ -47,6 +47,11 @@ class JobApplication(Base, TimestampMixin):
     # ─── Mutual assignment confirmation ─────────────────────────────────────
     # status=ACCEPTED is the customer's half; this is the worker's half. Job
     # flips to ASSIGNED (and every other application auto-rejects) once both are set.
+    # accepted_at is set explicitly when status becomes ACCEPTED -- can't reuse
+    # TimestampMixin.updated_at for this, since that gets bumped again the
+    # moment worker_confirmed_at is set, overwriting the very timestamp the
+    # timeout check needs to measure from.
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     worker_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     decline_reason: Mapped[ApplicationDeclineReason | None] = mapped_column(
         SAEnum(ApplicationDeclineReason, values_callable=lambda v: [e.value for e in v]), nullable=True, default=None

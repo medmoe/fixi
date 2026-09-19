@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastcrud import FastCRUD
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,11 +121,32 @@ class CRUDJobApplication(FastCRUD[
             already_accepted = await self.exists(db=db, job_id=job_id, status=ApplicationStatus.ACCEPTED)
             if already_accepted and application.status != ApplicationStatus.ACCEPTED:
                 raise BadRequestException("Another application is already accepted for this job")
+            # tracked separately from updated_at, which the later worker
+            # confirmation would otherwise overwrite -- the timeout check needs
+            # to measure from this specific moment
+            application.accepted_at = datetime.now(UTC)
 
         internal = JobApplicationUpdateInternal(status=object.status, decline_reason=object.decline_reason)
         await super().update(db=db, object=internal, id=app_id) # type: ignore[call-overload]
 
         return await self._get_with_relations(db=db, application_id=app_id)
+
+    async def get_my_application(self, db: AsyncSession, job_id: int, user_id: int) -> JobApplicationRead | None:
+        """Worker-facing — their own application for this job, if any. Powers
+        the confirm/withdraw/start/complete actions on the job detail page,
+        which otherwise have no way to discover the caller's application id
+        (GET .../applications is job-owner-only)."""
+        worker_profile = await db.scalar(select(WorkerProfile).where(WorkerProfile.user_id == user_id))
+        if worker_profile is None:
+            return None
+
+        application = await db.scalar(
+            select(JobApplication).where(JobApplication.job_id == job_id, JobApplication.worker_profile_id == worker_profile.id)
+        )
+        if application is None:
+            return None
+
+        return await self._get_with_relations(db=db, application_id=application.id)
 
     async def _get_with_relations(self, db: AsyncSession, application_id: int) -> JobApplicationRead:
         stmt = (

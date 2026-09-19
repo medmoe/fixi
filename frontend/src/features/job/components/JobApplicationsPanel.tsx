@@ -7,7 +7,8 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {Card, CardContent} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle} from "@/components/ui/alert-dialog";
-import {ApplicationStatus, JobApplicationRead, useJobApplications, useUpdateJobApplication} from "@/features/job";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {ApplicationDeclineReason, ApplicationStatus, DECLINE_REASON_OPTIONS, JobApplicationRead, useJobApplications, useUpdateJobApplication} from "@/features/job";
 import {UserPublicRead} from "@/features/user";
 
 const applicationStatusConfig: Record<ApplicationStatus, { label: string; icon: React.ReactNode; color: string }> = {
@@ -24,6 +25,7 @@ interface JobApplicationsPanelProps {
 export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId, jobStatus}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [appPendingAction, setAppPendingAction] = useState<{ app: JobApplicationRead; newStatus: ApplicationStatus } | null>(null);
+    const [declineReason, setDeclineReason] = useState<ApplicationDeclineReason | "">("");
     const [actionError, setActionError] = useState<string | null>(null);
 
     const {data, isLoading, isError} = useJobApplications(jobId);
@@ -34,6 +36,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
 
     const openActionDialog = (app: JobApplicationRead, newStatus: ApplicationStatus) => {
         setActionError(null);
+        setDeclineReason("");
         setAppPendingAction({app, newStatus});
     };
 
@@ -42,12 +45,14 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
         setActionError(null);
     };
 
+    const isRejecting = appPendingAction?.newStatus === "rejected";
+
     const handleConfirmAction = () => {
         if (!appPendingAction) return;
         const {app, newStatus} = appPendingAction;
         setActionError(null);
         updateApplication(
-            {jobId, appId: app.id, payload: {status: newStatus}},
+            {jobId, appId: app.id, payload: {status: newStatus, ...(isRejecting ? {decline_reason: declineReason as ApplicationDeclineReason} : {})}},
             {
                 onSuccess: () => closeActionDialog(),
                 onError: (error) => {
@@ -171,6 +176,21 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                         <AlertDialogDescription>{dialogContent?.description}</AlertDialogDescription>
                     </AlertDialogHeader>
 
+                    {isRejecting && (
+                        <Select value={declineReason} onValueChange={(value) => setDeclineReason(value as ApplicationDeclineReason)}>
+                            <SelectTrigger aria-label="Reason for rejecting">
+                                <SelectValue placeholder="Select a reason"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {DECLINE_REASON_OPTIONS.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+
                     {actionError && (
                         <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-2">
                             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0"/>
@@ -182,7 +202,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                         <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmAction}
-                            disabled={isUpdating}
+                            disabled={isUpdating || (isRejecting && !declineReason)}
                             className={dialogContent?.confirmClass}
                         >
                             {isUpdating ? (

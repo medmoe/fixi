@@ -11,6 +11,28 @@ async def _accept_application(async_session, job, worker_profile) -> JobApplicat
     return application
 
 
+class TestGetMyApplicationEndpoint:
+    """GET /jobs/{job_id}/my-application"""
+
+    async def test_returns_own_application(
+            self, async_client: AsyncClient, worker_profile_auth_headers, test_job, test_job_application
+    ):
+        response = await async_client.get(f"/api/v1/jobs/{test_job.id}/my-application", headers=worker_profile_auth_headers)
+        assert response.status_code == 200
+        assert response.json()["id"] == test_job_application.id
+
+    async def test_returns_null_when_never_applied(
+            self, async_client: AsyncClient, worker_profile_auth_headers, test_job
+    ):
+        response = await async_client.get(f"/api/v1/jobs/{test_job.id}/my-application", headers=worker_profile_auth_headers)
+        assert response.status_code == 200
+        assert response.json() is None
+
+    async def test_unauthenticated_returns_401(self, async_client: AsyncClient, test_job):
+        response = await async_client.get(f"/api/v1/jobs/{test_job.id}/my-application")
+        assert response.status_code == 401
+
+
 class TestConfirmApplicationEndpoint:
     """POST /jobs/{job_id}/applications/{app_id}/confirm"""
 

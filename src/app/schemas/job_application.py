@@ -22,6 +22,7 @@ class JobApplicationRead(JobApplicationBase):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True, extra="forbid")
     id: int
     status: ApplicationStatus
+    accepted_at: datetime | None = None
     worker_confirmed_at: datetime | None = None
     decline_reason: ApplicationDeclineReason | None = None
     job: JobRead | None = None

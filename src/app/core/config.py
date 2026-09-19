@@ -122,6 +122,14 @@ class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
 
 
+class JobLifecycleSettings(BaseSettings):
+    # how long a job can sit waiting on one side's response (worker
+    # confirmation, or the other party's completion confirmation) before the
+    # timeout cron auto-resolves it and logs a no-show. Revisit once there's
+    # real usage data -- 24h is a starting guess, not a measured value.
+    JOB_LIFECYCLE_TIMEOUT_HOURS: int = config("JOB_LIFECYCLE_TIMEOUT_HOURS", default=24)
+
+
 class CRUDAdminSettings(BaseSettings):
     CRUD_ADMIN_ENABLED: bool = config("CRUD_ADMIN_ENABLED", default=True)
     CRUD_ADMIN_MOUNT_PATH: str = config("CRUD_ADMIN_MOUNT_PATH", default="/admin")
@@ -177,6 +185,7 @@ class Settings(
     DevSettings,
     EnvironmentSettings,
     FirstUserSettings,
+    JobLifecycleSettings,
     MinIOSettings,
     NotificationSettings,
     PostgresSettings,

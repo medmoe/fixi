@@ -26,6 +26,8 @@ const mockJob = (id: number) => ({
     user: null,
     coordinates: null,
     deleted_at: null,
+    customer_marked_complete_at: null,
+    worker_marked_complete_at: null,
 });
 
 const makePage = (ids: number[], total_count: number, has_more: boolean) => ({

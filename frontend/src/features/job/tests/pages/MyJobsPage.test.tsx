@@ -61,6 +61,8 @@ const createMockJob = (overrides: Partial<JobRead> = {}): JobRead => ({
     display_location: 'Brooklyn, NY',
     updated_at: null,
     deleted_at: null,
+    customer_marked_complete_at: null,
+    worker_marked_complete_at: null,
     trade_category: null,
     user: null,
     ...overrides,

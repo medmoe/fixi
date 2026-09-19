@@ -1,4 +1,4 @@
-import {JobCreateRequest, JobFilters, JobRead, JobUpdateRequest, JobApplicationCreate, JobApplicationRead, JobApplicationUpdate} from "@/features/job";
+import {JobCreateRequest, JobFilters, JobRead, JobUpdateRequest, JobApplicationCreate, JobApplicationRead, JobApplicationUpdate, JobApplicationWithdrawRequest} from "@/features/job";
 import {PaginatedListResponse} from "@/features/types";
 import apiClient from "./apiClient";
 
@@ -40,5 +40,25 @@ export const jobApi = {
     updateJobApplication: async (jobId: number, appId: number, payload: JobApplicationUpdate): Promise<JobApplicationRead> => {
         const {data} = await apiClient.patch<JobApplicationRead>(`/jobs/${jobId}/applications/${appId}`, payload);
         return data;
-    }
+    },
+    getMyApplication: async (jobId: number): Promise<JobApplicationRead | null> => {
+        const {data} = await apiClient.get<JobApplicationRead | null>(`/jobs/${jobId}/my-application`);
+        return data;
+    },
+    confirmApplication: async (jobId: number, appId: number): Promise<JobApplicationRead> => {
+        const {data} = await apiClient.post<JobApplicationRead>(`/jobs/${jobId}/applications/${appId}/confirm`);
+        return data;
+    },
+    withdrawApplication: async (jobId: number, appId: number, payload: JobApplicationWithdrawRequest): Promise<JobApplicationRead> => {
+        const {data} = await apiClient.post<JobApplicationRead>(`/jobs/${jobId}/applications/${appId}/withdraw`, payload);
+        return data;
+    },
+    startJob: async (jobId: number): Promise<JobRead> => {
+        const {data} = await apiClient.post<JobRead>(`/jobs/${jobId}/start`);
+        return data;
+    },
+    completeJob: async (jobId: number): Promise<JobRead> => {
+        const {data} = await apiClient.post<JobRead>(`/jobs/${jobId}/complete`);
+        return data;
+    },
 }

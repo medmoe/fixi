@@ -237,6 +237,19 @@ async def get_job_applications(
     )
 
 
+# ─── GET /jobs/{job_id}/my-application ──────────────────────────────────────
+@router.get("/jobs/{job_id}/my-application", response_model=JobApplicationRead | None, status_code=200)
+async def get_my_job_application(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> JobApplicationRead | None:
+    """Worker-facing — their own application for this job, or null if they
+    never applied. Powers the confirm/withdraw/start/complete actions on the
+    job detail page."""
+    return await crud_job_application.get_my_application(db=db, job_id=job_id, user_id=current_user["id"])
+
+
 # ─── GET /jobs/{job_id}/nearby-workers ────────────────────────────────────────────────────────────────────────────────────────────
 @router.get(
     "/jobs/{job_id}/nearby-workers",

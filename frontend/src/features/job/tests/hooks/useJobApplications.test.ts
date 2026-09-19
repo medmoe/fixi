@@ -23,6 +23,9 @@ const mockApplication = (id: number, status: ApplicationStatus = 'pending'): Job
     message: null,
     job: null,
     worker_profile: null,
+    accepted_at: null,
+    worker_confirmed_at: null,
+    decline_reason: null,
 });
 
 const makePage = (apps: JobApplicationRead[]): PaginatedListResponse<JobApplicationRead> => ({
