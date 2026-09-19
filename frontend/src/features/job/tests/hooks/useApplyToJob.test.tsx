@@ -23,7 +23,7 @@ describe("useApplyToJob", () => {
     });
 
     it("calls jobApi.applyToJob with the correct jobId and payload", async () => {
-        vi.mocked(jobApi.applyToJob).mockResolvedValue({id: 1, message: null, status: "pending", job: null, worker_profile: null});
+        vi.mocked(jobApi.applyToJob).mockResolvedValue({id: 1, message: null, status: "pending", job: null, worker_profile: null, accepted_at: null, worker_confirmed_at: null, decline_reason: null});
 
         const {result} = renderHook(() => useApplyToJob(42), {wrapper: createWrapper(queryClient)});
         result.current.mutate({message: "hello"});
@@ -33,7 +33,7 @@ describe("useApplyToJob", () => {
     });
 
     it("shows a success toast and invalidates the job cache on success", async () => {
-        vi.mocked(jobApi.applyToJob).mockResolvedValue({id: 1, message: null, status: "pending", job: null, worker_profile: null});
+        vi.mocked(jobApi.applyToJob).mockResolvedValue({id: 1, message: null, status: "pending", job: null, worker_profile: null, accepted_at: null, worker_confirmed_at: null, decline_reason: null});
         const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
         const {result} = renderHook(() => useApplyToJob(42), {wrapper: createWrapper(queryClient)});

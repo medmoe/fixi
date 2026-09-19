@@ -11,3 +11,7 @@ class CustomerProfile(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, unique=True)
     saved_addresses: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
     loyalty_points: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+    # Reliability -- incremented when a job with this customer times out
+    # waiting on their confirmation/completion response. See WorkerProfile.no_show_count.
+    no_show_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")

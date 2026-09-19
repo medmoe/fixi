@@ -183,7 +183,7 @@ class TestUpdateJobApplicationEndpoint:
     ):
         response = await async_client.patch(
             f"/api/v1/jobs/{test_job.id}/applications/{test_job_application.id}",
-            json={"status": "rejected"},
+            json={"status": "rejected", "decline_reason": "scope_mismatch"},
             headers=customer_auth_headers,
         )
         assert response.status_code == 200

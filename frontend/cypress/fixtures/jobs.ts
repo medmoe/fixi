@@ -46,6 +46,8 @@ export const mockJob = (overrides: Partial<any> = {}): any => ({
     display_location: null,
     trade_category: null,
     user: {id: 1, name: 'Jane Customer'},
+    customer_marked_complete_at: null,
+    worker_marked_complete_at: null,
     ...overrides,
 })
 
@@ -75,6 +77,9 @@ export const mockApplication = (overrides: Partial<any> = {}): any => ({
         avatar_url: null,
         trade_categories: [],
     },
+    accepted_at: null,
+    worker_confirmed_at: null,
+    decline_reason: null,
     ...overrides,
 })
 

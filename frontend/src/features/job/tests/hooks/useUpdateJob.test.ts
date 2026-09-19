@@ -38,6 +38,8 @@ const mockJob: JobRead = {
     display_location: 'New York, NY',
     updated_at: '2024-01-02T00:00:00Z',
     deleted_at: null,
+    customer_marked_complete_at: null,
+    worker_marked_complete_at: null,
     trade_category: null,
     user: null,
 };

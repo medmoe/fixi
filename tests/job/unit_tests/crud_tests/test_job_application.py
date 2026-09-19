@@ -2,7 +2,7 @@ import pytest
 
 from src.app.core.exceptions.http_exceptions import NotFoundException, ForbiddenException, BadRequestException
 from src.app.crud.crud_job_applications import crud_job_application
-from src.app.models import ApplicationStatus
+from src.app.models import ApplicationDeclineReason, ApplicationStatus
 from src.app.schemas.job_application import JobApplicationCreate, JobApplicationUpdate
 
 
@@ -179,7 +179,7 @@ class TestUpdateJobApplication:
     async def test_non_owner_forbidden(
             self, async_session, test_job, other_customer_test_user, test_job_application
     ):
-        payload = JobApplicationUpdate(status=ApplicationStatus.REJECTED)
+        payload = JobApplicationUpdate(status=ApplicationStatus.REJECTED, decline_reason=ApplicationDeclineReason.OTHER)
         with pytest.raises(ForbiddenException):
             await crud_job_application.update_job_application(
                 db=async_session,
@@ -249,7 +249,7 @@ class TestUpdateJobApplication:
     async def test_update_persists_and_is_retrievable(
             self, async_session, test_job, customer_test_user, test_job_application
     ):
-        payload = JobApplicationUpdate(status=ApplicationStatus.REJECTED)
+        payload = JobApplicationUpdate(status=ApplicationStatus.REJECTED, decline_reason=ApplicationDeclineReason.OTHER)
         await crud_job_application.update_job_application(
             db=async_session,
             job_id=test_job.id,

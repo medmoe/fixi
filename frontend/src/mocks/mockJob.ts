@@ -15,6 +15,8 @@ export const mockJob: JobRead = {
     updated_at: "2024-01-15T10:30:00",
     deleted_at: null,
     is_deleted: false,
+    customer_marked_complete_at: null,
+    worker_marked_complete_at: null,
     user: null,
     trade_category: {
         id: 3,

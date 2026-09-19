@@ -7,7 +7,7 @@ import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Skeleton} from '@/components/ui/skeleton';
 import {jobApi} from '@/lib';
-import {ApplyToJobDialog, JobRead, JobStatus} from '@/features/job';
+import {ApplyToJobDialog, JobLifecycleActions, JobRead, JobStatus, useMyJobApplication} from '@/features/job';
 import {useAuth} from '@/features/auth';
 import {useUser} from '@/features/user';
 import {ReviewCard} from '@/features/review';
@@ -34,6 +34,12 @@ export const JobDetailPage: React.FC = () => {
         queryFn: () => jobApi.getJob(jobId),
         enabled: !isNaN(jobId),
     });
+
+    const isWorker = user?.role_type === 'worker';
+
+    // Also drives JobLifecycleActions below — cached by React Query, so this
+    // doesn't cause an extra request beyond the one that component makes.
+    const {data: myApplication} = useMyJobApplication(jobId, isAuthenticated && isWorker && !isNaN(jobId));
 
     // Returns wherever the user actually came from — public /jobs listing,
     // a worker's dashboard Jobs tab, or a shared direct link all "just
@@ -64,7 +70,6 @@ export const JobDetailPage: React.FC = () => {
         );
     }
 
-    const isWorker = user?.role_type === 'worker';
     const isOpen = job.status === 'open';
 
     return (
@@ -151,7 +156,7 @@ export const JobDetailPage: React.FC = () => {
                 </>
             )}
 
-            {isAuthenticated && isWorker && (
+            {isAuthenticated && isWorker && !myApplication && (
                 <>
                     <Separator/>
                     <ApplyToJobDialog
@@ -164,6 +169,16 @@ export const JobDetailPage: React.FC = () => {
                             This job is no longer accepting applications.
                         </p>
                     )}
+                </>
+            )}
+
+            {/* Lifecycle actions — confirm/withdraw/start/complete. Gates
+                itself internally based on role and where the job/application
+                actually stand, so it's safe to always mount when signed in. */}
+            {isAuthenticated && (
+                <>
+                    <Separator/>
+                    <JobLifecycleActions job={job}/>
                 </>
             )}
 

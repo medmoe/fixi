@@ -35,6 +35,7 @@ class WorkerProfileRead(WorkerProfileBase):
     available_since: Annotated[datetime | None, Field(default=None)] = None
     average_rating: Annotated[Decimal | None, Field(default=None)] = None
     review_count: Annotated[int, Field(default=0)] = 0
+    no_show_count: Annotated[int, Field(default=0)] = 0
 
 
 class WorkerProfileCreate(WorkerProfileBase):
