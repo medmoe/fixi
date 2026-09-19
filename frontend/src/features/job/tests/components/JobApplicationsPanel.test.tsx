@@ -40,6 +40,25 @@ vi.mock('@/components/ui/alert-dialog', async () => {
     };
 });
 
+vi.mock('@/components/ui/select', () => ({
+    Select: ({children, onValueChange, value}: any) => (
+        <select
+            data-testid="mocked-select"
+            aria-label="Reason for rejecting"
+            value={value}
+            onChange={(e) => onValueChange?.(e.target.value)}
+        >
+            {children}
+        </select>
+    ),
+    SelectTrigger: ({children}: any) => <>{children}</>,
+    SelectValue: ({placeholder}: any) => <option value="">{placeholder}</option>,
+    SelectContent: ({children}: any) => <>{children}</>,
+    SelectItem: ({value, children}: any) => (
+        <option value={value}>{children}</option>
+    ),
+}));
+
 vi.mock('@/components/ui/card', () => ({
     Card: ({children, className}: any) => <div className={className}>{children}</div>,
     CardContent: ({children, className}: any) => <div className={className}>{children}</div>,
@@ -380,11 +399,15 @@ describe('JobApplicationsPanel', () => {
         it('calls mutate with rejected status on confirm', async () => {
             await openDialog('reject');
             const dialog = screen.getByTestId('alert-dialog');
+            await userEvent.selectOptions(
+                within(dialog).getByTestId('mocked-select'),
+                'schedule_conflict'
+            );
             await act(async () => {
                 await userEvent.click(within(dialog).getByRole('button', {name: /^reject$/i}));
             });
             expect(mutateMock).toHaveBeenCalledWith(
-                {jobId: 1, appId: 1, payload: {status: 'rejected'}},
+                {jobId: 1, appId: 1, payload: {status: 'rejected', decline_reason: 'schedule_conflict'}},
                 expect.objectContaining({onSuccess: expect.any(Function)})
             );
         });
@@ -432,6 +455,10 @@ describe('JobApplicationsPanel', () => {
             });
             await openDialog('reject');
             const dialog = screen.getByTestId('alert-dialog');
+            await userEvent.selectOptions(
+                within(dialog).getByTestId('mocked-select'),
+                'schedule_conflict'
+            );
             await act(async () => {
                 await userEvent.click(within(dialog).getByRole('button', {name: /^reject$/i}));
             });
