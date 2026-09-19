@@ -12,12 +12,13 @@ from ...crud.crud_job_applications import crud_job_application
 from ...crud.crud_jobs import crud_jobs
 from ...crud.crud_reviews import crud_reviews
 from ...crud.crud_worker_profiles import crud_worker_profiles
-from ...models import Job, UserRole
+from ...models import Job, JobApplication, UserRole
 from ...schemas.job import JobCreate, JobFilter, JobRead, JobUpdate
-from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate
+from ...schemas.job_application import JobApplicationCreate, JobApplicationRead, JobApplicationUpdate, JobApplicationWithdrawRequest
 from ...schemas.review import ReviewCreateRequest, ReviewEligibility, ReviewSubmitResponse
 from ...schemas.utils import parse_wkt_point
 from ...schemas.worker_profile import WorkerProfileFilter, WorkerProfileWithTradesRead, WorkerSortBy
+from ...services.job_lifecycle_service import confirm_application, mark_job_complete, start_job, withdraw_application
 from ...services.review_eligibility_service import check_review_eligibility
 from ..dependencies import get_current_user
 
@@ -43,6 +44,18 @@ async def _build_paginated_jobs_response(
         items_per_page=page_size,
         data=jobs
     )
+
+
+async def _get_job_and_application(db: AsyncSession, job_id: int, app_id: int) -> tuple[Job, JobApplication]:
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+
+    application = await db.get(JobApplication, app_id)
+    if application is None or application.job_id != job_id:
+        raise NotFoundException(f"Job application with id {app_id} not found")
+
+    return job, application
 
 
 # ─── POST /jobs ─────────────────────────────────────────────────────────────
@@ -278,3 +291,71 @@ async def update_job_application(
     return await crud_job_application.update_job_application(
         db=db, job_id=job_id, app_id=app_id, user_id=current_user["id"], object=payload
     )
+
+
+# ─── POST /jobs/{job_id}/applications/{app_id}/confirm ─────────────────────
+@router.post("/jobs/{job_id}/applications/{app_id}/confirm", response_model=JobApplicationRead, status_code=200)
+async def confirm_job_application(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        app_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> JobApplicationRead:
+    """
+    The worker's half of the mutual assignment handshake, after the customer
+    has already accepted them (and, implicitly, after the two have discussed
+    and agreed offline). Moves the job to ASSIGNED and auto-rejects every
+    other application on it.
+    """
+    job, application = await _get_job_and_application(db, job_id, app_id)
+    return await confirm_application(db=db, job=job, application=application, user_id=current_user["id"])
+
+
+# ─── POST /jobs/{job_id}/applications/{app_id}/withdraw ────────────────────
+@router.post("/jobs/{job_id}/applications/{app_id}/withdraw", response_model=JobApplicationRead, status_code=200)
+async def withdraw_job_application(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        app_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        payload: JobApplicationWithdrawRequest,
+) -> JobApplicationRead:
+    """Worker-facing — retract their own application (pending, or accepted
+    but not yet mutually confirmed). Requires a reason, same as a customer's rejection."""
+    job, application = await _get_job_and_application(db, job_id, app_id)
+    return await withdraw_application(
+        db=db, job=job, application=application, user_id=current_user["id"], reason=payload.decline_reason
+    )
+
+
+# ─── POST /jobs/{job_id}/start ──────────────────────────────────────────────
+@router.post("/jobs/{job_id}/start", response_model=JobRead, status_code=200)
+async def start_job_endpoint(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> JobRead:
+    """Worker marks the assigned job as started."""
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+
+    return await start_job(db=db, job=job, user_id=current_user["id"])
+
+
+# ─── POST /jobs/{job_id}/complete ───────────────────────────────────────────
+@router.post("/jobs/{job_id}/complete", response_model=JobRead, status_code=200)
+async def complete_job_endpoint(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        job_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+) -> JobRead:
+    """
+    Either participant marks their side of the job as done — the job only
+    flips to COMPLETED once both the customer and the worker have.
+    """
+    job = await db.get(Job, job_id)
+    if job is None:
+        raise NotFoundException(f"Job with id {job_id} not found")
+
+    return await mark_job_complete(db=db, job=job, user_id=current_user["id"])

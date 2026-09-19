@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
-from ..models import Job, JobApplication, JobStatus, WorkerProfile
+from ..models import ApplicationStatus, Job, JobApplication, JobStatus, WorkerProfile
 from ..schemas.job_application import (
     JobApplicationCreate,
     JobApplicationCreateInternal,
@@ -96,12 +96,18 @@ class CRUDJobApplication(FastCRUD[
     ) -> JobApplicationRead:
         """Update an application's status — only the owner of the job the
         application belongs to may do this, and app_id must actually belong
-        to job_id (not just any application the caller can guess an id for)."""
+        to job_id (not just any application the caller can guess an id for).
+
+        Only usable while the job is still OPEN — once an application is
+        mutually confirmed (job ASSIGNED), further changes go through the
+        dedicated lifecycle endpoints, not this generic one."""
         job = await db.get(Job, job_id)
         if job is None:
             raise NotFoundException(f"Job with id {job_id} not found")
         if job.user_id != user_id:
             raise ForbiddenException("Only the owner of this job can update its applications")
+        if job.status != JobStatus.OPEN:
+            raise BadRequestException(f"Cannot update applications — job is no longer open. Current status: {job.status.value}")
 
         application = await db.get(JobApplication, app_id)
         if application is None:
@@ -109,7 +115,12 @@ class CRUDJobApplication(FastCRUD[
         if application.job_id != job_id:
             raise NotFoundException(f"Job application with id {app_id} does not belong to job {job_id}")
 
-        internal = JobApplicationUpdateInternal(status=object.status)
+        if object.status == ApplicationStatus.ACCEPTED:
+            already_accepted = await self.exists(db=db, job_id=job_id, status=ApplicationStatus.ACCEPTED)
+            if already_accepted and application.status != ApplicationStatus.ACCEPTED:
+                raise BadRequestException("Another application is already accepted for this job")
+
+        internal = JobApplicationUpdateInternal(status=object.status, decline_reason=object.decline_reason)
         await super().update(db=db, object=internal, id=app_id) # type: ignore[call-overload]
 
         return await self._get_with_relations(db=db, application_id=app_id)

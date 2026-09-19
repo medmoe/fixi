@@ -1,8 +1,9 @@
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Numeric, String, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -56,3 +57,9 @@ class Job(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
         default=JobStatus.OPEN,
         index=True
     )
+
+    # ─── Mutual completion confirmation ─────────────────────────────────────
+    # status flips to COMPLETED once both are set — neither party can force
+    # completion unilaterally.
+    customer_marked_complete_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    worker_marked_complete_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

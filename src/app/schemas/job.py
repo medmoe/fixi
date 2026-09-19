@@ -104,6 +104,8 @@ class JobRead(BaseModel):
     updated_at: datetime | None
     deleted_at: datetime | None
     is_deleted: bool
+    customer_marked_complete_at: datetime | None = None
+    worker_marked_complete_at: datetime | None = None
     trade_category: TradeCategoryRead | None = None
     user: UserPublicRead | None = None
 

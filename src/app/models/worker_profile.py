@@ -40,6 +40,12 @@ class WorkerProfile(Base):
     average_rating: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), default=None)
     review_count: Mapped[int] = mapped_column(default=0)
 
+    # Reliability -- incremented when a job with this worker times out
+    # waiting on their confirmation/completion response. Tracked separately
+    # from average_rating (a reliability signal, not a work-quality one);
+    # not yet factored into search ranking or display.
+    no_show_count: Mapped[int] = mapped_column(default=0)
+
     # Portfolio
     # skills: Mapped[list[str]] = mapped_column(JSON, default_factory=list)
 
