@@ -1,80 +1,27 @@
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.types import ASGIApp
 
 
-# class ClientCacheMiddleware:
-#     """ Pure ASGI middleware — no BaseHTTPMiddleware, no event loop binding. """
-#
-#     def __init__(self, app: ASGIApp, max_age: int = 3600) -> None:
-#         self.app = app
-#         self.max_age = max_age
-#
-#     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-#         if scope["type"] != "http":
-#             await self.app(scope, receive, send)
-#             return
-#
-#         async def send_with_cache_header(message):
-#             if message["type"] == "http.response.start":
-#                 headers = MutableHeaders(scope=message)
-#                 headers.append(
-#                     "Cache-Control",
-#                     f"public, max-age={self.max_age}"
-#                 )
-#             await send(message)
-#
-#         await self.app(scope, receive, send_with_cache_header)
 class ClientCacheMiddleware(BaseHTTPMiddleware):
-    """Middleware to set the `Cache-Control` header for client-side caching on all responses.
-
-    Parameters
-    ----------
-    app: FastAPI
-        The FastAPI application instance.
-    max_age: int, optional
-        Duration (in seconds) for which the response should be cached. Defaults to 60 seconds.
-
-    Attributes
-    ----------
-    max_age: int
-        Duration (in seconds) for which the response should be cached.
-
-    Methods
-    -------
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        Process the request and set the `Cache-Control` header in the response.
+    """Sets a default `Cache-Control: no-store` on responses that don't already have one.
 
     Note
     ----
-        - The `Cache-Control` header instructs clients (e.g., browsers)
-        to cache the response for the specified duration.
+        Routes serving genuinely stable data (e.g. trade categories) opt into caching
+        explicitly by setting their own `Cache-Control` response header *before* this
+        middleware runs (see `read_trade_categories`). Everything else defaults to
+        `no-store`: this app's data (jobs, applications, profiles, ...) mutates based on
+        other users' actions, and a blanket `public, max-age=N` previously caused the
+        browser to serve stale GET responses -- invisible to React Query's own cache,
+        which had correctly invalidated and re-requested -- until a hard refresh bypassed
+        the browser's HTTP cache. A `public` cache is also unsafe by default for
+        authenticated, per-user data: a shared cache does not know to key by the
+        `Authorization` header unless told to.
     """
 
-    def __init__(self, app: ASGIApp, max_age: int = 60) -> None:
-        super().__init__(app)
-        self.max_age = max_age
-
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        """Process the request and set the `Cache-Control` header in the response.
-
-        Parameters
-        ----------
-        request: Request
-            The incoming request.
-        call_next: RequestResponseEndpoint
-            The next middleware or route handler in the processing chain.
-
-        Returns
-        -------
-        Response
-            The response object with the `Cache-Control` header set.
-
-        Note
-        ----
-            - This method is automatically called by Starlette for processing the request-response cycle.
-        """
         response: Response = await call_next(request)
-        response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "no-store"
         return response
