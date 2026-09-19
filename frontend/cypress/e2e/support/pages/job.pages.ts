@@ -153,4 +153,39 @@ export class PublicJobDetailPage {
     getToast() {
         return cy.get('[data-sonner-toast]')
     }
+
+    // ─── Job Lifecycle Actions ───────────────────────────────────────────
+
+    clickConfirmAssignment() {
+        cy.contains('button', 'Confirm assignment').click()
+        return this
+    }
+
+    clickWithdraw() {
+        // Matches both the accepted-but-unconfirmed "Withdraw" button and the
+        // still-pending "Withdraw application" button.
+        cy.contains('button', /^Withdraw/).click()
+        return this
+    }
+
+    selectWithdrawReason(label: string) {
+        cy.get('[aria-label="Reason for withdrawing"]').click()
+        cy.contains('[role="option"]', label).click()
+        return this
+    }
+
+    confirmWithdraw() {
+        cy.get('[role="dialog"]').contains('button', 'Withdraw').click()
+        return this
+    }
+
+    clickStartJob() {
+        cy.contains('button', 'Start job').click()
+        return this
+    }
+
+    clickMarkComplete() {
+        cy.contains('button', 'Mark as complete').click()
+        return this
+    }
 }
