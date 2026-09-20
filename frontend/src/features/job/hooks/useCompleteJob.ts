@@ -10,6 +10,7 @@ export const useCompleteJob = (jobId: number) => {
         mutationFn: () => jobApi.completeJob(jobId),
         onSuccess: (job) => {
             queryClient.invalidateQueries({queryKey: ["job", jobId]});
+            queryClient.invalidateQueries({queryKey: ["jobs"]});
             toast.success(job.status === "completed" ? "Job completed!" : "Marked as complete — waiting on the other party.");
         },
         onError: (error: AxiosError<{ detail: string }>) => {

@@ -7,6 +7,7 @@ import {type RegisterFormValues, registerSchema} from '../schemas/authSchema'
 import {useRegister} from '@/features/auth/hooks/useRegister'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
+import {PasswordInput} from '@/components/ui/password-input'
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select'
 
@@ -113,9 +114,8 @@ export const RegisterForm: React.FC = () => {
                         <FormItem>
                             <FormLabel htmlFor="register-password">Password</FormLabel>
                             <FormControl>
-                                <Input
+                                <PasswordInput
                                     id="register-password"
-                                    type="password"
                                     placeholder="••••••••"
                                     autoComplete="new-password"
                                     aria-label="Password"

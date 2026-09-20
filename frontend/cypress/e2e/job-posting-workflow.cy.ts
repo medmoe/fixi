@@ -58,17 +58,26 @@ describe('Job Posting Workflow - POM Style', () => {
     // ─── 1. Customer posts a job (full login → create journey) ────────────────
 
     describe('Customer — posts a job', () => {
-        it('navigates from login through to a newly created job', () => {
+        it('navigates from login through to a newly created job, redirecting to the customer dashboard jobs list (not the public jobs page)', () => {
             const newJob = mockJob({id: 11, title: 'Rewire living room lights'})
+
+            // The dashboard jobs list is fetched once before creation (empty) and
+            // again after creation (now including the new job) — the create
+            // mutation invalidates the `jobs` query, and the redirect lands back
+            // on this same list, so this is what proves the fix end-to-end.
+            let myJobsCallCount = 0
+            cy.intercept('GET', '**/api/v1/jobs/my', (req) => {
+                myJobsCallCount += 1
+                req.reply({statusCode: 200, body: mockJobsResponse(myJobsCallCount === 1 ? [] : [newJob])})
+            }).as('myJobs')
 
             cy.intercept('POST', '**/api/v1/auth/login', {
                 statusCode: 200,
                 body: {access_token: 'customer-token', user: {id: 1, role_type: 'customer'}},
             }).as('loginApi')
             cy.intercept('GET', '**/api/v1/user/me', {statusCode: 200, body: mockCustomer}).as('userMe')
-            cy.intercept('GET', '**/api/v1/jobs/my', {statusCode: 200, body: mockJobsResponse([])}).as('myJobs')
             cy.intercept('POST', '**/api/v1/jobs', {statusCode: 201, body: newJob}).as('createJob')
-            // Public /jobs page that the form redirects to on success
+            // Public /jobs page — the form must NOT redirect here after creation.
             cy.intercept('GET', '**/api/v1/jobs*', {statusCode: 200, body: mockJobsResponse([newJob])}).as('publicJobs')
             // Geocoding API for the required location field
             cy.intercept('GET', '**/nominatim.openstreetmap.org/search*', {
@@ -109,7 +118,13 @@ describe('Job Posting Workflow - POM Style', () => {
             jobPostingPage.submitCreate()
 
             cy.wait('@createJob')
-            cy.url().should('include', '/jobs')
+
+            // Redirected to the customer's own dashboard jobs list, not the public /jobs browse page.
+            cy.location('pathname').should('eq', '/dashboard/jobs')
+
+            // The dashboard list refetches after the redirect and now shows the newly created job.
+            cy.wait('@myJobs')
+            cy.contains('Rewire living room lights').should('be.visible')
         })
     })
 
