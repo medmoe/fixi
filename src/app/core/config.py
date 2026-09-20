@@ -116,6 +116,13 @@ class NotificationSettings(BaseSettings):
     FCM_TOPIC_PREFIX: str = config("FCM_TOPIC_PREFIX", default="user-")
     FCM_SERVICE_ACCOUNT_JSON: str | None = config("FCM_SERVICE_ACCOUNT_JSON", default=None)
 
+    # Provider selection is config-driven -- swapping a provider (e.g. adding
+    # Mailjet or a local SIM gateway in a later Phase 6 issue) means changing
+    # one of these values, never touching NotificationService itself.
+    NOTIFICATION_EMAIL_PROVIDER: str = config("NOTIFICATION_EMAIL_PROVIDER", default="noop")
+    NOTIFICATION_PUSH_PROVIDER: str = config("NOTIFICATION_PUSH_PROVIDER", default="noop")
+    NOTIFICATION_SMS_PROVIDER: str = config("NOTIFICATION_SMS_PROVIDER", default="noop")
+
 
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)

@@ -1,0 +1,20 @@
+from pydantic import BaseModel
+
+from ..core.schemas import TimestampSchema
+from ..models.notification_log import NotificationChannel, NotificationLogStatus
+
+
+class NotificationLogBase(BaseModel):
+    event_type: str
+    channel: NotificationChannel
+    provider: str
+    status: NotificationLogStatus
+    error: str | None = None
+
+
+class NotificationLogCreateInternal(NotificationLogBase):
+    pass
+
+
+class NotificationLogRead(TimestampSchema, NotificationLogBase):
+    id: int
