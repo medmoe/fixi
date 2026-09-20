@@ -7,6 +7,7 @@ import {type LoginFormValues, loginSchema} from '../schemas/authSchema'
 import {useAuth} from '@/features/auth'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
+import {PasswordInput} from '@/components/ui/password-input'
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 
 export const LoginForm: React.FC = () => {
@@ -66,9 +67,8 @@ export const LoginForm: React.FC = () => {
                                 Password
                             </FormLabel>
                             <FormControl>
-                                <Input
+                                <PasswordInput
                                     id="login-password"
-                                    type="password"
                                     placeholder="••••••••"
                                     autoComplete="current-password"
                                     aria-label="Password"

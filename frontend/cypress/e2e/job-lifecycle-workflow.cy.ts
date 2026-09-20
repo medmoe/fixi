@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
-import {PublicJobDetailPage} from './support/pages/job.pages'
-import {mockApplication, mockCustomer, mockJob, mockWorkerProfile, mockWorkerUser} from '../fixtures/jobs'
+import {CustomerJobsListPage, PublicJobDetailPage} from './support/pages/job.pages'
+import {mockApplication, mockApplicationsResponse, mockCustomer, mockJob, mockWorkerProfile, mockWorkerUser} from '../fixtures/jobs'
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 // Same approach as job-posting-workflow.cy.ts: mock the silent token refresh
@@ -36,6 +36,7 @@ const asWorker = () => {
 
 describe('Job Lifecycle Workflow - POM Style', () => {
     const jobDetailPage = new PublicJobDetailPage()
+    const jobsListPage = new CustomerJobsListPage()
 
     beforeEach(() => {
         cy.clearAllSessionStorage()
@@ -229,6 +230,75 @@ describe('Job Lifecycle Workflow - POM Style', () => {
             cy.wait('@jobAfterComplete')
 
             cy.contains('completed').should('be.visible')
+        })
+    })
+
+    // ─── 6. Customer's job card on the dashboard jobs tab reflects a status ───
+    //        change made on the detail page, without a hard refresh.
+
+    describe('Customer — job card status stays in sync with the detail page', () => {
+        it('shows the updated status on the dashboard jobs tab after completing a job from the detail page', () => {
+            asCustomer()
+            const inProgressJob = mockJob({
+                id: 10,
+                title: 'Fix leaking kitchen sink',
+                status: 'in_progress',
+                worker_marked_complete_at: '2026-09-18T12:00:00Z',
+            })
+
+            // The dashboard jobs list is fetched on the initial visit (in_progress)
+            // and again after navigating back from the detail page — the fix
+            // under test is that the second fetch reflects the new status.
+            let myJobsCallCount = 0
+            cy.intercept('GET', '**/api/v1/jobs/my', (req) => {
+                myJobsCallCount += 1
+                const job = myJobsCallCount === 1
+                    ? inProgressJob
+                    : mockJob({...inProgressJob, status: 'completed', customer_marked_complete_at: '2026-09-18T13:00:00Z'})
+                req.reply({statusCode: 200, body: {data: [job], total_count: 1, has_more: false, page: 1, items_per_page: 50}})
+            }).as('myJobs')
+
+            cy.intercept('GET', '**/api/v1/jobs/10', {statusCode: 200, body: inProgressJob}).as('jobDetail')
+            // JobApplicationsPanel fetches this unconditionally for every card on mount.
+            cy.intercept('GET', '**/api/v1/jobs/10/applications*', {statusCode: 200, body: mockApplicationsResponse([])}).as('applications')
+
+            cy.visit('/dashboard/jobs')
+            cy.wait('@authRefresh')
+            cy.wait('@userMe')
+            cy.wait('@myJobs')
+
+            jobsListPage.getJobCardStatus('Fix leaking kitchen sink').should('contain.text', 'in progress')
+
+            jobsListPage.clickViewJob('Fix leaking kitchen sink')
+            cy.wait('@jobDetail')
+            cy.url().should('include', '/dashboard/jobs/10')
+
+            const completedJob = mockJob({
+                ...inProgressJob,
+                status: 'completed',
+                customer_marked_complete_at: '2026-09-18T13:00:00Z',
+            })
+            cy.intercept('POST', '**/api/v1/jobs/10/complete', {statusCode: 200, body: completedJob}).as('completeJob')
+            cy.intercept('GET', '**/api/v1/jobs/10', {statusCode: 200, body: completedJob}).as('jobAfterComplete')
+            cy.intercept('GET', '**/api/v1/jobs/10/review-status', {
+                statusCode: 200,
+                body: {can_review: false, reason: 'not_a_participant'},
+            }).as('reviewStatus')
+
+            cy.contains('Is this job done?').should('be.visible')
+            jobDetailPage.clickMarkComplete()
+
+            cy.wait('@completeJob')
+            cy.wait('@jobAfterComplete')
+            cy.contains('completed').should('be.visible')
+
+            // Navigate back to the dashboard jobs tab via SPA navigation (no reload).
+            cy.contains('button', 'Back').click()
+            cy.url().should('include', '/dashboard/jobs')
+            cy.url().should('not.include', '/dashboard/jobs/10')
+
+            cy.wait('@myJobs')
+            jobsListPage.getJobCardStatus('Fix leaking kitchen sink').should('contain.text', 'completed')
         })
     })
 })

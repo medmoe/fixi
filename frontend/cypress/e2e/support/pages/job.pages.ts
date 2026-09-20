@@ -72,6 +72,16 @@ export class CustomerJobsListPage {
         return cy.get(`[aria-label="Delete job ${title}"]`)
     }
 
+    viewJobBtn(title: string) {
+        return cy.get(`[aria-label="View job ${title}"]`)
+    }
+
+    // Scopes to the job's own Card so the status badge assertion can't match
+    // a different job's badge when multiple jobs are listed.
+    getJobCardStatus(title: string) {
+        return cy.contains(title).parents('[data-slot="card"]').find('[data-slot="badge"]')
+    }
+
     visit() {
         cy.visit('/dashboard/jobs')
         return this
@@ -84,6 +94,11 @@ export class CustomerJobsListPage {
 
     clickEditJob(title: string) {
         this.editJobBtn(title).click()
+        return this
+    }
+
+    clickViewJob(title: string) {
+        this.viewJobBtn(title).click()
         return this
     }
 

@@ -12,6 +12,8 @@ export const useWithdrawApplication = (jobId: number) => {
             jobApi.withdrawApplication(jobId, appId, {decline_reason: declineReason}),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ["my-job-application", jobId]});
+            queryClient.invalidateQueries({queryKey: ["job", jobId]});
+            queryClient.invalidateQueries({queryKey: ["jobs"]});
             toast.success("Application withdrawn");
         },
         onError: (error: AxiosError<{ detail: string }>) => {

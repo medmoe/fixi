@@ -11,6 +11,7 @@ export const useConfirmApplication = (jobId: number) => {
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ["my-job-application", jobId]});
             queryClient.invalidateQueries({queryKey: ["job", jobId]});
+            queryClient.invalidateQueries({queryKey: ["jobs"]});
             toast.success("Assignment confirmed!");
         },
         onError: (error: AxiosError<{ detail: string }>) => {

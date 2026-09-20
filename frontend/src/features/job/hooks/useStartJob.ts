@@ -10,6 +10,7 @@ export const useStartJob = (jobId: number) => {
         mutationFn: () => jobApi.startJob(jobId),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ["job", jobId]});
+            queryClient.invalidateQueries({queryKey: ["jobs"]});
             toast.success("Job started!");
         },
         onError: (error: AxiosError<{ detail: string }>) => {

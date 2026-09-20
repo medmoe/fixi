@@ -232,7 +232,7 @@ Future: Chargily Pay split payments when their marketplace API matures
 - Cypress E2E tests: full job posting workflow, auth flows
 - GitHub Actions CI on pull requests (lint, type-check, unit tests, E2E)
 
-### Phase 5 — Reviews & Ratings `Oct 2026`
+### Phase 5 — Reviews & Ratings `COMPLETE`
 - Post-job review form (customer reviews worker, worker reviews customer)
 - Star rating aggregation on worker profile
 - Review list on public worker profile page

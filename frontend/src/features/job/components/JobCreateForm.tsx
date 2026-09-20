@@ -34,7 +34,7 @@ export const JobCreateForm: React.FC = () => {
 
     const onSubmit = (data: JobCreateFormValues) => {
         createJob(data, {
-            onSuccess: () => navigate("/jobs")
+            onSuccess: () => navigate("/dashboard/jobs")
         });
     };
 

@@ -6,6 +6,7 @@ import {LocationSearchField, useChangePassword, useDeactivateAccount, type UserP
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
+import {PasswordInput} from '@/components/ui/password-input'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger} from '@/components/ui/alert-dialog'
 import {ImageIcon, Loader2, Lock, Trash2, UserCircle} from 'lucide-react'
@@ -229,7 +230,7 @@ export const AccountTab: React.FC = () => {
                                     <FormItem>
                                         <FormLabel>Current Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" {...field} />
+                                            <PasswordInput autoComplete="current-password" {...field} />
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>
@@ -242,7 +243,7 @@ export const AccountTab: React.FC = () => {
                                     <FormItem>
                                         <FormLabel>New Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" {...field} />
+                                            <PasswordInput autoComplete="new-password" {...field} />
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>
@@ -255,7 +256,7 @@ export const AccountTab: React.FC = () => {
                                     <FormItem>
                                         <FormLabel>Confirm New Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" {...field} />
+                                            <PasswordInput autoComplete="new-password" {...field} />
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>

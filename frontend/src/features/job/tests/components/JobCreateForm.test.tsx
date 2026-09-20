@@ -8,7 +8,7 @@ import {JobCreateForm} from '@/features/job';
 import {useCreateJob} from "../../hooks/useCreateJob"
 import {useTrades} from '@/features/worker/hooks/useTrades';
 import {useLocationSearch} from '@/features/user/hooks/useLocationSearch';
-import {MemoryRouter} from "react-router-dom";
+import {MemoryRouter, Route, Routes} from "react-router-dom";
 
 vi.mock('../../hooks/useCreateJob');
 vi.mock('@/features/worker/hooks/useTrades');
@@ -274,6 +274,67 @@ describe('JobCreateForm', () => {
                     expect.objectContaining({ onSuccess: expect.any(Function) })
                 );
             });
+        });
+    });
+
+    // ------------------------------------------------------------------ //
+    //  Post-submit navigation                                             //
+    // ------------------------------------------------------------------ //
+
+    describe('post-submit navigation', () => {
+        it('redirects to the customer dashboard jobs list (not the public jobs route) after a successful submit', async () => {
+            vi.mocked(useLocationSearch).mockReturnValue({
+                suggestions: mockSuggestions,
+                isFetching: false,
+                isError: false,
+                searchTerm: 'New York',
+            } as never);
+
+            const queryClient = new QueryClient({
+                defaultOptions: {queries: {retry: false}, mutations: {retry: false}},
+            });
+
+            render(
+                <MemoryRouter
+                    initialEntries={['/dashboard/jobs/create']}
+                    future={{v7_relativeSplatPath: true, v7_startTransition: true}}
+                >
+                    <QueryClientProvider client={queryClient}>
+                        <Routes>
+                            <Route path="/dashboard/jobs/create" element={<JobCreateForm/>}/>
+                            <Route path="/dashboard/jobs" element={<div>Dashboard Jobs Page</div>}/>
+                            <Route path="/jobs" element={<div>Public Jobs Page</div>}/>
+                        </Routes>
+                    </QueryClientProvider>
+                </MemoryRouter>
+            );
+
+            await act(async () => {
+                await userEvent.type(screen.getByLabelText('Job Title'), 'Fix leaking sink');
+            });
+            await act(async () => {
+                await userEvent.click(screen.getByRole('button', {name: /plumbing/i}));
+            });
+            await act(async () => {
+                await userEvent.type(screen.getByRole('combobox'), 'New York');
+            });
+            await act(async () => {
+                await userEvent.click(screen.getByRole('option', {name: /new york, ny/i}));
+            });
+            await act(async () => {
+                await userEvent.click(screen.getByRole('button', {name: /submit job/i}));
+            });
+
+            await waitFor(() => expect(mutateMock).toHaveBeenCalled());
+
+            // Simulate the mutation succeeding, as useCreateJob is mocked.
+            const onSuccess = mutateMock.mock.calls[0][1].onSuccess;
+            await act(async () => {
+                onSuccess();
+            });
+
+            expect(screen.getByText('Dashboard Jobs Page')).toBeInTheDocument();
+            expect(screen.queryByText('Public Jobs Page')).not.toBeInTheDocument();
         });
     });
 
