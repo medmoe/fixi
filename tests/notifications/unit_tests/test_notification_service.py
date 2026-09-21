@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
+from src.app.crud.crud_notification_preferences import crud_notification_preferences
 from src.app.models import Notification, NotificationChannel, NotificationLog, NotificationLogStatus
 from src.app.services.notifications import DeliveryResult, NotificationEvent, NotificationProvider, NotificationService, connection_manager
 from tests.conftest import create_test_user
@@ -340,3 +341,157 @@ class TestNotificationServiceConfigDrivenDefaults:
         results = await service.send(async_session, event)
 
         assert results[0] == DeliveryResult(success=True, provider="noop")
+
+
+@pytest.mark.unit
+class TestNotificationServicePreferences:
+    """Issue 6: a disabled (channel, event_type) preference must actually
+    suppress the send, not just hide a toggle in a UI somewhere."""
+
+    async def test_a_disabled_preference_suppresses_the_send(self, async_session):
+        user = await create_test_user(async_session)
+        push = FakeProvider(name="fake-push")
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.PUSH, event_type="job.started", enabled=False
+        )
+        service = NotificationService(push_provider=push)
+
+        event = NotificationEvent(
+            event_type="job.started",
+            channels=(NotificationChannel.PUSH,),
+            recipients={NotificationChannel.PUSH: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0] == DeliveryResult(success=True, provider="skipped", error="Disabled by user notification preference")
+        assert push.calls == []  # the provider was never even called
+
+        logs = await _log_rows(async_session, "job.started")
+        assert logs[0].status == NotificationLogStatus.SKIPPED
+
+    async def test_a_disabled_preference_only_suppresses_its_own_channel(self, async_session):
+        user = await create_test_user(async_session)
+        push = FakeProvider(name="fake-push")
+        email = FakeProvider(name="fake-email")
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.PUSH, event_type="review_received", enabled=False
+        )
+        service = NotificationService(push_provider=push, email_provider=email)
+
+        event = NotificationEvent(
+            event_type="review_received",
+            channels=(NotificationChannel.PUSH, NotificationChannel.EMAIL),
+            recipients={NotificationChannel.PUSH: str(user.id), NotificationChannel.EMAIL: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0].provider == "skipped"
+        assert results[1] == DeliveryResult(success=True, provider="fake-email")
+        assert push.calls == []
+        assert len(email.calls) == 1
+
+    async def test_no_preference_row_defaults_to_enabled(self, async_session):
+        user = await create_test_user(async_session)
+        push = FakeProvider(name="fake-push")
+        service = NotificationService(push_provider=push)
+
+        event = NotificationEvent(
+            event_type="job.started",
+            channels=(NotificationChannel.PUSH,),
+            recipients={NotificationChannel.PUSH: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0] == DeliveryResult(success=True, provider="fake-push")
+        assert len(push.calls) == 1
+
+    async def test_disabling_one_event_type_does_not_affect_another(self, async_session):
+        user = await create_test_user(async_session)
+        push = FakeProvider(name="fake-push")
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.PUSH, event_type="job.started", enabled=False
+        )
+        service = NotificationService(push_provider=push)
+
+        event = NotificationEvent(
+            event_type="job.completed",
+            channels=(NotificationChannel.PUSH,),
+            recipients={NotificationChannel.PUSH: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0].success is True
+        assert results[0].provider == "fake-push"
+
+    async def test_re_enabling_a_previously_disabled_preference_resumes_sending(self, async_session):
+        user = await create_test_user(async_session)
+        push = FakeProvider(name="fake-push")
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.PUSH, event_type="job.started", enabled=False
+        )
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.PUSH, event_type="job.started", enabled=True
+        )
+        service = NotificationService(push_provider=push)
+
+        event = NotificationEvent(
+            event_type="job.started",
+            channels=(NotificationChannel.PUSH,),
+            recipients={NotificationChannel.PUSH: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0].provider == "fake-push"
+        assert len(push.calls) == 1
+
+    async def test_sms_is_never_suppressible_even_with_a_matching_row(self, async_session):
+        """SMS OTP is a mandatory auth requirement (Issue 5), not a
+        preference -- NotificationService must ignore any notification_preferences
+        row on the SMS channel rather than honor it."""
+        user = await create_test_user(async_session)
+        sms = FakeProvider(name="fake-sms")
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.SMS, event_type="otp_code", enabled=False
+        )
+        service = NotificationService(sms_provider=sms)
+
+        event = NotificationEvent(
+            event_type="otp_code",
+            channels=(NotificationChannel.SMS,),
+            recipients={NotificationChannel.SMS: str(user.id)},
+            template="t",
+            payload={},
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0].provider == "fake-sms"
+        assert len(sms.calls) == 1
+
+    async def test_in_app_is_never_suppressible_even_with_a_matching_row(self, async_session):
+        user = await create_test_user(async_session)
+        await crud_notification_preferences.set_enabled(
+            db=async_session, user_id=user.id, channel=NotificationChannel.IN_APP, event_type="job.started", enabled=False
+        )
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.started",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={NotificationChannel.IN_APP: str(user.id)},
+            template="t",
+            payload=IN_APP_PAYLOAD,
+        )
+        results = await service.send(async_session, event)
+
+        assert results[0].success is True
+        assert results[0].provider == "in_app"

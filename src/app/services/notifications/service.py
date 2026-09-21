@@ -8,10 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.config import settings
 from ...core.logger import logging
 from ...crud.crud_notification_logs import crud_notification_logs
+from ...crud.crud_notification_preferences import crud_notification_preferences
 from ...crud.crud_notifications import crud_notifications
 from ...models import NotificationChannel, NotificationLogStatus
 from ...schemas.notification import NotificationCreateInternal, NotificationRead
 from ...schemas.notification_log import NotificationLogCreateInternal
+from ...schemas.notification_preference import NotificationPreferenceRead
 from .providers import (
     DeliveryResult,
     EmailProvider,
@@ -84,6 +86,16 @@ _PROVIDER_RESOLVERS = {
     NotificationChannel.SMS: _resolve_sms_provider,
 }
 
+# Channels a NotificationPreference row can suppress (Issue 6). IN_APP is
+# never suppressible (the feed always records everything) and SMS is
+# deliberately excluded -- OTP never reaches this service at all (see
+# services/otp.py), so there's nothing here for a preference to act on.
+_PREFERENCE_CHANNELS = frozenset({NotificationChannel.PUSH, NotificationChannel.EMAIL})
+# Sentinel DeliveryResult.provider value meaning "never attempted -- the
+# user turned this (channel, event_type) off", distinct from a real
+# provider name so `_log` can tell it apart from an actual send.
+_SKIPPED_PROVIDER = "skipped"
+
 
 class NotificationService:
     """Central seam every Phase 6 notification goes through.
@@ -137,6 +149,9 @@ class NotificationService:
         if channel == NotificationChannel.IN_APP:
             return await self._send_in_app(db, event)
 
+        if channel in _PREFERENCE_CHANNELS and not await self._is_enabled(db, channel, event):
+            return DeliveryResult(success=True, provider=_SKIPPED_PROVIDER, error="Disabled by user notification preference")
+
         provider = self._get_provider(channel)
         if provider is None:
             return DeliveryResult(success=False, provider="none", error=f"No provider configured for channel {channel.value}")
@@ -146,6 +161,30 @@ class NotificationService:
             return DeliveryResult(success=False, provider=provider.name, error=f"No recipient resolved for channel {channel.value}")
 
         return await self._send_with_retry(db, provider, recipient, event.template, event.payload)
+
+    async def _is_enabled(self, db: AsyncSession, channel: NotificationChannel, event: NotificationEvent) -> bool:
+        """True unless the recipient explicitly turned this (channel,
+        event_type) off. A missing/non-numeric recipient returns True here
+        deliberately -- that's not this method's problem to report, `_send_one`
+        already raises the right "no/invalid recipient" error for it right
+        after this check is skipped."""
+        recipient = event.recipients.get(channel)
+        if recipient is None:
+            return True
+        try:
+            user_id = int(recipient)
+        except (TypeError, ValueError):
+            return True
+
+        preference = await crud_notification_preferences.get(
+            db=db,
+            user_id=user_id,
+            channel=channel,
+            event_type=event.event_type,
+            schema_to_select=NotificationPreferenceRead,
+            return_as_model=True,
+        )
+        return True if preference is None else preference.enabled
 
     async def _send_in_app(self, db: AsyncSession, event: NotificationEvent) -> DeliveryResult:
         """Persists the notification (so it shows up in GET /notifications and
@@ -212,13 +251,20 @@ class NotificationService:
         return result
 
     async def _log(self, db: AsyncSession, event: NotificationEvent, channel: NotificationChannel, result: DeliveryResult) -> None:
+        if result.provider == _SKIPPED_PROVIDER:
+            status = NotificationLogStatus.SKIPPED
+        elif result.success:
+            status = NotificationLogStatus.SENT
+        else:
+            status = NotificationLogStatus.FAILED
+
         logger.info(
             "notification dispatched",
             extra={
                 "event_type": event.event_type,
                 "channel": channel.value,
                 "provider": result.provider,
-                "status": "sent" if result.success else "failed",
+                "status": status.value,
                 "error": result.error,
             },
         )
@@ -228,7 +274,7 @@ class NotificationService:
                 event_type=event.event_type,
                 channel=channel,
                 provider=result.provider,
-                status=NotificationLogStatus.SENT if result.success else NotificationLogStatus.FAILED,
+                status=status,
                 error=result.error,
             ),
         )
