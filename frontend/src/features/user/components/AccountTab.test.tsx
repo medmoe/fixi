@@ -26,6 +26,10 @@ vi.mock('@/features/auth', () => ({
     useAuth: vi.fn(),
 }))
 
+vi.mock('@/features/notification', () => ({
+    NotificationPreferencesCard: () => <div data-testid="notification-preferences-card">notification preferences</div>,
+}))
+
 // Stub UI components to avoid heavy DOM — AccountTab's job is wiring, not rendering inputs
 vi.mock('@/components/ui/form', () => ({
     Form: ({children}: any) => <div>{children}</div>,   // ← use <div>, not <form>

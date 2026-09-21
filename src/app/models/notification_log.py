@@ -18,6 +18,9 @@ class NotificationChannel(Enum):
 class NotificationLogStatus(Enum):
     SENT = "sent"
     FAILED = "failed"
+    # Never reached the provider at all -- suppressed by a user's
+    # notification preference (Issue 6), not a delivery failure.
+    SKIPPED = "skipped"
 
 
 class NotificationLog(Base, TimestampMixin):

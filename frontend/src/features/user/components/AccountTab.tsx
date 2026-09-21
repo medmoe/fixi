@@ -2,6 +2,7 @@ import React from 'react'
 import {useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {useAuth} from '@/features/auth'
+import {NotificationPreferencesCard} from '@/features/notification'
 import {LocationSearchField, useChangePassword, useDeactivateAccount, type UserPasswordFormValues, userPasswordSchema, type UserUpdateFormValues, userUpdateSchema, useUpdateUser, useUser} from '@/features/user'
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 import {Button} from '@/components/ui/button'
@@ -204,6 +205,9 @@ export const AccountTab: React.FC = () => {
                     </Form>
                 </CardContent>
             </Card>
+
+            {/* ─── Notification Preferences ──────────────────────────────── */}
+            <NotificationPreferencesCard/>
 
             {/* ─── Change Password ────────────────────────────────────────── */}
             <Card>

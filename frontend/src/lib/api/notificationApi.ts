@@ -1,4 +1,4 @@
-import {DevicePlatform, DeviceTokenRead, NotificationRead} from "@/features/notification";
+import {DevicePlatform, DeviceTokenRead, NotificationPreference, NotificationPreferenceChannel, NotificationRead} from "@/features/notification";
 import {PaginatedListResponse} from "@/features/types";
 import apiClient from "./apiClient";
 
@@ -22,5 +22,13 @@ export const notificationApi = {
     },
     unregisterDeviceToken: async (token: string): Promise<void> => {
         await apiClient.delete(`/notifications/device-tokens/${encodeURIComponent(token)}`);
+    },
+    getNotificationPreferences: async (): Promise<NotificationPreference[]> => {
+        const {data} = await apiClient.get<NotificationPreference[]>("/notifications/preferences");
+        return data;
+    },
+    updateNotificationPreference: async (eventType: string, channel: NotificationPreferenceChannel, enabled: boolean): Promise<NotificationPreference> => {
+        const {data} = await apiClient.put<NotificationPreference>("/notifications/preferences", {event_type: eventType, channel, enabled});
+        return data;
     },
 };

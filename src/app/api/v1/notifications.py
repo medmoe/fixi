@@ -8,13 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import settings
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException
+from ...core.exceptions.http_exceptions import BadRequestException, ForbiddenException, NotFoundException
 from ...crud.crud_device_tokens import crud_device_tokens
+from ...crud.crud_notification_preferences import crud_notification_preferences
 from ...crud.crud_notifications import crud_notifications
 from ...models import Notification, User
 from ...schemas.device_token import DeviceTokenCreate, DeviceTokenCreateInternal, DeviceTokenRead
 from ...schemas.notification import NotificationRead
+from ...schemas.notification_preference import NotificationPreferenceRead, NotificationPreferenceUpdate
 from ...services.notifications import connection_manager
+from ...services.notifications.event_catalog import TOGGLEABLE_EVENT_CHANNELS
 from ..dependencies import get_current_user, get_current_user_ws
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -83,6 +86,57 @@ async def mark_all_notifications_read(
         .values(read_at=datetime.now(UTC).replace(tzinfo=None))
     )
     await db.commit()
+
+
+# ─── GET /notifications/preferences ──────────────────────────────────────
+@router.get("/preferences", response_model=list[NotificationPreferenceRead], status_code=200)
+async def get_notification_preferences(
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> list[NotificationPreferenceRead]:
+    """Every (event_type, channel) combo the settings UI can toggle (Issue
+    6), merged with this user's overrides -- absent a row, a combo is
+    enabled by default. SMS OTP never appears here: TOGGLEABLE_EVENT_CHANNELS
+    only lists PUSH/EMAIL, since OTP is a mandatory auth requirement, not a
+    preference (see services/otp.py, which bypasses this system entirely)."""
+    rows = await crud_notification_preferences.get_multi(
+        db=db,
+        user_id=current_user["id"],
+        limit=None,
+        schema_to_select=NotificationPreferenceRead,
+        return_as_model=True,
+    )
+    overrides = {(row.event_type, row.channel): row.enabled for row in rows["data"]}
+
+    return [
+        NotificationPreferenceRead(event_type=event_type, channel=channel, enabled=overrides.get((event_type, channel), True))
+        for event_type, channels in TOGGLEABLE_EVENT_CHANNELS.items()
+        for channel in sorted(channels, key=lambda c: c.value)
+    ]
+
+
+# ─── PUT /notifications/preferences ──────────────────────────────────────
+@router.put("/preferences", response_model=NotificationPreferenceRead, status_code=200)
+async def update_notification_preference(
+        payload: NotificationPreferenceUpdate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> NotificationPreferenceRead:
+    allowed_channels = TOGGLEABLE_EVENT_CHANNELS.get(payload.event_type)
+    if allowed_channels is None or payload.channel not in allowed_channels:
+        # Also where SMS/IN_APP get rejected outright, not just hidden from
+        # the UI -- SMS OTP is a mandatory auth requirement (Issue 5), never
+        # toggleable, and IN_APP always records everything.
+        raise BadRequestException(f"{payload.channel.value!r} is not a toggleable channel for event type {payload.event_type!r}")
+
+    await crud_notification_preferences.set_enabled(
+        db=db,
+        user_id=current_user["id"],
+        channel=payload.channel,
+        event_type=payload.event_type,
+        enabled=payload.enabled,
+    )
+    return NotificationPreferenceRead(event_type=payload.event_type, channel=payload.channel, enabled=payload.enabled)
 
 
 # ─── POST /notifications/device-tokens ───────────────────────────────────
