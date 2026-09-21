@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from .auth import router as auth_v2_router
 from .files import router as files_router
 from .jobs import router as jobs_router
+from .notifications import router as notifications_router
 from .trade_category import router as trade_category_router
 from .users import router as users_router
 from .worker_profile import router as worker_profiles_router
@@ -16,3 +17,4 @@ router.include_router(files_router)
 router.include_router(trade_category_router)
 router.include_router(worker_profiles_router)
 router.include_router(jobs_router)
+router.include_router(notifications_router)

@@ -6,3 +6,4 @@ export {default as apiClient} from './api/apiClient';
 export {userApi} from './api/userApi';
 export {workerApi} from './api/workerApi';
 export {reviewApi} from './api/reviewApi';
+export {notificationApi} from './api/notificationApi';
