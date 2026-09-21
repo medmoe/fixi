@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.config import settings
 from ...core.logger import logging
 from ...crud.crud_notification_logs import crud_notification_logs
+from ...crud.crud_notifications import crud_notifications
 from ...models import NotificationChannel, NotificationLogStatus
+from ...schemas.notification import NotificationCreateInternal, NotificationRead
 from ...schemas.notification_log import NotificationLogCreateInternal
 from .providers import (
     DeliveryResult,
@@ -20,6 +22,7 @@ from .providers import (
     PushProvider,
     SmsProvider,
 )
+from .ws_manager import connection_manager
 
 logger = logging.getLogger(__name__)
 
@@ -117,16 +120,14 @@ class NotificationService:
     async def send(self, db: AsyncSession, event: NotificationEvent) -> list[DeliveryResult]:
         results = []
         for channel in event.channels:
-            result = await self._send_one(channel, event)
+            result = await self._send_one(db, channel, event)
             results.append(result)
             await self._log(db, event, channel, result)
         return results
 
-    async def _send_one(self, channel: NotificationChannel, event: NotificationEvent) -> DeliveryResult:
+    async def _send_one(self, db: AsyncSession, channel: NotificationChannel, event: NotificationEvent) -> DeliveryResult:
         if channel == NotificationChannel.IN_APP:
-            # Persisted in-app feed lands in a later Phase 6 issue -- this
-            # abstraction layer only needs to route + log the event for now.
-            return DeliveryResult(success=True, provider="in_app")
+            return await self._send_in_app(db, event)
 
         provider = self._get_provider(channel)
         if provider is None:
@@ -137,6 +138,46 @@ class NotificationService:
             return DeliveryResult(success=False, provider=provider.name, error=f"No recipient resolved for channel {channel.value}")
 
         return await self._send_with_retry(provider, recipient, event.template, event.payload)
+
+    async def _send_in_app(self, db: AsyncSession, event: NotificationEvent) -> DeliveryResult:
+        """Persists the notification (so it shows up in GET /notifications and
+        survives a refresh) and pushes it over the live WS connection, if the
+        recipient has one open, for the sub-second update the bell needs."""
+        recipient = event.recipients.get(NotificationChannel.IN_APP)
+        if recipient is None:
+            return DeliveryResult(success=False, provider="in_app", error="No recipient resolved for channel in_app")
+
+        try:
+            user_id = int(recipient)
+        except (TypeError, ValueError):
+            return DeliveryResult(success=False, provider="in_app", error=f"Invalid in-app recipient: {recipient!r}")
+
+        required_fields = ("title_ar", "title_fr", "body_ar", "body_fr")
+        missing = [key for key in required_fields if not event.payload.get(key)]
+        if missing:
+            return DeliveryResult(success=False, provider="in_app", error=f"Missing in-app payload field(s): {', '.join(missing)}")
+
+        notification = await crud_notifications.create(
+            db=db,
+            object=NotificationCreateInternal(
+                user_id=user_id,
+                type=event.event_type,
+                title_ar=event.payload["title_ar"],
+                title_fr=event.payload["title_fr"],
+                body_ar=event.payload["body_ar"],
+                body_fr=event.payload["body_fr"],
+                related_job_id=event.payload.get("related_job_id"),
+            ),
+            schema_to_select=NotificationRead,
+            return_as_model=True,
+        )
+
+        await connection_manager.send_to_user(
+            user_id,
+            {"type": "notification", "data": notification.model_dump(mode="json")},
+        )
+
+        return DeliveryResult(success=True, provider="in_app")
 
     async def _send_with_retry(
         self, provider: NotificationProvider, recipient: str, template: str, payload: dict[str, Any]

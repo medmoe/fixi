@@ -1,6 +1,6 @@
 from typing import Annotated, Any, cast
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.config import settings
@@ -38,6 +38,26 @@ async def get_current_user(
         return user.model_dump()
 
     raise UnauthorizedException("User not authenticated.")
+
+
+async def get_current_user_ws(websocket: WebSocket, db: AsyncSession) -> dict[str, Any] | None:
+    """WS handshakes can't carry an Authorization header from a browser, so
+    the access token travels as a query param instead. Returns None (never
+    raises) on any auth failure -- the caller decides how to close."""
+    token = websocket.query_params.get("token")
+    if not token:
+        return None
+
+    token_data = await verify_token(token, TokenType.ACCESS, db)
+    if token_data is None:
+        return None
+
+    if "@" in token_data.username_or_email:
+        user = await crud_users.get(db=db, email=token_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
+    else:
+        user = await crud_users.get(db=db, username=token_data.username_or_email, is_deleted=False, schema_to_select=UserRead, return_as_model=True)
+
+    return user.model_dump() if user else None
 
 
 async def get_optional_user(request: Request, db: AsyncSession = Depends(async_get_db)) -> dict | None:

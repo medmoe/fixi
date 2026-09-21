@@ -3,8 +3,18 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
-from src.app.models import NotificationChannel, NotificationLog, NotificationLogStatus
-from src.app.services.notifications import DeliveryResult, NotificationEvent, NotificationProvider, NotificationService
+from src.app.models import Notification, NotificationChannel, NotificationLog, NotificationLogStatus
+from src.app.services.notifications import DeliveryResult, NotificationEvent, NotificationProvider, NotificationService, connection_manager
+from tests.conftest import create_test_user
+from tests.job.helpers import create_test_job
+from tests.notifications.unit_tests.test_ws_manager import FakeWebSocket
+
+IN_APP_PAYLOAD = {
+    "title_ar": "عنوان",
+    "title_fr": "Titre",
+    "body_ar": "نص",
+    "body_fr": "Corps",
+}
 
 
 class FakeProvider(NotificationProvider):
@@ -53,22 +63,40 @@ class TestNotificationServiceSend:
         assert push.calls == [("user-topic-1", "job_status_changed", {"title": "Job started"})]
         assert email.calls == [("jane@example.com", "job_status_changed", {"title": "Job started"})]
 
-    async def test_in_app_channel_succeeds_without_a_provider(self, async_session):
-        """Persisted in-app delivery lands in a later Phase 6 issue -- for
-        now this abstraction layer just needs to route + log it as sent."""
+    async def test_in_app_channel_persists_a_notification_row(self, async_session):
+        user = await create_test_user(async_session)
         service = NotificationService()
 
         event = NotificationEvent(
             event_type="job.status_changed",
             channels=(NotificationChannel.IN_APP,),
-            recipients={NotificationChannel.IN_APP: "42"},
+            recipients={NotificationChannel.IN_APP: str(user.id)},
             template="job_status_changed",
-            payload={},
+            payload=IN_APP_PAYLOAD,
         )
 
         results = await service.send(async_session, event)
 
-        assert results == [DeliveryResult(success=True, provider="in_app")]
+        assert results[0].success is True
+        assert results[0].provider == "in_app"
+
+    async def test_in_app_channel_fails_without_a_provider(self, async_session):
+        """No provider is needed for in-app -- it always persists -- but a
+        channel still needs a recipient like every other channel."""
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.status_changed",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={},
+            template="job_status_changed",
+            payload=IN_APP_PAYLOAD,
+        )
+
+        results = await service.send(async_session, event)
+
+        assert results[0].success is False
+        assert "No recipient resolved" in results[0].error
 
     async def test_retries_a_failing_provider_and_eventually_succeeds(self, async_session):
         push = FakeProvider(fail_times=2)
@@ -173,14 +201,15 @@ class TestNotificationServiceLogging:
         assert by_channel[NotificationChannel.EMAIL].error == "smtp down"
 
     async def test_in_app_delivery_is_also_logged(self, async_session):
+        user = await create_test_user(async_session)
         service = NotificationService()
 
         event = NotificationEvent(
             event_type="test.in_app_logging",
             channels=(NotificationChannel.IN_APP,),
-            recipients={NotificationChannel.IN_APP: "42"},
+            recipients={NotificationChannel.IN_APP: str(user.id)},
             template="t",
-            payload={},
+            payload=IN_APP_PAYLOAD,
         )
 
         await service.send(async_session, event)
@@ -190,6 +219,107 @@ class TestNotificationServiceLogging:
         assert rows[0].channel == NotificationChannel.IN_APP
         assert rows[0].status == NotificationLogStatus.SENT
         assert rows[0].provider == "in_app"
+
+
+@pytest.mark.unit
+class TestNotificationServiceInAppDelivery:
+    async def test_persists_a_notification_row_with_the_bilingual_fields_and_job_link(self, async_session):
+        user = await create_test_user(async_session)
+        job = await create_test_job(async_session, user)
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.status_changed",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={NotificationChannel.IN_APP: str(user.id)},
+            template="t",
+            payload={**IN_APP_PAYLOAD, "related_job_id": job.id},
+        )
+
+        await service.send(async_session, event)
+
+        rows = (await async_session.execute(select(Notification).where(Notification.user_id == user.id))).scalars().all()
+        assert len(rows) == 1
+        assert rows[0].type == "job.status_changed"
+        assert rows[0].title_ar == IN_APP_PAYLOAD["title_ar"]
+        assert rows[0].title_fr == IN_APP_PAYLOAD["title_fr"]
+        assert rows[0].body_ar == IN_APP_PAYLOAD["body_ar"]
+        assert rows[0].body_fr == IN_APP_PAYLOAD["body_fr"]
+        assert rows[0].related_job_id == job.id
+        assert rows[0].read_at is None
+
+    async def test_pushes_the_new_notification_over_an_open_websocket_connection(self, async_session):
+        user = await create_test_user(async_session)
+        ws = FakeWebSocket()
+        await connection_manager.connect(user.id, ws)
+        try:
+            service = NotificationService()
+            event = NotificationEvent(
+                event_type="job.status_changed",
+                channels=(NotificationChannel.IN_APP,),
+                recipients={NotificationChannel.IN_APP: str(user.id)},
+                template="t",
+                payload=IN_APP_PAYLOAD,
+            )
+
+            await service.send(async_session, event)
+
+            assert len(ws.sent) == 1
+            assert ws.sent[0]["type"] == "notification"
+            assert ws.sent[0]["data"]["title_fr"] == IN_APP_PAYLOAD["title_fr"]
+        finally:
+            connection_manager.disconnect(user.id, ws)
+
+    async def test_does_not_push_when_the_recipient_has_no_open_connection(self, async_session):
+        user = await create_test_user(async_session)
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.status_changed",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={NotificationChannel.IN_APP: str(user.id)},
+            template="t",
+            payload=IN_APP_PAYLOAD,
+        )
+
+        # No WS connection registered for this user -- should still succeed
+        # and persist, just without a push.
+        results = await service.send(async_session, event)
+
+        assert results[0].success is True
+
+    async def test_fails_when_a_required_bilingual_field_is_missing(self, async_session):
+        user = await create_test_user(async_session)
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.status_changed",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={NotificationChannel.IN_APP: str(user.id)},
+            template="t",
+            payload={"title_ar": "عنوان", "title_fr": "Titre", "body_ar": "نص"},  # missing body_fr
+        )
+
+        results = await service.send(async_session, event)
+
+        assert results[0].success is False
+        assert "body_fr" in results[0].error
+
+    async def test_fails_when_the_recipient_is_not_a_valid_user_id(self, async_session):
+        service = NotificationService()
+
+        event = NotificationEvent(
+            event_type="job.status_changed",
+            channels=(NotificationChannel.IN_APP,),
+            recipients={NotificationChannel.IN_APP: "not-an-id"},
+            template="t",
+            payload=IN_APP_PAYLOAD,
+        )
+
+        results = await service.send(async_session, event)
+
+        assert results[0].success is False
+        assert "Invalid in-app recipient" in results[0].error
 
 
 @pytest.mark.unit

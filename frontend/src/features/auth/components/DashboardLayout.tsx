@@ -1,6 +1,7 @@
 // src/features/auth/components/DashboardLayout.tsx
 import React from 'react'
 import {useUser} from '@/features/user'
+import {NotificationBell} from '@/features/notification'
 import {LogoutButton} from '@/components/LogoutButton'
 import {AlertCircle, ArrowLeft, Home, Loader2, Search, UserCircle} from 'lucide-react'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
@@ -88,6 +89,11 @@ export const DashboardLayout: React.FC = () => {
 
             {/* ═══ Main Area ═════════════════════════════════════════════════ */}
             <div className="flex-1 flex flex-col">
+                {/* Desktop Header — just the notification bell; the sidebar covers identity/nav */}
+                <header className="hidden lg:flex justify-end border-b bg-card px-8 h-14 items-center">
+                    <NotificationBell/>
+                </header>
+
                 {/* Mobile Header */}
                 <header data-testid="mobile-header" className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-2">
@@ -96,7 +102,10 @@ export const DashboardLayout: React.FC = () => {
                         </div>
                         <span className="font-medium text-sm">{user.name}</span>
                     </div>
-                    <LogoutButton/>
+                    <div className="flex items-center gap-1">
+                        <NotificationBell/>
+                        <LogoutButton/>
+                    </div>
                 </header>
 
                 {/* Mobile Tab Switcher */}

@@ -11,6 +11,7 @@ from .providers import (
     SmsProvider,
 )
 from .service import NotificationEvent, NotificationService
+from .ws_manager import ConnectionManager, connection_manager
 
 __all__ = [
     "NotificationChannel",
@@ -25,4 +26,6 @@ __all__ = [
     "FcmPushProvider",
     "NotificationEvent",
     "NotificationService",
+    "ConnectionManager",
+    "connection_manager",
 ]
