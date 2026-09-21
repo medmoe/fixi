@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
@@ -84,7 +85,7 @@ class FcmPushProvider(PushProvider):
 
     name = "fcm"
 
-    def _init_app(self):
+    def _init_app(self) -> None:
         import firebase_admin
         from firebase_admin import credentials
 
@@ -134,12 +135,18 @@ class FcmPushProvider(PushProvider):
             # `tokens=` is deprecated in favor of `fids=` (Firebase Installation
             # IDs), a different identifier requiring the separate Firebase
             # Installations SDK on the client. device_tokens stores classic FCM
-            # registration tokens, so `tokens=` is deliberately still correct here.
-            message = messaging.MulticastMessage(
-                notification=messaging.Notification(title=title, body=body),
-                data=data,
-                tokens=token_values,
-            )
+            # registration tokens, so `tokens=` is deliberately still correct
+            # here -- the warning is expected noise, not a bug, so it's silenced.
+            # Note: firebase_admin raises this with stacklevel=2, so it's
+            # attributed to *this* module, not firebase_admin.messaging --
+            # `module=` can't be used to scope the filter, hence `message=`.
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=DeprecationWarning, message="MulticastMessage.tokens is deprecated")
+                message = messaging.MulticastMessage(
+                    notification=messaging.Notification(title=title, body=body),
+                    data=data,
+                    tokens=token_values,
+                )
             batch_response = await messaging.send_each_for_multicast_async(message)
         except Exception as exc:  # pragma: no cover - external integration path
             logger.warning("FCM multicast send failed: %s", exc)

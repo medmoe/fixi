@@ -178,6 +178,10 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
         raise ForbiddenException("You are not a participant in this job")
     if job.status != JobStatus.IN_PROGRESS:
         raise BadRequestException(f"Cannot mark complete — job must be in progress. Current status: {job.status.value}")
+    # A job can't reach IN_PROGRESS without a mutually confirmed application
+    # (OPEN -> ASSIGNED via confirm_application -> IN_PROGRESS via start_job),
+    # so there's always an accepted worker by this point.
+    assert accepted_worker_user_id is not None
 
     if is_customer:
         if job.customer_marked_complete_at is not None:

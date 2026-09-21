@@ -23,6 +23,10 @@ class DeviceTokenUpdateInternal(BaseModel):
     last_seen: datetime
 
 
+class DeviceTokenDelete(BaseModel):
+    pass
+
+
 class DeviceTokenRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

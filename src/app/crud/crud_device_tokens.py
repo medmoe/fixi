@@ -2,17 +2,26 @@ from fastcrud import FastCRUD
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import DeviceToken
-from ..schemas.device_token import DeviceTokenCreateInternal, DeviceTokenRead, DeviceTokenUpdateInternal
+from ..schemas.device_token import DeviceTokenCreateInternal, DeviceTokenDelete, DeviceTokenRead, DeviceTokenUpdateInternal
 
 
-class CRUDDeviceToken(FastCRUD):
+class CRUDDeviceToken(
+    FastCRUD[
+        DeviceToken,
+        DeviceTokenCreateInternal,
+        DeviceTokenUpdateInternal,
+        DeviceTokenUpdateInternal,
+        DeviceTokenDelete,
+        DeviceTokenRead,
+    ]
+):
     async def register(self, db: AsyncSession, object: DeviceTokenCreateInternal) -> DeviceTokenRead:
         """Upsert by token -- a device re-registering an already-known token
         (e.g. a different user logging into the same browser) reassigns it
         rather than creating a duplicate row."""
         existing = await self.exists(db=db, token=object.token)
         if existing:
-            return await self.update(
+            return await self.update(  # type: ignore[return-value]
                 db=db,
                 object=DeviceTokenUpdateInternal(user_id=object.user_id, platform=object.platform, last_seen=object.last_seen),
                 token=object.token,
