@@ -24,8 +24,19 @@ from ...core.security import (
 )
 from ...crud.crud_users import crud_users
 from ...models import CustomerProfile, User, UserRole, WorkerProfile
-from ...schemas.auth import LoginRequest, RegisterCustomer, RegisterRequest, RegisterResponse, RegisterWorker
+from ...schemas.auth import (
+    LoginRequest,
+    OtpSendRequest,
+    OtpSendResponse,
+    OtpVerifyRequest,
+    OtpVerifyResponse,
+    RegisterCustomer,
+    RegisterRequest,
+    RegisterResponse,
+    RegisterWorker,
+)
 from ...schemas.user import UserReadInternal
+from ...services.otp import otp_service
 from ..dependencies import rate_limiter_dependency
 
 router = APIRouter(tags=["auth-v2"], prefix="/auth")
@@ -122,3 +133,29 @@ async def refresh_access_token(request: Request, db: AsyncSession = Depends(asyn
 
     new_access_token = await create_access_token(data=create_token_payload(db_user))
     return {"access_token": new_access_token, "token_type": "bearer"}
+
+
+@router.post("/otp/send", response_model=OtpSendResponse, status_code=202, dependencies=[Depends(rate_limiter_dependency)])
+async def send_otp(payload: OtpSendRequest, db: Annotated[AsyncSession, Depends(async_get_db)]) -> OtpSendResponse:
+    """Sends a 6-digit OTP to `phone_number` over SMS (Issue 5). Unauthenticated
+    on purpose -- this runs before/without a session, e.g. during phone
+    verification at registration or a future phone-based login step.
+
+    Per-phone-number rate limiting/cooldown lives in OtpService; the
+    `rate_limiter_dependency` above adds a second, per-IP layer on top
+    (same pattern as POST /auth/login) so no single client can hammer
+    arbitrary phone numbers even while staying under each number's own
+    limit.
+    """
+    await otp_service.send(db, payload.phone_number)
+    return OtpSendResponse()
+
+
+@router.post("/otp/verify", response_model=OtpVerifyResponse, dependencies=[Depends(rate_limiter_dependency)])
+async def verify_otp(payload: OtpVerifyRequest) -> OtpVerifyResponse:
+    """Verifies a previously-sent OTP. Returns `{"verified": false}` rather
+    than a 4xx for a wrong/expired/missing code -- distinguishing "your
+    code was wrong" from "something broke" without leaking whether a code
+    was ever sent to this number."""
+    verified = await otp_service.verify(payload.phone_number, payload.code)
+    return OtpVerifyResponse(verified=verified)

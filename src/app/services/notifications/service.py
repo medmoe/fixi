@@ -69,6 +69,10 @@ def _resolve_push_provider() -> PushProvider:
 
 def _resolve_sms_provider() -> SmsProvider:
     name = settings.NOTIFICATION_SMS_PROVIDER
+    if name == "capcom6":
+        from .providers import Capcom6SmsProvider
+
+        return Capcom6SmsProvider()
     if name == "noop":
         return NoOpSmsProvider()
     raise ValueError(f"Unknown SMS provider: {name!r}")

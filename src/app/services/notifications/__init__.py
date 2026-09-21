@@ -1,6 +1,7 @@
 from ...models import NotificationChannel
 from .events import notify_user
 from .providers import (
+    Capcom6SmsProvider,
     DeliveryResult,
     EmailProvider,
     FcmPushProvider,
@@ -27,6 +28,7 @@ __all__ = [
     "NoOpSmsProvider",
     "FcmPushProvider",
     "MailjetEmailProvider",
+    "Capcom6SmsProvider",
     "NotificationEvent",
     "NotificationService",
     "ConnectionManager",
