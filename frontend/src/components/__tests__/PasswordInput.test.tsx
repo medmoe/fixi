@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from 'vitest';
-import {render, screen} from '@testing-library/react';
+import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type {FormEvent} from 'react';
 import {PasswordInput} from '@/components/ui/password-input';
@@ -15,7 +15,7 @@ describe('PasswordInput', () => {
         render(<PasswordInput aria-label="Password" value="secret123" onChange={() => {
         }}/>);
 
-        await userEvent.click(screen.getByRole('button', {name: /show password/i}));
+        await act(async () => await userEvent.click(screen.getByRole('button', {name: /show password/i})));
 
         expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'text');
     });
@@ -25,8 +25,8 @@ describe('PasswordInput', () => {
         }}/>);
 
         const toggle = screen.getByRole('button', {name: /show password/i});
-        await userEvent.click(toggle);
-        await userEvent.click(screen.getByRole('button', {name: /hide password/i}));
+        await act(async () => await userEvent.click(toggle));
+        await act(async () => await userEvent.click(screen.getByRole('button', {name: /hide password/i})));
 
         expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     });
@@ -40,7 +40,7 @@ describe('PasswordInput', () => {
             </form>
         );
 
-        await userEvent.click(screen.getByRole('button', {name: /show password/i}));
+        await act(async () => await userEvent.click(screen.getByRole('button', {name: /show password/i})));
 
         expect(handleSubmit).not.toHaveBeenCalled();
     });

@@ -124,10 +124,10 @@ const makePage = (apps: JobApplicationRead[]) => ({
 
 const mutateMock = vi.fn();
 
-const renderPanel = (props: {jobId?: number; jobStatus?: string} = {}) => {
+const renderPanel = (props: { jobId?: number; jobStatus?: string } = {}) => {
     const {jobId = 1, jobStatus = 'open'} = props;
     return render(
-        <MemoryRouter>
+        <MemoryRouter future={{v7_relativeSplatPath: true, v7_startTransition: true}}>
             <JobApplicationsPanel jobId={jobId} jobStatus={jobStatus}/>
         </MemoryRouter>
     );
@@ -332,7 +332,7 @@ describe('JobApplicationsPanel', () => {
                 isError: false,
             } as any);
             render(
-                <MemoryRouter>
+                <MemoryRouter future={{v7_relativeSplatPath: true, v7_startTransition: true}}>
                     <JobApplicationsPanel jobId={1} jobStatus="assigned"/>
                 </MemoryRouter>
             );
@@ -399,10 +399,10 @@ describe('JobApplicationsPanel', () => {
         it('calls mutate with rejected status on confirm', async () => {
             await openDialog('reject');
             const dialog = screen.getByTestId('alert-dialog');
-            await userEvent.selectOptions(
+            await act(async () => await userEvent.selectOptions(
                 within(dialog).getByTestId('mocked-select'),
                 'schedule_conflict'
-            );
+            ));
             await act(async () => {
                 await userEvent.click(within(dialog).getByRole('button', {name: /^reject$/i}));
             });
@@ -455,10 +455,10 @@ describe('JobApplicationsPanel', () => {
             });
             await openDialog('reject');
             const dialog = screen.getByTestId('alert-dialog');
-            await userEvent.selectOptions(
+            await act(async () => await userEvent.selectOptions(
                 within(dialog).getByTestId('mocked-select'),
                 'schedule_conflict'
-            );
+            ));
             await act(async () => {
                 await userEvent.click(within(dialog).getByRole('button', {name: /^reject$/i}));
             });
