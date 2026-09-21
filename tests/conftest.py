@@ -1,23 +1,24 @@
 import uuid
-from datetime import datetime, UTC
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
-from typing import AsyncGenerator, Annotated
-from unittest.mock import Mock, AsyncMock
+from typing import Annotated
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import pytest_asyncio
-from PIL import Image
 from faker import Faker
-from fastapi import Request, Depends
-from httpx import AsyncClient, ASGITransport
+from fastapi import Depends, Request
+from httpx import ASGITransport, AsyncClient
+from PIL import Image
 from redis import Redis
-from sqlalchemy import text, insert, select
+from sqlalchemy import insert, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 from uuid6 import uuid7
 
-from src.app.api.dependencies import rate_limiter_dependency, get_optional_user
+from src.app.api.dependencies import get_optional_user, rate_limiter_dependency
 from src.app.core.config import settings
 from src.app.core.db.database import Base, async_get_db
 from src.app.core.exceptions.http_exceptions import RateLimitException
@@ -25,7 +26,7 @@ from src.app.core.security import get_password_hash
 from src.app.core.utils import cache as cache_module
 from src.app.core.utils.rate_limit import RateLimiter
 from src.app.main import app
-from src.app.models import User, UserRole, WorkerProfile, TradeCategory, PortfolioImage, WorkerTrade, SkillLevel
+from src.app.models import PortfolioImage, SkillLevel, TradeCategory, User, UserRole, WorkerProfile, WorkerTrade
 from tests.helpers.fakes import FakeRateLimiter
 
 fake = Faker()
@@ -514,6 +515,7 @@ def sample_user_read():
     """Generate a sample UserRead object."""
     from uuid6 import uuid7
 
+    from src.app.models import PreferredLanguage
     from src.app.schemas.user import UserRead
 
     return UserRead(
@@ -523,7 +525,8 @@ def sample_user_read():
         username=fake.user_name(),
         email=fake.email(),
         profile_image_url=fake.image_url(),
-        role_type=UserRole.WORKER
+        role_type=UserRole.WORKER,
+        preferred_language=PreferredLanguage.FR,
     )
 
 

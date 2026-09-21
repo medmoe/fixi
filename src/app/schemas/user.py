@@ -12,7 +12,7 @@ from pydantic import (
 )
 
 from ..core.schemas import PersistentDeletion, UUIDSchema
-from ..models.user import UserRole
+from ..models.user import PreferredLanguage, UserRole
 
 #
 # -------------------------------------------------------------------------
@@ -100,6 +100,7 @@ class UserRead(UserBase, UUIDSchema):
     id: int
     profile_image_url: str
     role_type: UserRole
+    preferred_language: PreferredLanguage
     is_deleted: bool | None = None
     deleted_at: datetime | None = None
     updated_at: datetime | None = None
@@ -186,6 +187,7 @@ class UserUpdate(BaseModel):
     display_location: DisplayLocation = None
     latitude: Annotated[float, Field(ge=-90, le=90)] | None = None
     longitude: Annotated[float, Field(ge=-180, le=180)] | None = None
+    preferred_language: PreferredLanguage | None = None
 
     @field_validator("profile_image_url", mode="before")
     @classmethod

@@ -47,6 +47,10 @@ class NotificationEvent:
 
 def _resolve_email_provider() -> EmailProvider:
     name = settings.NOTIFICATION_EMAIL_PROVIDER
+    if name == "mailjet":
+        from .providers import MailjetEmailProvider
+
+        return MailjetEmailProvider()
     if name == "noop":
         return NoOpEmailProvider()
     raise ValueError(f"Unknown email provider: {name!r}")

@@ -1,25 +1,23 @@
 # tests/unit_tests/schema_tests/test_user_schemas.py
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from geoalchemy2.functions import ST_SetSRID, ST_MakePoint
 from pydantic import ValidationError
 
-from src.app.models import UserRole
+from src.app.models import PreferredLanguage, UserRole
 from src.app.schemas.user import (
+    UserAdminUpdate,
     UserBase,
-    UserRead,
     UserCreate,
     UserCreateInternal,
+    UserPasswordUpdate,
+    UserRead,
+    UserTierUpdate,
     UserUpdate,
     UserUpdateInternal,
-    UserPasswordUpdate,
-    UserTierUpdate,
-    UserAdminUpdate,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -40,6 +38,7 @@ def valid_read_payload(**overrides) -> dict:
         "uuid": uuid4(),
         "profile_image_url": "https://example.com/avatar.jpg",
         "role_type": UserRole.CUSTOMER,
+        "preferred_language": PreferredLanguage.FR,
         **overrides,
     }
 
@@ -151,6 +150,7 @@ class TestUserRead:
             uuid = uuid4()
             profile_image_url = "https://example.com/avatar.jpg"
             role_type = UserRole.CUSTOMER
+            preferred_language = PreferredLanguage.FR
 
         schema = UserRead.model_validate(FakeORM())
         data = schema.model_dump()

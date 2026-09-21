@@ -9,7 +9,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from ...api.dependencies import get_current_user, rate_limiter_dependency
+from ...api.dependencies import get_current_superuser, get_current_user, rate_limiter_dependency
 from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.events import publish
@@ -24,6 +24,7 @@ from ...schemas.review import ReviewSortBy, WorkerReviewEligibility, WorkerRevie
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
+from ...services.notifications import notify_user
 from ...services.review_eligibility_service import check_worker_review_eligibility
 
 router = APIRouter(tags=["workers"], prefix="/worker-profile")
@@ -371,6 +372,45 @@ async def get_worker_review_eligibility(
         raise NotFoundException(f"Worker with id {worker_profile_id} not found.")
 
     return await check_worker_review_eligibility(db=db, worker_profile_id=worker_profile_id, user_id=current_user["id"])
+
+
+# ————— PATCH /worker-profile/{worker_profile_id}/verify —————————————————
+@router.patch("/{worker_profile_id}/verify", response_model=WorkerProfileRead, status_code=200)
+async def verify_worker_profile(
+        worker_profile_id: int,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        _admin: Annotated[dict, Depends(get_current_superuser)],
+) -> Any:
+    """Admin-only. Marks a worker profile as verified -- there's no automatic
+    path to this today (ID/credential review happens out of band by staff),
+    so this is a deliberate manual action, not a side effect of anything else."""
+    worker_profile = await db.get(WorkerProfile, worker_profile_id)
+    if worker_profile is None:
+        raise NotFoundException(f"Worker profile with id {worker_profile_id} not found")
+
+    if worker_profile.is_verified:
+        return await _get_worker_profile_or_404(db=db, user_id=worker_profile.user_id)
+
+    updated = await crud_worker_profiles.update(
+        db=db,
+        object=WorkerProfileUpdateInternal(is_verified=True),
+        user_id=worker_profile.user_id,
+        schema_to_select=WorkerProfileRead,
+        return_as_model=True,
+    )
+
+    await notify_user(
+        db,
+        event_type="worker_verification_approved",
+        user_id=worker_profile.user_id,
+        title_ar="تم التحقق من ملفك الشخصي",
+        title_fr="Votre profil a été vérifié",
+        body_ar="تم التحقق من ملفك المهني من قبل فريقنا.",
+        body_fr="Votre profil professionnel a été vérifié par notre équipe.",
+        email_payload={"app_url": f"{settings.FRONTEND_BASE_URL}/dashboard"},
+    )
+
+    return updated
 
 
 # ————— GET /worker-profile/{worker_profile_id} —————————————————————————
