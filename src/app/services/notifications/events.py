@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.logger import logging
@@ -19,32 +21,45 @@ async def notify_user(
     body_ar: str,
     body_fr: str,
     related_job_id: int | None = None,
+    email_payload: dict[str, Any] | None = None,
 ) -> None:
-    """Fire an in-app + push notification at one user. Used by the job
-    lifecycle/application code, which must never let a notification failure
-    block or roll back the business transaction it's reporting on -- so this
-    swallows and logs rather than raising."""
+    """Fire an in-app + push notification at one user, and an email too when
+    `email_payload` is given -- its keys become `$variables` in the
+    `{event_type}_{language}.html` template (see email_templates/), so
+    `event_type` must match a template name whenever this is passed.
+
+    Used by the job lifecycle/application/review code, which must never let
+    a notification failure block or roll back the business transaction it's
+    reporting on -- so this swallows and logs rather than raising."""
+    channels: list[NotificationChannel] = [NotificationChannel.IN_APP, NotificationChannel.PUSH]
+    recipients: dict[NotificationChannel, str] = {
+        NotificationChannel.IN_APP: str(user_id),
+        NotificationChannel.PUSH: str(user_id),
+    }
+    payload: dict[str, Any] = {
+        "title_ar": title_ar,
+        "title_fr": title_fr,
+        "body_ar": body_ar,
+        "body_fr": body_fr,
+        "related_job_id": related_job_id,
+        # Plain title/body for channels (push) that don't do bilingual copy.
+        "title": title_fr,
+        "body": body_fr,
+    }
+    if email_payload is not None:
+        channels.append(NotificationChannel.EMAIL)
+        recipients[NotificationChannel.EMAIL] = str(user_id)
+        payload.update(email_payload)
+
     try:
         await NotificationService().send(
             db,
             NotificationEvent(
                 event_type=event_type,
-                channels=(NotificationChannel.IN_APP, NotificationChannel.PUSH),
-                recipients={
-                    NotificationChannel.IN_APP: str(user_id),
-                    NotificationChannel.PUSH: str(user_id),
-                },
+                channels=tuple(channels),
+                recipients=recipients,
                 template=event_type,
-                payload={
-                    "title_ar": title_ar,
-                    "title_fr": title_fr,
-                    "body_ar": body_ar,
-                    "body_fr": body_fr,
-                    "related_job_id": related_job_id,
-                    # Plain title/body for channels (push) that don't do bilingual copy.
-                    "title": title_fr,
-                    "body": body_fr,
-                },
+                payload=payload,
             ),
         )
     except Exception as exc:  # pragma: no cover - defensive: NotificationService already catches provider errors

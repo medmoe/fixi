@@ -8,6 +8,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
+from ..core.config import settings
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException
 from ..models import Job, Review, User, UserRole, WorkerProfile
 from ..schemas.review import (
@@ -19,6 +20,7 @@ from ..schemas.review import (
     WorkerReviewsMeta,
     WorkerReviewsResponse,
 )
+from ..services.notifications import notify_user
 from ..services.rating_service import recalculate_worker_rating
 from ..services.review_eligibility_service import check_review_eligibility, get_accepted_worker_user_id
 
@@ -179,6 +181,26 @@ class CRUDReview:
 
         await db.commit()
         await db.refresh(review)
+
+        reviewer = await db.get(User, user_id)
+        reviewer_name = reviewer.name if reviewer is not None else "Someone"
+        await notify_user(
+            db,
+            event_type="review_received",
+            user_id=reviewee_id,
+            title_ar="لقد تلقيت تقييماً جديداً",
+            title_fr="Vous avez reçu un nouvel avis",
+            body_ar=f"قام {reviewer_name} بتقييمك {payload.rating}/5 على مهمة «{job.title}».",
+            body_fr=f"{reviewer_name} vous a laissé un avis {payload.rating}/5 pour la mission « {job.title} ».",
+            related_job_id=job.id,
+            email_payload={
+                "reviewer_name": reviewer_name,
+                "rating": str(payload.rating),
+                "job_title": job.title,
+                "comment": payload.comment or "",
+                "app_url": f"{settings.FRONTEND_BASE_URL}/dashboard",
+            },
+        )
 
         return ReviewSubmitResponse.model_validate(review)
 

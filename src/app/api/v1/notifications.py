@@ -1,16 +1,17 @@
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
 from fastcrud import PaginatedListResponse, paginated_response
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.config import settings
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import NotFoundException
+from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundException
 from ...crud.crud_device_tokens import crud_device_tokens
 from ...crud.crud_notifications import crud_notifications
-from ...models import Notification
+from ...models import Notification, User
 from ...schemas.device_token import DeviceTokenCreate, DeviceTokenCreateInternal, DeviceTokenRead
 from ...schemas.notification import NotificationRead
 from ...services.notifications import connection_manager
@@ -113,6 +114,37 @@ async def unregister_device_token(
     if existing is None or existing.user_id != current_user["id"]:
         raise NotFoundException("Device token not found")
     await crud_device_tokens.delete(db=db, token=token)
+
+
+# ─── POST /notifications/email/webhook ───────────────────────────────────
+_BOUNCE_LIKE_EVENTS = {"bounce", "blocked", "spam"}
+
+
+@router.post("/email/webhook", status_code=200)
+async def mailjet_email_webhook(
+        request: Request,
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        secret: str | None = None,
+) -> dict[str, int]:
+    """Mailjet posts bounce/blocked/spam-complaint events here (configured
+    in the Mailjet console under Account > Webhooks). Mailjet doesn't sign
+    its payloads, so a shared secret on the URL query string is the only
+    way to confirm a request actually came from Mailjet -- reject
+    everything if it isn't configured, rather than run an open webhook."""
+    if not settings.MAILJET_WEBHOOK_SECRET or secret != settings.MAILJET_WEBHOOK_SECRET:
+        raise ForbiddenException("Invalid or missing webhook secret")
+
+    body: Any = await request.json()
+    events = body if isinstance(body, list) else [body]
+
+    bad_emails = {
+        event["email"] for event in events if isinstance(event, dict) and event.get("event") in _BOUNCE_LIKE_EVENTS and event.get("email")
+    }
+    if bad_emails:
+        await db.execute(update(User).where(User.email.in_(bad_emails)).values(email_invalid=True))
+        await db.commit()
+
+    return {"received": len(events)}
 
 
 # ─── WS /notifications/ws ─────────────────────────────────────────────────

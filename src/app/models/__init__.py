@@ -10,6 +10,6 @@ from .rate_limit import RateLimit
 from .review import Review
 from .tier import Tier
 from .trade_category import TradeCategory
-from .user import User, UserRole
+from .user import PreferredLanguage, User, UserRole
 from .worker_profile import WorkerProfile
 from .worker_trade import SkillLevel, WorkerTrade

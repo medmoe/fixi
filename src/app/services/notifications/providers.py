@@ -6,11 +6,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...core.config import settings
+from ...core.config import EnvironmentOption, settings
 from ...core.logger import logging
 from ...crud.crud_device_tokens import crud_device_tokens
+from ...models import User
+from .email_templates import EmailTemplateNotFound, render_email_template
 
 logger = logging.getLogger(__name__)
 
@@ -172,4 +175,70 @@ class FcmPushProvider(PushProvider):
                 "FCM multicast partially failed",
                 extra={"user_id": user_id, "success_count": batch_response.success_count, "failure_count": batch_response.failure_count},
             )
+        return DeliveryResult(success=True, provider=self.name)
+
+
+class MailjetEmailProvider(EmailProvider):
+    """Wraps Mailjet's v3.1 send API over plain HTTP (Mailjet's own SDK is
+    sync-only; httpx keeps this consistent with the rest of the app).
+    `recipient` is a user id -- this provider resolves it to that user's
+    email + preferred_language, renders the matching AR/FR HTML template,
+    and skips anyone with a known-bad address (email_invalid, flipped by
+    the bounce/complaint webhook) instead of retrying them forever.
+
+    Outside ENVIRONMENT=production this always logs instead of sending, no
+    matter what NOTIFICATION_EMAIL_PROVIDER says -- a deliberate second
+    layer so staging can never send real email even with real Mailjet
+    credentials configured (belt-and-suspenders over the provider switch).
+    """
+
+    name = "mailjet"
+
+    async def send(self, db: AsyncSession, recipient: str, template: str, payload: dict[str, Any]) -> DeliveryResult:
+        try:
+            user_id = int(recipient)
+        except (TypeError, ValueError):
+            return DeliveryResult(success=False, provider=self.name, error=f"Invalid email recipient: {recipient!r}")
+
+        user = await db.get(User, user_id)
+        if user is None:
+            return DeliveryResult(success=False, provider=self.name, error=f"No such user: {user_id}")
+        if user.email_invalid:
+            return DeliveryResult(success=False, provider=self.name, error="Recipient email previously bounced/complained -- skipped")
+
+        language = user.preferred_language.value
+        try:
+            subject, html = render_email_template(template, language, {**payload, "recipient_name": user.name})
+        except EmailTemplateNotFound as exc:
+            return DeliveryResult(success=False, provider=self.name, error=str(exc))
+
+        if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
+            logger.info("sandbox email (not sent)", extra={"to": user.email, "subject": subject, "template": template})
+            return DeliveryResult(success=True, provider=self.name)
+
+        if not (settings.MAILJET_API_KEY and settings.MAILJET_API_SECRET and settings.MAILJET_SENDER_EMAIL):
+            return DeliveryResult(success=False, provider=self.name, error="Mailjet is not configured (missing API key/secret/sender email)")
+
+        message = {
+            "Messages": [
+                {
+                    "From": {"Email": settings.MAILJET_SENDER_EMAIL, "Name": settings.MAILJET_SENDER_NAME},
+                    "To": [{"Email": user.email, "Name": user.name}],
+                    "Subject": subject,
+                    "HTMLPart": html,
+                }
+            ]
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    "https://api.mailjet.com/v3.1/send",
+                    json=message,
+                    auth=(settings.MAILJET_API_KEY, settings.MAILJET_API_SECRET),
+                )
+            response.raise_for_status()
+        except Exception as exc:  # pragma: no cover - external integration path
+            logger.warning("Mailjet send failed: %s", exc)
+            return DeliveryResult(success=False, provider=self.name, error=str(exc))
+
         return DeliveryResult(success=True, provider=self.name)

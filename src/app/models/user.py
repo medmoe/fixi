@@ -22,6 +22,11 @@ class UserRole(Enum):
     WORKER = "worker"
 
 
+class PreferredLanguage(Enum):
+    AR = "ar"
+    FR = "fr"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -47,6 +52,16 @@ class User(Base):
     is_superuser: Mapped[bool] = mapped_column(default=False)
     role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole, values_callable=lambda v: [e.value for e in v]), nullable=False, default=UserRole.CUSTOMER)
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    # ─── Email notifications ────────────────────────────────────────────────
+    preferred_language: Mapped[PreferredLanguage] = mapped_column(
+        SAEnum(PreferredLanguage, values_callable=lambda v: [e.value for e in v]),
+        nullable=False,
+        default=PreferredLanguage.FR,
+    )
+    # Flipped by the Mailjet bounce/complaint webhook -- once true, the email
+    # provider skips this user instead of retrying indefinitely.
+    email_invalid: Mapped[bool] = mapped_column(default=False)
 
     tier_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tiers.id"), index=True, default=None, )
 

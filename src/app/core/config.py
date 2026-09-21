@@ -20,6 +20,8 @@ class AppSettings(BaseSettings):
     LICENSE_NAME: str | None = config("LICENSE", default=None)
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
+    # Used to build absolute links in outbound emails (e.g. "view your review").
+    FRONTEND_BASE_URL: str = config("FRONTEND_BASE_URL", default="http://localhost:5173")
 
 
 class CryptSettings(BaseSettings):
@@ -122,6 +124,15 @@ class NotificationSettings(BaseSettings):
     NOTIFICATION_EMAIL_PROVIDER: str = config("NOTIFICATION_EMAIL_PROVIDER", default="noop")
     NOTIFICATION_PUSH_PROVIDER: str = config("NOTIFICATION_PUSH_PROVIDER", default="noop")
     NOTIFICATION_SMS_PROVIDER: str = config("NOTIFICATION_SMS_PROVIDER", default="noop")
+
+    MAILJET_API_KEY: str | None = config("MAILJET_API_KEY", default=None)
+    MAILJET_API_SECRET: str | None = config("MAILJET_API_SECRET", default=None)
+    MAILJET_SENDER_EMAIL: str | None = config("MAILJET_SENDER_EMAIL", default=None)
+    MAILJET_SENDER_NAME: str = config("MAILJET_SENDER_NAME", default="Fixi")
+    # Shared secret Mailjet must send back as a query param on the bounce/
+    # complaint webhook URL -- Mailjet doesn't sign webhook payloads, so this
+    # is the only way to confirm a request actually came from Mailjet.
+    MAILJET_WEBHOOK_SECRET: str | None = config("MAILJET_WEBHOOK_SECRET", default=None)
 
 
 class DefaultRateLimitSettings(BaseSettings):
