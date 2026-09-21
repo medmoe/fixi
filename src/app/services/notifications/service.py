@@ -137,7 +137,7 @@ class NotificationService:
         if recipient is None:
             return DeliveryResult(success=False, provider=provider.name, error=f"No recipient resolved for channel {channel.value}")
 
-        return await self._send_with_retry(provider, recipient, event.template, event.payload)
+        return await self._send_with_retry(db, provider, recipient, event.template, event.payload)
 
     async def _send_in_app(self, db: AsyncSession, event: NotificationEvent) -> DeliveryResult:
         """Persists the notification (so it shows up in GET /notifications and
@@ -180,12 +180,12 @@ class NotificationService:
         return DeliveryResult(success=True, provider="in_app")
 
     async def _send_with_retry(
-        self, provider: NotificationProvider, recipient: str, template: str, payload: dict[str, Any]
+        self, db: AsyncSession, provider: NotificationProvider, recipient: str, template: str, payload: dict[str, Any]
     ) -> DeliveryResult:
         result = DeliveryResult(success=False, provider=provider.name, error="not attempted")
         for attempt in range(1, self._max_attempts + 1):
             try:
-                result = await provider.send(recipient, template, payload)
+                result = await provider.send(db, recipient, template, payload)
             except Exception as exc:  # a provider bug shouldn't crash the caller
                 result = DeliveryResult(success=False, provider=provider.name, error=str(exc))
 

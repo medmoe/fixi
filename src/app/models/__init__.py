@@ -1,4 +1,5 @@
 from .customer_profile import CustomerProfile
+from .device_token import DevicePlatform, DeviceToken
 from .files import File
 from .job import Job, JobStatus
 from .job_application import ApplicationDeclineReason, ApplicationStatus, JobApplication

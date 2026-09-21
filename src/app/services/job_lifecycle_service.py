@@ -8,6 +8,7 @@ from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenExce
 from ..models import ApplicationDeclineReason, ApplicationStatus, Job, JobApplication, JobStatus, WorkerProfile
 from ..schemas.job import JobRead
 from ..schemas.job_application import JobApplicationRead
+from .notifications import notify_user
 from .review_eligibility_service import get_accepted_worker_user_id
 
 
@@ -32,9 +33,10 @@ async def _get_application_with_relations(db: AsyncSession, application_id: int)
     return result.unique().scalar_one()
 
 
-async def _reject_other_applications(db: AsyncSession, job_id: int, winning_application_id: int) -> None:
+async def _reject_other_applications(db: AsyncSession, job_id: int, winning_application_id: int) -> list[int]:
     """Called the moment an application reaches mutual confirmation --
-    every other application on the job (pending or accepted) loses out."""
+    every other application on the job (pending or accepted) loses out.
+    Returns the user_ids of the rejected workers, for notifying them."""
     result = await db.execute(
         select(JobApplication).where(
             JobApplication.job_id == job_id,
@@ -42,9 +44,16 @@ async def _reject_other_applications(db: AsyncSession, job_id: int, winning_appl
             JobApplication.status != ApplicationStatus.REJECTED,
         )
     )
-    for other in result.scalars().all():
+    others = result.scalars().all()
+    for other in others:
         other.status = ApplicationStatus.REJECTED
         other.decline_reason = ApplicationDeclineReason.ANOTHER_APPLICANT_SELECTED
+
+    if not others:
+        return []
+    profile_ids = [other.worker_profile_id for other in others]
+    user_ids_result = await db.execute(select(WorkerProfile.user_id).where(WorkerProfile.id.in_(profile_ids)))
+    return [row[0] for row in user_ids_result.all()]
 
 
 async def confirm_application(db: AsyncSession, job: Job, application: JobApplication, user_id: int) -> JobApplicationRead:
@@ -64,9 +73,31 @@ async def confirm_application(db: AsyncSession, job: Job, application: JobApplic
 
     application.worker_confirmed_at = datetime.now(UTC)
     job.status = JobStatus.ASSIGNED
-    await _reject_other_applications(db, job.id, application.id)
+    rejected_worker_user_ids = await _reject_other_applications(db, job.id, application.id)
 
     await db.commit()
+
+    await notify_user(
+        db,
+        event_type="job_application.confirmed",
+        user_id=job.user_id,
+        title_ar="تم تعيين المهمة",
+        title_fr="Mission assignée",
+        body_ar=f"قام محترف بتأكيد التعيين وهو الآن مسؤول عن مهمة «{job.title}».",
+        body_fr=f"Un professionnel a confirmé et est maintenant assigné à « {job.title} ».",
+        related_job_id=job.id,
+    )
+    for rejected_user_id in rejected_worker_user_ids:
+        await notify_user(
+            db,
+            event_type="job_application.rejected",
+            user_id=rejected_user_id,
+            title_ar="لم يتم قبول طلبك",
+            title_fr="Candidature non retenue",
+            body_ar=f"تم اختيار محترف آخر لمهمة «{job.title}».",
+            body_fr=f"Un autre professionnel a été choisi pour « {job.title} ».",
+            related_job_id=job.id,
+        )
 
     return JobApplicationRead.model_validate(await _get_application_with_relations(db, application.id))
 
@@ -92,6 +123,17 @@ async def withdraw_application(
 
     await db.commit()
 
+    await notify_user(
+        db,
+        event_type="job_application.withdrawn",
+        user_id=job.user_id,
+        title_ar="تم سحب الطلب",
+        title_fr="Candidature retirée",
+        body_ar=f"قام المحترف بسحب طلبه لمهمة «{job.title}».",
+        body_fr=f"Le professionnel a retiré sa candidature pour « {job.title} ».",
+        related_job_id=job.id,
+    )
+
     return JobApplicationRead.model_validate(await _get_application_with_relations(db, application.id))
 
 
@@ -107,6 +149,17 @@ async def start_job(db: AsyncSession, job: Job, user_id: int) -> JobRead:
 
     job.status = JobStatus.IN_PROGRESS
     await db.commit()
+
+    await notify_user(
+        db,
+        event_type="job.started",
+        user_id=job.user_id,
+        title_ar="بدأ العمل",
+        title_fr="Travail démarré",
+        body_ar=f"بدأ المحترف العمل على مهمة «{job.title}».",
+        body_fr=f"Le professionnel a commencé à travailler sur « {job.title} ».",
+        related_job_id=job.id,
+    )
 
     return JobRead.model_validate(await _get_job_with_relations(db, job.id))
 
@@ -125,6 +178,10 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
         raise ForbiddenException("You are not a participant in this job")
     if job.status != JobStatus.IN_PROGRESS:
         raise BadRequestException(f"Cannot mark complete — job must be in progress. Current status: {job.status.value}")
+    # A job can't reach IN_PROGRESS without a mutually confirmed application
+    # (OPEN -> ASSIGNED via confirm_application -> IN_PROGRESS via start_job),
+    # so there's always an accepted worker by this point.
+    assert accepted_worker_user_id is not None
 
     if is_customer:
         if job.customer_marked_complete_at is not None:
@@ -139,5 +196,30 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
         job.status = JobStatus.COMPLETED
 
     await db.commit()
+
+    if job.status == JobStatus.COMPLETED:
+        for participant_user_id in (job.user_id, accepted_worker_user_id):
+            await notify_user(
+                db,
+                event_type="job.completed",
+                user_id=participant_user_id,
+                title_ar="اكتملت المهمة",
+                title_fr="Mission terminée",
+                body_ar=f"تم تحديد مهمة «{job.title}» كمكتملة من الطرفين.",
+                body_fr=f"« {job.title} » est marqué comme terminé par les deux parties.",
+                related_job_id=job.id,
+            )
+    else:
+        other_user_id = accepted_worker_user_id if is_customer else job.user_id
+        await notify_user(
+            db,
+            event_type="job.completion_pending_confirmation",
+            user_id=other_user_id,
+            title_ar="مطلوب تأكيد",
+            title_fr="Confirmation requise",
+            body_ar=f"قام الطرف الآخر بتحديد مهمة «{job.title}» كمكتملة. يرجى التأكيد من جانبك أيضاً.",
+            body_fr=f"L'autre partie a marqué « {job.title} » comme terminé. Merci de confirmer à votre tour.",
+            related_job_id=job.id,
+        )
 
     return JobRead.model_validate(await _get_job_with_relations(db, job.id))

@@ -28,7 +28,7 @@ class FakeProvider(NotificationProvider):
         self._fail_times = fail_times
         self._raise_exc = raise_exc
 
-    async def send(self, recipient: str, template: str, payload: dict[str, Any]) -> DeliveryResult:
+    async def send(self, db, recipient: str, template: str, payload: dict[str, Any]) -> DeliveryResult:
         self.calls.append((recipient, template, payload))
         if self._raise_exc is not None:
             raise self._raise_exc

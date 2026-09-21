@@ -1,4 +1,5 @@
 from ...models import NotificationChannel
+from .events import notify_user
 from .providers import (
     DeliveryResult,
     EmailProvider,
@@ -28,4 +29,5 @@ __all__ = [
     "NotificationService",
     "ConnectionManager",
     "connection_manager",
+    "notify_user",
 ]
