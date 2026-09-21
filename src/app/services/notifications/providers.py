@@ -178,6 +178,64 @@ class FcmPushProvider(PushProvider):
         return DeliveryResult(success=True, provider=self.name)
 
 
+class Capcom6SmsProvider(SmsProvider):
+    """Wraps the local SMS Gateway for Android app by capcom6
+    (https://github.com/capcom6/android-sms-gateway) -- see
+    documentation/SMS_GATEWAY_RUNBOOK.md for the hardware/software setup.
+
+    Unlike Email/Push above, `recipient` here is a raw E.164 phone number,
+    not a user id: OTP is sent before/without an authenticated user, so
+    there's no User row to resolve it from.
+
+    No retry here (unlike MailjetEmailProvider/NotificationService's
+    `_send_with_retry`) -- a failed OTP send should surface to the caller
+    immediately as a clear error (see Issue 5's "failover path" acceptance
+    criterion) rather than silently retrying and making the user wait on a
+    request that may still fail.
+    """
+
+    name = "capcom6"
+
+    async def send(self, db: AsyncSession, recipient: str, template: str, payload: dict[str, Any]) -> DeliveryResult:
+        if not settings.SMS_GATEWAY_BASE_URL:
+            return DeliveryResult(success=False, provider=self.name, error="SMS_GATEWAY_BASE_URL is not configured -- no SIM gateway set up yet (see documentation/SMS_GATEWAY_RUNBOOK.md)")
+        if not (settings.SMS_GATEWAY_USERNAME and settings.SMS_GATEWAY_PASSWORD):
+            return DeliveryResult(success=False, provider=self.name, error="SMS gateway credentials are not configured")
+
+        text = self._render(template, payload)
+        if not text:
+            return DeliveryResult(success=False, provider=self.name, error=f"No SMS text resolved for template {template!r}")
+
+        body = {"textMessage": {"text": text}, "phoneNumbers": [recipient]}
+        try:
+            async with httpx.AsyncClient(timeout=settings.SMS_GATEWAY_TIMEOUT_SECONDS) as client:
+                response = await client.post(
+                    f"{settings.SMS_GATEWAY_BASE_URL.rstrip('/')}/message",
+                    json=body,
+                    auth=(settings.SMS_GATEWAY_USERNAME, settings.SMS_GATEWAY_PASSWORD),
+                )
+            response.raise_for_status()
+        except Exception as exc:  # pragma: no cover - external integration path, no gateway to hit yet
+            logger.warning("SMS gateway send failed: %s", exc)
+            return DeliveryResult(success=False, provider=self.name, error=str(exc))
+
+        return DeliveryResult(success=True, provider=self.name)
+
+    @staticmethod
+    def _render(template: str, payload: dict[str, Any]) -> str:
+        # Plain text only -- no AR/FR localization yet (unlike the email
+        # templates) since OTP is sent before a User row exists to read
+        # preferred_language off of. Revisit once/if OTP moves to always
+        # following an authenticated step.
+        if template == "otp_code":
+            code = payload.get("code")
+            if not code:
+                return ""
+            ttl_minutes = payload.get("ttl_minutes", 5)
+            return f"Fixi: {code} is your verification code. It expires in {ttl_minutes} minute(s). Don't share this code with anyone."
+        return str(payload.get("text", ""))
+
+
 class MailjetEmailProvider(EmailProvider):
     """Wraps Mailjet's v3.1 send API over plain HTTP (Mailjet's own SDK is
     sync-only; httpx keeps this consistent with the rest of the app).

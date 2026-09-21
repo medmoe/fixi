@@ -46,3 +46,28 @@ class LoginRequest(BaseModel):
 
     username_or_email: Annotated[str, Field(max_length=255)]
     password: Annotated[str, Field(max_length=128)]
+
+
+# E.164: a leading '+', 8-15 digits total, no leading zero after the '+'.
+_E164_PATTERN = r"^\+[1-9]\d{7,14}$"
+
+
+class OtpSendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone_number: Annotated[str, Field(pattern=_E164_PATTERN, examples=["+213555000000"])]
+
+
+class OtpSendResponse(BaseModel):
+    detail: str = "OTP sent"
+
+
+class OtpVerifyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone_number: Annotated[str, Field(pattern=_E164_PATTERN, examples=["+213555000000"])]
+    code: Annotated[str, Field(pattern=r"^\d{4,8}$", examples=["123456"])]
+
+
+class OtpVerifyResponse(BaseModel):
+    verified: bool

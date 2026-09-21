@@ -134,6 +134,41 @@ class NotificationSettings(BaseSettings):
     # is the only way to confirm a request actually came from Mailjet.
     MAILJET_WEBHOOK_SECRET: str | None = config("MAILJET_WEBHOOK_SECRET", default=None)
 
+    # ─── SMS gateway (capcom6 "SMS Gateway for Android") ────────────────────
+    # No SIM card / phone is provisioned yet -- see documentation/
+    # SMS_GATEWAY_RUNBOOK.md for the hardware setup steps and how these
+    # values get filled in once it is. Until then NOTIFICATION_SMS_PROVIDER
+    # stays "noop" and none of these need a value.
+    #
+    # SMS_GATEWAY_BASE_URL is either:
+    #   - local mode:  http://<phone-lan-ip>:8080          (same network/VPN as the phone)
+    #   - cloud mode:  https://api.sms-gate.app/3rdparty/v1  (capcom6's hosted relay)
+    # Both modes expose the same REST shape; only the host changes.
+    SMS_GATEWAY_BASE_URL: str | None = config("SMS_GATEWAY_BASE_URL", default=None)
+    SMS_GATEWAY_USERNAME: str | None = config("SMS_GATEWAY_USERNAME", default=None)
+    SMS_GATEWAY_PASSWORD: str | None = config("SMS_GATEWAY_PASSWORD", default=None)
+    SMS_GATEWAY_TIMEOUT_SECONDS: float = config("SMS_GATEWAY_TIMEOUT_SECONDS", default=10.0)
+
+
+class OtpSettings(BaseSettings):
+    """Policy knobs for phone OTP (Issue 5) -- deliberately separate from
+    SMS transport config above since these tune auth behavior, not the
+    gateway. OTPs live in Redis (rate_limiter's client), never the DB."""
+
+    OTP_LENGTH: int = config("OTP_LENGTH", default=6)
+    OTP_TTL_SECONDS: int = config("OTP_TTL_SECONDS", default=300)  # 5 minutes
+    # Minimum gap between two sends to the same phone number -- stops a
+    # "resend" button (or a script) from burning through the window limit
+    # below in a handful of seconds.
+    OTP_SEND_COOLDOWN_SECONDS: int = config("OTP_SEND_COOLDOWN_SECONDS", default=60)
+    # Hard cap on sends per phone number within a rolling window, on top of
+    # the cooldown -- e.g. someone waiting out the cooldown 5 times in a row.
+    OTP_MAX_SENDS_PER_WINDOW: int = config("OTP_MAX_SENDS_PER_WINDOW", default=5)
+    OTP_SEND_WINDOW_SECONDS: int = config("OTP_SEND_WINDOW_SECONDS", default=3600)  # 1 hour
+    # Wrong-code guesses allowed before the code is burned outright, to keep
+    # a 6-digit code from being brute-forceable within its 5-minute TTL.
+    OTP_MAX_VERIFY_ATTEMPTS: int = config("OTP_MAX_VERIFY_ATTEMPTS", default=5)
+
 
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
@@ -206,6 +241,7 @@ class Settings(
     JobLifecycleSettings,
     MinIOSettings,
     NotificationSettings,
+    OtpSettings,
     PostgresSettings,
     ProdSettings,
     RedisCacheSettings,
