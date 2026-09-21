@@ -16,6 +16,7 @@ import {useNotifications} from '../hooks/useNotifications'
 import {useMarkAllNotificationsRead} from '../hooks/useMarkAllNotificationsRead'
 import {useMarkNotificationRead} from '../hooks/useMarkNotificationRead'
 import {useNotificationSocket} from '../hooks/useNotificationSocket'
+import {usePushRegistration} from '../hooks/usePushRegistration'
 
 const RECENT_NOTIFICATIONS_LIMIT = 10
 
@@ -23,6 +24,7 @@ export const NotificationBell: React.FC = () => {
     // Keeps the WS connection alive for as long as the bell is mounted
     // (i.e. anywhere inside the authenticated dashboard layout).
     useNotificationSocket()
+    usePushRegistration()
 
     const {data: unreadData} = useNotifications({unreadOnly: true, itemsPerPage: 1})
     const {data, isLoading} = useNotifications({itemsPerPage: RECENT_NOTIFICATIONS_LIMIT})

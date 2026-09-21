@@ -15,3 +15,13 @@ export interface NotificationSocketMessage {
     type: 'notification';
     data: NotificationRead;
 }
+
+export type DevicePlatform = 'web' | 'ios' | 'android';
+
+export interface DeviceTokenRead {
+    id: number;
+    user_id: number;
+    token: string;
+    platform: DevicePlatform;
+    last_seen: string;
+}

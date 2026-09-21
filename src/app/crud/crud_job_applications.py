@@ -15,6 +15,7 @@ from ..schemas.job_application import (
     JobApplicationUpdate,
     JobApplicationUpdateInternal,
 )
+from ..services.notifications import notify_user
 
 
 class CRUDJobApplication(FastCRUD[
@@ -128,6 +129,32 @@ class CRUDJobApplication(FastCRUD[
 
         internal = JobApplicationUpdateInternal(status=object.status, decline_reason=object.decline_reason)
         await super().update(db=db, object=internal, id=app_id) # type: ignore[call-overload]
+
+        if object.status in (ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED):
+            worker_profile = await db.get(WorkerProfile, application.worker_profile_id)
+            if worker_profile is not None:
+                if object.status == ApplicationStatus.ACCEPTED:
+                    await notify_user(
+                        db,
+                        event_type="job_application.accepted",
+                        user_id=worker_profile.user_id,
+                        title_ar="تم قبول طلبك",
+                        title_fr="Candidature acceptée",
+                        body_ar=f"تم قبول طلبك لمهمة «{job.title}». يرجى تأكيد التعيين.",
+                        body_fr=f"Votre candidature pour « {job.title} » a été acceptée. Merci de confirmer votre assignation.",
+                        related_job_id=job.id,
+                    )
+                else:
+                    await notify_user(
+                        db,
+                        event_type="job_application.rejected",
+                        user_id=worker_profile.user_id,
+                        title_ar="لم يتم قبول طلبك",
+                        title_fr="Candidature non retenue",
+                        body_ar=f"لم يتم قبول طلبك لمهمة «{job.title}».",
+                        body_fr=f"Votre candidature pour « {job.title} » n'a pas été retenue.",
+                        related_job_id=job.id,
+                    )
 
         return await self._get_with_relations(db=db, application_id=app_id)
 

@@ -8,8 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import NotFoundException
+from ...crud.crud_device_tokens import crud_device_tokens
 from ...crud.crud_notifications import crud_notifications
 from ...models import Notification
+from ...schemas.device_token import DeviceTokenCreate, DeviceTokenCreateInternal, DeviceTokenRead
 from ...schemas.notification import NotificationRead
 from ...services.notifications import connection_manager
 from ..dependencies import get_current_user, get_current_user_ws
@@ -80,6 +82,37 @@ async def mark_all_notifications_read(
         .values(read_at=datetime.now(UTC).replace(tzinfo=None))
     )
     await db.commit()
+
+
+# ─── POST /notifications/device-tokens ───────────────────────────────────
+@router.post("/device-tokens", response_model=DeviceTokenRead, status_code=201)
+async def register_device_token(
+        body: DeviceTokenCreate,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+):
+    return await crud_device_tokens.register(
+        db=db,
+        object=DeviceTokenCreateInternal(
+            token=body.token,
+            platform=body.platform,
+            user_id=current_user["id"],
+            last_seen=datetime.now(UTC).replace(tzinfo=None),
+        ),
+    )
+
+
+# ─── DELETE /notifications/device-tokens/{token} ─────────────────────────
+@router.delete("/device-tokens/{token}", status_code=204)
+async def unregister_device_token(
+        token: str,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+):
+    existing = await crud_device_tokens.get(db=db, token=token, schema_to_select=DeviceTokenRead, return_as_model=True)
+    if existing is None or existing.user_id != current_user["id"]:
+        raise NotFoundException("Device token not found")
+    await crud_device_tokens.delete(db=db, token=token)
 
 
 # ─── WS /notifications/ws ─────────────────────────────────────────────────
