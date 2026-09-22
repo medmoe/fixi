@@ -199,7 +199,7 @@ class NotificationService:
         except (TypeError, ValueError):
             return DeliveryResult(success=False, provider="in_app", error=f"Invalid in-app recipient: {recipient!r}")
 
-        required_fields = ("title_ar", "title_fr", "body_ar", "body_fr")
+        required_fields = ("title_ar", "title_fr", "title_en", "body_ar", "body_fr", "body_en")
         missing = [key for key in required_fields if not event.payload.get(key)]
         if missing:
             return DeliveryResult(success=False, provider="in_app", error=f"Missing in-app payload field(s): {', '.join(missing)}")
@@ -211,8 +211,10 @@ class NotificationService:
                 type=event.event_type,
                 title_ar=event.payload["title_ar"],
                 title_fr=event.payload["title_fr"],
+                title_en=event.payload["title_en"],
                 body_ar=event.payload["body_ar"],
                 body_fr=event.payload["body_fr"],
+                body_en=event.payload["body_en"],
                 related_job_id=event.payload.get("related_job_id"),
             ),
             schema_to_select=NotificationRead,

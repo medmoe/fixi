@@ -12,8 +12,10 @@ async def create_test_notification(async_session: AsyncSession, user: User, **ov
         "type": "job.status_changed",
         "title_ar": "عنوان",
         "title_fr": "Titre",
+        "title_en": "Title",
         "body_ar": "نص",
         "body_fr": "Corps",
+        "body_en": "Body",
         "read_at": None,
         "related_job_id": None,
     }

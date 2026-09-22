@@ -83,8 +83,10 @@ async def confirm_application(db: AsyncSession, job: Job, application: JobApplic
         user_id=job.user_id,
         title_ar="تم تعيين المهمة",
         title_fr="Mission assignée",
+        title_en="Job assigned",
         body_ar=f"قام محترف بتأكيد التعيين وهو الآن مسؤول عن مهمة «{job.title}».",
         body_fr=f"Un professionnel a confirmé et est maintenant assigné à « {job.title} ».",
+        body_en=f'A professional has confirmed and is now assigned to "{job.title}".',
         related_job_id=job.id,
     )
     for rejected_user_id in rejected_worker_user_ids:
@@ -94,8 +96,10 @@ async def confirm_application(db: AsyncSession, job: Job, application: JobApplic
             user_id=rejected_user_id,
             title_ar="لم يتم قبول طلبك",
             title_fr="Candidature non retenue",
+            title_en="Application not selected",
             body_ar=f"تم اختيار محترف آخر لمهمة «{job.title}».",
             body_fr=f"Un autre professionnel a été choisi pour « {job.title} ».",
+            body_en=f'Another professional was chosen for "{job.title}".',
             related_job_id=job.id,
         )
 
@@ -129,8 +133,10 @@ async def withdraw_application(
         user_id=job.user_id,
         title_ar="تم سحب الطلب",
         title_fr="Candidature retirée",
+        title_en="Application withdrawn",
         body_ar=f"قام المحترف بسحب طلبه لمهمة «{job.title}».",
         body_fr=f"Le professionnel a retiré sa candidature pour « {job.title} ».",
+        body_en=f'The professional withdrew their application for "{job.title}".',
         related_job_id=job.id,
     )
 
@@ -156,8 +162,10 @@ async def start_job(db: AsyncSession, job: Job, user_id: int) -> JobRead:
         user_id=job.user_id,
         title_ar="بدأ العمل",
         title_fr="Travail démarré",
+        title_en="Job started",
         body_ar=f"بدأ المحترف العمل على مهمة «{job.title}».",
         body_fr=f"Le professionnel a commencé à travailler sur « {job.title} ».",
+        body_en=f'The professional has started working on "{job.title}".',
         related_job_id=job.id,
     )
 
@@ -205,8 +213,10 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
                 user_id=participant_user_id,
                 title_ar="اكتملت المهمة",
                 title_fr="Mission terminée",
+                title_en="Job completed",
                 body_ar=f"تم تحديد مهمة «{job.title}» كمكتملة من الطرفين.",
                 body_fr=f"« {job.title} » est marqué comme terminé par les deux parties.",
+                body_en=f'"{job.title}" is marked as completed by both parties.',
                 related_job_id=job.id,
             )
     else:
@@ -217,8 +227,10 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
             user_id=other_user_id,
             title_ar="مطلوب تأكيد",
             title_fr="Confirmation requise",
+            title_en="Confirmation required",
             body_ar=f"قام الطرف الآخر بتحديد مهمة «{job.title}» كمكتملة. يرجى التأكيد من جانبك أيضاً.",
             body_fr=f"L'autre partie a marqué « {job.title} » comme terminé. Merci de confirmer à votre tour.",
+            body_en=f'The other party marked "{job.title}" as completed. Please confirm on your side too.',
             related_job_id=job.id,
         )
 

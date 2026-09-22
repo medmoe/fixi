@@ -13,8 +13,10 @@ from tests.notifications.unit_tests.test_ws_manager import FakeWebSocket
 IN_APP_PAYLOAD = {
     "title_ar": "عنوان",
     "title_fr": "Titre",
+    "title_en": "Title",
     "body_ar": "نص",
     "body_fr": "Corps",
+    "body_en": "Body",
 }
 
 
@@ -244,8 +246,10 @@ class TestNotificationServiceInAppDelivery:
         assert rows[0].type == "job.status_changed"
         assert rows[0].title_ar == IN_APP_PAYLOAD["title_ar"]
         assert rows[0].title_fr == IN_APP_PAYLOAD["title_fr"]
+        assert rows[0].title_en == IN_APP_PAYLOAD["title_en"]
         assert rows[0].body_ar == IN_APP_PAYLOAD["body_ar"]
         assert rows[0].body_fr == IN_APP_PAYLOAD["body_fr"]
+        assert rows[0].body_en == IN_APP_PAYLOAD["body_en"]
         assert rows[0].related_job_id == job.id
         assert rows[0].read_at is None
 

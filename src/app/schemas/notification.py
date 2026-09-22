@@ -8,8 +8,10 @@ class NotificationBase(BaseModel):
     type: str
     title_ar: str
     title_fr: str
+    title_en: str
     body_ar: str
     body_fr: str
+    body_en: str
     related_job_id: int | None = None
 
 

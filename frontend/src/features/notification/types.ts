@@ -4,8 +4,10 @@ export interface NotificationRead {
     type: string;
     title_ar: string;
     title_fr: string;
+    title_en: string;
     body_ar: string;
     body_fr: string;
+    body_en: string;
     read_at: string | null;
     related_job_id: number | null;
     created_at: string;
