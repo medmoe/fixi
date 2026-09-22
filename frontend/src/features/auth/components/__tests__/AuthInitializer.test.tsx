@@ -6,6 +6,7 @@ import {MemoryRouter, Route, Routes, useLocation} from 'react-router-dom'
 import {AuthInitializer} from '@/features/auth/components/AuthInitializer'
 import {useInitAuth} from '@/features/auth/hooks/useInitAuth'
 import {useNotificationSocket} from '@/features/notification'
+import {useLanguageSync} from '@/features/i18n'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,10 @@ vi.mock('@/features/auth/hooks/useInitAuth', () => ({
 
 vi.mock('@/features/notification', () => ({
     useNotificationSocket: vi.fn(),
+}))
+
+vi.mock('@/features/i18n', () => ({
+    useLanguageSync: vi.fn(),
 }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -191,6 +196,14 @@ describe('AuthInitializer', () => {
                 authState: {isLoading: true, isAuthenticated: false, isError: false},
             })
             expect(useNotificationSocket).toHaveBeenCalled()
+        })
+
+        it('mounts language sync unconditionally, so preferred_language takes effect as soon as it is known rather than only where a LanguageSwitcher happens to be mounted', () => {
+            renderWithRouter({
+                initialRoute: '/',
+                authState: {isLoading: true, isAuthenticated: false, isError: false},
+            })
+            expect(useLanguageSync).toHaveBeenCalled()
         })
     })
 })

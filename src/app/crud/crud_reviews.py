@@ -190,8 +190,10 @@ class CRUDReview:
             user_id=reviewee_id,
             title_ar="لقد تلقيت تقييماً جديداً",
             title_fr="Vous avez reçu un nouvel avis",
+            title_en="You received a new review",
             body_ar=f"قام {reviewer_name} بتقييمك {payload.rating}/5 على مهمة «{job.title}».",
             body_fr=f"{reviewer_name} vous a laissé un avis {payload.rating}/5 pour la mission « {job.title} ».",
+            body_en=f'{reviewer_name} left you a {payload.rating}/5 review for the job "{job.title}".',
             related_job_id=job.id,
             email_payload={
                 "reviewer_name": reviewer_name,

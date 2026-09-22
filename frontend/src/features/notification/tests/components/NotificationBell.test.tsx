@@ -8,6 +8,7 @@ import {useMarkAllNotificationsRead} from '../../hooks/useMarkAllNotificationsRe
 import {useMarkNotificationRead} from '../../hooks/useMarkNotificationRead'
 import {usePushRegistration} from '../../hooks/usePushRegistration'
 import type {NotificationRead} from '../../types'
+import i18n from '@/lib/i18n'
 
 vi.mock('../../hooks/useNotifications')
 vi.mock('../../hooks/useMarkAllNotificationsRead')
@@ -59,8 +60,10 @@ const buildNotification = (overrides: Partial<NotificationRead> = {}): Notificat
     type: 'job.status_changed',
     title_ar: 'عنوان',
     title_fr: 'Job démarré',
+    title_en: 'Job started',
     body_ar: 'نص',
     body_fr: 'Votre job a démarré.',
+    body_en: 'Your job has started.',
     read_at: null,
     related_job_id: null,
     created_at: '2026-09-21T10:00:00Z',
@@ -71,11 +74,17 @@ const markReadMock = vi.fn()
 const markAllReadMock = vi.fn()
 
 describe('NotificationBell', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
         vi.clearAllMocks()
         vi.mocked(usePushRegistration).mockReturnValue(undefined)
         vi.mocked(useMarkNotificationRead).mockReturnValue({mutate: markReadMock} as never)
         vi.mocked(useMarkAllNotificationsRead).mockReturnValue({mutate: markAllReadMock, isPending: false} as never)
+        // Explicit rather than relying on i18next's browser-locale detection
+        // default -- jsdom's navigator.language ('en-US') now resolves to a
+        // real supported language ('en') since English support was added,
+        // so tests below that don't care about language selection need a
+        // deterministic starting point.
+        await i18n.changeLanguage('fr')
     })
 
     const mockLists = (options: { unreadCount?: number; notifications?: NotificationRead[]; isLoading?: boolean } = {}) => {
@@ -174,5 +183,40 @@ describe('NotificationBell', () => {
         await userEvent.click(screen.getByRole('button', {name: /mark all read/i}))
 
         expect(markAllReadMock).toHaveBeenCalled()
+    })
+
+    describe('language-aware content', () => {
+        it('shows the Arabic title/body when the active language is Arabic', async () => {
+            await i18n.changeLanguage('ar')
+            mockLists({notifications: [buildNotification()]})
+            render(<NotificationBell/>)
+
+            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+
+            expect(screen.getByText('عنوان')).toBeInTheDocument()
+            expect(screen.getByText('نص')).toBeInTheDocument()
+            expect(screen.queryByText('Job démarré')).not.toBeInTheDocument()
+        })
+
+        it('shows the English title/body when the active language is English', async () => {
+            await i18n.changeLanguage('en')
+            mockLists({notifications: [buildNotification()]})
+            render(<NotificationBell/>)
+
+            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+
+            expect(screen.getByText('Job started')).toBeInTheDocument()
+            expect(screen.getByText('Your job has started.')).toBeInTheDocument()
+        })
+
+        it('falls back to French for an unrecognized language', async () => {
+            await i18n.changeLanguage('es')
+            mockLists({notifications: [buildNotification()]})
+            render(<NotificationBell/>)
+
+            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+
+            expect(screen.getByText('Job démarré')).toBeInTheDocument()
+        })
     })
 })

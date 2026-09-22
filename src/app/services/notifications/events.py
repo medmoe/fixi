@@ -18,8 +18,10 @@ async def notify_user(
     user_id: int,
     title_ar: str,
     title_fr: str,
+    title_en: str,
     body_ar: str,
     body_fr: str,
+    body_en: str,
     related_job_id: int | None = None,
     email_payload: dict[str, Any] | None = None,
 ) -> None:
@@ -39,12 +41,11 @@ async def notify_user(
     payload: dict[str, Any] = {
         "title_ar": title_ar,
         "title_fr": title_fr,
+        "title_en": title_en,
         "body_ar": body_ar,
         "body_fr": body_fr,
+        "body_en": body_en,
         "related_job_id": related_job_id,
-        # Plain title/body for channels (push) that don't do bilingual copy.
-        "title": title_fr,
-        "body": body_fr,
     }
     if email_payload is not None:
         channels.append(NotificationChannel.EMAIL)

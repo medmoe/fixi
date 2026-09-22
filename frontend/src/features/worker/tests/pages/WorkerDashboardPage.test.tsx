@@ -27,6 +27,10 @@ vi.mock('@/features/notification', () => ({
     NotificationBell: () => <div data-testid="notification-bell"/>,
 }))
 
+vi.mock('@/features/i18n', () => ({
+    LanguageSwitcher: () => <div data-testid="language-switcher"/>,
+}))
+
 vi.mock('@/features/worker/components/AvailabilityToggle', () => ({
     AvailabilityToggle: ({isAvailable}: { isAvailable: boolean }) => (
         <div data-testid="availability-toggle">{isAvailable ? 'Available' : 'Unavailable'}</div>
@@ -357,6 +361,11 @@ describe('WorkerDashboardPage', () => {
             // once in the desktop header, once in the mobile header -- same
             // pattern as the customer DashboardLayout.
             expect(screen.getAllByTestId('notification-bell')).toHaveLength(2)
+        })
+
+        it('renders the language switcher', () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            expect(screen.getAllByTestId('language-switcher')).toHaveLength(2)
         })
     })
 })

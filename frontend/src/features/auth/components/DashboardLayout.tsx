@@ -2,6 +2,7 @@
 import React from 'react'
 import {useUser} from '@/features/user'
 import {NotificationBell} from '@/features/notification'
+import {LanguageSwitcher} from '@/features/i18n'
 import {LogoutButton} from '@/components/LogoutButton'
 import {AlertCircle, ArrowLeft, Home, Loader2, Search, UserCircle} from 'lucide-react'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
@@ -89,8 +90,9 @@ export const DashboardLayout: React.FC = () => {
 
             {/* ═══ Main Area ═════════════════════════════════════════════════ */}
             <div className="flex-1 flex flex-col">
-                {/* Desktop Header — just the notification bell; the sidebar covers identity/nav */}
-                <header className="hidden lg:flex justify-end border-b bg-card px-8 h-14 items-center">
+                {/* Desktop Header — notification bell + language switcher; the sidebar covers identity/nav */}
+                <header className="hidden lg:flex justify-end gap-1 border-b bg-card px-8 h-14 items-center">
+                    <LanguageSwitcher/>
                     <NotificationBell/>
                 </header>
 
@@ -103,6 +105,7 @@ export const DashboardLayout: React.FC = () => {
                         <span className="font-medium text-sm">{user.name}</span>
                     </div>
                     <div className="flex items-center gap-1">
+                        <LanguageSwitcher/>
                         <NotificationBell/>
                         <LogoutButton/>
                     </div>

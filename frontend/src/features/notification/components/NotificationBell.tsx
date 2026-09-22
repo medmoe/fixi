@@ -1,5 +1,6 @@
 import React from 'react'
 import {Bell} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Badge} from '@/components/ui/badge'
 import {Skeleton} from '@/components/ui/skeleton'
@@ -16,6 +17,7 @@ import {useNotifications} from '../hooks/useNotifications'
 import {useMarkAllNotificationsRead} from '../hooks/useMarkAllNotificationsRead'
 import {useMarkNotificationRead} from '../hooks/useMarkNotificationRead'
 import {usePushRegistration} from '../hooks/usePushRegistration'
+import {getLocalizedNotificationText} from '../utils/getLocalizedNotificationText'
 
 const RECENT_NOTIFICATIONS_LIMIT = 10
 
@@ -24,6 +26,12 @@ export const NotificationBell: React.FC = () => {
     // the whole session) rather than here -- this component can mount and
     // unmount freely (e.g. across dashboard layouts) without dropping it.
     usePushRegistration()
+
+    // Drives which of title_ar/fr/en (body_ar/fr/en) gets shown below --
+    // previously always title_fr/body_fr regardless of the active UI
+    // language, so an Arabic- or English-reading user saw French
+    // notification text no matter what the rest of the app was in.
+    const {i18n} = useTranslation()
 
     const {data: unreadData} = useNotifications({unreadOnly: true, itemsPerPage: 1})
     const {data, isLoading} = useNotifications({itemsPerPage: RECENT_NOTIFICATIONS_LIMIT})
@@ -88,26 +96,29 @@ export const NotificationBell: React.FC = () => {
                 )}
 
                 <div className="max-h-96 overflow-y-auto">
-                    {notifications.map((notification) => (
-                        <DropdownMenuItem
-                            key={notification.id}
-                            className="flex flex-col items-start gap-0.5 whitespace-normal py-2"
-                            onClick={() => handleItemClick(notification)}
-                        >
-                            <div className="flex w-full items-start justify-between gap-2">
-                                <span className={notification.read_at ? 'font-normal' : 'font-semibold'}>
-                                    {notification.title_fr}
+                    {notifications.map((notification) => {
+                        const {title, body} = getLocalizedNotificationText(notification, i18n.language)
+                        return (
+                            <DropdownMenuItem
+                                key={notification.id}
+                                className="flex flex-col items-start gap-0.5 whitespace-normal py-2"
+                                onClick={() => handleItemClick(notification)}
+                            >
+                                <div className="flex w-full items-start justify-between gap-2">
+                                    <span className={notification.read_at ? 'font-normal' : 'font-semibold'}>
+                                        {title}
+                                    </span>
+                                    {!notification.read_at && (
+                                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread"/>
+                                    )}
+                                </div>
+                                <span className="text-xs text-muted-foreground">{body}</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    {new Date(notification.created_at).toLocaleString()}
                                 </span>
-                                {!notification.read_at && (
-                                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread"/>
-                                )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">{notification.body_fr}</span>
-                            <span className="text-[10px] text-muted-foreground">
-                                {new Date(notification.created_at).toLocaleString()}
-                            </span>
-                        </DropdownMenuItem>
-                    ))}
+                            </DropdownMenuItem>
+                        )
+                    })}
                 </div>
             </DropdownMenuContent>
         </DropdownMenu>

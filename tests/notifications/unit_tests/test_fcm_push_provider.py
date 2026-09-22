@@ -5,11 +5,18 @@ import pytest
 from firebase_admin import messaging
 from sqlalchemy import select
 
-from src.app.models import DevicePlatform, DeviceToken
+from src.app.models import DevicePlatform, DeviceToken, PreferredLanguage
 from src.app.services.notifications.providers import FcmPushProvider
 from tests.conftest import create_test_user
 
-PAYLOAD = {"title": "Job started", "body": "Your job has started."}
+PAYLOAD = {
+    "title_ar": "بدأ العمل",
+    "title_fr": "Travail démarré",
+    "title_en": "Job started",
+    "body_ar": "بدأ المحترف العمل.",
+    "body_fr": "Le professionnel a commencé à travailler.",
+    "body_en": "Your job has started.",
+}
 
 
 async def _add_device_token(async_session, user, token: str) -> DeviceToken:
@@ -120,6 +127,67 @@ class TestFcmPushProvider:
         assert result.success is True
         sent_message = mock_send.call_args.args[0]
         assert sorted(sent_message.tokens) == ["token-1", "token-2"]
+        # default test user is French -- see below for other languages
+        assert sent_message.notification.title == "Travail démarré"
+        assert sent_message.notification.body == "Le professionnel a commencé à travailler."
+
+    async def test_selects_the_arabic_title_and_body_for_an_arabic_preferring_user(self, async_session, monkeypatch):
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.FCM_ENABLED", True)
+        user = await create_test_user(async_session, preferred_language=PreferredLanguage.AR)
+        await _add_device_token(async_session, user, "token-1")
+        provider = FcmPushProvider()
+
+        batch_response = messaging.BatchResponse([messaging.SendResponse({"name": "msg-1"}, None)])
+        with patch("firebase_admin.messaging.send_each_for_multicast_async", AsyncMock(return_value=batch_response)) as mock_send:
+            await provider.send(async_session, str(user.id), "t", PAYLOAD)
+
+        sent_message = mock_send.call_args.args[0]
+        assert sent_message.notification.title == "بدأ العمل"
+        assert sent_message.notification.body == "بدأ المحترف العمل."
+
+    async def test_selects_the_english_title_and_body_for_an_english_preferring_user(self, async_session, monkeypatch):
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.FCM_ENABLED", True)
+        user = await create_test_user(async_session, preferred_language=PreferredLanguage.EN)
+        await _add_device_token(async_session, user, "token-1")
+        provider = FcmPushProvider()
+
+        batch_response = messaging.BatchResponse([messaging.SendResponse({"name": "msg-1"}, None)])
+        with patch("firebase_admin.messaging.send_each_for_multicast_async", AsyncMock(return_value=batch_response)) as mock_send:
+            await provider.send(async_session, str(user.id), "t", PAYLOAD)
+
+        sent_message = mock_send.call_args.args[0]
+        assert sent_message.notification.title == "Job started"
+        assert sent_message.notification.body == "Your job has started."
+
+    async def test_falls_back_to_french_when_the_payload_has_no_copy_in_the_preferred_language(self, async_session, monkeypatch):
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.FCM_ENABLED", True)
+        user = await create_test_user(async_session, preferred_language=PreferredLanguage.EN)
+        await _add_device_token(async_session, user, "token-1")
+        provider = FcmPushProvider()
+        # No title_en/body_en -- an event that only ever provided French, or
+        # a translation gap -- must still produce a real notification.
+        incomplete_payload = {"title_fr": "Travail démarré", "body_fr": "Le professionnel a commencé à travailler."}
+
+        batch_response = messaging.BatchResponse([messaging.SendResponse({"name": "msg-1"}, None)])
+        with patch("firebase_admin.messaging.send_each_for_multicast_async", AsyncMock(return_value=batch_response)) as mock_send:
+            await provider.send(async_session, str(user.id), "t", incomplete_payload)
+
+        sent_message = mock_send.call_args.args[0]
+        assert sent_message.notification.title == "Travail démarré"
+        assert sent_message.notification.body == "Le professionnel a commencé à travailler."
+
+    async def test_excludes_localized_title_body_keys_from_the_fcm_data_payload(self, async_session, monkeypatch):
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.FCM_ENABLED", True)
+        user = await create_test_user(async_session)
+        await _add_device_token(async_session, user, "token-1")
+        provider = FcmPushProvider()
+
+        batch_response = messaging.BatchResponse([messaging.SendResponse({"name": "msg-1"}, None)])
+        with patch("firebase_admin.messaging.send_each_for_multicast_async", AsyncMock(return_value=batch_response)) as mock_send:
+            await provider.send(async_session, str(user.id), "t", {**PAYLOAD, "related_job_id": 10})
+
+        sent_message = mock_send.call_args.args[0]
+        assert sent_message.data == {"related_job_id": "10"}
 
     async def test_prunes_unregistered_tokens_after_a_partial_failure(self, async_session, monkeypatch):
         monkeypatch.setattr("src.app.services.notifications.providers.settings.FCM_ENABLED", True)

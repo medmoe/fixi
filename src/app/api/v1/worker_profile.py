@@ -405,8 +405,10 @@ async def verify_worker_profile(
         user_id=worker_profile.user_id,
         title_ar="تم التحقق من ملفك الشخصي",
         title_fr="Votre profil a été vérifié",
+        title_en="Your profile has been verified",
         body_ar="تم التحقق من ملفك المهني من قبل فريقنا.",
         body_fr="Votre profil professionnel a été vérifié par notre équipe.",
+        body_en="Your professional profile has been verified by our team.",
         email_payload={"app_url": f"{settings.FRONTEND_BASE_URL}/dashboard"},
     )
 

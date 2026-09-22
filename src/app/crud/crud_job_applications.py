@@ -140,8 +140,10 @@ class CRUDJobApplication(FastCRUD[
                         user_id=worker_profile.user_id,
                         title_ar="تم قبول طلبك",
                         title_fr="Candidature acceptée",
+                        title_en="Application accepted",
                         body_ar=f"تم قبول طلبك لمهمة «{job.title}». يرجى تأكيد التعيين.",
                         body_fr=f"Votre candidature pour « {job.title} » a été acceptée. Merci de confirmer votre assignation.",
+                        body_en=f'Your application for "{job.title}" has been accepted. Please confirm your assignment.',
                         related_job_id=job.id,
                     )
                 else:
@@ -151,8 +153,10 @@ class CRUDJobApplication(FastCRUD[
                         user_id=worker_profile.user_id,
                         title_ar="لم يتم قبول طلبك",
                         title_fr="Candidature non retenue",
+                        title_en="Application not selected",
                         body_ar=f"لم يتم قبول طلبك لمهمة «{job.title}».",
                         body_fr=f"Votre candidature pour « {job.title} » n'a pas été retenue.",
+                        body_en=f'Your application for "{job.title}" was not selected.',
                         related_job_id=job.id,
                     )
 

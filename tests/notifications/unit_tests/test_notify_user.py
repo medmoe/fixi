@@ -15,7 +15,7 @@ class TestNotifyUser:
 
         await notify_user(
             async_session, event_type="job.started", user_id=1,
-            title_ar="عنوان", title_fr="Titre", body_ar="نص", body_fr="Corps",
+            title_ar="عنوان", title_fr="Titre", title_en="Title", body_ar="نص", body_fr="Corps", body_en="Body",
         )
 
         event = mock_service.send.await_args.args[1]
@@ -29,7 +29,7 @@ class TestNotifyUser:
 
         await notify_user(
             async_session, event_type="review_received", user_id=42,
-            title_ar="عنوان", title_fr="Titre", body_ar="نص", body_fr="Corps",
+            title_ar="عنوان", title_fr="Titre", title_en="Title", body_ar="نص", body_fr="Corps", body_en="Body",
             email_payload={"reviewer_name": "Karim", "rating": "5"},
         )
 
@@ -48,5 +48,5 @@ class TestNotifyUser:
 
         await notify_user(
             async_session, event_type="job.started", user_id=1,
-            title_ar="عنوان", title_fr="Titre", body_ar="نص", body_fr="Corps",
+            title_ar="عنوان", title_fr="Titre", title_en="Title", body_ar="نص", body_fr="Corps", body_en="Body",
         )  # must not raise
