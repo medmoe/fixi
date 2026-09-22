@@ -105,6 +105,11 @@ skipped/logged), so the rest of the app can be built and tested against this tod
 
 ## 6. Test matrix (fill in as tested)
 
+Pull delivery/failure numbers for this table from `GET /notifications/stats` (see
+section 9) instead of eyeballing `notification_logs` by hand --
+`?event_type=otp_code` scopes it to just OTP traffic, and swap in each carrier's
+test window as `since_hours`.
+
 | Carrier  | SIM provisioned | Delivery time | Failure rate | Cost/SMS | Notes |
 |----------|:---------------:|:--------------|:--------------|:---------|:------|
 | Djezzy   | [ ]              |                |               |          |       |
@@ -137,3 +142,50 @@ Twilio later means:
 3. Flip `NOTIFICATION_SMS_PROVIDER` to the new provider's name.
 
 `OtpService`, `POST /auth/otp/send`, and `POST /auth/otp/verify` don't change at all.
+
+## 9. Delivery monitoring & alerting (Issue 7)
+
+### Dashboard query -- no DB console needed
+
+```
+GET /api/v1/notifications/stats?since_hours=24&event_type=otp_code
+```
+
+Superuser-only. Returns failure rate by (channel, provider) -- `sent`, `failed`,
+`skipped` (suppressed by a user's notification preference, Issue 6 -- excluded
+from `failure_rate` since it was never attempted), `attempted`, and
+`failure_rate`. Drop `event_type` to see every channel, or change `since_hours`
+to widen/narrow the window (e.g. `168` for the weekly check below).
+
+### Automatic alert
+
+A cron job (`check_otp_delivery_health` in `src/app/core/worker/functions.py`,
+registered in `WorkerSettings.cron_jobs`) runs every 15 minutes, computes the
+SMS/`otp_code` failure rate over the trailing `OTP_ALERT_WINDOW_MINUTES`
+(default 30), and -- if it's at or above `OTP_ALERT_FAILURE_RATE_THRESHOLD`
+(default 30%) on at least `OTP_ALERT_MIN_SAMPLE_SIZE` (default 5) attempts --
+posts to the configured admin alert provider. It re-checks every tick but only
+actually pages once per `OTP_ALERT_COOLDOWN_MINUTES` (default 60) so an
+ongoing outage doesn't spam the channel.
+
+Nothing pages anyone until you set:
+
+```
+ADMIN_ALERT_PROVIDER=slack   # or "mailjet"/"telegram"; "noop" (default) just logs
+ADMIN_ALERT_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...   # if slack
+ADMIN_ALERT_EMAIL=ops@yourdomain.com   # if mailjet -- reuses the MAILJET_* creds from section 4
+ADMIN_ALERT_TELEGRAM_BOT_TOKEN=...   # if telegram -- create a bot via @BotFather
+ADMIN_ALERT_TELEGRAM_CHAT_ID=...     # message the bot once, then GET api.telegram.org/bot<token>/getUpdates to find it
+```
+
+Like the SMS gateway itself, all three real providers are production-only --
+outside `ENVIRONMENT=production` they always log instead of posting/emailing,
+so a noisy staging environment (no real gateway there) can never page anyone.
+
+### Weekly manual check (during the Djezzy/Mobilis/Ooredoo test window)
+
+Once a week during active carrier testing, pull `GET /notifications/stats
+?since_hours=168&event_type=otp_code` and eyeball the failure rate per
+provider/carrier alongside the test matrix in section 6 -- the automatic alert
+only covers a sudden spike, not a slow-burn elevated rate that never crosses
+the threshold in any single 30-minute window.

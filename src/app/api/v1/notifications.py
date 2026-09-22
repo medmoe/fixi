@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
@@ -15,10 +15,12 @@ from ...crud.crud_notifications import crud_notifications
 from ...models import Notification, User
 from ...schemas.device_token import DeviceTokenCreate, DeviceTokenCreateInternal, DeviceTokenRead
 from ...schemas.notification import NotificationRead
+from ...schemas.notification_log import NotificationFailureRateRead
 from ...schemas.notification_preference import NotificationPreferenceRead, NotificationPreferenceUpdate
+from ...services.notification_monitoring import get_failure_rates
 from ...services.notifications import connection_manager
 from ...services.notifications.event_catalog import TOGGLEABLE_EVENT_CHANNELS
-from ..dependencies import get_current_user, get_current_user_ws
+from ..dependencies import get_current_superuser, get_current_user, get_current_user_ws
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -199,6 +201,36 @@ async def mailjet_email_webhook(
         await db.commit()
 
     return {"received": len(events)}
+
+
+# ─── GET /notifications/stats ────────────────────────────────────────────
+@router.get("/stats", response_model=list[NotificationFailureRateRead], status_code=200)
+async def get_notification_stats(
+        _admin: Annotated[dict, Depends(get_current_superuser)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        since_hours: int = 24,
+        event_type: str | None = None,
+) -> list[NotificationFailureRateRead]:
+    """Failure rate by (channel, provider) over the trailing `since_hours`
+    (default 24h), optionally scoped to one event_type -- Issue 7's
+    "queryable without a DB console session" requirement. Superuser-only:
+    this is an ops tool, not a user-facing endpoint. `skipped` (suppressed
+    by a user's notification preference, Issue 6) is reported but excluded
+    from `failure_rate` -- it was never attempted."""
+    since = datetime.now(UTC) - timedelta(hours=since_hours)
+    rates = await get_failure_rates(db, since=since, event_type=event_type)
+    return [
+        NotificationFailureRateRead(
+            channel=rate.channel,
+            provider=rate.provider,
+            sent=rate.sent,
+            failed=rate.failed,
+            skipped=rate.skipped,
+            attempted=rate.attempted,
+            failure_rate=rate.failure_rate,
+        )
+        for rate in sorted(rates, key=lambda r: (r.channel.value, r.provider))
+    ]
 
 
 # ─── WS /notifications/ws ─────────────────────────────────────────────────

@@ -18,3 +18,13 @@ class NotificationLogCreateInternal(NotificationLogBase):
 
 class NotificationLogRead(TimestampSchema, NotificationLogBase):
     id: int
+
+
+class NotificationFailureRateRead(BaseModel):
+    channel: NotificationChannel
+    provider: str
+    sent: int
+    failed: int
+    skipped: int
+    attempted: int
+    failure_rate: float | None
