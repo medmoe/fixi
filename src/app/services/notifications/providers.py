@@ -12,10 +12,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.config import EnvironmentOption, settings
 from ...core.logger import logging
 from ...crud.crud_device_tokens import crud_device_tokens
-from ...models import User
+from ...models import PreferredLanguage, User
 from .email_templates import EmailTemplateNotFound, render_email_template
 
 logger = logging.getLogger(__name__)
+
+# The per-language title_xx/body_xx keys every notify_user() payload carries
+# (see services/notifications/events.py) -- FcmPushProvider picks exactly
+# one pair per recipient (see below) and excludes the rest from FCM's `data`
+# field rather than shipping all languages' copy to every device.
+_LOCALIZED_PAYLOAD_KEYS = {f"title_{lang.value}" for lang in PreferredLanguage} | {f"body_{lang.value}" for lang in PreferredLanguage}
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,9 +135,17 @@ class FcmPushProvider(PushProvider):
         if not token_values:
             return DeliveryResult(success=False, provider=self.name, error="No device tokens registered for this user")
 
-        title = str(payload.get("title", ""))
-        body = str(payload.get("body", ""))
-        data = {k: str(v) for k, v in payload.items() if k not in {"title", "body"}}
+        # Resolves the recipient's own preferred_language rather than
+        # always sending French -- same idea as MailjetEmailProvider's
+        # template selection below, and the in-app feed's client-side
+        # title_ar/fr/en selection (see NotificationBell.tsx). Missing user
+        # or a payload that only carries one language (French) both fall
+        # back to French, never an empty notification.
+        user = await db.get(User, user_id)
+        language = user.preferred_language.value if user is not None else PreferredLanguage.FR.value
+        title = str(payload.get(f"title_{language}") or payload.get(f"title_{PreferredLanguage.FR.value}", ""))
+        body = str(payload.get(f"body_{language}") or payload.get(f"body_{PreferredLanguage.FR.value}", ""))
+        data = {k: str(v) for k, v in payload.items() if k not in _LOCALIZED_PAYLOAD_KEYS}
 
         try:
             self._init_app()

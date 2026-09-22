@@ -46,12 +46,6 @@ async def notify_user(
         "body_fr": body_fr,
         "body_en": body_en,
         "related_job_id": related_job_id,
-        # Plain title/body for channels (push) that don't do per-language
-        # copy -- always French regardless of the recipient's
-        # preferred_language. Known gap, not fixed here (see the in-app
-        # feed's title_ar/fr/en, which the client selects from directly).
-        "title": title_fr,
-        "body": body_fr,
     }
     if email_payload is not None:
         channels.append(NotificationChannel.EMAIL)
