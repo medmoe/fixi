@@ -27,11 +27,12 @@ export const NotificationBell: React.FC = () => {
     // unmount freely (e.g. across dashboard layouts) without dropping it.
     usePushRegistration()
 
-    // Drives which of title_ar/fr/en (body_ar/fr/en) gets shown below --
-    // previously always title_fr/body_fr regardless of the active UI
-    // language, so an Arabic- or English-reading user saw French
-    // notification text no matter what the rest of the app was in.
-    const {i18n} = useTranslation()
+    // `t` covers this component's own chrome; `i18n.language` drives which
+    // of title_ar/fr/en (body_ar/fr/en) gets shown below -- previously
+    // always title_fr/body_fr regardless of the active UI language, so an
+    // Arabic- or English-reading user saw French notification text no
+    // matter what the rest of the app was in.
+    const {t, i18n} = useTranslation('notification')
 
     const {data: unreadData} = useNotifications({unreadOnly: true, itemsPerPage: 1})
     const {data, isLoading} = useNotifications({itemsPerPage: RECENT_NOTIFICATIONS_LIMIT})
@@ -50,13 +51,13 @@ export const NotificationBell: React.FC = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+                <Button variant="ghost" size="icon" className="relative" aria-label={t('bell.triggerLabel')} data-testid="notification-bell-trigger">
                     <Bell className="h-5 w-5"/>
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
                             className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-[10px] justify-center"
-                            aria-label={`${unreadCount} unread notifications`}
+                            aria-label={t('bell.unreadBadge', {count: unreadCount})}
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </Badge>
@@ -66,7 +67,7 @@ export const NotificationBell: React.FC = () => {
 
             <DropdownMenuContent className="w-80">
                 <div className="flex items-center justify-between px-2 py-1.5">
-                    <DropdownMenuLabel className="p-0">Notifications</DropdownMenuLabel>
+                    <DropdownMenuLabel className="p-0">{t('bell.heading')}</DropdownMenuLabel>
                     {unreadCount > 0 && (
                         <Button
                             variant="ghost"
@@ -74,8 +75,9 @@ export const NotificationBell: React.FC = () => {
                             className="h-auto p-1 text-xs"
                             disabled={isMarkingAllRead}
                             onClick={() => markAllRead()}
+                            data-testid="mark-all-read-button"
                         >
-                            Mark all read
+                            {t('bell.markAllRead')}
                         </Button>
                     )}
                 </div>
@@ -91,7 +93,7 @@ export const NotificationBell: React.FC = () => {
 
                 {!isLoading && notifications.length === 0 && (
                     <p className="px-2 py-4 text-center text-sm text-muted-foreground">
-                        No notifications yet.
+                        {t('bell.empty')}
                     </p>
                 )}
 
@@ -109,7 +111,7 @@ export const NotificationBell: React.FC = () => {
                                         {title}
                                     </span>
                                     {!notification.read_at && (
-                                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread"/>
+                                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={t('bell.unread')}/>
                                     )}
                                 </div>
                                 <span className="text-xs text-muted-foreground">{body}</span>

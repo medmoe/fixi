@@ -1,0 +1,12 @@
+{
+  "locationPicker": {
+    "formAriaLabel": "Sélecteur de localisation",
+    "useMyLocation": "Utiliser ma position",
+    "geoDenied": "L'accès à la localisation a été refusé. Saisissez votre adresse manuellement ci-dessous.",
+    "geoTimeout": "Impossible d'obtenir votre position à temps. Saisissez votre adresse manuellement ci-dessous.",
+    "geoUnavailable": "Les services de localisation sont indisponibles. Saisissez votre adresse manuellement ci-dessous.",
+    "or": "ou",
+    "saving": "Enregistrement...",
+    "confirmLocation": "Confirmer la localisation"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "navbar": {
+    "logoAriaLabel": "Accueil Fixi",
+    "logIn": "Connexion",
+    "signUp": "Inscription",
+    "openMenuAriaLabel": "Ouvrir le menu"
+  },
+  "hero": {
+    "headingPrefix": "Trouvez des professionnels locaux",
+    "headingHighlight": "de confiance",
+    "subtitle": "Fixi met en relation les clients qui ont besoin de travaux qualifiés avec des professionnels locaux vérifiés, prêts à fournir un service de qualité — rapide, sécurisé et sans tracas.",
+    "findProfessional": "Trouver un professionnel",
+    "offerServices": "Proposer mes services",
+    "illustrationPlaceholder": "Illustration de la plateforme"
+  },
+  "howItWorks": {
+    "heading": "Comment fonctionne Fixi",
+    "subtitle": "Trois étapes simples pour faire avancer vos projets ou développer votre clientèle.",
+    "steps": {
+      "join": {
+        "title": "Rejoignez la plateforme",
+        "description": "Inscrivez-vous en quelques minutes en tant que client à la recherche d'aide ou de professionnel prêt à proposer vos compétences."
+      },
+      "connect": {
+        "title": "Entrez en contact",
+        "description": "Parcourez les missions locales ou recherchez les professionnels les mieux notés près de chez vous. Filtrez par métier, rayon et disponibilité."
+      },
+      "complete": {
+        "title": "Terminez et évaluez",
+        "description": "Coordonnez-vous en toute sécurité via la plateforme, terminez la mission et laissez un avis vérifié."
+      }
+    }
+  },
+  "audiencePitch": {
+    "heading": "Conçu pour tout le monde",
+    "subtitle": "Que vous ayez besoin d'une prestation ou que vous souhaitiez développer votre activité, Fixi répond à vos besoins.",
+    "customer": {
+      "badge": "Pour les clients",
+      "title": "Faites réaliser vos travaux correctement",
+      "description": "Trouvez des professionnels qualifiés et vérifiés près de chez vous, rapidement et en toute sécurité.",
+      "benefits": [
+        "Uniquement des professionnels vérifiés et contrôlés",
+        "Réservation sécurisée et paiement protégé",
+        "De vrais avis de vrais clients",
+        "Filtrage par rayon de service — trouvez des pros près de chez vous",
+        "Statut de disponibilité instantané sur chaque profil"
+      ],
+      "cta": "Trouver un professionnel"
+    },
+    "worker": {
+      "badge": "Pour les professionnels",
+      "title": "Développez votre activité",
+      "description": "Touchez plus de clients, gérez votre planning et soyez payé selon vos conditions.",
+      "benefits": [
+        "Fixez vous-même vos tarifs et disponibilités",
+        "Frais de plateforme réduits — gardez plus de vos revenus",
+        "Constituez un portfolio d'avis vérifiés",
+        "Accédez à une clientèle locale en croissance",
+        "Soyez payé rapidement et en toute sécurité"
+      ],
+      "cta": "Proposer mes services"
+    }
+  },
+  "footer": {
+    "logoAriaLabel": "Accueil Fixi",
+    "navAriaLabel": "Navigation du pied de page",
+    "copyright": "© {{year}} Fixi. Tous droits réservés.",
+    "logIn": "Connexion",
+    "signUp": "Inscription"
+  }
+}

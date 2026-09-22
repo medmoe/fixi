@@ -1,0 +1,71 @@
+{
+  "navbar": {
+    "logoAriaLabel": "Fixi home",
+    "logIn": "Log In",
+    "signUp": "Sign Up",
+    "openMenuAriaLabel": "Open menu"
+  },
+  "hero": {
+    "headingPrefix": "Connect with Trusted",
+    "headingHighlight": "Local Professionals",
+    "subtitle": "Fixi bridges the gap between customers who need skilled work done and verified local workers ready to deliver quality services — fast, secure, and hassle-free.",
+    "findProfessional": "Find a Professional",
+    "offerServices": "Offer My Services",
+    "illustrationPlaceholder": "Platform illustration"
+  },
+  "howItWorks": {
+    "heading": "How Fixi Works",
+    "subtitle": "Three simple steps to get things done or grow your client base.",
+    "steps": {
+      "join": {
+        "title": "Join the Platform",
+        "description": "Register in minutes as a Customer looking for help or a Worker ready to offer your skills."
+      },
+      "connect": {
+        "title": "Connect",
+        "description": "Browse local jobs or search for top-rated professionals near you. Filter by trade, radius, and availability."
+      },
+      "complete": {
+        "title": "Complete & Review",
+        "description": "Coordinate securely through the platform, complete the job, and leave a verified review."
+      }
+    }
+  },
+  "audiencePitch": {
+    "heading": "Built for Everyone",
+    "subtitle": "Whether you need a job done or want to grow your trade business, Fixi has you covered.",
+    "customer": {
+      "badge": "For Customers",
+      "title": "Get the job done right",
+      "description": "Find skilled, verified professionals in your area quickly and securely.",
+      "benefits": [
+        "Verified and vetted professionals only",
+        "Secure booking and payment protection",
+        "Real reviews from real customers",
+        "Service radius filtering — find pros near you",
+        "Instant availability status on every profile"
+      ],
+      "cta": "Find a Professional"
+    },
+    "worker": {
+      "badge": "For Workers",
+      "title": "Grow your trade business",
+      "description": "Reach more clients, manage your schedule, and get paid on your terms.",
+      "benefits": [
+        "Set your own rates and availability",
+        "Low platform fees — keep more of your earnings",
+        "Build a verified review portfolio",
+        "Access a growing local client base",
+        "Get paid quickly and securely"
+      ],
+      "cta": "Offer My Services"
+    }
+  },
+  "footer": {
+    "logoAriaLabel": "Fixi home",
+    "navAriaLabel": "Footer navigation",
+    "copyright": "© {{year}} Fixi. All rights reserved.",
+    "logIn": "Log In",
+    "signUp": "Sign Up"
+  }
+}

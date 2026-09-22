@@ -1,5 +1,6 @@
 import React from "react";
 import {Link} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 import {CheckCircle2, MapPin, Star} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -19,13 +20,15 @@ const getInitials = (name: string): string =>
         .toUpperCase();
 
 export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) => {
+    const {t} = useTranslation("worker");
+
     return (
         <Link
             to={`/workers/${profile.id}`}
             className="block rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
             <article
-                aria-label={`Worker profile for ${profile.user.name}`}
+                aria-label={t("workerCard.profileAriaLabel", {name: profile.user.name})}
                 className="p-4 space-y-3 h-full flex flex-col"
             >
                 {/* Header — avatar, name, verified badge */}
@@ -41,7 +44,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                             {profile.is_verified && (
                                 <CheckCircle2
                                     className="h-4 w-4 text-primary shrink-0"
-                                    aria-label="Verified worker"
+                                    aria-label={t("shared.verifiedWorker")}
                                 />
                             )}
                         </div>
@@ -51,10 +54,10 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                             <span>
                                 {profile.average_rating !== null
                                     ? `${Number(profile.average_rating).toFixed(1)} (${profile.review_count})`
-                                    : "New"}
+                                    : t("shared.newRating")}
                             </span>
                             {profile.years_of_experience !== null && (
-                                <span>· {profile.years_of_experience} yrs exp</span>
+                                <span>{t("workerCard.yearsExp", {count: profile.years_of_experience})}</span>
                             )}
                         </div>
                     </div>
@@ -64,7 +67,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                             profile.is_available ? "text-green-600" : "text-muted-foreground"
                         }`}
                     >
-                        {profile.is_available ? "Available" : "Unavailable"}
+                        {profile.is_available ? t("workerCard.available") : t("workerCard.unavailable")}
                     </span>
                 </div>
 
@@ -87,16 +90,16 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                 {/* Footer — rate, radius, distance */}
                 <div className="mt-auto flex items-center justify-between text-sm pt-2 border-t">
                     <div className="flex items-center gap-3 text-muted-foreground">
-                        {profile.hourly_rate !== null && <span>${Number(profile.hourly_rate).toFixed(2)}/hr</span>}
+                        {profile.hourly_rate !== null && <span>{t("workerCard.perHour", {rate: Number(profile.hourly_rate).toFixed(2)})}</span>}
                         {profile.service_radius_km !== null && (
-                            <span>{profile.service_radius_km} km radius</span>
+                            <span>{t("workerCard.radiusSuffix", {radius: profile.service_radius_km})}</span>
                         )}
                     </div>
 
                     {distance_km !== undefined && (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3" aria-hidden="true"/>
-                            {distance_km.toFixed(1)} km away
+                            {t("workerCard.distanceAway", {distance: distance_km.toFixed(1)})}
                         </span>
                     )}
                 </div>
@@ -105,11 +108,15 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
     );
 };
 
-export const WorkerSearchEmptyState: React.FC = () => (
+export const WorkerSearchEmptyState: React.FC = () => {
+    const {t} = useTranslation("worker");
+
+    return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-lg font-medium">No workers found</p>
+        <p className="text-lg font-medium">{t("workerCard.noWorkersFound")}</p>
         <p className="text-sm text-muted-foreground mt-1">
-            Try adjusting your filters to see more results.
+            {t("workerCard.noWorkersHint")}
         </p>
     </div>
-);
+    );
+};

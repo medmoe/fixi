@@ -1,0 +1,151 @@
+{
+  "shared": {
+    "cancel": "Cancel",
+    "updating": "Updating...",
+    "jobNotFound": "Job not found",
+    "selectAReason": "Select a reason",
+    "minimumBudgetAriaLabel": "Minimum budget",
+    "maximumBudgetAriaLabel": "Maximum budget"
+  },
+  "status": {
+    "open": "Open",
+    "assigned": "Assigned",
+    "in_progress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "myJobsPage": {
+    "signInPrompt": "Please sign in to view your jobs.",
+    "loadError": "Failed to load jobs. Please try again.",
+    "heading": "My Jobs",
+    "postNewJob": "Post New Job",
+    "emptyState": "You haven't posted any jobs yet.",
+    "postFirstJob": "Post Your First Job",
+    "viewJobAriaLabel": "View job {{title}}",
+    "editJobAriaLabel": "Edit job {{title}}",
+    "deleteJobAriaLabel": "Delete job {{title}}",
+    "deleteDialogTitle": "Delete this job?",
+    "deleteDialogDescription": "This will permanently remove “{{title}}”. This action cannot be undone.",
+    "deleting": "Deleting...",
+    "delete": "Delete"
+  },
+  "jobsTab": {
+    "loadingJobs": "Loading jobs...",
+    "jobsFoundCount_one": "{{count}} job found",
+    "jobsFoundCount_other": "{{count}} jobs found",
+    "loadError": "Failed to load jobs. Please try again later.",
+    "noJobsFound": "No jobs found",
+    "noJobsHint": "Try adjusting your filters to see more results.",
+    "loadMore": "Load more",
+    "loading": "Loading...",
+    "jobPostingAriaLabel": "Job posting: {{title}}",
+    "budgetNotSpecified": "Budget not specified",
+    "loadingJobAriaLabel": "Loading job"
+  },
+  "jobDetailPage": {
+    "back": "Back",
+    "descriptionHeading": "Description",
+    "postedOn": "Posted {{date}}",
+    "customerLabel": "Customer #{{name}}",
+    "loginToApply": "Log in to Apply",
+    "applicationsClosed": "This job is no longer accepting applications."
+  },
+  "jobCreateForm": {
+    "formAriaLabel": "Create job form",
+    "submitAriaLabel": "Submit job",
+    "creating": "Creating job...",
+    "postJob": "Post Job"
+  },
+  "jobEditForm": {
+    "formAriaLabel": "Edit job form",
+    "heading": "Edit Job",
+    "updateAriaLabel": "Update job",
+    "updateJob": "Update Job"
+  },
+  "jobApplicationsPanel": {
+    "toggleLabel": "Applications",
+    "pendingCount": "{{count}} pending",
+    "loadError": "Failed to load applications. Please try again.",
+    "emptyState": "No applications yet for this job.",
+    "acceptDialogTitle": "Accept Application?",
+    "acceptDialogDescription": "Accept {{workerName}}'s application for this job? You can still update other applications' statuses separately afterward.",
+    "rejectDialogTitle": "Reject Application?",
+    "rejectDialogDescription": "Reject {{workerName}}'s application for this job? This action cannot be undone.",
+    "accept": "Accept",
+    "reject": "Reject",
+    "reasonForRejectingAriaLabel": "Reason for rejecting",
+    "genericError": "Something went wrong. Please try again.",
+    "yearsExp": "{{count}} years exp.",
+    "perHour": "{{rate}}/hr",
+    "radiusKm": "{{radius}}km radius",
+    "message": "Message:",
+    "unknownWorker": "Unknown Worker",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    }
+  },
+  "jobLifecycleActions": {
+    "acceptedHeading": "You've been accepted for this job!",
+    "acceptedDescription": "Confirm once you and the customer have agreed on the details, or withdraw if it's not a fit.",
+    "confirmAssignment": "Confirm assignment",
+    "withdraw": "Withdraw",
+    "pendingReview": "Your application is pending review.",
+    "withdrawApplication": "Withdraw application",
+    "assignedHeading": "You're assigned to this job.",
+    "startJob": "Start job",
+    "markedComplete": "Marked complete — waiting for the other party to confirm.",
+    "isJobDoneHeading": "Is this job done?",
+    "markAsComplete": "Mark as complete",
+    "withdrawDialogTitle": "Withdraw application?",
+    "withdrawDialogDescription": "Let the customer know why — this helps us improve future matches.",
+    "reasonForWithdrawingAriaLabel": "Reason for withdrawing"
+  },
+  "applyToJobDialog": {
+    "applicationSubmitted": "Application submitted",
+    "applyToThisJob": "Apply to this job",
+    "dialogTitle": "Apply to “{{title}}”",
+    "dialogDescription": "Add an optional message to introduce yourself to the customer.",
+    "messageAriaLabel": "Application message",
+    "messagePlaceholder": "I have 5 years of experience and can start right away...",
+    "submitting": "Submitting...",
+    "submitApplication": "Submit application"
+  },
+  "jobsFilterPanel": {
+    "ariaLabel": "Job filters",
+    "searchLabel": "Search",
+    "searchAriaLabel": "Search jobs",
+    "searchPlaceholder": "e.g. Fix leaking sink",
+    "statusLabel": "Status",
+    "statusAriaLabel": "Job status",
+    "allStatuses": "All statuses",
+    "tradeCategoryLabel": "Trade Category",
+    "loadingCategories": "Loading categories...",
+    "budgetRangeLabel": "Budget Range",
+    "minBudgetPlaceholder": "Min",
+    "maxBudgetPlaceholder": "Max",
+    "clearFilters": "Clear filters"
+  },
+  "titleField": {
+    "label": "Job Title",
+    "placeholder": "e.g. Fix leaking kitchen sink, Install ceiling fan...",
+    "charCount": "{{count}}/255 chars"
+  },
+  "descriptionField": {
+    "label": "Description",
+    "ariaLabel": "Job Description",
+    "placeholder": "Describe the job in detail — what needs to be done, any access requirements, urgency...",
+    "charCount": "{{count}}/1000 chars"
+  },
+  "budgetRangeField": {
+    "label": "Budget Range",
+    "minLabel": "Min ($)",
+    "maxLabel": "Max ($)"
+  },
+  "jobTradeCategoryField": {
+    "label": "Trade Category",
+    "loading": "Loading trade categories...",
+    "removeAriaLabel": "Remove {{name}}"
+  }
+}

@@ -4,6 +4,30 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import common_ar from '@/locales/ar/common.json'
 import common_fr from '@/locales/fr/common.json'
 import common_en from '@/locales/en/common.json'
+import notification_ar from '@/locales/ar/notification.json'
+import notification_fr from '@/locales/fr/notification.json'
+import notification_en from '@/locales/en/notification.json'
+import landing_ar from '@/locales/ar/landing.json'
+import landing_fr from '@/locales/fr/landing.json'
+import landing_en from '@/locales/en/landing.json'
+import auth_ar from '@/locales/ar/auth.json'
+import auth_fr from '@/locales/fr/auth.json'
+import auth_en from '@/locales/en/auth.json'
+import account_ar from '@/locales/ar/account.json'
+import account_fr from '@/locales/fr/account.json'
+import account_en from '@/locales/en/account.json'
+import worker_ar from '@/locales/ar/worker.json'
+import worker_fr from '@/locales/fr/worker.json'
+import worker_en from '@/locales/en/worker.json'
+import job_ar from '@/locales/ar/job.json'
+import job_fr from '@/locales/fr/job.json'
+import job_en from '@/locales/en/job.json'
+import review_ar from '@/locales/ar/review.json'
+import review_fr from '@/locales/fr/review.json'
+import review_en from '@/locales/en/review.json'
+import customer_ar from '@/locales/ar/customer.json'
+import customer_fr from '@/locales/fr/customer.json'
+import customer_en from '@/locales/en/customer.json'
 
 // `ar`/`fr` are the languages Phase 7 targets (see
 // documentation/PHASE_7_I18N_RTL_ISSUES.md); `en` was added after, as a
@@ -14,11 +38,10 @@ export const SUPPORTED_LANGUAGES = ['fr', 'ar', 'en'] as const
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 
 // Namespaces are per-feature (see PHASE_7_I18N_RTL_ISSUES.md Issue 1's
-// "namespaced by feature" task) -- only `common` exists so far since string
-// extraction across the app is Issue 2's job, not this one. Add a namespace
-// here (and a matching src/locales/{ar,fr}/<name>.json pair) as each
-// feature's strings get extracted.
-export const NAMESPACES = ['common'] as const
+// "namespaced by feature" task). Add a namespace here (and a matching
+// src/locales/{ar,fr,en}/<name>.json triple) as each feature's strings get
+// extracted (Issue 2).
+export const NAMESPACES = ['common', 'notification', 'landing', 'auth', 'account', 'worker', 'job', 'review', 'customer'] as const
 
 // A missing key must never reach a real user as a raw i18next key (Issue 1
 // acceptance criteria) -- but hiding it in dev would make missing
@@ -43,9 +66,9 @@ void i18n
     .use(initReactI18next)
     .init({
         resources: {
-            fr: {common: common_fr},
-            ar: {common: common_ar},
-            en: {common: common_en},
+            fr: {common: common_fr, notification: notification_fr, landing: landing_fr, auth: auth_fr, account: account_fr, worker: worker_fr, job: job_fr, review: review_fr, customer: customer_fr},
+            ar: {common: common_ar, notification: notification_ar, landing: landing_ar, auth: auth_ar, account: account_ar, worker: worker_ar, job: job_ar, review: review_ar, customer: customer_ar},
+            en: {common: common_en, notification: notification_en, landing: landing_en, auth: auth_en, account: account_en, worker: worker_en, job: job_en, review: review_en, customer: customer_en},
         },
         ns: NAMESPACES,
         defaultNS: 'common',

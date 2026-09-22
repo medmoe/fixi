@@ -1,0 +1,151 @@
+{
+  "shared": {
+    "cancel": "Annuler",
+    "updating": "Mise à jour...",
+    "jobNotFound": "Mission introuvable",
+    "selectAReason": "Sélectionner un motif",
+    "minimumBudgetAriaLabel": "Budget minimum",
+    "maximumBudgetAriaLabel": "Budget maximum"
+  },
+  "status": {
+    "open": "Ouverte",
+    "assigned": "Attribuée",
+    "in_progress": "En cours",
+    "completed": "Terminée",
+    "cancelled": "Annulée"
+  },
+  "myJobsPage": {
+    "signInPrompt": "Veuillez vous connecter pour voir vos missions.",
+    "loadError": "Échec du chargement des missions. Veuillez réessayer.",
+    "heading": "Mes missions",
+    "postNewJob": "Publier une mission",
+    "emptyState": "Vous n'avez encore publié aucune mission.",
+    "postFirstJob": "Publier votre première mission",
+    "viewJobAriaLabel": "Voir la mission {{title}}",
+    "editJobAriaLabel": "Modifier la mission {{title}}",
+    "deleteJobAriaLabel": "Supprimer la mission {{title}}",
+    "deleteDialogTitle": "Supprimer cette mission ?",
+    "deleteDialogDescription": "Cela supprimera définitivement « {{title}} ». Cette action est irréversible.",
+    "deleting": "Suppression...",
+    "delete": "Supprimer"
+  },
+  "jobsTab": {
+    "loadingJobs": "Chargement des missions...",
+    "jobsFoundCount_one": "{{count}} mission trouvée",
+    "jobsFoundCount_other": "{{count}} missions trouvées",
+    "loadError": "Échec du chargement des missions. Veuillez réessayer plus tard.",
+    "noJobsFound": "Aucune mission trouvée",
+    "noJobsHint": "Essayez d'ajuster vos filtres pour voir plus de résultats.",
+    "loadMore": "Charger plus",
+    "loading": "Chargement...",
+    "jobPostingAriaLabel": "Offre de mission : {{title}}",
+    "budgetNotSpecified": "Budget non précisé",
+    "loadingJobAriaLabel": "Chargement de la mission"
+  },
+  "jobDetailPage": {
+    "back": "Retour",
+    "descriptionHeading": "Description",
+    "postedOn": "Publiée le {{date}}",
+    "customerLabel": "Client #{{name}}",
+    "loginToApply": "Se connecter pour postuler",
+    "applicationsClosed": "Cette mission n'accepte plus de candidatures."
+  },
+  "jobCreateForm": {
+    "formAriaLabel": "Formulaire de création de mission",
+    "submitAriaLabel": "Publier la mission",
+    "creating": "Publication de la mission...",
+    "postJob": "Publier la mission"
+  },
+  "jobEditForm": {
+    "formAriaLabel": "Formulaire de modification de mission",
+    "heading": "Modifier la mission",
+    "updateAriaLabel": "Mettre à jour la mission",
+    "updateJob": "Mettre à jour la mission"
+  },
+  "jobApplicationsPanel": {
+    "toggleLabel": "Candidatures",
+    "pendingCount": "{{count}} en attente",
+    "loadError": "Échec du chargement des candidatures. Veuillez réessayer.",
+    "emptyState": "Aucune candidature pour cette mission pour le moment.",
+    "acceptDialogTitle": "Accepter la candidature ?",
+    "acceptDialogDescription": "Accepter la candidature de {{workerName}} pour cette mission ? Vous pourrez toujours modifier le statut des autres candidatures séparément par la suite.",
+    "rejectDialogTitle": "Refuser la candidature ?",
+    "rejectDialogDescription": "Refuser la candidature de {{workerName}} pour cette mission ? Cette action est irréversible.",
+    "accept": "Accepter",
+    "reject": "Refuser",
+    "reasonForRejectingAriaLabel": "Motif du refus",
+    "genericError": "Une erreur s'est produite. Veuillez réessayer.",
+    "yearsExp": "{{count}} ans d'expérience",
+    "perHour": "{{rate}}/h",
+    "radiusKm": "rayon de {{radius}} km",
+    "message": "Message :",
+    "unknownWorker": "Professionnel inconnu",
+    "status": {
+      "pending": "En attente",
+      "accepted": "Acceptée",
+      "rejected": "Refusée"
+    }
+  },
+  "jobLifecycleActions": {
+    "acceptedHeading": "Vous avez été accepté pour cette mission !",
+    "acceptedDescription": "Confirmez une fois que vous et le client êtes d'accord sur les détails, ou retirez votre candidature si cela ne convient pas.",
+    "confirmAssignment": "Confirmer l'attribution",
+    "withdraw": "Retirer",
+    "pendingReview": "Votre candidature est en cours d'examen.",
+    "withdrawApplication": "Retirer la candidature",
+    "assignedHeading": "Vous êtes attribué à cette mission.",
+    "startJob": "Démarrer la mission",
+    "markedComplete": "Marquée comme terminée — en attente de confirmation de l'autre partie.",
+    "isJobDoneHeading": "Cette mission est-elle terminée ?",
+    "markAsComplete": "Marquer comme terminée",
+    "withdrawDialogTitle": "Retirer la candidature ?",
+    "withdrawDialogDescription": "Indiquez au client pourquoi — cela nous aide à améliorer les futures mises en relation.",
+    "reasonForWithdrawingAriaLabel": "Motif du retrait"
+  },
+  "applyToJobDialog": {
+    "applicationSubmitted": "Candidature envoyée",
+    "applyToThisJob": "Postuler à cette mission",
+    "dialogTitle": "Postuler à « {{title}} »",
+    "dialogDescription": "Ajoutez un message facultatif pour vous présenter au client.",
+    "messageAriaLabel": "Message de candidature",
+    "messagePlaceholder": "J'ai 5 ans d'expérience et je peux commencer immédiatement...",
+    "submitting": "Envoi en cours...",
+    "submitApplication": "Envoyer la candidature"
+  },
+  "jobsFilterPanel": {
+    "ariaLabel": "Filtres de missions",
+    "searchLabel": "Recherche",
+    "searchAriaLabel": "Rechercher des missions",
+    "searchPlaceholder": "ex. Réparer un évier qui fuit",
+    "statusLabel": "Statut",
+    "statusAriaLabel": "Statut de la mission",
+    "allStatuses": "Tous les statuts",
+    "tradeCategoryLabel": "Métier",
+    "loadingCategories": "Chargement des catégories...",
+    "budgetRangeLabel": "Fourchette de budget",
+    "minBudgetPlaceholder": "Min",
+    "maxBudgetPlaceholder": "Max",
+    "clearFilters": "Effacer les filtres"
+  },
+  "titleField": {
+    "label": "Titre de la mission",
+    "placeholder": "ex. Réparer un évier de cuisine qui fuit, installer un ventilateur de plafond...",
+    "charCount": "{{count}}/255 caractères"
+  },
+  "descriptionField": {
+    "label": "Description",
+    "ariaLabel": "Description de la mission",
+    "placeholder": "Décrivez la mission en détail — ce qui doit être fait, les conditions d'accès, l'urgence...",
+    "charCount": "{{count}}/1000 caractères"
+  },
+  "budgetRangeField": {
+    "label": "Fourchette de budget",
+    "minLabel": "Min ($)",
+    "maxLabel": "Max ($)"
+  },
+  "jobTradeCategoryField": {
+    "label": "Métier",
+    "loading": "Chargement des métiers...",
+    "removeAriaLabel": "Supprimer {{name}}"
+  }
+}

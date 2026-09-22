@@ -1,10 +1,14 @@
 import React from "react";
+import {useTranslation} from "react-i18next";
 import {Skeleton} from "@/components/ui/skeleton";
 
-export const WorkerCardSkeleton: React.FC = () => (
+export const WorkerCardSkeleton: React.FC = () => {
+    const {t} = useTranslation("worker");
+
+    return (
     <div
         role="status"
-        aria-label="Loading worker profile"
+        aria-label={t("shared.loadingWorkerProfile")}
         className="p-4 space-y-3 rounded-lg border h-full flex flex-col"
     >
         <div className="flex items-start gap-3">
@@ -28,7 +32,8 @@ export const WorkerCardSkeleton: React.FC = () => (
             <Skeleton className="h-3 w-16"/>
         </div>
     </div>
-);
+    );
+};
 
 export const WorkerCardSkeletonGrid: React.FC<{ count?: number }> = ({count = 6}) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

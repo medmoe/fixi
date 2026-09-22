@@ -1,0 +1,38 @@
+{
+  "heading": "Account Settings",
+  "subtitle": "Manage your personal information and security.",
+  "profile": {
+    "cardTitle": "Profile Information",
+    "cardDescription": "Update your name, email, location, and profile image.",
+    "nameLabel": "Full Name",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "imageUrlLabel": "Profile Image URL",
+    "imageUrlPlaceholder": "https://...",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes"
+  },
+  "password": {
+    "cardTitle": "Change Password",
+    "cardDescription": "Update your password. You will need to enter your current password.",
+    "currentPasswordLabel": "Current Password",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "changing": "Changing...",
+    "changePassword": "Change Password"
+  },
+  "danger": {
+    "cardTitle": "Danger Zone",
+    "cardDescription": "Once you deactivate your account, you will not be able to log in again. This action can be reversed by contacting support.",
+    "deactivateButton": "Deactivate Account",
+    "deactivating": "Deactivating...",
+    "confirmTitle": "Deactivate your account?",
+    "confirmDescription": "This will soft-delete your account and blacklist your access token. You will be logged out immediately and will not be able to sign in again unless support reactivates your account.",
+    "cancel": "Cancel",
+    "confirmDeactivate": "Yes, Deactivate"
+  },
+  "customerProfile": {
+    "heading": "Customer Profile",
+    "subtitle": "Coming soon — manage your address, preferences, and account details."
+  }
+}

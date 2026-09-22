@@ -3,10 +3,12 @@
 import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {Menu, Zap} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Sheet, SheetClose, SheetContent, SheetTrigger,} from '@/components/ui/sheet'
 
 export const Navbar = () => {
+    const {t} = useTranslation('landing')
     const [open, setOpen] = useState(false)
 
     return (
@@ -19,7 +21,7 @@ export const Navbar = () => {
                 <Link
                     to="/"
                     className="flex items-center gap-2 font-bold text-xl text-primary"
-                    aria-label="Fixi home"
+                    aria-label={t('navbar.logoAriaLabel')}
                 >
                     <Zap className="h-6 w-6" aria-hidden="true"/>
                     Fixi
@@ -28,10 +30,10 @@ export const Navbar = () => {
                 {/* Desktop nav */}
                 <div className="hidden md:flex items-center gap-3">
                     <Button variant="ghost" asChild>
-                        <Link to="/login">Log In</Link>
+                        <Link to="/login">{t('navbar.logIn')}</Link>
                     </Button>
                     <Button asChild>
-                        <Link to="/register">Sign Up</Link>
+                        <Link to="/register">{t('navbar.signUp')}</Link>
                     </Button>
                 </div>
 
@@ -42,7 +44,7 @@ export const Navbar = () => {
                             variant="ghost"
                             size="icon"
                             className="md:hidden"
-                            aria-label="Open menu"
+                            aria-label={t('navbar.openMenuAriaLabel')}
                         >
                             <Menu className="h-5 w-5" aria-hidden="true"/>
                         </Button>
@@ -51,12 +53,12 @@ export const Navbar = () => {
                         <div className="flex flex-col gap-4 mt-8">
                             <SheetClose asChild>
                                 <Button variant="ghost" className="w-full" asChild>
-                                    <Link to="/login">Log In</Link>
+                                    <Link to="/login">{t('navbar.logIn')}</Link>
                                 </Button>
                             </SheetClose>
                             <SheetClose asChild>
                                 <Button className="w-full" asChild>
-                                    <Link to="/register">Sign Up</Link>
+                                    <Link to="/register">{t('navbar.signUp')}</Link>
                                 </Button>
                             </SheetClose>
                         </div>

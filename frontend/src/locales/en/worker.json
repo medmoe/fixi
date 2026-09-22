@@ -1,0 +1,121 @@
+{
+  "dashboard": {
+    "loading": "Loading your dashboard...",
+    "errorTitle": "System Synchronization Failure",
+    "errorDescription": "We ran into trouble loading your account data. Please try again later.",
+    "navProfile": "Profile",
+    "navAccount": "Account",
+    "navJobs": "Jobs"
+  },
+  "availability": {
+    "availableForWork": "Available for Work",
+    "currentlyOffline": "Currently Offline",
+    "visibleToClients": "Visible to clients in discovery",
+    "hiddenFromClients": "Hidden from client searches",
+    "toggleAriaLabel": "Availability toggle"
+  },
+  "profileTab": {
+    "loading": "Loading your worker profile...",
+    "loadFailedTitle": "Failed to Load Profile",
+    "loadFailedDescription": "Something went wrong loading your profile data. Please try again later.",
+    "notFoundTitle": "Profile Not Found",
+    "notFoundDescription": "Your worker profile could not be found. Please contact support.",
+    "heading": "Worker Profile",
+    "subtitle": "Manage your public-facing profile, availability, and service capabilities."
+  },
+  "shared": {
+    "loadingWorkerProfile": "Loading worker profile",
+    "verifiedWorker": "Verified worker",
+    "serviceRadius": "Service radius",
+    "availableNow": "Available now",
+    "newRating": "New"
+  },
+  "profileForm": {
+    "saving": "Saving...",
+    "updateProfile": "Update Profile"
+  },
+  "workerCard": {
+    "profileAriaLabel": "Worker profile for {{name}}",
+    "yearsExp": "· {{count}} yrs exp",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "perHour": "${{rate}}/hr",
+    "radiusSuffix": "{{radius}} km radius",
+    "distanceAway": "{{distance}} km away",
+    "noWorkersFound": "No workers found",
+    "noWorkersHint": "Try adjusting your filters to see more results."
+  },
+  "workerFilterPanel": {
+    "ariaLabel": "Search filters",
+    "tradeCategoryLabel": "Trade Category",
+    "loadingCategories": "Loading categories...",
+    "hourlyRateRange": "Hourly Rate: ${{min}} – ${{max}}",
+    "hourlyRateRangeAriaLabel": "Hourly rate range",
+    "serviceRadiusRange": "Service Radius: {{radius}} km",
+    "verifiedOnly": "Verified only",
+    "clearFilters": "Clear filters"
+  },
+  "tradeCategoryPicker": {
+    "loading": "Loading trade categories...",
+    "heading": "Trades & Specializations",
+    "helperText": "Select up to {{max}} primary trades. Changes save on Update Profile.",
+    "selectedCount": "{{count}}/{{max}} Selected",
+    "assignedHeading": "Assigned",
+    "tradeFallback": "Trade #{{id}}",
+    "removeAriaLabel": "Remove {{name}}",
+    "pendingHeading": "Pending (save to confirm)"
+  },
+  "skillLevelSelect": {
+    "ariaLabel": "Skill level for {{trade}}",
+    "selectLevel": "Select Level",
+    "junior": "Junior",
+    "mid": "Mid-level",
+    "senior": "Senior"
+  },
+  "avatarUploadField": {
+    "altText": "Avatar profile graphic",
+    "heading": "Profile Picture",
+    "helperText": "Supports JPG, PNG under 5MB.",
+    "uploadAriaLabel": "Upload avatar image file",
+    "chooseImage": "Choose Image"
+  },
+  "bioField": {
+    "label": "Professional Bio",
+    "ariaLabel": "Bio",
+    "placeholder": "Tell clients about your expertise, machinery ownership, and experience...",
+    "charCount": "{{count}}/500 chars"
+  },
+  "hourlyRateField": {
+    "label": "Hourly Rate",
+    "ariaLabel": "Hourly rate",
+    "perHourSuffix": "/ hr"
+  },
+  "serviceRadiusField": {
+    "label": "Service Radius",
+    "valueBadge": "{{radius}} km"
+  },
+  "workerSearchPage": {
+    "searching": "Searching...",
+    "workersFoundCount_one": "{{count}} worker found",
+    "workersFoundCount_other": "{{count}} workers found",
+    "loadError": "Something went wrong loading results. Please try again.",
+    "loadMore": "Load more",
+    "loading": "Loading..."
+  },
+  "workerDetailPage": {
+    "notFoundTitle": "Worker not found",
+    "notFoundDescription": "This worker profile doesn't exist or is no longer available.",
+    "backToSearch": "Back to search",
+    "reviewCount_one": "{{rating}} ({{count}} review)",
+    "reviewCount_other": "{{rating}} ({{count}} reviews)",
+    "yearsExperience": "· {{count}} yrs experience",
+    "currentlyUnavailable": "Currently unavailable",
+    "aboutHeading": "About",
+    "hourlyRateLabel": "Hourly rate",
+    "hourlyRateValue": "${{rate}}/hr",
+    "radiusValue": "{{radius}} km",
+    "experienceLabel": "Experience",
+    "yearsSuffix": "{{count}} years",
+    "contactWorker": "Contact worker (coming soon)"
+  }
+}

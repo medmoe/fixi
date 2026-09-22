@@ -1,15 +1,17 @@
 // BudgetRangeField.tsx
 import React from 'react';
 import {useFormContext} from 'react-hook-form';
+import {useTranslation} from 'react-i18next';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
 
 export const BudgetRangeField: React.FC = () => {
+    const {t} = useTranslation('job');
     const {control} = useFormContext();
 
     return (
         <div className="flex flex-col gap-2">
-            <FormLabel>Budget Range</FormLabel>
+            <FormLabel>{t('budgetRangeField.label')}</FormLabel>
             <div className="flex items-center gap-3">
                 <FormField
                     control={control}
@@ -17,7 +19,7 @@ export const BudgetRangeField: React.FC = () => {
                     render={({field}) => (
                         <FormItem className="flex-1">
                             <FormLabel htmlFor="budget-min" className="text-xs text-muted-foreground">
-                                Min ($)
+                                {t('budgetRangeField.minLabel')}
                             </FormLabel>
                             <FormControl>
                                 <Input
@@ -26,7 +28,7 @@ export const BudgetRangeField: React.FC = () => {
                                     min={0}
                                     step="0.01"
                                     placeholder="0.00"
-                                    aria-label="Minimum budget"
+                                    aria-label={t('shared.minimumBudgetAriaLabel')}
                                     {...field}
                                     onChange={(e) => {
                                         const value = e.target.valueAsNumber;
@@ -45,7 +47,7 @@ export const BudgetRangeField: React.FC = () => {
                     render={({field}) => (
                         <FormItem className="flex-1">
                             <FormLabel htmlFor="budget-max" className="text-xs text-muted-foreground">
-                                Max ($)
+                                {t('budgetRangeField.maxLabel')}
                             </FormLabel>
                             <FormControl>
                                 <Input
@@ -54,7 +56,7 @@ export const BudgetRangeField: React.FC = () => {
                                     min={0}
                                     step="0.01"
                                     placeholder="0.00"
-                                    aria-label="Maximum budget"
+                                    aria-label={t('shared.maximumBudgetAriaLabel')}
                                     {...field}
                                     onChange={(e) => {
                                         const value = e.target.valueAsNumber

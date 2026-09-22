@@ -3,7 +3,8 @@ import {useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link} from 'react-router-dom'
 import {Loader2} from 'lucide-react'
-import {type LoginFormValues, loginSchema} from '../schemas/authSchema'
+import {useTranslation} from 'react-i18next'
+import {type LoginFormValues, createLoginSchema} from '../schemas/authSchema'
 import {useAuth} from '@/features/auth'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
@@ -11,10 +12,11 @@ import {PasswordInput} from '@/components/ui/password-input'
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form'
 
 export const LoginForm: React.FC = () => {
+    const {t} = useTranslation('auth')
     const {login, isLoggingIn} = useAuth()
 
     const form = useForm<LoginFormValues>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(createLoginSchema(t)),
         defaultValues: {
             username_or_email: '',
             password: '',
@@ -30,7 +32,7 @@ export const LoginForm: React.FC = () => {
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
-                aria-label="Login form"
+                aria-label={t('login.formAriaLabel')}
             >
                 {/* Username or Email */}
                 <FormField
@@ -39,15 +41,15 @@ export const LoginForm: React.FC = () => {
                     render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="username-or-email">
-                                Username or Email
+                                {t('login.usernameOrEmailLabel')}
                             </FormLabel>
                             <FormControl>
                                 <Input
                                     id="username-or-email"
                                     type="text"
-                                    placeholder="johndoe or john@example.com"
+                                    placeholder={t('login.usernameOrEmailPlaceholder')}
                                     autoComplete="username"
-                                    aria-label="Username or email"
+                                    aria-label={t('login.usernameOrEmailAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -64,14 +66,14 @@ export const LoginForm: React.FC = () => {
                     render={({field}) => (
                         <FormItem>
                             <FormLabel htmlFor="login-password">
-                                Password
+                                {t('login.passwordLabel')}
                             </FormLabel>
                             <FormControl>
                                 <PasswordInput
                                     id="login-password"
                                     placeholder="••••••••"
                                     autoComplete="current-password"
-                                    aria-label="Password"
+                                    aria-label={t('login.passwordAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -86,21 +88,21 @@ export const LoginForm: React.FC = () => {
                     type="submit"
                     className="w-full"
                     disabled={isLoggingIn}
-                    aria-label="Sign in"
+                    aria-label={t('login.submitAriaLabel')}
                 >
                     {isLoggingIn
-                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Signing in...</>
-                        : 'Sign In'
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('login.signingIn')}</>
+                        : t('login.signIn')
                     }
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
-                    Don't have an account?{' '}
+                    {t('login.noAccount')}{' '}
                     <Link
                         to="/register"
                         className="text-primary underline-offset-4 hover:underline"
                     >
-                        Register
+                        {t('login.register')}
                     </Link>
                 </p>
             </form>

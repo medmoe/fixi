@@ -146,9 +146,7 @@ exports[`WorkerCard > snapshot > matches snapshot with full profile data 1`] = `
               New
             </span>
             <span>
-              · 
-              5
-               yrs exp
+              · 5 yrs exp
             </span>
           </div>
         </div>
@@ -188,13 +186,10 @@ exports[`WorkerCard > snapshot > matches snapshot with full profile data 1`] = `
           class="flex items-center gap-3 text-muted-foreground"
         >
           <span>
-            $
-            75.00
-            /hr
+            $75.00/hr
           </span>
           <span>
-            20
-             km radius
+            20 km radius
           </span>
         </div>
       </div>

@@ -2,9 +2,13 @@
 
 import { Link } from 'react-router-dom'
 import { ArrowRight, Wrench, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
-export const Hero = () => (
+export const Hero = () => {
+    const {t} = useTranslation('landing')
+
+    return (
     <section
         aria-labelledby="hero-heading"
         className="container mx-auto px-4 py-20 md:py-32 flex flex-col items-center text-center gap-8"
@@ -14,13 +18,11 @@ export const Hero = () => (
                 id="hero-heading"
                 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight"
             >
-                Connect with Trusted{" "}
-                <span className="text-primary"> Local Professionals</span>
+                {t('hero.headingPrefix')}{" "}
+                <span className="text-primary"> {t('hero.headingHighlight')}</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Fixi bridges the gap between customers who need skilled work done
-                and verified local workers ready to deliver quality services —
-                fast, secure, and hassle-free.
+                {t('hero.subtitle')}
             </p>
         </div>
 
@@ -29,7 +31,7 @@ export const Hero = () => (
             <Button size="lg" className="gap-2 min-h-[44px] w-full sm:w-auto" asChild>
                 <Link to="/register?role=customer">
                     <Search className="h-5 w-5" aria-hidden="true" />
-                    Find a Professional
+                    {t('hero.findProfessional')}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
             </Button>
@@ -41,7 +43,7 @@ export const Hero = () => (
             >
                 <Link to="/register?role=worker">
                     <Wrench className="h-5 w-5" aria-hidden="true" />
-                    Offer My Services
+                    {t('hero.offerServices')}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
             </Button>
@@ -53,8 +55,9 @@ export const Hero = () => (
             aria-hidden="true"
         >
             <p className="text-muted-foreground text-sm">
-                Platform illustration
+                {t('hero.illustrationPlaceholder')}
             </p>
         </div>
     </section>
-)
+    )
+}

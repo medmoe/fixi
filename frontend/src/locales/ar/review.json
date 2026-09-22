@@ -1,0 +1,48 @@
+{
+  "shared": {
+    "starCount_zero": "لا نجوم",
+    "starCount_one": "نجمة واحدة",
+    "starCount_two": "نجمتان",
+    "starCount_few": "{{count}} نجوم",
+    "starCount_many": "{{count}} نجمة",
+    "starCount_other": "{{count}} نجمة",
+    "reviewCount_zero": "لا تقييمات",
+    "reviewCount_one": "تقييم واحد",
+    "reviewCount_two": "تقييمان",
+    "reviewCount_few": "{{count}} تقييمات",
+    "reviewCount_many": "{{count}} تقييمًا",
+    "reviewCount_other": "{{count}} تقييم"
+  },
+  "reviewCard": {
+    "submitError": "فشل إرسال التقييم. يرجى المحاولة مرة أخرى.",
+    "submitted": "تم إرسال التقييم — شكرًا لك!",
+    "dismissAriaLabel": "إغلاق",
+    "heading": "أضف تقييمًا",
+    "commentAriaLabel": "تعليق التقييم",
+    "commentPlaceholder": "شارك تفاصيل تجربتك (اختياري)",
+    "submit": "إرسال التقييم"
+  },
+  "reviewListItem": {
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل"
+  },
+  "reviewsSection": {
+    "loadingAriaLabel": "جارٍ تحميل التقييمات",
+    "loadError": "تعذر تحميل التقييمات في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.",
+    "heading": "التقييمات",
+    "ctaPrompt": "هل عملت مع هذا الشخص؟ أضف تقييمًا",
+    "leaveReviewLink": "أضف تقييمًا",
+    "loading": "جارٍ التحميل...",
+    "loadMore": "تحميل المزيد"
+  },
+  "reviewsEmptyState": {
+    "heading": "لا توجد تقييمات بعد",
+    "subtitle": "بمجرد أن يكمل هذا المحترف إحدى المهام، ستظهر التقييمات هنا."
+  },
+  "ratingBreakdownChart": {
+    "ariaLabel": "{{starLabel}}: {{percent}}٪ ({{reviewLabel}})"
+  },
+  "starRating": {
+    "ariaLabel": "التقييم"
+  }
+}

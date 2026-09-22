@@ -26,6 +26,4 @@ export {useReviewStatus} from "./hooks/useReviewStatus"
 export {useSubmitReview} from "./hooks/useSubmitReview"
 export {useWorkerReviews} from "./hooks/useWorkerReviews"
 export {useWorkerReviewEligibility} from "./hooks/useWorkerReviewEligibility"
-
-// +++++++++ Utils ++++++++++++++++++++++++++++++++++++++++++++++++++
-export {formatRelativeDate} from "./utils/formatRelativeDate"
+export {useFormatRelativeDate} from "./hooks/useFormatRelativeDate"

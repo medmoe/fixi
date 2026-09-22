@@ -1,5 +1,6 @@
 import React from 'react';
 import {useFormContext} from 'react-hook-form';
+import {useTranslation} from 'react-i18next';
 import {Plus, X} from 'lucide-react';
 import {FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Button} from '@/components/ui/button';
@@ -7,12 +8,13 @@ import {useTrades} from '@/features/worker/hooks/useTrades';
 import type {TradeCategoryRead} from '@/features/worker';
 
 export const JobTradeCategoryField: React.FC = () => {
+    const {t} = useTranslation('job');
     const {control, setValue, watch} = useFormContext();
     const {data: availableTrades = [], isLoading} = useTrades();
     const selectedId: number | undefined = watch('trade_category_id');
 
     const selectedTrade = (availableTrades as TradeCategoryRead[]).find(
-        (t) => t.id === selectedId
+        (trade) => trade.id === selectedId
     );
 
     const handleSelect = (id: number) => {
@@ -26,7 +28,7 @@ export const JobTradeCategoryField: React.FC = () => {
     if (isLoading) {
         return (
             <div className="text-sm text-muted-foreground animate-pulse">
-                Loading trade categories...
+                {t('jobTradeCategoryField.loading')}
             </div>
         );
     }
@@ -37,7 +39,7 @@ export const JobTradeCategoryField: React.FC = () => {
             name="trade_category_id"
             render={() => (
                 <FormItem>
-                    <FormLabel>Trade Category</FormLabel>
+                    <FormLabel>{t('jobTradeCategoryField.label')}</FormLabel>
 
                     {/* Selected trade */}
                     {selectedTrade && (
@@ -50,7 +52,7 @@ export const JobTradeCategoryField: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleClear}
-                                aria-label={`Remove ${selectedTrade.display_name ?? selectedTrade.name}`}
+                                aria-label={t('jobTradeCategoryField.removeAriaLabel', {name: selectedTrade.display_name ?? selectedTrade.name})}
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             >
                                 <X className="h-4 w-4"/>

@@ -1,0 +1,121 @@
+{
+  "dashboard": {
+    "loading": "Chargement de votre tableau de bord...",
+    "errorTitle": "Échec de synchronisation du système",
+    "errorDescription": "Nous avons rencontré un problème lors du chargement de vos données de compte. Veuillez réessayer plus tard.",
+    "navProfile": "Profil",
+    "navAccount": "Compte",
+    "navJobs": "Missions"
+  },
+  "availability": {
+    "availableForWork": "Disponible pour travailler",
+    "currentlyOffline": "Actuellement hors ligne",
+    "visibleToClients": "Visible par les clients dans la recherche",
+    "hiddenFromClients": "Masqué des recherches clients",
+    "toggleAriaLabel": "Basculer la disponibilité"
+  },
+  "profileTab": {
+    "loading": "Chargement de votre profil professionnel...",
+    "loadFailedTitle": "Échec du chargement du profil",
+    "loadFailedDescription": "Un problème est survenu lors du chargement de vos données de profil. Veuillez réessayer plus tard.",
+    "notFoundTitle": "Profil introuvable",
+    "notFoundDescription": "Votre profil professionnel est introuvable. Veuillez contacter le support.",
+    "heading": "Profil professionnel",
+    "subtitle": "Gérez votre profil public, votre disponibilité et vos capacités de service."
+  },
+  "shared": {
+    "loadingWorkerProfile": "Chargement du profil professionnel",
+    "verifiedWorker": "Professionnel vérifié",
+    "serviceRadius": "Rayon de service",
+    "availableNow": "Disponible maintenant",
+    "newRating": "Nouveau"
+  },
+  "profileForm": {
+    "saving": "Enregistrement...",
+    "updateProfile": "Mettre à jour le profil"
+  },
+  "workerCard": {
+    "profileAriaLabel": "Profil professionnel de {{name}}",
+    "yearsExp": "· {{count}} ans d'exp.",
+    "available": "Disponible",
+    "unavailable": "Indisponible",
+    "perHour": "{{rate}} $/h",
+    "radiusSuffix": "rayon de {{radius}} km",
+    "distanceAway": "à {{distance}} km",
+    "noWorkersFound": "Aucun professionnel trouvé",
+    "noWorkersHint": "Essayez d'ajuster vos filtres pour voir plus de résultats."
+  },
+  "workerFilterPanel": {
+    "ariaLabel": "Filtres de recherche",
+    "tradeCategoryLabel": "Métier",
+    "loadingCategories": "Chargement des catégories...",
+    "hourlyRateRange": "Taux horaire : {{min}} $ – {{max}} $",
+    "hourlyRateRangeAriaLabel": "Fourchette de taux horaire",
+    "serviceRadiusRange": "Rayon de service : {{radius}} km",
+    "verifiedOnly": "Vérifiés uniquement",
+    "clearFilters": "Effacer les filtres"
+  },
+  "tradeCategoryPicker": {
+    "loading": "Chargement des métiers...",
+    "heading": "Métiers et spécialisations",
+    "helperText": "Sélectionnez jusqu'à {{max}} métiers principaux. Les modifications sont enregistrées via « Mettre à jour le profil ».",
+    "selectedCount": "{{count}}/{{max}} sélectionné(s)",
+    "assignedHeading": "Attribués",
+    "tradeFallback": "Métier n°{{id}}",
+    "removeAriaLabel": "Supprimer {{name}}",
+    "pendingHeading": "En attente (à confirmer)"
+  },
+  "skillLevelSelect": {
+    "ariaLabel": "Niveau de compétence pour {{trade}}",
+    "selectLevel": "Sélectionner un niveau",
+    "junior": "Débutant",
+    "mid": "Intermédiaire",
+    "senior": "Expert"
+  },
+  "avatarUploadField": {
+    "altText": "Illustration du profil avatar",
+    "heading": "Photo de profil",
+    "helperText": "Formats JPG, PNG acceptés, moins de 5 Mo.",
+    "uploadAriaLabel": "Téléverser un fichier image d'avatar",
+    "chooseImage": "Choisir une image"
+  },
+  "bioField": {
+    "label": "Bio professionnelle",
+    "ariaLabel": "Bio",
+    "placeholder": "Parlez aux clients de votre expertise, de votre équipement et de votre expérience...",
+    "charCount": "{{count}}/500 caractères"
+  },
+  "hourlyRateField": {
+    "label": "Taux horaire",
+    "ariaLabel": "Taux horaire",
+    "perHourSuffix": "/ h"
+  },
+  "serviceRadiusField": {
+    "label": "Rayon de service",
+    "valueBadge": "{{radius}} km"
+  },
+  "workerSearchPage": {
+    "searching": "Recherche en cours...",
+    "workersFoundCount_one": "{{count}} professionnel trouvé",
+    "workersFoundCount_other": "{{count}} professionnels trouvés",
+    "loadError": "Une erreur s'est produite lors du chargement des résultats. Veuillez réessayer.",
+    "loadMore": "Charger plus",
+    "loading": "Chargement..."
+  },
+  "workerDetailPage": {
+    "notFoundTitle": "Professionnel introuvable",
+    "notFoundDescription": "Ce profil professionnel n'existe pas ou n'est plus disponible.",
+    "backToSearch": "Retour à la recherche",
+    "reviewCount_one": "{{rating}} ({{count}} avis)",
+    "reviewCount_other": "{{rating}} ({{count}} avis)",
+    "yearsExperience": "· {{count}} ans d'expérience",
+    "currentlyUnavailable": "Actuellement indisponible",
+    "aboutHeading": "À propos",
+    "hourlyRateLabel": "Taux horaire",
+    "hourlyRateValue": "{{rate}} $/h",
+    "radiusValue": "{{radius}} km",
+    "experienceLabel": "Expérience",
+    "yearsSuffix": "{{count}} ans",
+    "contactWorker": "Contacter le professionnel (bientôt disponible)"
+  }
+}

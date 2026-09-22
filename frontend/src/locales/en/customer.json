@@ -1,0 +1,12 @@
+{
+  "locationPicker": {
+    "formAriaLabel": "Location picker",
+    "useMyLocation": "Use my location",
+    "geoDenied": "Location access was denied. Enter your address manually below.",
+    "geoTimeout": "Could not get your location in time. Enter your address manually below.",
+    "geoUnavailable": "Location services are unavailable. Enter your address manually below.",
+    "or": "or",
+    "saving": "Saving...",
+    "confirmLocation": "Confirm location"
+  }
+}

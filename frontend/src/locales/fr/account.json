@@ -1,0 +1,38 @@
+{
+  "heading": "Paramètres du compte",
+  "subtitle": "Gérez vos informations personnelles et votre sécurité.",
+  "profile": {
+    "cardTitle": "Informations du profil",
+    "cardDescription": "Mettez à jour votre nom, e-mail, localisation et photo de profil.",
+    "nameLabel": "Nom complet",
+    "usernameLabel": "Nom d'utilisateur",
+    "emailLabel": "E-mail",
+    "imageUrlLabel": "URL de l'image de profil",
+    "imageUrlPlaceholder": "https://...",
+    "saving": "Enregistrement...",
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "password": {
+    "cardTitle": "Changer le mot de passe",
+    "cardDescription": "Mettez à jour votre mot de passe. Vous devrez saisir votre mot de passe actuel.",
+    "currentPasswordLabel": "Mot de passe actuel",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+    "changing": "Modification...",
+    "changePassword": "Changer le mot de passe"
+  },
+  "danger": {
+    "cardTitle": "Zone de danger",
+    "cardDescription": "Une fois votre compte désactivé, vous ne pourrez plus vous connecter. Cette action peut être annulée en contactant le support.",
+    "deactivateButton": "Désactiver le compte",
+    "deactivating": "Désactivation...",
+    "confirmTitle": "Désactiver votre compte ?",
+    "confirmDescription": "Cela désactivera votre compte et mettra votre jeton d'accès sur liste noire. Vous serez déconnecté immédiatement et ne pourrez plus vous reconnecter à moins que le support ne réactive votre compte.",
+    "cancel": "Annuler",
+    "confirmDeactivate": "Oui, désactiver"
+  },
+  "customerProfile": {
+    "heading": "Profil client",
+    "subtitle": "Bientôt disponible — gérez votre adresse, vos préférences et les détails de votre compte."
+  }
+}

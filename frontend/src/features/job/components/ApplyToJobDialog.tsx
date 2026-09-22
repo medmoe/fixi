@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {AxiosError} from "axios";
 import {Loader2, Send} from "lucide-react";
+import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,} from "@/components/ui/dialog";
@@ -13,6 +14,7 @@ interface ApplyToJobDialogProps {
 }
 
 export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTitle, disabled}) => {
+    const {t} = useTranslation("job");
     const [open, setOpen] = useState(false);
     const [message, setMessage] = useState("");
     const [hasApplied, setHasApplied] = useState(false);
@@ -56,7 +58,7 @@ export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTit
     if (hasApplied) {
         return (
             <Button disabled className="w-full">
-                Application submitted
+                {t("applyToJobDialog.applicationSubmitted")}
             </Button>
         );
     }
@@ -66,20 +68,20 @@ export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTit
             <DialogTrigger asChild>
                 <Button disabled={disabled} className="w-full">
                     <Send className="mr-2 h-4 w-4"/>
-                    Apply to this job
+                    {t("applyToJobDialog.applyToThisJob")}
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Apply to &ldquo;{jobTitle}&rdquo;</DialogTitle>
+                    <DialogTitle>{t("applyToJobDialog.dialogTitle", {title: jobTitle})}</DialogTitle>
                     <DialogDescription>
-                        Add an optional message to introduce yourself to the customer.
+                        {t("applyToJobDialog.dialogDescription")}
                     </DialogDescription>
                 </DialogHeader>
 
                 <Textarea
-                    aria-label="Application message"
-                    placeholder="I have 5 years of experience and can start right away..."
+                    aria-label={t("applyToJobDialog.messageAriaLabel")}
+                    placeholder={t("applyToJobDialog.messagePlaceholder")}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     maxLength={1000}
@@ -89,16 +91,16 @@ export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTit
 
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => setOpen(false)} disabled={isPending}>
-                        Cancel
+                        {t("shared.cancel")}
                     </Button>
                     <Button onClick={handleSubmit} disabled={isPending}>
                         {isPending ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                Submitting...
+                                {t("applyToJobDialog.submitting")}
                             </>
                         ) : (
-                            "Submit application"
+                            t("applyToJobDialog.submitApplication")
                         )}
                     </Button>
                 </DialogFooter>

@@ -1,7 +1,14 @@
 import {describe, expect, it} from 'vitest';
-import {loginSchema, registerSchema} from '../authSchema';
+import type {TFunction} from 'i18next';
+import {createLoginSchema, createRegisterSchema} from '../authSchema';
 
 // ——————— Helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// These tests assert only on validation shape (`.success`), never on message
+// text, so a stub `t` that echoes the key back is enough -- no need to pull
+// in the real i18next instance/locale files.
+const stubT = ((key: string) => key) as TFunction
+const registerSchema = createRegisterSchema(stubT)
+const loginSchema = createLoginSchema(stubT)
 const validRegisterPayload = {
     name: "John Doe",
     username: "johndoe",

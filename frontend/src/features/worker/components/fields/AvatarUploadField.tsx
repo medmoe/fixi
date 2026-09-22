@@ -1,4 +1,5 @@
 import React, {useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useUploadAvatar} from '@/features/worker';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar.tsx';
 import {Button} from '@/components/ui/button.tsx';
@@ -9,6 +10,7 @@ interface AvatarUploadFieldProps {
 }
 
 export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvatarUrl}) => {
+    const {t} = useTranslation('worker');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [localPreview, setLocalPreview] = useState<string | null>(null);
     const {mutate: uploadAvatar, isPending} = useUploadAvatar();
@@ -33,7 +35,7 @@ export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvat
         <div className="flex items-center space-x-6 bg-card border p-4 rounded-xl">
             <div className="relative">
                 <Avatar className="h-24 w-24 border-2 border-border">
-                    <AvatarImage src={src} alt="Avatar profile graphic"/>
+                    <AvatarImage src={src} alt={t('avatarUploadField.altText')}/>
                     <AvatarFallback className="text-lg font-bold">WP</AvatarFallback>
                 </Avatar>
                 {isPending && (
@@ -43,8 +45,8 @@ export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvat
                 )}
             </div>
             <div className="space-y-2">
-                <h4 className="text-sm font-medium leading-none">Profile Picture</h4>
-                <p className="text-xs text-muted-foreground">Supports JPG, PNG under 5MB.</p>
+                <h4 className="text-sm font-medium leading-none">{t('avatarUploadField.heading')}</h4>
+                <p className="text-xs text-muted-foreground">{t('avatarUploadField.helperText')}</p>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -59,11 +61,11 @@ export const AvatarUploadField: React.FC<AvatarUploadFieldProps> = ({currentAvat
                     size="sm"
                     onClick={triggerFileInput}
                     disabled={isPending}
-                    aria-label="Upload avatar image file"
+                    aria-label={t('avatarUploadField.uploadAriaLabel')}
                     className="flex items-center gap-2"
                 >
                     <Upload className="h-4 w-4"/>
-                    Choose Image
+                    {t('avatarUploadField.chooseImage')}
                 </Button>
             </div>
         </div>

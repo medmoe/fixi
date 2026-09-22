@@ -1,5 +1,6 @@
 import React from "react";
 import {Link, useParams} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 import {ArrowLeft, CheckCircle2, Clock, MapPin, Star} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -18,6 +19,7 @@ const getInitials = (name: string): string =>
         .toUpperCase();
 
 export const WorkerDetailPage: React.FC = () => {
+    const {t} = useTranslation("worker");
     const { workerId } = useParams<{ workerId: string }>();
     const id = Number(workerId);
 
@@ -25,7 +27,7 @@ export const WorkerDetailPage: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-2xl mx-auto p-6 space-y-4" role="status" aria-label="Loading worker profile">
+            <div className="max-w-2xl mx-auto p-6 space-y-4" role="status" aria-label={t("shared.loadingWorkerProfile")}>
                 <Skeleton className="h-8 w-32" />
                 <div className="flex items-center gap-4">
                     <Skeleton className="h-20 w-20 rounded-full" />
@@ -42,12 +44,12 @@ export const WorkerDetailPage: React.FC = () => {
     if (isError || !profile) {
         return (
             <div className="max-w-2xl mx-auto p-6 text-center space-y-4">
-                <p className="text-lg font-medium">Worker not found</p>
+                <p className="text-lg font-medium">{t("workerDetailPage.notFoundTitle")}</p>
                 <p className="text-sm text-muted-foreground">
-                    This worker profile doesn't exist or is no longer available.
+                    {t("workerDetailPage.notFoundDescription")}
                 </p>
                 <Button asChild variant="outline">
-                    <Link to="/workers/search">Back to search</Link>
+                    <Link to="/workers/search">{t("workerDetailPage.backToSearch")}</Link>
                 </Button>
             </div>
         );
@@ -58,7 +60,7 @@ export const WorkerDetailPage: React.FC = () => {
             <Button asChild variant="ghost" size="sm" className="-ml-2">
                 <Link to="/workers/search">
                     <ArrowLeft className="mr-1 h-4 w-4" />
-                    Back to search
+                    {t("workerDetailPage.backToSearch")}
                 </Link>
             </Button>
 
@@ -73,7 +75,7 @@ export const WorkerDetailPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <h1 className="text-xl font-semibold">{profile.user.name}</h1>
                         {profile.is_verified && (
-                            <span title="Verified worker">
+                            <span title={t("shared.verifiedWorker")}>
                                 <CheckCircle2 className="h-5 w-5 text-primary" />
                             </span>
                         )}
@@ -83,11 +85,11 @@ export const WorkerDetailPage: React.FC = () => {
                         <Star className="h-4 w-4" aria-hidden="true" />
                         <span>
                             {profile.average_rating !== null
-                                ? `${Number(profile.average_rating).toFixed(1)} (${profile.review_count} review${profile.review_count === 1 ? "" : "s"})`
-                                : "New"}
+                                ? t("workerDetailPage.reviewCount", {rating: Number(profile.average_rating).toFixed(1), count: profile.review_count})
+                                : t("shared.newRating")}
                         </span>
                         {profile.years_of_experience !== null && (
-                            <span>· {profile.years_of_experience} yrs experience</span>
+                            <span>{t("workerDetailPage.yearsExperience", {count: profile.years_of_experience})}</span>
                         )}
                     </div>
 
@@ -96,7 +98,7 @@ export const WorkerDetailPage: React.FC = () => {
                             profile.is_available ? "text-green-600" : "text-muted-foreground"
                         }`}
                     >
-                        {profile.is_available ? "Available now" : "Currently unavailable"}
+                        {profile.is_available ? t("shared.availableNow") : t("workerDetailPage.currentlyUnavailable")}
                     </span>
                 </div>
             </div>
@@ -115,7 +117,7 @@ export const WorkerDetailPage: React.FC = () => {
             {/* Bio */}
             {profile.bio && (
                 <div>
-                    <h2 className="text-sm font-medium mb-1">About</h2>
+                    <h2 className="text-sm font-medium mb-1">{t("workerDetailPage.aboutHeading")}</h2>
                     <p className="text-sm text-muted-foreground whitespace-pre-line">{profile.bio}</p>
                 </div>
             )}
@@ -124,24 +126,24 @@ export const WorkerDetailPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 {profile.hourly_rate !== null && (
                     <div>
-                        <p className="text-xs text-muted-foreground">Hourly rate</p>
-                        <p className="font-medium">${Number(profile.hourly_rate).toFixed(2)}/hr</p>
+                        <p className="text-xs text-muted-foreground">{t("workerDetailPage.hourlyRateLabel")}</p>
+                        <p className="font-medium">{t("workerDetailPage.hourlyRateValue", {rate: Number(profile.hourly_rate).toFixed(2)})}</p>
                     </div>
                 )}
                 {profile.service_radius_km !== null && (
                     <div>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> Service radius
+                            <MapPin className="h-3 w-3" /> {t("shared.serviceRadius")}
                         </p>
-                        <p className="font-medium">{profile.service_radius_km} km</p>
+                        <p className="font-medium">{t("workerDetailPage.radiusValue", {radius: profile.service_radius_km})}</p>
                     </div>
                 )}
                 {profile.years_of_experience !== null && (
                     <div>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> Experience
+                            <Clock className="h-3 w-3" /> {t("workerDetailPage.experienceLabel")}
                         </p>
-                        <p className="font-medium">{profile.years_of_experience} years</p>
+                        <p className="font-medium">{t("workerDetailPage.yearsSuffix", {count: profile.years_of_experience})}</p>
                     </div>
                 )}
             </div>
@@ -149,7 +151,7 @@ export const WorkerDetailPage: React.FC = () => {
             {/* Contact / request quote — placeholder for future ticket */}
             <div className="pt-4 border-t">
                 <Button className="w-full" disabled>
-                    Contact worker (coming soon)
+                    {t("workerDetailPage.contactWorker")}
                 </Button>
             </div>
 

@@ -1,24 +1,9 @@
 // src/features/landing/components/AudiencePitch.tsx
 
 import { Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-
-const customerBenefits = [
-    'Verified and vetted professionals only',
-    'Secure booking and payment protection',
-    'Real reviews from real customers',
-    'Service radius filtering — find pros near you',
-    'Instant availability status on every profile',
-]
-
-const workerBenefits = [
-    'Set your own rates and availability',
-    'Low platform fees — keep more of your earnings',
-    'Build a verified review portfolio',
-    'Access a growing local client base',
-    'Get paid quickly and securely',
-]
 
 const BenefitList = ({ items }: { items: string[] }) => (
     <ul className="space-y-3" role="list">
@@ -33,7 +18,12 @@ const BenefitList = ({ items }: { items: string[] }) => (
     </ul>
 )
 
-export const AudiencePitch = () => (
+export const AudiencePitch = () => {
+    const {t} = useTranslation('landing')
+    const customerBenefits = t('audiencePitch.customer.benefits', {returnObjects: true}) as string[]
+    const workerBenefits = t('audiencePitch.worker.benefits', {returnObjects: true}) as string[]
+
+    return (
     <section
         aria-labelledby="audience-heading"
         className="container mx-auto px-4 py-20"
@@ -43,11 +33,10 @@ export const AudiencePitch = () => (
                 id="audience-heading"
                 className="text-3xl md:text-4xl font-bold"
             >
-                Built for Everyone
+                {t('audiencePitch.heading')}
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-                Whether you need a job done or want to grow your trade business,
-                Fixi has you covered.
+                {t('audiencePitch.subtitle')}
             </p>
         </div>
 
@@ -56,17 +45,17 @@ export const AudiencePitch = () => (
             <div className="bg-card border rounded-2xl p-8 shadow-sm space-y-6">
                 <div className="space-y-2">
                     <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                        For Customers
+                        {t('audiencePitch.customer.badge')}
                     </span>
-                    <h3 className="text-2xl font-bold">Get the job done right</h3>
+                    <h3 className="text-2xl font-bold">{t('audiencePitch.customer.title')}</h3>
                     <p className="text-sm text-muted-foreground">
-                        Find skilled, verified professionals in your area quickly and securely.
+                        {t('audiencePitch.customer.description')}
                     </p>
                 </div>
                 <BenefitList items={customerBenefits} />
                 <Button className="w-full min-h-[44px]" asChild>
                     <Link to="/register?role=customer">
-                        Find a Professional
+                        {t('audiencePitch.customer.cta')}
                     </Link>
                 </Button>
             </div>
@@ -75,20 +64,21 @@ export const AudiencePitch = () => (
             <div className="bg-card border rounded-2xl p-8 shadow-sm space-y-6">
                 <div className="space-y-2">
                     <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                        For Workers
+                        {t('audiencePitch.worker.badge')}
                     </span>
-                    <h3 className="text-2xl font-bold">Grow your trade business</h3>
+                    <h3 className="text-2xl font-bold">{t('audiencePitch.worker.title')}</h3>
                     <p className="text-sm text-muted-foreground">
-                        Reach more clients, manage your schedule, and get paid on your terms.
+                        {t('audiencePitch.worker.description')}
                     </p>
                 </div>
                 <BenefitList items={workerBenefits} />
                 <Button variant="outline" className="w-full min-h-[44px]" asChild>
                     <Link to="/register?role=worker">
-                        Offer My Services
+                        {t('audiencePitch.worker.cta')}
                     </Link>
                 </Button>
             </div>
         </div>
     </section>
-)
+    )
+}
