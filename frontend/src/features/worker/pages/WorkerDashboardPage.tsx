@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
+import {NotificationBell} from '@/features/notification'
 import {AlertCircle, Briefcase, Loader2, UserCircle, Search} from 'lucide-react'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
@@ -109,8 +110,13 @@ export const WorkerDashboardPage: React.FC = () => {
                 </div>
             </aside>
 
-            {/* ═══ Mobile Header + Main Content ══════════════════════════════ */}
+            {/* ═══ Header + Main Content ══════════════════════════════════════ */}
             <div className="flex-1 flex flex-col">
+                {/* Desktop Header — just the notification bell; the sidebar covers identity/nav */}
+                <header className="hidden lg:flex justify-end border-b bg-card px-8 h-14 items-center">
+                    <NotificationBell/>
+                </header>
+
                 {/* Mobile Top Bar */}
                 <header data-testid="mobile-header" className="lg:hidden border-b bg-card px-4 h-14 flex items-center justify-between sticky top-0 z-50">
                     <div className="flex items-center gap-2">
@@ -119,7 +125,10 @@ export const WorkerDashboardPage: React.FC = () => {
                         </div>
                         <span className="font-medium text-sm">{user?.name}</span>
                     </div>
-                    <LogoutButton/>
+                    <div className="flex items-center gap-1">
+                        <NotificationBell/>
+                        <LogoutButton/>
+                    </div>
                 </header>
 
                 {/* Mobile Availability Banner */}

@@ -5,11 +5,16 @@ import {render, screen} from '@testing-library/react'
 import {MemoryRouter, Route, Routes, useLocation} from 'react-router-dom'
 import {AuthInitializer} from '@/features/auth/components/AuthInitializer'
 import {useInitAuth} from '@/features/auth/hooks/useInitAuth'
+import {useNotificationSocket} from '@/features/notification'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('@/features/auth/hooks/useInitAuth', () => ({
     useInitAuth: vi.fn(),
+}))
+
+vi.mock('@/features/notification', () => ({
+    useNotificationSocket: vi.fn(),
 }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -178,6 +183,14 @@ describe('AuthInitializer', () => {
         it('calls useInitAuth', () => {
             renderWithRouter()
             expect(useInitAuth).toHaveBeenCalled()
+        })
+
+        it('mounts the notification socket unconditionally -- this component wraps every route, so the connection stays open across navigation instead of depending on which dashboard header happens to render the bell', () => {
+            renderWithRouter({
+                initialRoute: '/',
+                authState: {isLoading: true, isAuthenticated: false, isError: false},
+            })
+            expect(useNotificationSocket).toHaveBeenCalled()
         })
     })
 })

@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
 import {CustomerJobsListPage, PublicJobDetailPage} from './support/pages/job.pages'
+import {NotificationBellPage} from './support/pages/notification.pages'
 import {mockApplication, mockApplicationsResponse, mockCustomer, mockJob, mockWorkerProfile, mockWorkerUser} from '../fixtures/jobs'
+import {interceptNotifications, mockNotification} from '../fixtures/notifications'
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 // Same approach as job-posting-workflow.cy.ts: mock the silent token refresh
@@ -299,6 +301,83 @@ describe('Job Lifecycle Workflow - POM Style', () => {
 
             cy.wait('@myJobs')
             jobsListPage.getJobCardStatus('Fix leaking kitchen sink').should('contain.text', 'completed')
+        })
+    })
+
+    // ─── 7. Notifications produced by job lifecycle events ─────────────────────
+    //        The backend fires notify_user() at each of these transitions
+    //        (see src/app/services/job_lifecycle_service.py); these tests cover
+    //        the frontend side -- the bell reflects them on both dashboards,
+    //        including the worker one, which previously had no bell at all.
+
+    describe('Notifications during the job lifecycle', () => {
+        const bell = new NotificationBellPage()
+
+        describe('Customer — sees a notification when a worker confirms assignment', () => {
+            beforeEach(() => {
+                asCustomer()
+            })
+
+            it('shows an unread badge and the notification content on the dashboard', () => {
+                interceptNotifications([mockNotification()])
+
+                cy.visit('/dashboard')
+                cy.wait('@authRefresh')
+                cy.wait('@userMe')
+                cy.wait(['@notifications', '@notifications'])
+
+                bell.getBadge(1).should('be.visible').and('contain.text', '1')
+                bell.open()
+                bell.getDropdownItem('Mission assignée')
+                    .should('be.visible')
+                    .and('contain.text', 'Un professionnel a confirmé')
+            })
+
+            it('clears the unread badge after marking all read', () => {
+                interceptNotifications([mockNotification()])
+                cy.intercept('PATCH', '**/api/v1/notifications/read-all', {statusCode: 204}).as('markAllRead')
+
+                cy.visit('/dashboard')
+                cy.wait('@authRefresh')
+                cy.wait('@userMe')
+                cy.wait(['@notifications', '@notifications'])
+
+                bell.getBadge(1).should('be.visible')
+                bell.open()
+
+                // Marking all read invalidates the notifications queries --
+                // the refetch that follows now reports everything as read.
+                interceptNotifications([mockNotification({read_at: '2026-09-18T10:10:00Z'})])
+                bell.clickMarkAllRead()
+
+                cy.wait('@markAllRead')
+                cy.wait(['@notifications', '@notifications'])
+                bell.getBadge(1).should('not.exist')
+            })
+        })
+
+        describe('Worker — sees a notification on their own dashboard', () => {
+            it('shows an unread badge -- the worker dashboard previously had no bell at all', () => {
+                asWorker()
+                interceptNotifications([
+                    mockNotification({
+                        user_id: 2,
+                        type: 'job_application.accepted',
+                        title_fr: 'Candidature acceptée',
+                        body_fr: 'Votre candidature pour « Fix leaking kitchen sink » a été acceptée.',
+                    }),
+                ])
+
+                cy.visit('/dashboard')
+                cy.wait('@authRefresh')
+                cy.wait('@userMe')
+                cy.wait('@workerProfile')
+                cy.wait(['@notifications', '@notifications'])
+
+                bell.getBadge(1).should('be.visible')
+                bell.open()
+                bell.getDropdownItem('Candidature acceptée').should('be.visible')
+            })
         })
     })
 })

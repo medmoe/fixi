@@ -170,6 +170,45 @@ class OtpSettings(BaseSettings):
     OTP_MAX_VERIFY_ATTEMPTS: int = config("OTP_MAX_VERIFY_ATTEMPTS", default=5)
 
 
+class AlertingSettings(BaseSettings):
+    """Delivery-monitoring/alerting (Issue 7) -- watches notification_logs
+    for an SMS OTP delivery failure spike (OTP blocks login, so this is the
+    one channel that gets an active alert rather than just a queryable
+    dashboard) and pages an internal admin channel when it crosses the
+    threshold. Provider selection follows the same config-driven pattern as
+    NOTIFICATION_*_PROVIDER: defaults to noop (log-only) so nothing pages
+    anyone until a webhook/address is actually configured.
+    """
+
+    ADMIN_ALERT_PROVIDER: str = config("ADMIN_ALERT_PROVIDER", default="noop")
+    # Slack incoming-webhook URL (https://api.slack.com/messaging/webhooks).
+    ADMIN_ALERT_SLACK_WEBHOOK_URL: str | None = config("ADMIN_ALERT_SLACK_WEBHOOK_URL", default=None)
+    # Reuses the Mailjet credentials already configured for user-facing
+    # email (see NotificationSettings.MAILJET_*) -- this is just a
+    # different, fixed recipient, not a separate provider account.
+    ADMIN_ALERT_EMAIL: str | None = config("ADMIN_ALERT_EMAIL", default=None)
+    # Bot token from @BotFather, and the chat/channel id it should post to
+    # (send the bot a message and hit https://api.telegram.org/bot<token>/getUpdates
+    # to find a chat id).
+    ADMIN_ALERT_TELEGRAM_BOT_TOKEN: str | None = config("ADMIN_ALERT_TELEGRAM_BOT_TOKEN", default=None)
+    ADMIN_ALERT_TELEGRAM_CHAT_ID: str | None = config("ADMIN_ALERT_TELEGRAM_CHAT_ID", default=None)
+
+    # Looks back this many minutes of otp_code/SMS notification_logs rows
+    # each time the cron check runs.
+    OTP_ALERT_WINDOW_MINUTES: int = config("OTP_ALERT_WINDOW_MINUTES", default=30)
+    # Below this many attempts in the window, the sample is too small to
+    # trust a rate from -- e.g. 1 failed out of 1 sent is a 100% "rate"
+    # that means nothing. No alert fires regardless of the computed rate.
+    OTP_ALERT_MIN_SAMPLE_SIZE: int = config("OTP_ALERT_MIN_SAMPLE_SIZE", default=5)
+    # Fraction of attempts that must fail within the window to trigger an
+    # alert -- 0.3 = 30%.
+    OTP_ALERT_FAILURE_RATE_THRESHOLD: float = config("OTP_ALERT_FAILURE_RATE_THRESHOLD", default=0.3)
+    # Once an alert fires, suppress a repeat for this long -- keeps an
+    # ongoing outage from paging the channel again on every cron tick
+    # (every 15 minutes, see WorkerSettings.cron_jobs) instead of once.
+    OTP_ALERT_COOLDOWN_MINUTES: int = config("OTP_ALERT_COOLDOWN_MINUTES", default=60)
+
+
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
@@ -230,6 +269,7 @@ class ProdSettings(BaseSettings):
 
 
 class Settings(
+    AlertingSettings,
     AppSettings,
     CRUDAdminSettings,
     ClientSideCacheSettings,

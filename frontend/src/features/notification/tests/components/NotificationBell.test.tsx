@@ -6,14 +6,12 @@ import {NotificationBell} from '../../components/NotificationBell'
 import {useNotifications} from '../../hooks/useNotifications'
 import {useMarkAllNotificationsRead} from '../../hooks/useMarkAllNotificationsRead'
 import {useMarkNotificationRead} from '../../hooks/useMarkNotificationRead'
-import {useNotificationSocket} from '../../hooks/useNotificationSocket'
 import {usePushRegistration} from '../../hooks/usePushRegistration'
 import type {NotificationRead} from '../../types'
 
 vi.mock('../../hooks/useNotifications')
 vi.mock('../../hooks/useMarkAllNotificationsRead')
 vi.mock('../../hooks/useMarkNotificationRead')
-vi.mock('../../hooks/useNotificationSocket')
 vi.mock('../../hooks/usePushRegistration')
 
 // The real radix-based DropdownMenu doesn't play well with jsdom (no
@@ -75,7 +73,6 @@ const markAllReadMock = vi.fn()
 describe('NotificationBell', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        vi.mocked(useNotificationSocket).mockReturnValue(undefined)
         vi.mocked(usePushRegistration).mockReturnValue(undefined)
         vi.mocked(useMarkNotificationRead).mockReturnValue({mutate: markReadMock} as never)
         vi.mocked(useMarkAllNotificationsRead).mockReturnValue({mutate: markAllReadMock, isPending: false} as never)
