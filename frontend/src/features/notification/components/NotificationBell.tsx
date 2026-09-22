@@ -15,15 +15,14 @@ import {NotificationRead} from '../types'
 import {useNotifications} from '../hooks/useNotifications'
 import {useMarkAllNotificationsRead} from '../hooks/useMarkAllNotificationsRead'
 import {useMarkNotificationRead} from '../hooks/useMarkNotificationRead'
-import {useNotificationSocket} from '../hooks/useNotificationSocket'
 import {usePushRegistration} from '../hooks/usePushRegistration'
 
 const RECENT_NOTIFICATIONS_LIMIT = 10
 
 export const NotificationBell: React.FC = () => {
-    // Keeps the WS connection alive for as long as the bell is mounted
-    // (i.e. anywhere inside the authenticated dashboard layout).
-    useNotificationSocket()
+    // The WS connection itself is owned by AuthInitializer (mounted once for
+    // the whole session) rather than here -- this component can mount and
+    // unmount freely (e.g. across dashboard layouts) without dropping it.
     usePushRegistration()
 
     const {data: unreadData} = useNotifications({unreadOnly: true, itemsPerPage: 1})

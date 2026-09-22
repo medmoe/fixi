@@ -23,6 +23,10 @@ vi.mock('@/components/LogoutButton', () => ({
     LogoutButton: () => <button>Logout</button>,
 }))
 
+vi.mock('@/features/notification', () => ({
+    NotificationBell: () => <div data-testid="notification-bell"/>,
+}))
+
 vi.mock('@/features/worker/components/AvailabilityToggle', () => ({
     AvailabilityToggle: ({isAvailable}: { isAvailable: boolean }) => (
         <div data-testid="availability-toggle">{isAvailable ? 'Available' : 'Unavailable'}</div>
@@ -346,6 +350,13 @@ describe('WorkerDashboardPage', () => {
             render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
             const mobileTabs = screen.getAllByRole('button', {name: /profile/i})
             expect(mobileTabs.length).toBeGreaterThanOrEqual(1)
+        })
+
+        it('renders the notification bell -- previously missing entirely from the worker dashboard', () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            // once in the desktop header, once in the mobile header -- same
+            // pattern as the customer DashboardLayout.
+            expect(screen.getAllByTestId('notification-bell')).toHaveLength(2)
         })
     })
 })
