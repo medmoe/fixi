@@ -1,4 +1,5 @@
 import {RoleType} from "@/features/auth";
+import type {SupportedLanguage} from "@/lib/i18n";
 
 export interface UserRead {
     uuid: string,
@@ -13,6 +14,7 @@ export interface UserRead {
     tier_id: number,
     location: string | null,          // WKT point, read-only — derived from the coordinates
     display_location: string | null,
+    preferred_language: SupportedLanguage,
     deleted_at: string | null,
     created_at: string | null,
     updated_at: string | null,
@@ -33,6 +35,7 @@ export interface UserUpdate {
     latitude?: number | null,
     longitude?: number | null,
     profile_image_url?: string | null,
+    preferred_language?: SupportedLanguage,
 }
 
 export interface UserChangePasswordPayload {

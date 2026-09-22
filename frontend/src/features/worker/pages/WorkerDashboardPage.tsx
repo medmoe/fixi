@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {NotificationBell} from '@/features/notification'
+import {LanguageSwitcher} from '@/features/i18n'
 import {AlertCircle, Briefcase, Loader2, UserCircle, Search} from 'lucide-react'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
@@ -112,8 +113,9 @@ export const WorkerDashboardPage: React.FC = () => {
 
             {/* ═══ Header + Main Content ══════════════════════════════════════ */}
             <div className="flex-1 flex flex-col">
-                {/* Desktop Header — just the notification bell; the sidebar covers identity/nav */}
-                <header className="hidden lg:flex justify-end border-b bg-card px-8 h-14 items-center">
+                {/* Desktop Header — notification bell + language switcher; the sidebar covers identity/nav */}
+                <header className="hidden lg:flex justify-end gap-1 border-b bg-card px-8 h-14 items-center">
+                    <LanguageSwitcher/>
                     <NotificationBell/>
                 </header>
 
@@ -126,6 +128,7 @@ export const WorkerDashboardPage: React.FC = () => {
                         <span className="font-medium text-sm">{user?.name}</span>
                     </div>
                     <div className="flex items-center gap-1">
+                        <LanguageSwitcher/>
                         <NotificationBell/>
                         <LogoutButton/>
                     </div>

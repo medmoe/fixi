@@ -2,6 +2,7 @@ import React from 'react'
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useInitAuth } from '@/features/auth/hooks/useInitAuth'
 import { useNotificationSocket } from '@/features/notification'
+import { useLanguageSync } from '@/features/i18n'
 import { Loader2 } from 'lucide-react'
 
 const PUBLIC_ROUTES = ['/', '/login', '/register']
@@ -20,6 +21,11 @@ export const AuthInitializer: React.FC = () => {
     // no-ops until Redux has isAuthenticated + accessToken, so this is safe
     // to call before that's true.
     useNotificationSocket()
+
+    // Same rationale, different concern: syncs the active language to
+    // `user.preferred_language` as soon as it's known, rather than only
+    // wherever a LanguageSwitcher happens to be mounted.
+    useLanguageSync()
 
     // 2. While verifying refresh token, render the full-screen loader
     if (isLoading) {

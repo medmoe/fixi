@@ -40,7 +40,8 @@ const mockUser: UserRead = {
     created_at: '2023-01-01T00:00:00Z',
     deleted_at: null,
     updated_at: null,
-    display_location: 'New York, NY'
+    display_location: 'New York, NY',
+    preferred_language: 'fr',
 }
 
 describe('useUser', () => {

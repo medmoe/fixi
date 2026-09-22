@@ -114,6 +114,21 @@ class TestMailjetEmailProviderProduction:
         subject = mock_post.call_args.kwargs["json"]["Messages"][0]["Subject"]
         assert subject == "لقد تلقيت تقييماً جديداً"
 
+    async def test_selects_the_english_template_for_english_preferring_users(self, async_session, monkeypatch):
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.ENVIRONMENT", EnvironmentOption.PRODUCTION)
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.MAILJET_API_KEY", "test-key")
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.MAILJET_API_SECRET", "test-secret")
+        monkeypatch.setattr("src.app.services.notifications.providers.settings.MAILJET_SENDER_EMAIL", "noreply@fixi.example")
+        user = await create_test_user(async_session, preferred_language=PreferredLanguage.EN)
+        provider = MailjetEmailProvider()
+
+        mock_response = httpx.Response(200, request=httpx.Request("POST", "https://api.mailjet.com/v3.1/send"))
+        with patch("httpx.AsyncClient.post", AsyncMock(return_value=mock_response)) as mock_post:
+            await provider.send(async_session, str(user.id), "review_received", PAYLOAD)
+
+        subject = mock_post.call_args.kwargs["json"]["Messages"][0]["Subject"]
+        assert subject == "You received a new review"
+
     async def test_a_send_failure_is_captured_as_a_failed_result(self, async_session, monkeypatch):
         monkeypatch.setattr("src.app.services.notifications.providers.settings.ENVIRONMENT", EnvironmentOption.PRODUCTION)
         monkeypatch.setattr("src.app.services.notifications.providers.settings.MAILJET_API_KEY", "test-key")

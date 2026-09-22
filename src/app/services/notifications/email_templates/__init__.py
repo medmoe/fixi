@@ -6,8 +6,10 @@ TEMPLATES_DIR = Path(__file__).parent
 _SUBJECTS: dict[tuple[str, str], str] = {
     ("review_received", "ar"): "لقد تلقيت تقييماً جديداً",
     ("review_received", "fr"): "Vous avez reçu un nouvel avis",
+    ("review_received", "en"): "You received a new review",
     ("worker_verification_approved", "ar"): "تم التحقق من ملفك الشخصي",
     ("worker_verification_approved", "fr"): "Votre profil a été vérifié",
+    ("worker_verification_approved", "en"): "Your profile has been verified",
 }
 
 

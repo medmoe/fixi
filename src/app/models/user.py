@@ -25,6 +25,7 @@ class UserRole(Enum):
 class PreferredLanguage(Enum):
     AR = "ar"
     FR = "fr"
+    EN = "en"
 
 
 class User(Base):

@@ -32,8 +32,22 @@ class TestRenderEmailTemplate:
         assert "أمينة" in html
         assert "كريم" in html
 
-    def test_renders_worker_verification_approved_in_both_languages(self):
-        for language in ("ar", "fr"):
+    def test_renders_the_english_template_with_substituted_variables(self):
+        subject, html = render_email_template(
+            "review_received",
+            "en",
+            {"recipient_name": "Amina", "reviewer_name": "Karim", "rating": "5", "job_title": "Plumbing", "comment": "Great work", "app_url": "https://fixi.example/dashboard"},
+        )
+
+        assert subject == "You received a new review"
+        assert "Amina" in html
+        assert "Karim" in html
+        assert "5/5" in html
+        assert "Plumbing" in html
+        assert "Great work" in html
+
+    def test_renders_worker_verification_approved_in_every_language(self):
+        for language in ("ar", "fr", "en"):
             subject, html = render_email_template(
                 "worker_verification_approved", language, {"recipient_name": "Yacine", "app_url": "https://fixi.example/dashboard"}
             )
@@ -52,4 +66,4 @@ class TestRenderEmailTemplate:
 
     def test_unknown_language_raises_email_template_not_found(self):
         with pytest.raises(EmailTemplateNotFound):
-            render_email_template("review_received", "en", {})
+            render_email_template("review_received", "de", {})
