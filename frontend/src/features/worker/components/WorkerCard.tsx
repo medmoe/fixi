@@ -4,6 +4,7 @@ import {useTranslation} from "react-i18next";
 import {CheckCircle2, MapPin, Star} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {useFormatCurrency, useFormatNumber} from "@/lib/hooks/useFormatters";
 import type {WorkerProfileWithTradesRead} from "../types";
 
 interface WorkerCardProps {
@@ -21,6 +22,8 @@ const getInitials = (name: string): string =>
 
 export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) => {
     const {t} = useTranslation("worker");
+    const formatCurrency = useFormatCurrency();
+    const formatNumber = useFormatNumber();
 
     return (
         <Link
@@ -53,7 +56,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                             <Star className="h-3 w-3" aria-hidden="true"/>
                             <span>
                                 {profile.average_rating !== null
-                                    ? `${Number(profile.average_rating).toFixed(1)} (${profile.review_count})`
+                                    ? `${formatNumber(Number(profile.average_rating), {minimumFractionDigits: 1, maximumFractionDigits: 1})} (${profile.review_count})`
                                     : t("shared.newRating")}
                             </span>
                             {profile.years_of_experience !== null && (
@@ -90,7 +93,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                 {/* Footer — rate, radius, distance */}
                 <div className="mt-auto flex items-center justify-between text-sm pt-2 border-t">
                     <div className="flex items-center gap-3 text-muted-foreground">
-                        {profile.hourly_rate !== null && <span>{t("workerCard.perHour", {rate: Number(profile.hourly_rate).toFixed(2)})}</span>}
+                        {profile.hourly_rate !== null && <span>{t("workerCard.perHour", {rate: formatCurrency(Number(profile.hourly_rate))})}</span>}
                         {profile.service_radius_km !== null && (
                             <span>{t("workerCard.radiusSuffix", {radius: profile.service_radius_km})}</span>
                         )}
@@ -99,7 +102,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                     {distance_km !== undefined && (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3" aria-hidden="true"/>
-                            {t("workerCard.distanceAway", {distance: distance_km.toFixed(1)})}
+                            {t("workerCard.distanceAway", {distance: formatNumber(distance_km, {minimumFractionDigits: 1, maximumFractionDigits: 1})})}
                         </span>
                     )}
                 </div>

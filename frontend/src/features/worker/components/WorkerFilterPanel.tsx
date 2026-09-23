@@ -7,6 +7,7 @@ import {Switch} from "@/components/ui/switch";
 import {Slider} from "@/components/ui/slider";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {useFormatCurrency} from "@/lib/hooks/useFormatters";
 import type {WorkerSearchFilters} from "../types";
 
 interface FilterPanelProps {
@@ -19,6 +20,7 @@ const MAX_RADIUS_KM = 200;
 
 export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
     const {t} = useTranslation("worker");
+    const formatCurrency = useFormatCurrency();
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useQuery({
         queryKey: ["trade-categories"],
         queryFn: workerApi.getTrades,
@@ -74,7 +76,10 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
             {/* Hourly rate range slider */}
             <div className="space-y-2">
                 <p className="text-sm font-medium">
-                    {t("workerFilterPanel.hourlyRateRange", {min: filters.min_hourly_rate ?? 0, max: filters.max_hourly_rate ?? MAX_HOURLY_RATE})}
+                    {t("workerFilterPanel.hourlyRateRange", {
+                        min: formatCurrency(filters.min_hourly_rate ?? 0),
+                        max: formatCurrency(filters.max_hourly_rate ?? MAX_HOURLY_RATE),
+                    })}
                 </p>
                 <Slider
                     aria-label={t("workerFilterPanel.hourlyRateRangeAriaLabel")}

@@ -112,7 +112,7 @@ describe("JobsTab", () => {
         );
         renderJobsTab();
         await waitFor(() => {
-            expect(screen.getByText("$100 – $500")).toBeInTheDocument();
+            expect(screen.getByText("$100.00 – $500.00")).toBeInTheDocument();
         });
     });
 
