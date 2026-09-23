@@ -1,0 +1,40 @@
+{
+  "shared": {
+    "starCount_one": "{{count}} star",
+    "starCount_other": "{{count}} stars",
+    "reviewCount_one": "{{count}} review",
+    "reviewCount_other": "{{count}} reviews"
+  },
+  "reviewCard": {
+    "submitError": "Failed to submit review. Please try again.",
+    "submitted": "Review submitted — thank you!",
+    "dismissAriaLabel": "Dismiss",
+    "heading": "Leave a review",
+    "commentAriaLabel": "Review comment",
+    "commentPlaceholder": "Share details about your experience (optional)",
+    "submit": "Submit review"
+  },
+  "reviewListItem": {
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
+  "reviewsSection": {
+    "loadingAriaLabel": "Loading reviews",
+    "loadError": "Couldn't load reviews right now. Please try again later.",
+    "heading": "Reviews",
+    "ctaPrompt": "Worked with this person? Leave a review",
+    "leaveReviewLink": "Leave a review",
+    "loading": "Loading...",
+    "loadMore": "Load more"
+  },
+  "reviewsEmptyState": {
+    "heading": "No reviews yet",
+    "subtitle": "Once this worker completes a job, reviews will show up here."
+  },
+  "ratingBreakdownChart": {
+    "ariaLabel": "{{starLabel}}: {{percent}}% ({{reviewLabel}})"
+  },
+  "starRating": {
+    "ariaLabel": "Rating"
+  }
+}

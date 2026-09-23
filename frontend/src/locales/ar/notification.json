@@ -1,0 +1,34 @@
+{
+  "bell": {
+    "triggerLabel": "الإشعارات",
+    "unreadBadge_one": "إشعار واحد غير مقروء",
+    "unreadBadge_two": "إشعاران غير مقروءين",
+    "unreadBadge_few": "{{count}} إشعارات غير مقروءة",
+    "unreadBadge_many": "{{count}} إشعارًا غير مقروء",
+    "unreadBadge_other": "{{count}} إشعار غير مقروء",
+    "heading": "الإشعارات",
+    "markAllRead": "تعليم الكل كمقروء",
+    "empty": "لا توجد إشعارات بعد.",
+    "unread": "غير مقروء"
+  },
+  "preferences": {
+    "title": "تفضيلات الإشعارات",
+    "description": "اختر الأحداث التي ترسل لك إشعارًا فوريًا أو بريدًا إلكترونيًا. لا يمكن إيقاف رموز التحقق عبر الرسائل النصية.",
+    "loading": "جارٍ تحميل التفضيلات...",
+    "push": "إشعار فوري",
+    "email": "بريد إلكتروني",
+    "pushAriaLabel": "إشعارات فورية: {{label}}",
+    "emailAriaLabel": "إشعارات بريد إلكتروني: {{label}}"
+  },
+  "events": {
+    "jobApplicationAccepted": "تم قبول طلبك",
+    "jobApplicationRejected": "لم يتم قبول طلبك",
+    "jobApplicationConfirmed": "قام محترف بتأكيد مهمتك",
+    "jobApplicationWithdrawn": "قام محترف بسحب طلبه",
+    "jobStarted": "بدأت مهمة قمت بحجزها",
+    "jobCompleted": "تم تحديد مهمة كمكتملة",
+    "jobCompletionPendingConfirmation": "هناك مهمة بانتظار تأكيدك",
+    "reviewReceived": "لقد تلقيت تقييماً جديداً",
+    "workerVerificationApproved": "تمت الموافقة على توثيق حسابك كمحترف"
+  }
+}

@@ -1,32 +1,18 @@
 // src/features/landing/components/HowItWorks.tsx
 
 import { UserPlus, Users, Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-const steps = [
-    {
-        icon: UserPlus,
-        title: 'Join the Platform',
-        description:
-            'Register in minutes as a Customer looking for help or a Worker ready to offer your skills.',
-        step: '01',
-    },
-    {
-        icon: Users,
-        title: 'Connect',
-        description:
-            'Browse local jobs or search for top-rated professionals near you. Filter by trade, radius, and availability.',
-        step: '02',
-    },
-    {
-        icon: Star,
-        title: 'Complete & Review',
-        description:
-            'Coordinate securely through the platform, complete the job, and leave a verified review.',
-        step: '03',
-    },
-]
+const STEPS = [
+    {icon: UserPlus, key: 'join', step: '01'},
+    {icon: Users, key: 'connect', step: '02'},
+    {icon: Star, key: 'complete', step: '03'},
+] as const
 
-export const HowItWorks = () => (
+export const HowItWorks = () => {
+    const {t} = useTranslation('landing')
+
+    return (
     <section
         aria-labelledby="how-it-works-heading"
         className="bg-muted/40 py-20"
@@ -37,15 +23,15 @@ export const HowItWorks = () => (
                     id="how-it-works-heading"
                     className="text-3xl md:text-4xl font-bold"
                 >
-                    How Fixi Works
+                    {t('howItWorks.heading')}
                 </h2>
                 <p className="text-muted-foreground max-w-xl mx-auto">
-                    Three simple steps to get things done or grow your client base.
+                    {t('howItWorks.subtitle')}
                 </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {steps.map(({ icon: Icon, title, description, step }) => (
+                {STEPS.map(({ icon: Icon, key, step }) => (
                     <div
                         key={step}
                         className="relative bg-card border rounded-2xl p-6 shadow-sm flex flex-col gap-4"
@@ -59,11 +45,12 @@ export const HowItWorks = () => (
                         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                             <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
                         </div>
-                        <h3 className="text-lg font-semibold">{title}</h3>
-                        <p className="text-sm text-muted-foreground">{description}</p>
+                        <h3 className="text-lg font-semibold">{t(`howItWorks.steps.${key}.title`)}</h3>
+                        <p className="text-sm text-muted-foreground">{t(`howItWorks.steps.${key}.description`)}</p>
                     </div>
                 ))}
             </div>
         </div>
     </section>
-)
+    )
+}

@@ -2,6 +2,7 @@ import React, {useEffect} from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {Loader2} from 'lucide-react';
+import {useTranslation} from 'react-i18next';
 import {useNavigate, useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
 import {Button} from '@/components/ui/button';
@@ -14,6 +15,7 @@ import {Skeleton} from '@/components/ui/skeleton';
 type JobEditFormValues = JobUpdateRequest;
 
 export const JobEditForm: React.FC = () => {
+    const {t} = useTranslation('job');
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
     const jobId = Number(id);
@@ -84,19 +86,19 @@ export const JobEditForm: React.FC = () => {
     if (!job) {
         return (
             <div className="max-w-2xl mx-auto p-6 text-center text-destructive">
-                Job not found
+                {t('shared.jobNotFound')}
             </div>
         );
     }
 
     return (
         <div className="max-w-2xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Edit Job</h1>
+            <h1 className="text-2xl font-bold mb-6">{t('jobEditForm.heading')}</h1>
             <Form {...form}>
                 <form
                     onSubmit={handleSubmit(onSubmit)}
                     noValidate
-                    aria-label="Edit job form"
+                    aria-label={t('jobEditForm.formAriaLabel')}
                     className="space-y-6 bg-card border p-6 rounded-xl shadow-sm"
                 >
                     <TitleField/>
@@ -117,20 +119,20 @@ export const JobEditForm: React.FC = () => {
                             variant="outline"
                             onClick={() => navigate(`/jobs/${jobId}`)}
                         >
-                            Cancel
+                            {t('shared.cancel')}
                         </Button>
                         <Button
                             type="submit"
                             disabled={!canSubmit}
-                            aria-label="Update job"
+                            aria-label={t('jobEditForm.updateAriaLabel')}
                         >
                             {isPending ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true"/>
-                                    Updating...
+                                    {t('shared.updating')}
                                 </>
                             ) : (
-                                'Update Job'
+                                t('jobEditForm.updateJob')
                             )}
                         </Button>
                     </div>

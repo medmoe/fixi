@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useNavigate} from 'react-router-dom';
+import {useTranslation} from 'react-i18next';
 import {Eye, Loader2, Pencil, Plus, Trash2} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
@@ -23,6 +24,7 @@ const statusColors: Record<JobStatus, string> = {
 };
 
 export const MyJobsPage: React.FC = () => {
+    const {t} = useTranslation('job');
     const navigate = useNavigate();
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser();
     const {mutate: deleteJob, isPending: isDeleting} = useDeleteJob();
@@ -57,7 +59,7 @@ export const MyJobsPage: React.FC = () => {
     if (userError || !user) {
         return (
             <div className="max-w-4xl mx-auto p-6 text-center text-destructive">
-                Please sign in to view your jobs.
+                {t('myJobsPage.signInPrompt')}
             </div>
         );
     }
@@ -76,7 +78,7 @@ export const MyJobsPage: React.FC = () => {
     if (isError) {
         return (
             <div className="max-w-4xl mx-auto p-6 text-center text-destructive">
-                Failed to load jobs. Please try again.
+                {t('myJobsPage.loadError')}
             </div>
         );
     }
@@ -87,10 +89,10 @@ export const MyJobsPage: React.FC = () => {
         <div className="max-w-4xl mx-auto p-6 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">My Jobs</h1>
+                <h1 className="text-2xl font-bold">{t('myJobsPage.heading')}</h1>
                 <Button onClick={() => navigate('create')}>
                     <Plus className="mr-2 h-4 w-4"/>
-                    Post New Job
+                    {t('myJobsPage.postNewJob')}
                 </Button>
             </div>
 
@@ -98,10 +100,10 @@ export const MyJobsPage: React.FC = () => {
             {jobs.length === 0 ? (
                 <Card>
                     <CardContent className="p-8 text-center text-muted-foreground">
-                        <p className="mb-4">You haven&apos;t posted any jobs yet.</p>
+                        <p className="mb-4">{t('myJobsPage.emptyState')}</p>
                         <Button onClick={() => navigate('create')} variant="outline">
                             <Plus className="mr-2 h-4 w-4"/>
-                            Post Your First Job
+                            {t('myJobsPage.postFirstJob')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -135,7 +137,7 @@ export const MyJobsPage: React.FC = () => {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => navigate(`${job.id}`)}
-                                            aria-label={`View job ${job.title}`}
+                                            aria-label={t('myJobsPage.viewJobAriaLabel', {title: job.title})}
                                         >
                                             <Eye className="h-4 w-4"/>
                                         </Button>
@@ -144,7 +146,7 @@ export const MyJobsPage: React.FC = () => {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => navigate(`${job.id}/edit`)}
-                                                aria-label={`Edit job ${job.title}`}
+                                                aria-label={t('myJobsPage.editJobAriaLabel', {title: job.title})}
                                             >
                                                 <Pencil className="h-4 w-4"/>
                                             </Button>
@@ -154,7 +156,7 @@ export const MyJobsPage: React.FC = () => {
                                             size="icon"
                                             className="text-destructive hover:text-destructive"
                                             onClick={() => setJobPendingDeletion(job)}
-                                            aria-label={`Delete job ${job.title}`}
+                                            aria-label={t('myJobsPage.deleteJobAriaLabel', {title: job.title})}
                                         >
                                             <Trash2 className="h-4 w-4"/>
                                         </Button>
@@ -181,15 +183,13 @@ export const MyJobsPage: React.FC = () => {
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('myJobsPage.deleteDialogTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {jobPendingDeletion && (
-                                <>This will permanently remove &ldquo;{jobPendingDeletion.title}&rdquo;. This action cannot be undone.</>
-                            )}
+                            {jobPendingDeletion && t('myJobsPage.deleteDialogDescription', {title: jobPendingDeletion.title})}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isDeleting}>{t('shared.cancel')}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmDelete}
                             disabled={isDeleting}
@@ -198,10 +198,10 @@ export const MyJobsPage: React.FC = () => {
                             {isDeleting ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                    Deleting...
+                                    {t('myJobsPage.deleting')}
                                 </>
                             ) : (
-                                'Delete'
+                                t('myJobsPage.delete')
                             )}
                         </AlertDialogAction>
                     </AlertDialogFooter>

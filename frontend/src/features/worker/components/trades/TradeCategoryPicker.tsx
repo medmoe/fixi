@@ -1,6 +1,7 @@
 
 import React from 'react'
 import {Plus, X} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Badge} from '@/components/ui/badge'
 import {useTrades} from '@/features/worker/hooks/useTrades'
@@ -23,23 +24,24 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                                                                             onRemove,
                                                                             isRemoving,
                                                                         }) => {
+    const {t} = useTranslation('worker')
     const {data: availableTrades = [], isLoading} = useTrades()
 
     if (isLoading) {
         return (
             <div className="text-sm text-muted-foreground animate-pulse">
-                Loading trade categories...
+                {t('tradeCategoryPicker.loading')}
             </div>
         )
     }
 
-    const assignedIds = assignedTrades.map((t) => t.trade_category_id)
+    const assignedIds = assignedTrades.map((wt) => wt.trade_category_id)
     const totalSelected = assignedIds.length + pendingIds.length
     const atMax = totalSelected >= MAX_TRADES
 
     // trades not yet assigned and not pending
     const selectableTrades = (availableTrades as TradeCategoryRead[]).filter(
-        (t) => !assignedIds.includes(t.id) && !pendingIds.includes(t.id),
+        (trade) => !assignedIds.includes(trade.id) && !pendingIds.includes(trade.id),
     )
 
     const handleAddPending = (id: number) => {
@@ -52,7 +54,7 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
     }
 
     const pendingTrades = (availableTrades as TradeCategoryRead[]).filter(
-        (t) => pendingIds.includes(t.id),
+        (trade) => pendingIds.includes(trade.id),
     )
 
     return (
@@ -60,13 +62,13 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <p className="text-base font-semibold">Trades & Specializations</p>
+                    <p className="text-base font-semibold">{t('tradeCategoryPicker.heading')}</p>
                     <p className="text-xs text-muted-foreground">
-                        Select up to {MAX_TRADES} primary trades. Changes save on Update Profile.
+                        {t('tradeCategoryPicker.helperText', {max: MAX_TRADES})}
                     </p>
                 </div>
                 <Badge variant={atMax ? 'destructive' : 'secondary'}>
-                    {totalSelected}/{MAX_TRADES} Selected
+                    {t('tradeCategoryPicker.selectedCount', {count: totalSelected, max: MAX_TRADES})}
                 </Badge>
             </div>
 
@@ -74,13 +76,13 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
             {assignedTrades.length > 0 && (
                 <div className="space-y-2">
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                        Assigned
+                        {t('tradeCategoryPicker.assignedHeading')}
                     </p>
                     {assignedTrades.map((wt) => {
                         const label =
                             wt.trade_category?.display_name ??
                             wt.trade_category?.name ??
-                            `Trade #${wt.trade_category_id}`
+                            t('tradeCategoryPicker.tradeFallback', {id: wt.trade_category_id})
                         return (
                             <div
                                 key={wt.id}
@@ -93,7 +95,7 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                                     size="icon"
                                     disabled={isRemoving}
                                     onClick={() => onRemove(wt.trade_category_id)}
-                                    aria-label={`Remove ${label}`}
+                                    aria-label={t('tradeCategoryPicker.removeAriaLabel', {name: label})}
                                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                 >
                                     <X className="h-4 w-4"/>
@@ -108,22 +110,22 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
             {pendingTrades.length > 0 && (
                 <div className="space-y-2">
                     <p className="text-xs text-amber-600 font-medium uppercase tracking-wide">
-                        Pending (save to confirm)
+                        {t('tradeCategoryPicker.pendingHeading')}
                     </p>
-                    {pendingTrades.map((t) => (
+                    {pendingTrades.map((trade) => (
                         <div
-                            key={t.id}
+                            key={trade.id}
                             className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200"
                         >
                             <span className="text-sm font-medium text-amber-800">
-                                {t.display_name ?? t.name}
+                                {trade.display_name ?? trade.name}
                             </span>
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleRemovePending(t.id)}
-                                aria-label={`Remove ${t.display_name ?? t.name}`}
+                                onClick={() => handleRemovePending(trade.id)}
+                                aria-label={t('tradeCategoryPicker.removeAriaLabel', {name: trade.display_name ?? trade.name})}
                                 className="h-8 w-8 text-amber-600 hover:text-destructive"
                             >
                                 <X className="h-4 w-4"/>

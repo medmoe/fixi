@@ -1,4 +1,5 @@
 import React from "react";
+import {useTranslation} from "react-i18next";
 import type {RatingBreakdown} from "../types";
 
 const STAR_ROWS = [5, 4, 3, 2, 1] as const;
@@ -9,17 +10,21 @@ interface RatingBreakdownChartProps {
 }
 
 export const RatingBreakdownChart: React.FC<RatingBreakdownChartProps> = ({breakdown, totalCount}) => {
+    const {t} = useTranslation("review");
+
     return (
         <div className="space-y-1.5">
             {STAR_ROWS.map((star) => {
                 const count = breakdown[star];
                 const percent = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-                const label = `${star} star${star > 1 ? "s" : ""}: ${percent}% (${count} review${count === 1 ? "" : "s"})`;
+                const starLabel = t("shared.starCount", {count: star});
+                const reviewLabel = t("shared.reviewCount", {count});
+                const label = t("ratingBreakdownChart.ariaLabel", {starLabel, percent, reviewLabel});
 
                 return (
                     <div key={star} className="flex items-center gap-2 text-xs">
                         <span className="w-10 shrink-0 text-muted-foreground">
-                            {star} star{star > 1 ? "s" : ""}
+                            {starLabel}
                         </span>
                         <div
                             role="img"

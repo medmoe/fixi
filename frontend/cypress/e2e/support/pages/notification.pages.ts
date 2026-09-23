@@ -10,8 +10,9 @@ export class NotificationBellPage {
     // the default (desktop-width) Cypress viewport.
     private readonly selectors = {
         trigger: '[aria-label="Notifications"]:visible',
-        // NotificationBell always renders the plural form, even for count === 1.
-        badge: (count: number) => `[aria-label="${count} unread notifications"]:visible`,
+        // NotificationBell pluralizes via i18next: singular "unread notification"
+        // for count === 1, plural "unread notifications" otherwise.
+        badge: (count: number) => `[aria-label="${count} unread notification${count === 1 ? '' : 's'}"]:visible`,
         markAllRead: 'button:contains("Mark all read"):visible',
     }
 

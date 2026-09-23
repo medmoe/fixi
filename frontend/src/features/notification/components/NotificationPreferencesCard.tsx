@@ -1,30 +1,35 @@
 import React from 'react'
 import {Bell, Loader2} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
 import {Switch} from '@/components/ui/switch'
 import {useNotificationPreferences} from '../hooks/useNotificationPreferences'
 import {useUpdateNotificationPreference} from '../hooks/useUpdateNotificationPreference'
 import type {NotificationPreferenceChannel} from '../types'
 
-// Human-readable labels for the event_type strings the backend's
-// TOGGLEABLE_EVENT_CHANNELS catalog returns (src/app/services/notifications/
-// event_catalog.py) -- keep these two lists in sync. An event_type missing
-// here still renders (falls back to the raw string) rather than being
-// dropped, so a new backend event type never silently disappears from the
-// settings UI.
-const EVENT_TYPE_LABELS: Record<string, string> = {
-    'job_application.accepted': 'Your job application was accepted',
-    'job_application.rejected': 'Your job application was declined',
-    'job_application.confirmed': 'A worker confirmed your job',
-    'job_application.withdrawn': 'A worker withdrew from your job',
-    'job.started': 'A job you booked started',
-    'job.completed': 'A job was marked completed',
-    'job.completion_pending_confirmation': 'A job is awaiting your confirmation',
-    review_received: 'You received a new review',
-    worker_verification_approved: 'Your worker verification was approved',
+// Maps the event_type strings the backend's TOGGLEABLE_EVENT_CHANNELS
+// catalog returns (src/app/services/notifications/event_catalog.py) to a
+// translation key under `notification:events.*` -- keep these two lists in
+// sync. event_type values contain dots ("job_application.accepted"), which
+// i18next would otherwise parse as a nested-key path, hence the indirection
+// through a dot-free key rather than using event_type as the key directly.
+// An event_type missing here still renders (falls back to the raw string)
+// rather than being dropped, so a new backend event type never silently
+// disappears from the settings UI.
+const EVENT_TYPE_KEYS: Record<string, string> = {
+    'job_application.accepted': 'events.jobApplicationAccepted',
+    'job_application.rejected': 'events.jobApplicationRejected',
+    'job_application.confirmed': 'events.jobApplicationConfirmed',
+    'job_application.withdrawn': 'events.jobApplicationWithdrawn',
+    'job.started': 'events.jobStarted',
+    'job.completed': 'events.jobCompleted',
+    'job.completion_pending_confirmation': 'events.jobCompletionPendingConfirmation',
+    review_received: 'events.reviewReceived',
+    worker_verification_approved: 'events.workerVerificationApproved',
 }
 
 export const NotificationPreferencesCard: React.FC = () => {
+    const {t} = useTranslation('notification')
     const {data: preferences, isLoading} = useNotificationPreferences()
     const {mutate: updatePreference, isPending, variables} = useUpdateNotificationPreference()
 
@@ -36,33 +41,37 @@ export const NotificationPreferencesCard: React.FC = () => {
 
     const eventTypes = Array.from(new Set((preferences ?? []).map((preference) => preference.event_type)))
 
+    const labelFor = (eventType: string): string => {
+        const key = EVENT_TYPE_KEYS[eventType]
+        return key ? t(key) : eventType
+    }
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5"/>
-                    Notification Preferences
+                    {t('preferences.title')}
                 </CardTitle>
                 <CardDescription>
-                    Choose which events send you a push notification or an email.
-                    SMS verification codes cannot be turned off.
+                    {t('preferences.description')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
                     <div className="flex items-center gap-2 text-muted-foreground" role="status">
                         <Loader2 className="h-4 w-4 animate-spin"/>
-                        Loading preferences...
+                        {t('preferences.loading')}
                     </div>
                 ) : (
                     <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 gap-y-4 text-sm">
                         <div/>
-                        <div className="text-center font-medium text-muted-foreground">Push</div>
-                        <div className="text-center font-medium text-muted-foreground">Email</div>
+                        <div className="text-center font-medium text-muted-foreground">{t('preferences.push')}</div>
+                        <div className="text-center font-medium text-muted-foreground">{t('preferences.email')}</div>
                         {eventTypes.map((eventType) => {
                             const push = findPreference(eventType, 'push')
                             const email = findPreference(eventType, 'email')
-                            const label = EVENT_TYPE_LABELS[eventType] ?? eventType
+                            const label = labelFor(eventType)
 
                             return (
                                 <React.Fragment key={eventType}>
@@ -73,7 +82,7 @@ export const NotificationPreferencesCard: React.FC = () => {
                                                 checked={push.enabled}
                                                 disabled={isRowPending(eventType, 'push')}
                                                 onCheckedChange={(checked) => updatePreference({eventType, channel: 'push', enabled: checked})}
-                                                aria-label={`Push notifications: ${label}`}
+                                                aria-label={t('preferences.pushAriaLabel', {label})}
                                             />
                                         )}
                                     </div>
@@ -83,7 +92,7 @@ export const NotificationPreferencesCard: React.FC = () => {
                                                 checked={email.enabled}
                                                 disabled={isRowPending(eventType, 'email')}
                                                 onCheckedChange={(checked) => updatePreference({eventType, channel: 'email', enabled: checked})}
-                                                aria-label={`Email notifications: ${label}`}
+                                                aria-label={t('preferences.emailAriaLabel', {label})}
                                             />
                                         )}
                                     </div>

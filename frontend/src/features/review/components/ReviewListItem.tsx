@@ -1,7 +1,8 @@
 import React, {useState} from "react";
+import {useTranslation} from "react-i18next";
 import {cn} from "@/lib/utils";
 import {RatingStars} from "./RatingStars";
-import {formatRelativeDate} from "../utils/formatRelativeDate";
+import {useFormatRelativeDate} from "../hooks/useFormatRelativeDate";
 import type {ReviewPublicRead} from "../types";
 
 // jsdom doesn't compute real layout (scrollHeight/clientHeight are always 0),
@@ -15,7 +16,9 @@ interface ReviewListItemProps {
 }
 
 export const ReviewListItem: React.FC<ReviewListItemProps> = ({review}) => {
+    const {t} = useTranslation("review");
     const [expanded, setExpanded] = useState(false);
+    const formatRelativeDate = useFormatRelativeDate();
     const isLong = (review.comment?.length ?? 0) > LIKELY_OVERFLOW_THRESHOLD;
 
     return (
@@ -38,7 +41,7 @@ export const ReviewListItem: React.FC<ReviewListItemProps> = ({review}) => {
                             onClick={() => setExpanded((prev) => !prev)}
                             className="mt-1 text-xs font-medium text-primary hover:underline"
                         >
-                            {expanded ? "Show less" : "Show more"}
+                            {expanded ? t("reviewListItem.showLess") : t("reviewListItem.showMore")}
                         </button>
                     )}
                 </div>

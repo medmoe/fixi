@@ -1,4 +1,5 @@
 import React, {useState} from 'react'
+import {useTranslation} from 'react-i18next'
 import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {NotificationBell} from '@/features/notification'
@@ -12,6 +13,7 @@ import {JobsTab} from "@/features/job";
 type Tab = 'profile' | 'account' | 'jobs'
 
 export const WorkerDashboardPage: React.FC = () => {
+    const {t} = useTranslation('worker')
     const [activeTab, setActiveTab] = useState<Tab>('profile')
 
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser()
@@ -22,7 +24,7 @@ export const WorkerDashboardPage: React.FC = () => {
             <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
                 <p className="text-sm font-medium text-muted-foreground">
-                    Loading your dashboard...
+                    {t('dashboard.loading')}
                 </p>
             </div>
         )
@@ -34,11 +36,10 @@ export const WorkerDashboardPage: React.FC = () => {
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
                     <h3 className="font-semibold text-sm">
-                        System Synchronization Failure
+                        {t('dashboard.errorTitle')}
                     </h3>
                     <p className="text-xs opacity-90 mt-1">
-                        We ran into trouble loading your account data. Please try
-                        again later.
+                        {t('dashboard.errorDescription')}
                     </p>
                 </div>
             </div>
@@ -48,17 +49,17 @@ export const WorkerDashboardPage: React.FC = () => {
     const navItems: { id: Tab; label: string; icon: React.ReactNode }[] = [
         {
             id: 'profile',
-            label: 'Profile',
+            label: t('dashboard.navProfile'),
             icon: <Briefcase className="h-4 w-4"/>,
         },
         {
             id: 'account',
-            label: 'Account',
+            label: t('dashboard.navAccount'),
             icon: <UserCircle className="h-4 w-4"/>,
         },
         {
             id: 'jobs',
-            label: 'Jobs',
+            label: t('dashboard.navJobs'),
             icon: <Search className="h-4 w-4"/>,
         }
     ]
@@ -75,8 +76,8 @@ export const WorkerDashboardPage: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="font-medium text-sm truncate">{user?.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                                {user?.role_type}
+                            <p className="text-xs text-muted-foreground">
+                                {t(`role.${user?.role_type}`)}
                             </p>
                         </div>
                     </div>

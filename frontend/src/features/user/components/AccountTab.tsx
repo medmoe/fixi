@@ -1,6 +1,7 @@
 import React from 'react'
 import {useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
+import {useTranslation} from 'react-i18next'
 import {useAuth} from '@/features/auth'
 import {NotificationPreferencesCard} from '@/features/notification'
 import {LocationSearchField, useChangePassword, useDeactivateAccount, type UserPasswordFormValues, userPasswordSchema, type UserUpdateFormValues, userUpdateSchema, useUpdateUser, useUser} from '@/features/user'
@@ -13,6 +14,7 @@ import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, A
 import {ImageIcon, Loader2, Lock, Trash2, UserCircle} from 'lucide-react'
 
 export const AccountTab: React.FC = () => {
+    const {t} = useTranslation('account')
     const {data: user} = useUser()
     const {logout} = useAuth()
 
@@ -98,10 +100,10 @@ export const AccountTab: React.FC = () => {
             <header className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                     <UserCircle className="h-8 w-8 text-primary"/>
-                    Account Settings
+                    {t('heading')}
                 </h2>
                 <p className="text-muted-foreground">
-                    Manage your personal information and security.
+                    {t('subtitle')}
                 </p>
             </header>
 
@@ -110,10 +112,10 @@ export const AccountTab: React.FC = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <ImageIcon className="h-5 w-5"/>
-                        Profile Information
+                        {t('profile.cardTitle')}
                     </CardTitle>
                     <CardDescription>
-                        Update your name, email, location, and profile image.
+                        {t('profile.cardDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -128,7 +130,7 @@ export const AccountTab: React.FC = () => {
                                     name="name"
                                     render={({field}) => (
                                         <FormItem>
-                                            <FormLabel>Full Name</FormLabel>
+                                            <FormLabel>{t('profile.nameLabel')}</FormLabel>
                                             <FormControl>
                                                 <Input {...field} />
                                             </FormControl>
@@ -141,7 +143,7 @@ export const AccountTab: React.FC = () => {
                                     name="username"
                                     render={({field}) => (
                                         <FormItem>
-                                            <FormLabel>Username</FormLabel>
+                                            <FormLabel>{t('profile.usernameLabel')}</FormLabel>
                                             <FormControl>
                                                 <Input {...field} />
                                             </FormControl>
@@ -156,7 +158,7 @@ export const AccountTab: React.FC = () => {
                                 name="email"
                                 render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Email</FormLabel>
+                                        <FormLabel>{t('profile.emailLabel')}</FormLabel>
                                         <FormControl>
                                             <Input type="email" {...field} />
                                         </FormControl>
@@ -172,10 +174,10 @@ export const AccountTab: React.FC = () => {
                                 name="profile_image_url"
                                 render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Profile Image URL</FormLabel>
+                                        <FormLabel>{t('profile.imageUrlLabel')}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="https://..."
+                                                placeholder={t('profile.imageUrlPlaceholder')}
                                                 {...field}
                                                 value={field.value ?? ''}
                                             />
@@ -195,10 +197,10 @@ export const AccountTab: React.FC = () => {
                                 {updateMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                        Saving...
+                                        {t('profile.saving')}
                                     </>
                                 ) : (
-                                    'Save Changes'
+                                    t('profile.saveChanges')
                                 )}
                             </Button>
                         </form>
@@ -214,11 +216,10 @@ export const AccountTab: React.FC = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Lock className="h-5 w-5"/>
-                        Change Password
+                        {t('password.cardTitle')}
                     </CardTitle>
                     <CardDescription>
-                        Update your password. You will need to enter your current
-                        password.
+                        {t('password.cardDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -232,7 +233,7 @@ export const AccountTab: React.FC = () => {
                                 name="current_password"
                                 render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Current Password</FormLabel>
+                                        <FormLabel>{t('password.currentPasswordLabel')}</FormLabel>
                                         <FormControl>
                                             <PasswordInput autoComplete="current-password" {...field} />
                                         </FormControl>
@@ -245,7 +246,7 @@ export const AccountTab: React.FC = () => {
                                 name="new_password"
                                 render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>New Password</FormLabel>
+                                        <FormLabel>{t('password.newPasswordLabel')}</FormLabel>
                                         <FormControl>
                                             <PasswordInput autoComplete="new-password" {...field} />
                                         </FormControl>
@@ -258,7 +259,7 @@ export const AccountTab: React.FC = () => {
                                 name="confirm_password"
                                 render={({field}) => (
                                     <FormItem>
-                                        <FormLabel>Confirm New Password</FormLabel>
+                                        <FormLabel>{t('password.confirmPasswordLabel')}</FormLabel>
                                         <FormControl>
                                             <PasswordInput autoComplete="new-password" {...field} />
                                         </FormControl>
@@ -273,10 +274,10 @@ export const AccountTab: React.FC = () => {
                                 {passwordMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                        Changing...
+                                        {t('password.changing')}
                                     </>
                                 ) : (
-                                    'Change Password'
+                                    t('password.changePassword')
                                 )}
                             </Button>
                         </form>
@@ -289,12 +290,10 @@ export const AccountTab: React.FC = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-destructive">
                         <Trash2 className="h-5 w-5"/>
-                        Danger Zone
+                        {t('danger.cardTitle')}
                     </CardTitle>
                     <CardDescription>
-                        Once you deactivate your account, you will not be able to
-                        log in again. This action can be reversed by contacting
-                        support.
+                        {t('danger.cardDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -302,23 +301,20 @@ export const AccountTab: React.FC = () => {
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive">
                                 <Trash2 className="mr-2 h-4 w-4"/>
-                                Deactivate Account
+                                {t('danger.deactivateButton')}
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>
-                                    Deactivate your account?
+                                    {t('danger.confirmTitle')}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This will soft-delete your account and blacklist
-                                    your access token. You will be logged out
-                                    immediately and will not be able to sign in
-                                    again unless support reactivates your account.
+                                    {t('danger.confirmDescription')}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t('danger.cancel')}</AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={handleDeactivate}
                                     disabled={deactivateMutation.isPending}
@@ -327,10 +323,10 @@ export const AccountTab: React.FC = () => {
                                     {deactivateMutation.isPending ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                            Deactivating...
+                                            {t('danger.deactivating')}
                                         </>
                                     ) : (
-                                        'Yes, Deactivate'
+                                        t('danger.confirmDeactivate')
                                     )}
                                 </AlertDialogAction>
                             </AlertDialogFooter>

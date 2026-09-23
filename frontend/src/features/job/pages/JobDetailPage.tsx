@@ -1,6 +1,7 @@
 import React from 'react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
+import {useTranslation} from 'react-i18next';
 import {ArrowLeft, Calendar, DollarSign, LogIn, MapPin, User, Wrench} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
@@ -21,6 +22,7 @@ const statusColors: Record<JobStatus, string> = {
 };
 
 export const JobDetailPage: React.FC = () => {
+    const {t} = useTranslation('job');
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
     const location = useLocation();
@@ -60,11 +62,11 @@ export const JobDetailPage: React.FC = () => {
         return (
             <div className="max-w-3xl mx-auto p-6 text-center">
                 <p className="text-destructive mb-4">
-                    {error instanceof Error ? error.message : 'Job not found'}
+                    {error instanceof Error ? error.message : t('shared.jobNotFound')}
                 </p>
                 <Button onClick={handleBack} variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Back
+                    {t('jobDetailPage.back')}
                 </Button>
             </div>
         );
@@ -76,7 +78,7 @@ export const JobDetailPage: React.FC = () => {
         <div className="max-w-3xl mx-auto p-6 space-y-6">
             <Button onClick={handleBack} variant="ghost" size="sm" className="-ml-2">
                 <ArrowLeft className="mr-2 h-4 w-4"/>
-                Back
+                {t('jobDetailPage.back')}
             </Button>
 
             {/* Header */}
@@ -113,11 +115,11 @@ export const JobDetailPage: React.FC = () => {
                 )}
                 <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4"/>
-                    Posted {new Date(job.created_at).toLocaleDateString()}
+                    {t('jobDetailPage.postedOn', {date: new Date(job.created_at).toLocaleDateString()})}
                 </div>
                 <div className="flex items-center gap-2">
                     <User className="h-4 w-4"/>
-                    Customer #{job.user?.name}
+                    {t('jobDetailPage.customerLabel', {name: job.user?.name})}
                 </div>
             </div>
 
@@ -126,7 +128,7 @@ export const JobDetailPage: React.FC = () => {
                 <>
                     <Separator/>
                     <div>
-                        <h2 className="text-lg font-semibold mb-2">Description</h2>
+                        <h2 className="text-lg font-semibold mb-2">{t('jobDetailPage.descriptionHeading')}</h2>
                         <p className="text-muted-foreground whitespace-pre-wrap">
                             {job.description}
                         </p>
@@ -146,11 +148,11 @@ export const JobDetailPage: React.FC = () => {
                             onClick={() => navigate('/login', {state: {from: location.pathname}})}
                         >
                             <LogIn className="mr-2 h-4 w-4"/>
-                            Log in to Apply
+                            {t('jobDetailPage.loginToApply')}
                         </Button>
                     ) : (
                         <p className="text-xs text-muted-foreground text-center">
-                            This job is no longer accepting applications.
+                            {t('jobDetailPage.applicationsClosed')}
                         </p>
                     )}
                 </>
@@ -166,7 +168,7 @@ export const JobDetailPage: React.FC = () => {
                     />
                     {!isOpen && (
                         <p className="text-xs text-muted-foreground text-center">
-                            This job is no longer accepting applications.
+                            {t('jobDetailPage.applicationsClosed')}
                         </p>
                     )}
                 </>

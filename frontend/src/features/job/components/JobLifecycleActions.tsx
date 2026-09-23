@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import {Loader2} from "lucide-react";
+import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button";
 import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
@@ -21,6 +22,7 @@ interface JobLifecycleActionsProps {
 }
 
 export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) => {
+    const {t} = useTranslation("job");
     const {isAuthenticated} = useAuth();
     const {data: user} = useUser();
     const isCustomer = isAuthenticated && user?.id === job.user_id;
@@ -61,18 +63,18 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
         return (
             <div className="rounded-lg border p-4 space-y-3">
                 <div>
-                    <p className="text-sm font-medium">You've been accepted for this job!</p>
+                    <p className="text-sm font-medium">{t("jobLifecycleActions.acceptedHeading")}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Confirm once you and the customer have agreed on the details, or withdraw if it's not a fit.
+                        {t("jobLifecycleActions.acceptedDescription")}
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => confirmApplication(myApplication.id)} disabled={isConfirming}>
                         {isConfirming ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Confirm assignment
+                        {t("jobLifecycleActions.confirmAssignment")}
                     </Button>
                     <Button variant="outline" onClick={() => setShowWithdrawDialog(true)} disabled={isWithdrawing}>
-                        Withdraw
+                        {t("jobLifecycleActions.withdraw")}
                     </Button>
                 </div>
                 {withdrawDialog}
@@ -84,9 +86,9 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
     if (job.status === "open" && myApplication?.status === "pending") {
         return (
             <div className="rounded-lg border p-4 space-y-2">
-                <p className="text-sm text-muted-foreground">Your application is pending review.</p>
+                <p className="text-sm text-muted-foreground">{t("jobLifecycleActions.pendingReview")}</p>
                 <Button variant="outline" size="sm" onClick={() => setShowWithdrawDialog(true)}>
-                    Withdraw application
+                    {t("jobLifecycleActions.withdrawApplication")}
                 </Button>
                 {withdrawDialog}
             </div>
@@ -97,10 +99,10 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
     if (job.status === "assigned" && isAssignedWorker) {
         return (
             <div className="rounded-lg border p-4 space-y-2">
-                <p className="text-sm font-medium">You're assigned to this job.</p>
+                <p className="text-sm font-medium">{t("jobLifecycleActions.assignedHeading")}</p>
                 <Button onClick={() => startJob()} disabled={isStarting}>
                     {isStarting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                    Start job
+                    {t("jobLifecycleActions.startJob")}
                 </Button>
             </div>
         );
@@ -114,14 +116,14 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
             <div className="rounded-lg border p-4 space-y-2">
                 {alreadyMarked ? (
                     <p className="text-sm text-muted-foreground">
-                        Marked complete — waiting for the other party to confirm.
+                        {t("jobLifecycleActions.markedComplete")}
                     </p>
                 ) : (
                     <>
-                        <p className="text-sm font-medium">Is this job done?</p>
+                        <p className="text-sm font-medium">{t("jobLifecycleActions.isJobDoneHeading")}</p>
                         <Button onClick={() => completeJob()} disabled={isCompleting}>
                             {isCompleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                            Mark as complete
+                            {t("jobLifecycleActions.markAsComplete")}
                         </Button>
                     </>
                 )}
@@ -142,19 +144,20 @@ interface WithdrawApplicationDialogProps {
 }
 
 const WithdrawApplicationDialog: React.FC<WithdrawApplicationDialogProps> = ({open, onOpenChange, onConfirm, isPending}) => {
+    const {t} = useTranslation("job");
     const [reason, setReason] = useState<ApplicationDeclineReason | "">("");
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Withdraw application?</DialogTitle>
-                    <DialogDescription>Let the customer know why — this helps us improve future matches.</DialogDescription>
+                    <DialogTitle>{t("jobLifecycleActions.withdrawDialogTitle")}</DialogTitle>
+                    <DialogDescription>{t("jobLifecycleActions.withdrawDialogDescription")}</DialogDescription>
                 </DialogHeader>
 
                 <Select value={reason} onValueChange={(value) => setReason(value as ApplicationDeclineReason)}>
-                    <SelectTrigger aria-label="Reason for withdrawing">
-                        <SelectValue placeholder="Select a reason"/>
+                    <SelectTrigger aria-label={t("jobLifecycleActions.reasonForWithdrawingAriaLabel")}>
+                        <SelectValue placeholder={t("shared.selectAReason")}/>
                     </SelectTrigger>
                     <SelectContent>
                         {DECLINE_REASON_OPTIONS.map((option) => (
@@ -167,7 +170,7 @@ const WithdrawApplicationDialog: React.FC<WithdrawApplicationDialogProps> = ({op
 
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isPending}>
-                        Cancel
+                        {t("shared.cancel")}
                     </Button>
                     <Button
                         variant="destructive"
@@ -175,7 +178,7 @@ const WithdrawApplicationDialog: React.FC<WithdrawApplicationDialogProps> = ({op
                         disabled={!reason || isPending}
                     >
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Withdraw
+                        {t("jobLifecycleActions.withdraw")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

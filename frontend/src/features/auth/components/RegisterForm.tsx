@@ -3,7 +3,8 @@ import {useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link} from 'react-router-dom'
 import {Loader2} from 'lucide-react'
-import {type RegisterFormValues, registerSchema} from '../schemas/authSchema'
+import {useTranslation} from 'react-i18next'
+import {type RegisterFormValues, createRegisterSchema} from '../schemas/authSchema'
 import {useRegister} from '@/features/auth/hooks/useRegister'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
@@ -12,10 +13,11 @@ import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select'
 
 export const RegisterForm: React.FC = () => {
+    const {t} = useTranslation('auth')
     const {mutate: register, isPending} = useRegister()
 
     const form = useForm<RegisterFormValues>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(createRegisterSchema(t)),
         defaultValues: {
             name: '',
             username: '',
@@ -34,7 +36,7 @@ export const RegisterForm: React.FC = () => {
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-5"
-                aria-label="Registration form"
+                aria-label={t('register.formAriaLabel')}
                 noValidate // bypass browser validation since we are using zod validation.
             >
                 {/* Name */}
@@ -43,14 +45,14 @@ export const RegisterForm: React.FC = () => {
                     name="name"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel htmlFor="register-name">Full Name</FormLabel>
+                            <FormLabel htmlFor="register-name">{t('register.nameLabel')}</FormLabel>
                             <FormControl>
                                 <Input
                                     id="register-name"
                                     type="text"
                                     placeholder="John Doe"
                                     autoComplete="name"
-                                    aria-label="Full name"
+                                    aria-label={t('register.nameAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -66,14 +68,14 @@ export const RegisterForm: React.FC = () => {
                     name="username"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel htmlFor="register-username">Username</FormLabel>
+                            <FormLabel htmlFor="register-username">{t('register.usernameLabel')}</FormLabel>
                             <FormControl>
                                 <Input
                                     id="register-username"
                                     type="text"
                                     placeholder="john_doe"
                                     autoComplete="username"
-                                    aria-label="Username"
+                                    aria-label={t('register.usernameAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -89,14 +91,14 @@ export const RegisterForm: React.FC = () => {
                     name="email"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel htmlFor="register-email">Email</FormLabel>
+                            <FormLabel htmlFor="register-email">{t('register.emailLabel')}</FormLabel>
                             <FormControl>
                                 <Input
                                     id="register-email"
                                     type="email"
                                     placeholder="john@example.com"
                                     autoComplete="email"
-                                    aria-label="Email address"
+                                    aria-label={t('register.emailAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -112,13 +114,13 @@ export const RegisterForm: React.FC = () => {
                     name="password"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel htmlFor="register-password">Password</FormLabel>
+                            <FormLabel htmlFor="register-password">{t('register.passwordLabel')}</FormLabel>
                             <FormControl>
                                 <PasswordInput
                                     id="register-password"
                                     placeholder="••••••••"
                                     autoComplete="new-password"
-                                    aria-label="Password"
+                                    aria-label={t('register.passwordAriaLabel')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -134,22 +136,22 @@ export const RegisterForm: React.FC = () => {
                     name="role_type"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>I want to join as</FormLabel>
+                            <FormLabel>{t('register.roleLabel')}</FormLabel>
                             <Select
                                 value={field.value}
                                 onValueChange={field.onChange}
                             >
                                 <FormControl>
-                                    <SelectTrigger aria-label="Select role">
-                                        <SelectValue placeholder="Select a role"/>
+                                    <SelectTrigger aria-label={t('register.roleAriaLabel')}>
+                                        <SelectValue placeholder={t('register.rolePlaceholder')}/>
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     <SelectItem value="customer">
-                                        Customer — I need services
+                                        {t('register.roleCustomer')}
                                     </SelectItem>
                                     <SelectItem value="worker">
-                                        Worker — I offer services
+                                        {t('register.roleWorker')}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -163,21 +165,21 @@ export const RegisterForm: React.FC = () => {
                     type="submit"
                     className="w-full"
                     disabled={isPending}
-                    aria-label="Create account"
+                    aria-label={t('register.submitAriaLabel')}
                 >
                     {isPending
-                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating account...</>
-                        : 'Create Account'
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('register.creatingAccount')}</>
+                        : t('register.createAccount')
                     }
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
+                    {t('register.haveAccount')}{' '}
                     <Link
                         to="/login"
                         className="text-primary underline-offset-4 hover:underline"
                     >
-                        Sign in
+                        {t('register.signIn')}
                     </Link>
                 </p>
             </form>

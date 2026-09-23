@@ -1,5 +1,6 @@
 import React from "react";
 import {useQuery} from "@tanstack/react-query";
+import {useTranslation} from "react-i18next";
 import {workerApi} from "@/lib";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Switch} from "@/components/ui/switch";
@@ -17,6 +18,7 @@ const MAX_HOURLY_RATE = 500;
 const MAX_RADIUS_KM = 200;
 
 export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
+    const {t} = useTranslation("worker");
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useQuery({
         queryKey: ["trade-categories"],
         queryFn: workerApi.getTrades,
@@ -37,13 +39,13 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
     };
 
     return (
-        <div className="space-y-6" aria-label="Search filters">
+        <div className="space-y-6" aria-label={t("workerFilterPanel.ariaLabel")}>
 
             {/* Trade category multi-select */}
             <div className="space-y-2">
-                <p className="text-sm font-medium">Trade Category</p>
+                <p className="text-sm font-medium">{t("workerFilterPanel.tradeCategoryLabel")}</p>
                 {categoriesLoading ? (
-                    <p className="text-xs text-muted-foreground animate-pulse">Loading categories...</p>
+                    <p className="text-xs text-muted-foreground animate-pulse">{t("workerFilterPanel.loadingCategories")}</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
                         {tradeCategories.map((category) => (
@@ -72,10 +74,10 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
             {/* Hourly rate range slider */}
             <div className="space-y-2">
                 <p className="text-sm font-medium">
-                    Hourly Rate: ${filters.min_hourly_rate ?? 0} – ${filters.max_hourly_rate ?? MAX_HOURLY_RATE}
+                    {t("workerFilterPanel.hourlyRateRange", {min: filters.min_hourly_rate ?? 0, max: filters.max_hourly_rate ?? MAX_HOURLY_RATE})}
                 </p>
                 <Slider
-                    aria-label="Hourly rate range"
+                    aria-label={t("workerFilterPanel.hourlyRateRangeAriaLabel")}
                     min={0}
                     max={MAX_HOURLY_RATE}
                     step={5}
@@ -89,10 +91,10 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
             {/* Service radius slider */}
             <div className="space-y-2">
                 <p className="text-sm font-medium">
-                    Service Radius: {filters.service_radius_km ?? MAX_RADIUS_KM} km
+                    {t("workerFilterPanel.serviceRadiusRange", {radius: filters.service_radius_km ?? MAX_RADIUS_KM})}
                 </p>
                 <Slider
-                    aria-label="Service radius"
+                    aria-label={t("shared.serviceRadius")}
                     min={1}
                     max={MAX_RADIUS_KM}
                     step={5}
@@ -103,9 +105,9 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
 
             {/* Availability toggle */}
             <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Available now</p>
+                <p className="text-sm font-medium">{t("shared.availableNow")}</p>
                 <Switch
-                    aria-label="Available now"
+                    aria-label={t("shared.availableNow")}
                     checked={filters.is_available ?? false}
                     onCheckedChange={(checked) =>
                         onChange({is_available: checked ? true : undefined})
@@ -117,14 +119,14 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
             <div className="flex items-center gap-2">
                 <Checkbox
                     id="verified-only"
-                    aria-label="Verified only"
+                    aria-label={t("workerFilterPanel.verifiedOnly")}
                     checked={filters.is_verified ?? false}
                     onCheckedChange={(checked) =>
                         onChange({is_verified: checked === true ? true : undefined})
                     }
                 />
                 <label htmlFor="verified-only" className="text-sm font-medium cursor-pointer">
-                    Verified only
+                    {t("workerFilterPanel.verifiedOnly")}
                 </label>
             </div>
 
@@ -143,7 +145,7 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
                     })
                 }
             >
-                Clear filters
+                {t("workerFilterPanel.clearFilters")}
             </Button>
         </div>
     );

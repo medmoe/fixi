@@ -1,4 +1,5 @@
 import React from 'react'
+import {useTranslation} from 'react-i18next'
 import {useWorkerProfile} from '@/features/worker'
 import {ProfileForm} from './ProfileForm'
 import {AlertCircle, Briefcase, Loader2} from 'lucide-react'
@@ -14,6 +15,7 @@ import {AlertCircle, Briefcase, Loader2} from 'lucide-react'
  * - ProfileForm: updates existing profile (bio, hourly_rate, service_radius_km, trades)
  */
 export const ProfileTab: React.FC = () => {
+    const {t} = useTranslation('worker')
 
     const {
         data: profile,
@@ -27,7 +29,7 @@ export const ProfileTab: React.FC = () => {
             <div className="flex h-[60vh] w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
                 <p className="text-sm font-medium text-muted-foreground">
-                    Loading your worker profile...
+                    {t('profileTab.loading')}
                 </p>
             </div>
         )
@@ -40,11 +42,10 @@ export const ProfileTab: React.FC = () => {
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
                     <h3 className="font-semibold text-sm">
-                        Failed to Load Profile
+                        {t('profileTab.loadFailedTitle')}
                     </h3>
                     <p className="text-xs opacity-90 mt-1">
-                        Something went wrong loading your profile data. Please try
-                        again later.
+                        {t('profileTab.loadFailedDescription')}
                     </p>
 
                 </div>
@@ -58,10 +59,10 @@ export const ProfileTab: React.FC = () => {
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
                     <h3 className="font-semibold text-sm">
-                        Profile Not Found
+                        {t('profileTab.notFoundTitle')}
                     </h3>
                     <p className="text-xs opacity-90 mt-1">
-                        Your worker profile could not be found. Please contact support.
+                        {t('profileTab.notFoundDescription')}
                     </p>
                 </div>
             </div>
@@ -73,11 +74,10 @@ export const ProfileTab: React.FC = () => {
             <header className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                     <Briefcase className="h-8 w-8 text-primary"/>
-                    Worker Profile
+                    {t('profileTab.heading')}
                 </h2>
                 <p className="text-muted-foreground">
-                    Manage your public-facing profile, availability, and service
-                    capabilities.
+                    {t('profileTab.subtitle')}
                 </p>
             </header>
 

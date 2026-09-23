@@ -1,0 +1,133 @@
+{
+  "role": {
+    "worker": "محترف",
+    "customer": "عميل"
+  },
+  "dashboard": {
+    "loading": "جارٍ تحميل لوحة التحكم الخاصة بك...",
+    "errorTitle": "فشل مزامنة النظام",
+    "errorDescription": "واجهنا مشكلة أثناء تحميل بيانات حسابك. يرجى المحاولة مرة أخرى لاحقًا.",
+    "navProfile": "الملف الشخصي",
+    "navAccount": "الحساب",
+    "navJobs": "المهام"
+  },
+  "availability": {
+    "availableForWork": "متاح للعمل",
+    "currentlyOffline": "غير متصل حاليًا",
+    "visibleToClients": "مرئي للعملاء في نتائج البحث",
+    "hiddenFromClients": "مخفي عن عمليات بحث العملاء",
+    "toggleAriaLabel": "تبديل حالة التوفر"
+  },
+  "profileTab": {
+    "loading": "جارٍ تحميل ملفك المهني...",
+    "loadFailedTitle": "فشل تحميل الملف الشخصي",
+    "loadFailedDescription": "حدث خطأ أثناء تحميل بيانات ملفك الشخصي. يرجى المحاولة مرة أخرى لاحقًا.",
+    "notFoundTitle": "الملف الشخصي غير موجود",
+    "notFoundDescription": "تعذر العثور على ملفك المهني. يرجى التواصل مع الدعم.",
+    "heading": "الملف المهني",
+    "subtitle": "أدر ملفك الشخصي العام وتوفرك وقدراتك في تقديم الخدمات."
+  },
+  "shared": {
+    "loadingWorkerProfile": "جارٍ تحميل الملف المهني",
+    "verifiedWorker": "محترف موثّق",
+    "serviceRadius": "نطاق الخدمة",
+    "availableNow": "متاح الآن",
+    "newRating": "جديد"
+  },
+  "profileForm": {
+    "saving": "جارٍ الحفظ...",
+    "updateProfile": "تحديث الملف الشخصي"
+  },
+  "workerCard": {
+    "profileAriaLabel": "الملف المهني لـ {{name}}",
+    "yearsExp": "· {{count}} سنوات خبرة",
+    "available": "متاح",
+    "unavailable": "غير متاح",
+    "perHour": "{{rate}}$/ساعة",
+    "radiusSuffix": "نطاق {{radius}} كم",
+    "distanceAway": "يبعد {{distance}} كم",
+    "noWorkersFound": "لم يتم العثور على محترفين",
+    "noWorkersHint": "حاول تعديل عوامل التصفية لرؤية المزيد من النتائج."
+  },
+  "workerFilterPanel": {
+    "ariaLabel": "عوامل تصفية البحث",
+    "tradeCategoryLabel": "الحرفة",
+    "loadingCategories": "جارٍ تحميل الفئات...",
+    "hourlyRateRange": "الأجر بالساعة: {{min}}$ – {{max}}$",
+    "hourlyRateRangeAriaLabel": "نطاق الأجر بالساعة",
+    "serviceRadiusRange": "نطاق الخدمة: {{radius}} كم",
+    "verifiedOnly": "الموثّقون فقط",
+    "clearFilters": "مسح عوامل التصفية"
+  },
+  "tradeCategoryPicker": {
+    "loading": "جارٍ تحميل الحرف...",
+    "heading": "الحرف والتخصصات",
+    "helperText": "اختر حتى {{max}} حرف رئيسية. تُحفظ التغييرات عند الضغط على «تحديث الملف الشخصي».",
+    "selectedCount": "{{count}}/{{max}} محدد",
+    "assignedHeading": "المُسندة",
+    "tradeFallback": "الحرفة رقم {{id}}",
+    "removeAriaLabel": "إزالة {{name}}",
+    "pendingHeading": "قيد الانتظار (بحاجة إلى تأكيد)"
+  },
+  "skillLevelSelect": {
+    "ariaLabel": "مستوى المهارة في {{trade}}",
+    "selectLevel": "اختر المستوى",
+    "junior": "مبتدئ",
+    "mid": "متوسط",
+    "senior": "خبير"
+  },
+  "avatarUploadField": {
+    "altText": "رسم توضيحي للصورة الشخصية",
+    "heading": "الصورة الشخصية",
+    "helperText": "يدعم صيغ JPG وPNG بحجم أقل من 5 ميجابايت.",
+    "uploadAriaLabel": "رفع ملف صورة شخصية",
+    "chooseImage": "اختيار صورة"
+  },
+  "bioField": {
+    "label": "النبذة المهنية",
+    "ariaLabel": "النبذة",
+    "placeholder": "أخبر العملاء عن خبرتك ومعداتك وتجربتك...",
+    "charCount": "{{count}}/500 حرف"
+  },
+  "hourlyRateField": {
+    "label": "الأجر بالساعة",
+    "ariaLabel": "الأجر بالساعة",
+    "perHourSuffix": "/ ساعة"
+  },
+  "serviceRadiusField": {
+    "label": "نطاق الخدمة",
+    "valueBadge": "{{radius}} كم"
+  },
+  "workerSearchPage": {
+    "searching": "جارٍ البحث...",
+    "workersFoundCount_zero": "لا يوجد محترفون",
+    "workersFoundCount_one": "محترف واحد",
+    "workersFoundCount_two": "محترفان",
+    "workersFoundCount_few": "{{count}} محترفين",
+    "workersFoundCount_many": "{{count}} محترفًا",
+    "workersFoundCount_other": "{{count}} محترف",
+    "loadError": "حدث خطأ أثناء تحميل النتائج. يرجى المحاولة مرة أخرى.",
+    "loadMore": "تحميل المزيد",
+    "loading": "جارٍ التحميل..."
+  },
+  "workerDetailPage": {
+    "notFoundTitle": "المحترف غير موجود",
+    "notFoundDescription": "هذا الملف المهني غير موجود أو لم يعد متاحًا.",
+    "backToSearch": "العودة إلى البحث",
+    "reviewCount_zero": "{{rating}} (لا توجد تقييمات)",
+    "reviewCount_one": "{{rating}} (تقييم واحد)",
+    "reviewCount_two": "{{rating}} (تقييمان)",
+    "reviewCount_few": "{{rating}} ({{count}} تقييمات)",
+    "reviewCount_many": "{{rating}} ({{count}} تقييمًا)",
+    "reviewCount_other": "{{rating}} ({{count}} تقييم)",
+    "yearsExperience": "· {{count}} سنوات خبرة",
+    "currentlyUnavailable": "غير متاح حاليًا",
+    "aboutHeading": "نبذة",
+    "hourlyRateLabel": "الأجر بالساعة",
+    "hourlyRateValue": "{{rate}}$/ساعة",
+    "radiusValue": "{{radius}} كم",
+    "experienceLabel": "الخبرة",
+    "yearsSuffix": "{{count}} سنوات",
+    "contactWorker": "التواصل مع المحترف (قريبًا)"
+  }
+}

@@ -1,5 +1,6 @@
 import React from 'react'
 import {Loader2, LogOut} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {useAuth} from '@/features/auth'
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from '@/components/ui/alert-dialog'
@@ -15,6 +16,7 @@ import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, A
  * - Confirmation dialog to prevent accidental clicks
  */
 export const LogoutButton: React.FC = () => {
+    const {t} = useTranslation()
     const {logout, isLoggingOut} = useAuth()
 
     return (
@@ -23,23 +25,23 @@ export const LogoutButton: React.FC = () => {
                 <Button
                     variant="ghost"
                     className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                    aria-label="Logout"
+                    aria-label={t('logout.button')}
                     data-testid="logout-button"
                 >
                     <LogOut className="h-4 w-4"/>
-                    <span>Logout</span>
+                    <span>{t('logout.button')}</span>
                 </Button>
             </AlertDialogTrigger>
 
             <AlertDialogContent data-testid="logout-dialog">
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('logout.confirmTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        You will be logged out and redirected to the login page.
+                        {t('logout.confirmDescription')}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="logout-cancel">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel data-testid="logout-cancel">{t('logout.cancel')}</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={logout}
                         disabled={isLoggingOut}
@@ -49,10 +51,10 @@ export const LogoutButton: React.FC = () => {
                         {isLoggingOut ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                Logging out...
+                                {t('logout.loggingOut')}
                             </>
                         ) : (
-                            'Logout'
+                            t('logout.button')
                         )}
                     </AlertDialogAction>
                 </AlertDialogFooter>

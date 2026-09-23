@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import type {AxiosError} from "axios";
 import {X} from "lucide-react";
+import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button";
 import {Card, CardAction, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Textarea} from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ interface ReviewCardProps {
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
+    const {t} = useTranslation("review");
     const {data: eligibility, isLoading} = useReviewStatus(jobId);
     const {mutate: submitReview} = useSubmitReview(jobId);
 
@@ -36,7 +38,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
             {
                 onError: (error: AxiosError<{ detail: string }>) => {
                     setSubmitted(false);
-                    setSubmitError(error.response?.data?.detail ?? "Failed to submit review. Please try again.");
+                    setSubmitError(error.response?.data?.detail ?? t("reviewCard.submitError"));
                 },
             }
         );
@@ -46,8 +48,8 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
         return (
             <Card>
                 <CardContent className="flex items-center justify-between gap-4">
-                    <p className="text-sm font-medium">Review submitted — thank you!</p>
-                    <Button variant="ghost" size="icon-sm" onClick={() => setDismissed(true)} aria-label="Dismiss">
+                    <p className="text-sm font-medium">{t("reviewCard.submitted")}</p>
+                    <Button variant="ghost" size="icon-sm" onClick={() => setDismissed(true)} aria-label={t("reviewCard.dismissAriaLabel")}>
                         <X className="size-4"/>
                     </Button>
                 </CardContent>
@@ -58,9 +60,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Leave a review</CardTitle>
+                <CardTitle>{t("reviewCard.heading")}</CardTitle>
                 <CardAction>
-                    <Button variant="ghost" size="icon-sm" onClick={() => setDismissed(true)} aria-label="Dismiss">
+                    <Button variant="ghost" size="icon-sm" onClick={() => setDismissed(true)} aria-label={t("reviewCard.dismissAriaLabel")}>
                         <X className="size-4"/>
                     </Button>
                 </CardAction>
@@ -70,8 +72,8 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
 
                 <div className="space-y-1">
                     <Textarea
-                        aria-label="Review comment"
-                        placeholder="Share details about your experience (optional)"
+                        aria-label={t("reviewCard.commentAriaLabel")}
+                        placeholder={t("reviewCard.commentPlaceholder")}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         maxLength={MAX_COMMENT_LENGTH}
@@ -89,7 +91,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
                 )}
 
                 <Button onClick={handleSubmit} disabled={rating === 0} className="w-full">
-                    Submit review
+                    {t("reviewCard.submit")}
                 </Button>
             </CardContent>
         </Card>

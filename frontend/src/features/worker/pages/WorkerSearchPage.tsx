@@ -1,9 +1,11 @@
 import React from "react";
+import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button";
 import {Loader2} from "lucide-react";
 import {WorkerFilterPanel, useWorkerSearch, WorkerCard, WorkerCardSkeletonGrid, WorkerSearchEmptyState} from "@/features/worker";
 
 export const WorkerSearchPage: React.FC = () => {
+    const {t} = useTranslation("worker");
     const {
         filters,
         updateFilters,
@@ -24,12 +26,12 @@ export const WorkerSearchPage: React.FC = () => {
 
             <main>
                 <p className="text-sm text-muted-foreground mb-4">
-                    {isLoading ? "Searching..." : `${totalCount} workers found`}
+                    {isLoading ? t("workerSearchPage.searching") : t("workerSearchPage.workersFoundCount", {count: totalCount})}
                 </p>
 
                 {isError && (
                     <p className="text-sm text-destructive">
-                        Something went wrong loading results. Please try again.
+                        {t("workerSearchPage.loadError")}
                     </p>
                 )}
 
@@ -55,10 +57,10 @@ export const WorkerSearchPage: React.FC = () => {
                                     {isFetchingNextPage ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                            Loading...
+                                            {t("workerSearchPage.loading")}
                                         </>
                                     ) : (
-                                        "Load more"
+                                        t("workerSearchPage.loadMore")
                                     )}
                                 </Button>
                             </div>

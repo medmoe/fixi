@@ -1,4 +1,5 @@
 import React from "react";
+import {useTranslation} from "react-i18next";
 import {JobFilters, JobStatus} from "@/features/job";
 import {useTrades} from "@/features/worker";
 import {Badge} from "@/components/ui/badge.tsx";
@@ -11,15 +12,10 @@ interface FilterPanelProps {
     onChange: (partial: Partial<JobFilters>) => void;
 }
 
-const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
-    {value: "open", label: "Open"},
-    {value: "assigned", label: "Assigned"},
-    {value: "in_progress", label: "In Progress"},
-    {value: "completed", label: "Completed"},
-    {value: "cancelled", label: "Cancelled"},
-];
+const STATUS_VALUES: JobStatus[] = ["open", "assigned", "in_progress", "completed", "cancelled"];
 
 export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
+    const {t} = useTranslation("job");
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useTrades();
 
     const selectedIds = filters.trade_category_id !== undefined ? [filters.trade_category_id] : [];
@@ -33,14 +29,14 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
     };
 
     return (
-        <div className="space-y-6" aria-label="Job filters">
+        <div className="space-y-6" aria-label={t("jobsFilterPanel.ariaLabel")}>
 
             {/* Search */}
             <div className="space-y-2">
-                <p className="text-sm font-medium">Search</p>
+                <p className="text-sm font-medium">{t("jobsFilterPanel.searchLabel")}</p>
                 <Input
-                    aria-label="Search jobs"
-                    placeholder="e.g. Fix leaking sink"
+                    aria-label={t("jobsFilterPanel.searchAriaLabel")}
+                    placeholder={t("jobsFilterPanel.searchPlaceholder")}
                     value={filters.search ?? ""}
                     onChange={(e) => onChange({search: e.target.value || undefined})}
                 />
@@ -48,21 +44,21 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
 
             {/* Status */}
             <div className="space-y-2">
-                <p className="text-sm font-medium">Status</p>
+                <p className="text-sm font-medium">{t("jobsFilterPanel.statusLabel")}</p>
                 <Select
                     value={filters.status ?? "all"}
                     onValueChange={(value) =>
                         onChange({status: value === "all" ? undefined : (value as JobStatus)})
                     }
                 >
-                    <SelectTrigger aria-label="Job status">
-                        <SelectValue placeholder="All statuses"/>
+                    <SelectTrigger aria-label={t("jobsFilterPanel.statusAriaLabel")}>
+                        <SelectValue placeholder={t("jobsFilterPanel.allStatuses")}/>
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All statuses</SelectItem>
-                        {STATUS_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                                {option.label}
+                        <SelectItem value="all">{t("jobsFilterPanel.allStatuses")}</SelectItem>
+                        {STATUS_VALUES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                                {t(`status.${value}`)}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -71,9 +67,9 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
 
             {/* Trade category */}
             <div className="space-y-2">
-                <p className="text-sm font-medium">Trade Category</p>
+                <p className="text-sm font-medium">{t("jobsFilterPanel.tradeCategoryLabel")}</p>
                 {categoriesLoading ? (
-                    <p className="text-xs text-muted-foreground animate-pulse">Loading categories...</p>
+                    <p className="text-xs text-muted-foreground animate-pulse">{t("jobsFilterPanel.loadingCategories")}</p>
                 ) : (
                     <div className="flex flex-wrap gap-2">
                         {tradeCategories.map((category) => (
@@ -101,14 +97,14 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
 
             {/* Budget range */}
             <div className="space-y-2">
-                <p className="text-sm font-medium">Budget Range</p>
+                <p className="text-sm font-medium">{t("jobsFilterPanel.budgetRangeLabel")}</p>
                 <div className="flex items-center gap-3">
                     <Input
                         type="number"
                         min={0}
                         step="0.01"
-                        aria-label="Minimum budget"
-                        placeholder="Min"
+                        aria-label={t("shared.minimumBudgetAriaLabel")}
+                        placeholder={t("jobsFilterPanel.minBudgetPlaceholder")}
                         value={filters.budget_min ?? ""}
                         onChange={(e) =>
                             onChange({
@@ -121,8 +117,8 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
                         type="number"
                         min={0}
                         step="0.01"
-                        aria-label="Maximum budget"
-                        placeholder="Max"
+                        aria-label={t("shared.maximumBudgetAriaLabel")}
+                        placeholder={t("jobsFilterPanel.maxBudgetPlaceholder")}
                         value={filters.budget_max ?? ""}
                         onChange={(e) =>
                             onChange({
@@ -147,7 +143,7 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
                     })
                 }
             >
-                Clear filters
+                {t("jobsFilterPanel.clearFilters")}
             </Button>
         </div>
     );

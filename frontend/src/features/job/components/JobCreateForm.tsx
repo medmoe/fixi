@@ -2,6 +2,7 @@ import React from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {Loader2} from 'lucide-react';
+import {useTranslation} from 'react-i18next';
 import {Button} from '@/components/ui/button';
 import {Form} from '@/components/ui/form';
 import {BudgetRangeField, DescriptionField, JobCreateRequest, jobPostSchema, JobTradeCategoryField, TitleField, useCreateJob} from '@/features/job';
@@ -11,6 +12,7 @@ import {useNavigate} from "react-router-dom";
 type JobCreateFormValues = JobCreateRequest;
 
 export const JobCreateForm: React.FC = () => {
+    const {t} = useTranslation('job');
     const navigate = useNavigate();
     const {mutate: createJob, isPending} = useCreateJob();
 
@@ -43,7 +45,7 @@ export const JobCreateForm: React.FC = () => {
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 noValidate
-                aria-label="Create job form"
+                aria-label={t('jobCreateForm.formAriaLabel')}
                 className="space-y-6 bg-card border p-6 rounded-xl shadow-sm"
             >
                 <TitleField/>
@@ -63,15 +65,15 @@ export const JobCreateForm: React.FC = () => {
                         type="submit"
                         disabled={!canSubmit}
                         className="w-full"
-                        aria-label="Submit job"
+                        aria-label={t('jobCreateForm.submitAriaLabel')}
                     >
                         {isPending ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true"/>
-                                Creating job...
+                                {t('jobCreateForm.creating')}
                             </>
                         ) : (
-                            'Post Job'
+                            t('jobCreateForm.postJob')
                         )}
                     </Button>
                 </div>

@@ -1,32 +1,33 @@
 import {z} from 'zod'
+import type {TFunction} from 'i18next'
 
 const RoleType = {
     customer: "customer",
     worker: "worker",
 } as const;
 
-export const registerSchema = z.object({
-    name: z.string().min(2, 'Name must be at least 2 characters').trim(),
+export const createRegisterSchema = (t: TFunction) => z.object({
+    name: z.string().min(2, t('validation.nameMinLength')).trim(),
     username: z
         .string()
-        .min(3, 'Username must be at least 3 characters')
-        .max(20, 'Username must be at most 20 characters')
-        .regex(/^[a-z][a-z0-9_]{1,19}$/, 'Username must start with a letter and contain only lowercase letters, numbers, or underscores'),
-    email: z.email('Invalid email address'),
+        .min(3, t('validation.usernameMinLength'))
+        .max(20, t('validation.usernameMaxLength'))
+        .regex(/^[a-z][a-z0-9_]{1,19}$/, t('validation.usernamePattern')),
+    email: z.email(t('validation.invalidEmail')),
     password: z
         .string()
-        .min(8, 'Password must be at least 8 characters long')
-        .max(120, 'Password must be at most 120 characters')
-        .refine((val) => /[0-9]/.test(val), 'Password must contain at least one digit')
-        .refine((val) => /[A-Z]/.test(val), 'Password must contain at least one capital letter')
-        .refine((val) => /[^a-zA-Z0-9]/.test(val), 'Password must contain at least one special character'),
+        .min(8, t('validation.passwordMinLength'))
+        .max(120, t('validation.passwordMaxLength'))
+        .refine((val) => /[0-9]/.test(val), t('validation.passwordDigit'))
+        .refine((val) => /[A-Z]/.test(val), t('validation.passwordCapital'))
+        .refine((val) => /[^a-zA-Z0-9]/.test(val), t('validation.passwordSpecial')),
     role_type: z.enum(RoleType),
 })
 
-export const loginSchema = z.object({
-    username_or_email: z.string().min(1, 'Username or email is required'),
-    password: z.string().min(1, 'Password is required'),
+export const createLoginSchema = (t: TFunction) => z.object({
+    username_or_email: z.string().min(1, t('validation.usernameOrEmailRequired')),
+    password: z.string().min(1, t('validation.passwordRequired')),
 })
 
-export type RegisterFormValues = z.infer<typeof registerSchema>
-export type LoginFormValues = z.infer<typeof loginSchema>
+export type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>
+export type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>

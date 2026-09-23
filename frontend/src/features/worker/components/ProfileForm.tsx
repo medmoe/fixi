@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import {SubmitHandler, useForm} from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Loader2, Save} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {Form} from '@/components/ui/form'
 import {Button} from '@/components/ui/button'
 import {type WorkerProfileFormValues, workerProfileSchema} from '../schemas/workerProfileSchema'
@@ -15,6 +16,7 @@ interface ProfileFormProps {
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
+    const {t} = useTranslation('worker')
     const {mutate: updateProfile, isPending: isUpdating} = useUpdateWorkerProfile()
     const {assignTrades, removeTrade} = useAssignTrades()
 
@@ -131,8 +133,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
                         disabled={!canSubmit}
                     >
                         {isPending
-                            ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Saving...</>
-                            : <><Save className="mr-2 h-4 w-4"/> Update Profile</>
+                            ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('profileForm.saving')}</>
+                            : <><Save className="mr-2 h-4 w-4"/> {t('profileForm.updateProfile')}</>
                         }
                     </Button>
                 </div>

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form.tsx';
 import { Slider } from '@/components/ui/slider.tsx';
 
 export const ServiceRadiusField: React.FC = () => {
+  const {t} = useTranslation('worker');
   const { control, watch, setValue } = useFormContext();
   const radius = watch('service_radius_km') || 25;
 
@@ -14,9 +16,9 @@ export const ServiceRadiusField: React.FC = () => {
       render={() => (
         <FormItem>
           <div className="flex justify-between items-center">
-            <FormLabel>Service Radius</FormLabel>
+            <FormLabel>{t('serviceRadiusField.label')}</FormLabel>
             <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
-              {radius} km
+              {t('serviceRadiusField.valueBadge', {radius})}
             </span>
           </div>
           <FormControl>
@@ -27,11 +29,11 @@ export const ServiceRadiusField: React.FC = () => {
                 step={1}
                 value={[radius]}
                 onValueChange={(vals) => setValue('service_radius_km', vals[0], { shouldDirty: true, shouldValidate: true })}
-                aria-label="Service radius"
+                aria-label={t('shared.serviceRadius')}
                 aria-valuemin={1}
                 aria-valuemax={500}
                 aria-valuenow={radius}
-                name="Service Radius"
+                name={t('serviceRadiusField.label')}
               />
             </div>
           </FormControl>

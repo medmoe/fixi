@@ -1,6 +1,13 @@
 // src/test/setup.ts
 import '@testing-library/jest-dom'
 import {vi} from 'vitest'
+// Real apps guarantee this via a side-effect import in main.tsx before
+// anything renders. Isolated component tests don't go through main.tsx, so
+// without this, any component calling useTranslation() hits an
+// unconfigured i18next instance and t() just echoes the raw key back --
+// global here so every test file gets a real, initialized i18next for
+// free, without each one needing its own `import '@/lib/i18n'`.
+import '@/lib/i18n'
 
 const { getComputedStyle } = window
 window.getComputedStyle = (elt) => getComputedStyle(elt)

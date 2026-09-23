@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {FormProvider, useForm} from 'react-hook-form';
 import {AlertCircle, Loader2, MapPin, Navigation} from 'lucide-react';
+import {useTranslation} from 'react-i18next';
 import {Button} from '@/components/ui/button';
 import {LocationSearchField} from '@/features/user/components/fields/LocationSearchField';
 import {useReverseGeocode} from '../hooks/useReverseGeocode';
@@ -20,6 +21,7 @@ interface LocationPickerProps {
 type GeoErrorReason = 'denied' | 'unavailable' | 'timeout' | null;
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfirmed}) => {
+    const {t} = useTranslation('customer');
     const [isLocating, setIsLocating] = useState(false);
     const [geoError, setGeoError] = useState<GeoErrorReason>(null);
     const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -103,7 +105,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfi
 
     return (
         <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" aria-label="Location picker">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" aria-label={t('locationPicker.formAriaLabel')}>
 
                 <Button
                     type="button"
@@ -117,24 +119,21 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfi
                     ) : (
                         <Navigation className="h-4 w-4" aria-hidden="true"/>
                     )}
-                    Use my location
+                    {t('locationPicker.useMyLocation')}
                 </Button>
 
                 {geoError && (
                     <p className="text-xs text-destructive flex items-center gap-1" role="alert">
                         <AlertCircle className="h-3 w-3" aria-hidden="true"/>
-                        {geoError === 'denied' &&
-                            'Location access was denied. Enter your address manually below.'}
-                        {geoError === 'timeout' &&
-                            'Could not get your location in time. Enter your address manually below.'}
-                        {geoError === 'unavailable' &&
-                            'Location services are unavailable. Enter your address manually below.'}
+                        {geoError === 'denied' && t('locationPicker.geoDenied')}
+                        {geoError === 'timeout' && t('locationPicker.geoTimeout')}
+                        {geoError === 'unavailable' && t('locationPicker.geoUnavailable')}
                     </p>
                 )}
 
                 <div className="relative flex items-center gap-2 text-xs text-muted-foreground">
                     <div className="h-px flex-1 bg-border"/>
-                    or
+                    {t('locationPicker.or')}
                     <div className="h-px flex-1 bg-border"/>
                 </div>
 
@@ -155,12 +154,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfi
                     {isSaving ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true"/>
-                            Saving...
+                            {t('locationPicker.saving')}
                         </>
                     ) : (
                         <>
                             <MapPin className="mr-2 h-4 w-4" aria-hidden="true"/>
-                            Confirm location
+                            {t('locationPicker.confirmLocation')}
                         </>
                     )}
                 </Button>

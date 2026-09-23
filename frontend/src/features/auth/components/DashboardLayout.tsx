@@ -1,5 +1,6 @@
 // src/features/auth/components/DashboardLayout.tsx
 import React from 'react'
+import {useTranslation} from 'react-i18next'
 import {useUser} from '@/features/user'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
@@ -10,6 +11,7 @@ import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 type Tab = 'profile' | 'account' | 'jobs'
 
 export const DashboardLayout: React.FC = () => {
+    const {t} = useTranslation('auth')
     const navigate = useNavigate()
     const location = useLocation()
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser()
@@ -27,7 +29,7 @@ export const DashboardLayout: React.FC = () => {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
                 <Loader2 className="h-10 w-10 animate-spin text-primary"/>
-                <p className="text-sm font-medium text-muted-foreground">Loading your dashboard...</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('dashboard.loading')}</p>
             </div>
         )
     }
@@ -37,17 +39,17 @@ export const DashboardLayout: React.FC = () => {
             <div className="mx-auto max-w-md my-12 border-destructive/50 bg-destructive/10 text-destructive rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5"/>
                 <div>
-                    <h3 className="font-semibold text-sm">System Synchronization Failure</h3>
-                    <p className="text-xs opacity-90 mt-1">We ran into trouble loading your account data.</p>
+                    <h3 className="font-semibold text-sm">{t('dashboard.errorTitle')}</h3>
+                    <p className="text-xs opacity-90 mt-1">{t('dashboard.errorDescription')}</p>
                 </div>
             </div>
         )
     }
 
     const navItems: { id: Tab; label: string; icon: React.ReactNode; path: string }[] = [
-        {id: 'profile', label: 'Profile', icon: <Home className="h-4 w-4"/>, path: '/dashboard'},
-        {id: 'account', label: 'Account', icon: <UserCircle className="h-4 w-4"/>, path: '/dashboard/account'},
-        {id: 'jobs', label: 'Jobs', icon: <Search className="h-4 w-4"/>, path: '/dashboard/jobs'},
+        {id: 'profile', label: t('dashboard.navProfile'), icon: <Home className="h-4 w-4"/>, path: '/dashboard'},
+        {id: 'account', label: t('dashboard.navAccount'), icon: <UserCircle className="h-4 w-4"/>, path: '/dashboard/account'},
+        {id: 'jobs', label: t('dashboard.navJobs'), icon: <Search className="h-4 w-4"/>, path: '/dashboard/jobs'},
     ]
 
     return (
@@ -61,7 +63,7 @@ export const DashboardLayout: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="font-medium text-sm truncate">{user.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{user.role_type}</p>
+                            <p className="text-xs text-muted-foreground">{t(`role.${user.role_type}`)}</p>
                         </div>
                     </div>
                 </div>
@@ -137,7 +139,7 @@ export const DashboardLayout: React.FC = () => {
                             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="h-4 w-4"/>
-                            Back to My Jobs
+                            {t('dashboard.backToJobs')}
                         </button>
                     </div>
                 )}

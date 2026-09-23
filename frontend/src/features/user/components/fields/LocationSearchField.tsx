@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
 import {useFormContext} from 'react-hook-form'
 import {Loader2, MapPin, Search, X} from 'lucide-react'
+import {useTranslation} from 'react-i18next'
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form'
 import {Input} from '@/components/ui/input'
 import {Button} from '@/components/ui/button'
@@ -18,6 +19,7 @@ const SUGGESTION_LIST_ID = 'location-suggestions'
  * all-or-none rule instead of reaching the backend.
  */
 export const LocationSearchField: React.FC = () => {
+    const {t} = useTranslation('user')
     const {control, setValue, watch, trigger} = useFormContext()
     const [isOpen, setIsOpen] = useState(false)
 
@@ -70,7 +72,7 @@ export const LocationSearchField: React.FC = () => {
                 <FormItem>
                     <FormLabel className="flex items-center gap-1">
                         <MapPin className="h-3 w-3"/>
-                        Location
+                        {t('locationSearchField.label')}
                     </FormLabel>
                     <div className="relative">
                         <Search
@@ -86,7 +88,7 @@ export const LocationSearchField: React.FC = () => {
                                 aria-controls={SUGGESTION_LIST_ID}
                                 aria-autocomplete="list"
                                 autoComplete="off"
-                                placeholder="Search for a city or address"
+                                placeholder={t('locationSearchField.placeholder')}
                                 className="pl-9 pr-9"
                                 value={inputValue}
                                 onChange={(event) => handleQueryChange(event.target.value)}
@@ -98,7 +100,7 @@ export const LocationSearchField: React.FC = () => {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                aria-label="Clear location"
+                                aria-label={t('locationSearchField.clearAriaLabel')}
                                 onClick={handleClear}
                                 className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-destructive"
                             >
@@ -110,7 +112,7 @@ export const LocationSearchField: React.FC = () => {
                             <ul
                                 id={SUGGESTION_LIST_ID}
                                 role="listbox"
-                                aria-label="Location suggestions"
+                                aria-label={t('locationSearchField.suggestionsAriaLabel')}
                                 className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-border bg-popover shadow-md"
                             >
                                 {suggestions.map((suggestion) => (
@@ -133,31 +135,31 @@ export const LocationSearchField: React.FC = () => {
                     {isFetching && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <Loader2 className="h-3 w-3 animate-spin"/>
-                            Searching locations...
+                            {t('locationSearchField.searching')}
                         </p>
                     )}
 
                     {isError && (
                         <p className="text-xs text-destructive">
-                            Could not search locations right now. Please try again.
+                            {t('locationSearchField.searchError')}
                         </p>
                     )}
 
                     {showNoResults && (
                         <p className="text-xs text-muted-foreground">
-                            No locations found. Try a different search.
+                            {t('locationSearchField.noResults')}
                         </p>
                     )}
 
                     {isConfirmed && (
                         <FormDescription className="text-xs">
-                            Coordinates: {latitude}, {longitude}
+                            {t('locationSearchField.coordinatesLabel', {lat: latitude, lon: longitude})}
                         </FormDescription>
                     )}
 
                     {showUnconfirmedHint && (
                         <p className="text-xs text-amber-600">
-                            Select a location from the suggestions to save it.
+                            {t('locationSearchField.unconfirmedHint')}
                         </p>
                     )}
 

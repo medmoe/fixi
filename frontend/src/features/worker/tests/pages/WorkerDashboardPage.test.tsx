@@ -228,7 +228,7 @@ describe('WorkerDashboardPage', () => {
 
         it('renders user role in sidebar', async () => {
             render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
-            await waitFor(() => expect(screen.getByText('worker')).toBeInTheDocument())
+            await waitFor(() => expect(screen.getByText('Worker')).toBeInTheDocument())
         })
 
         it('renders logout button', async () => {

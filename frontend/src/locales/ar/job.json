@@ -1,0 +1,155 @@
+{
+  "shared": {
+    "cancel": "إلغاء",
+    "updating": "جارٍ التحديث...",
+    "jobNotFound": "المهمة غير موجودة",
+    "selectAReason": "اختر سببًا",
+    "minimumBudgetAriaLabel": "الحد الأدنى للميزانية",
+    "maximumBudgetAriaLabel": "الحد الأقصى للميزانية"
+  },
+  "status": {
+    "open": "مفتوحة",
+    "assigned": "مُسندة",
+    "in_progress": "قيد التنفيذ",
+    "completed": "مكتملة",
+    "cancelled": "ملغاة"
+  },
+  "myJobsPage": {
+    "signInPrompt": "يرجى تسجيل الدخول لعرض مهامك.",
+    "loadError": "فشل تحميل المهام. يرجى المحاولة مرة أخرى.",
+    "heading": "مهامي",
+    "postNewJob": "نشر مهمة جديدة",
+    "emptyState": "لم تنشر أي مهمة بعد.",
+    "postFirstJob": "انشر مهمتك الأولى",
+    "viewJobAriaLabel": "عرض المهمة {{title}}",
+    "editJobAriaLabel": "تعديل المهمة {{title}}",
+    "deleteJobAriaLabel": "حذف المهمة {{title}}",
+    "deleteDialogTitle": "هل تريد حذف هذه المهمة؟",
+    "deleteDialogDescription": "سيؤدي هذا إلى إزالة «{{title}}» نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    "deleting": "جارٍ الحذف...",
+    "delete": "حذف"
+  },
+  "jobsTab": {
+    "loadingJobs": "جارٍ تحميل المهام...",
+    "jobsFoundCount_zero": "لا توجد مهام",
+    "jobsFoundCount_one": "مهمة واحدة",
+    "jobsFoundCount_two": "مهمتان",
+    "jobsFoundCount_few": "{{count}} مهام",
+    "jobsFoundCount_many": "{{count}} مهمة",
+    "jobsFoundCount_other": "{{count}} مهمة",
+    "loadError": "فشل تحميل المهام. يرجى المحاولة مرة أخرى لاحقًا.",
+    "noJobsFound": "لم يتم العثور على مهام",
+    "noJobsHint": "حاول تعديل عوامل التصفية لرؤية المزيد من النتائج.",
+    "loadMore": "تحميل المزيد",
+    "loading": "جارٍ التحميل...",
+    "jobPostingAriaLabel": "إعلان مهمة: {{title}}",
+    "budgetNotSpecified": "الميزانية غير محددة",
+    "loadingJobAriaLabel": "جارٍ تحميل المهمة"
+  },
+  "jobDetailPage": {
+    "back": "رجوع",
+    "descriptionHeading": "الوصف",
+    "postedOn": "نُشرت في {{date}}",
+    "customerLabel": "العميل #{{name}}",
+    "loginToApply": "سجّل الدخول للتقديم",
+    "applicationsClosed": "لم تعد هذه المهمة تقبل طلبات التقديم."
+  },
+  "jobCreateForm": {
+    "formAriaLabel": "نموذج إنشاء مهمة",
+    "submitAriaLabel": "نشر المهمة",
+    "creating": "جارٍ نشر المهمة...",
+    "postJob": "نشر المهمة"
+  },
+  "jobEditForm": {
+    "formAriaLabel": "نموذج تعديل المهمة",
+    "heading": "تعديل المهمة",
+    "updateAriaLabel": "تحديث المهمة",
+    "updateJob": "تحديث المهمة"
+  },
+  "jobApplicationsPanel": {
+    "toggleLabel": "طلبات التقديم",
+    "pendingCount": "{{count}} قيد الانتظار",
+    "loadError": "فشل تحميل طلبات التقديم. يرجى المحاولة مرة أخرى.",
+    "emptyState": "لا توجد طلبات تقديم لهذه المهمة حتى الآن.",
+    "acceptDialogTitle": "هل تريد قبول طلب التقديم؟",
+    "acceptDialogDescription": "هل تريد قبول طلب {{workerName}} لهذه المهمة؟ يمكنك لاحقًا تحديث حالة طلبات التقديم الأخرى بشكل منفصل.",
+    "rejectDialogTitle": "هل تريد رفض طلب التقديم؟",
+    "rejectDialogDescription": "هل تريد رفض طلب {{workerName}} لهذه المهمة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "accept": "قبول",
+    "reject": "رفض",
+    "reasonForRejectingAriaLabel": "سبب الرفض",
+    "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "yearsExp": "{{count}} سنوات خبرة",
+    "perHour": "{{rate}}/ساعة",
+    "radiusKm": "نطاق {{radius}} كم",
+    "message": "الرسالة:",
+    "unknownWorker": "محترف غير معروف",
+    "status": {
+      "pending": "قيد الانتظار",
+      "accepted": "مقبول",
+      "rejected": "مرفوض"
+    }
+  },
+  "jobLifecycleActions": {
+    "acceptedHeading": "لقد تم قبولك لهذه المهمة!",
+    "acceptedDescription": "أكّد بمجرد اتفاقك أنت والعميل على التفاصيل، أو اسحب طلبك إذا لم تعد المهمة مناسبة.",
+    "confirmAssignment": "تأكيد التكليف",
+    "withdraw": "سحب",
+    "pendingReview": "طلبك قيد المراجعة.",
+    "withdrawApplication": "سحب طلب التقديم",
+    "assignedHeading": "تم تكليفك بهذه المهمة.",
+    "startJob": "بدء المهمة",
+    "markedComplete": "تم وضع علامة الاكتمال — بانتظار تأكيد الطرف الآخر.",
+    "isJobDoneHeading": "هل اكتملت هذه المهمة؟",
+    "markAsComplete": "وضع علامة الاكتمال",
+    "withdrawDialogTitle": "هل تريد سحب طلب التقديم؟",
+    "withdrawDialogDescription": "أخبر العميل بالسبب — هذا يساعدنا على تحسين عمليات المطابقة المستقبلية.",
+    "reasonForWithdrawingAriaLabel": "سبب السحب"
+  },
+  "applyToJobDialog": {
+    "applicationSubmitted": "تم إرسال الطلب",
+    "applyToThisJob": "التقديم على هذه المهمة",
+    "dialogTitle": "التقديم على «{{title}}»",
+    "dialogDescription": "أضف رسالة اختيارية للتعريف بنفسك للعميل.",
+    "messageAriaLabel": "رسالة التقديم",
+    "messagePlaceholder": "لدي 5 سنوات من الخبرة ويمكنني البدء فورًا...",
+    "submitting": "جارٍ الإرسال...",
+    "submitApplication": "إرسال الطلب"
+  },
+  "jobsFilterPanel": {
+    "ariaLabel": "عوامل تصفية المهام",
+    "searchLabel": "بحث",
+    "searchAriaLabel": "البحث عن مهام",
+    "searchPlaceholder": "مثال: إصلاح حوض مسرب",
+    "statusLabel": "الحالة",
+    "statusAriaLabel": "حالة المهمة",
+    "allStatuses": "كل الحالات",
+    "tradeCategoryLabel": "الحرفة",
+    "loadingCategories": "جارٍ تحميل الفئات...",
+    "budgetRangeLabel": "نطاق الميزانية",
+    "minBudgetPlaceholder": "الحد الأدنى",
+    "maxBudgetPlaceholder": "الحد الأقصى",
+    "clearFilters": "مسح عوامل التصفية"
+  },
+  "titleField": {
+    "label": "عنوان المهمة",
+    "placeholder": "مثال: إصلاح حوض مطبخ مسرب، تركيب مروحة سقف...",
+    "charCount": "{{count}}/255 حرفًا"
+  },
+  "descriptionField": {
+    "label": "الوصف",
+    "ariaLabel": "وصف المهمة",
+    "placeholder": "صف المهمة بالتفصيل — ما الذي يجب إنجازه، أي متطلبات وصول، ومدى الاستعجال...",
+    "charCount": "{{count}}/1000 حرف"
+  },
+  "budgetRangeField": {
+    "label": "نطاق الميزانية",
+    "minLabel": "الحد الأدنى ($)",
+    "maxLabel": "الحد الأقصى ($)"
+  },
+  "jobTradeCategoryField": {
+    "label": "الحرفة",
+    "loading": "جارٍ تحميل الحرف...",
+    "removeAriaLabel": "إزالة {{name}}"
+  }
+}

@@ -1,5 +1,6 @@
 import React, {useRef, useState} from "react";
 import {Star} from "lucide-react";
+import {useTranslation} from "react-i18next";
 import {cn} from "@/lib/utils";
 
 const STAR_VALUES = [1, 2, 3, 4, 5] as const;
@@ -11,6 +12,7 @@ interface StarRatingProps {
 }
 
 export const StarRating: React.FC<StarRatingProps> = ({value, onChange, disabled}) => {
+    const {t} = useTranslation("review");
     const [hovered, setHovered] = useState<number | null>(null);
     const starRefs = useRef<Array<HTMLButtonElement | null>>([]);
     const displayValue = hovered ?? value;
@@ -37,7 +39,7 @@ export const StarRating: React.FC<StarRatingProps> = ({value, onChange, disabled
     return (
         <div
             role="radiogroup"
-            aria-label="Rating"
+            aria-label={t("starRating.ariaLabel")}
             // rtl:flex-row-reverse keeps the stars reading correctly once an
             // Arabic locale sets dir="rtl" on an ancestor (Phase 7 i18n) —
             // no locale detection needed here, Tailwind's rtl: variant
@@ -56,7 +58,7 @@ export const StarRating: React.FC<StarRatingProps> = ({value, onChange, disabled
                         type="button"
                         role="radio"
                         aria-checked={value === starValue}
-                        aria-label={`${starValue} star${starValue > 1 ? "s" : ""}`}
+                        aria-label={t("shared.starCount", {count: starValue})}
                         tabIndex={starValue === activeValue ? 0 : -1}
                         disabled={disabled}
                         onClick={() => onChange(starValue)}

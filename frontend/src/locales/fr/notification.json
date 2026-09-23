@@ -1,0 +1,31 @@
+{
+  "bell": {
+    "triggerLabel": "Notifications",
+    "unreadBadge_one": "{{count}} notification non lue",
+    "unreadBadge_other": "{{count}} notifications non lues",
+    "heading": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Aucune notification pour le moment.",
+    "unread": "Non lue"
+  },
+  "preferences": {
+    "title": "Préférences de notification",
+    "description": "Choisissez les événements qui vous envoient une notification push ou un e-mail. Les codes de vérification par SMS ne peuvent pas être désactivés.",
+    "loading": "Chargement des préférences...",
+    "push": "Push",
+    "email": "E-mail",
+    "pushAriaLabel": "Notifications push : {{label}}",
+    "emailAriaLabel": "Notifications par e-mail : {{label}}"
+  },
+  "events": {
+    "jobApplicationAccepted": "Votre candidature a été acceptée",
+    "jobApplicationRejected": "Votre candidature a été refusée",
+    "jobApplicationConfirmed": "Un professionnel a confirmé votre mission",
+    "jobApplicationWithdrawn": "Un professionnel a retiré sa candidature",
+    "jobStarted": "Une mission que vous avez réservée a démarré",
+    "jobCompleted": "Une mission a été marquée comme terminée",
+    "jobCompletionPendingConfirmation": "Une mission est en attente de votre confirmation",
+    "reviewReceived": "Vous avez reçu un nouvel avis",
+    "workerVerificationApproved": "Votre vérification de professionnel a été approuvée"
+  }
+}

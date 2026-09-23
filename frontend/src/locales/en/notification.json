@@ -1,0 +1,31 @@
+{
+  "bell": {
+    "triggerLabel": "Notifications",
+    "unreadBadge_one": "{{count}} unread notification",
+    "unreadBadge_other": "{{count}} unread notifications",
+    "heading": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications yet.",
+    "unread": "Unread"
+  },
+  "preferences": {
+    "title": "Notification Preferences",
+    "description": "Choose which events send you a push notification or an email. SMS verification codes cannot be turned off.",
+    "loading": "Loading preferences...",
+    "push": "Push",
+    "email": "Email",
+    "pushAriaLabel": "Push notifications: {{label}}",
+    "emailAriaLabel": "Email notifications: {{label}}"
+  },
+  "events": {
+    "jobApplicationAccepted": "Your job application was accepted",
+    "jobApplicationRejected": "Your job application was declined",
+    "jobApplicationConfirmed": "A worker confirmed your job",
+    "jobApplicationWithdrawn": "A worker withdrew from your job",
+    "jobStarted": "A job you booked started",
+    "jobCompleted": "A job was marked completed",
+    "jobCompletionPendingConfirmation": "A job is awaiting your confirmation",
+    "reviewReceived": "You received a new review",
+    "workerVerificationApproved": "Your worker verification was approved"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "locationSearchField": {
+    "label": "Location",
+    "placeholder": "Search for a city or address",
+    "clearAriaLabel": "Clear location",
+    "suggestionsAriaLabel": "Location suggestions",
+    "searching": "Searching locations...",
+    "searchError": "Could not search locations right now. Please try again.",
+    "noResults": "No locations found. Try a different search.",
+    "coordinatesLabel": "Coordinates: {{lat}}, {{lon}}",
+    "unconfirmedHint": "Select a location from the suggestions to save it."
+  }
+}

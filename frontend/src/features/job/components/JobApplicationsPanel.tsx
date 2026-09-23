@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import {Link} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 import {AlertCircle, Briefcase, CheckCircle2, ChevronDown, ChevronUp, Clock, DollarSign, Loader2, MapPin, User, XCircle} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
@@ -11,10 +12,10 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {ApplicationDeclineReason, ApplicationStatus, DECLINE_REASON_OPTIONS, JobApplicationRead, useJobApplications, useUpdateJobApplication} from "@/features/job";
 import {UserPublicRead} from "@/features/user";
 
-const applicationStatusConfig: Record<ApplicationStatus, { label: string; icon: React.ReactNode; color: string }> = {
-    pending: {label: "Pending", icon: <Clock className="h-3.5 w-3.5"/>, color: "bg-yellow-100 text-yellow-800 border-yellow-200"},
-    accepted: {label: "Accepted", icon: <CheckCircle2 className="h-3.5 w-3.5"/>, color: "bg-green-100 text-green-800 border-green-200"},
-    rejected: {label: "Rejected", icon: <XCircle className="h-3.5 w-3.5"/>, color: "bg-red-100 text-red-800 border-red-200"},
+const applicationStatusIcons: Record<ApplicationStatus, { icon: React.ReactNode; color: string }> = {
+    pending: {icon: <Clock className="h-3.5 w-3.5"/>, color: "bg-yellow-100 text-yellow-800 border-yellow-200"},
+    accepted: {icon: <CheckCircle2 className="h-3.5 w-3.5"/>, color: "bg-green-100 text-green-800 border-green-200"},
+    rejected: {icon: <XCircle className="h-3.5 w-3.5"/>, color: "bg-red-100 text-red-800 border-red-200"},
 };
 
 interface JobApplicationsPanelProps {
@@ -23,6 +24,7 @@ interface JobApplicationsPanelProps {
 }
 
 export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId, jobStatus}) => {
+    const {t} = useTranslation("job");
     const [isExpanded, setIsExpanded] = useState(false);
     const [appPendingAction, setAppPendingAction] = useState<{ app: JobApplicationRead; newStatus: ApplicationStatus } | null>(null);
     const [declineReason, setDeclineReason] = useState<ApplicationDeclineReason | "">("");
@@ -56,7 +58,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
             {
                 onSuccess: () => closeActionDialog(),
                 onError: (error) => {
-                    setActionError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+                    setActionError(error instanceof Error ? error.message : t("jobApplicationsPanel.genericError"));
                 },
             }
         );
@@ -64,25 +66,25 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
 
     const getActionDialogContent = () => {
         if (!appPendingAction) return null;
-        const workerName = getWorkerName(appPendingAction.app);
+        const workerName = getWorkerName(appPendingAction.app, t("jobApplicationsPanel.unknownWorker"));
         if (appPendingAction.newStatus === "accepted") {
             return {
-                title: "Accept Application?",
+                title: t("jobApplicationsPanel.acceptDialogTitle"),
                 // FIX: previous copy claimed this cascades to reject other
                 // applications and flips the job to "assigned" — the backend
                 // (crud_job_applications.update_job_application) doesn't do
                 // either of those, it only updates this one application's
                 // status. Update this copy again if/when that cascade is
                 // actually implemented server-side.
-                description: `Accept ${workerName}'s application for this job? You can still update other applications' statuses separately afterward.`,
-                confirmLabel: "Accept",
+                description: t("jobApplicationsPanel.acceptDialogDescription", {workerName}),
+                confirmLabel: t("jobApplicationsPanel.accept"),
                 confirmClass: "bg-green-600 text-white hover:bg-green-700",
             };
         }
         return {
-            title: "Reject Application?",
-            description: `Reject ${workerName}'s application for this job? This action cannot be undone.`,
-            confirmLabel: "Reject",
+            title: t("jobApplicationsPanel.rejectDialogTitle"),
+            description: t("jobApplicationsPanel.rejectDialogDescription", {workerName}),
+            confirmLabel: t("jobApplicationsPanel.reject"),
             confirmClass: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         };
     };
@@ -98,7 +100,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
             >
                 <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground"/>
-                    <span>Applications</span>
+                    <span>{t("jobApplicationsPanel.toggleLabel")}</span>
                     {applications.length > 0 && (
                         <Badge variant="secondary" className="text-xs">
                             {applications.length}
@@ -106,7 +108,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                     )}
                     {pendingCount > 0 && (
                         <Badge className="text-xs bg-yellow-100 text-yellow-800">
-                            {pendingCount} pending
+                            {t("jobApplicationsPanel.pendingCount", {count: pendingCount})}
                         </Badge>
                     )}
                 </div>
@@ -140,13 +142,13 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                     {isError && (
                         <div className="flex items-center gap-2 text-sm text-destructive py-4">
                             <AlertCircle className="h-4 w-4"/>
-                            Failed to load applications. Please try again.
+                            {t("jobApplicationsPanel.loadError")}
                         </div>
                     )}
 
                     {!isLoading && !isError && applications.length === 0 && (
                         <div className="text-center py-6 text-sm text-muted-foreground">
-                            No applications yet for this job.
+                            {t("jobApplicationsPanel.emptyState")}
                         </div>
                     )}
 
@@ -178,8 +180,8 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
 
                     {isRejecting && (
                         <Select value={declineReason} onValueChange={(value) => setDeclineReason(value as ApplicationDeclineReason)}>
-                            <SelectTrigger aria-label="Reason for rejecting">
-                                <SelectValue placeholder="Select a reason"/>
+                            <SelectTrigger aria-label={t("jobApplicationsPanel.reasonForRejectingAriaLabel")}>
+                                <SelectValue placeholder={t("shared.selectAReason")}/>
                             </SelectTrigger>
                             <SelectContent>
                                 {DECLINE_REASON_OPTIONS.map((option) => (
@@ -199,7 +201,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                     )}
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isUpdating}>{t("shared.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmAction}
                             disabled={isUpdating || (isRejecting && !declineReason)}
@@ -208,7 +210,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                             {isUpdating ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                    Updating...
+                                    {t("shared.updating")}
                                 </>
                             ) : (
                                 dialogContent?.confirmLabel
@@ -231,16 +233,18 @@ interface ApplicationCardProps {
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus, onAction, isUpdating}) => {
+    const {t} = useTranslation("job");
     const worker = application.worker_profile;
     const user = worker?.user;
-    const config = applicationStatusConfig[application.status];
+    const config = applicationStatusIcons[application.status];
+    const statusLabel = t(`jobApplicationsPanel.status.${application.status}`);
     const isPending = application.status === "pending";
     const canAct = isPending && jobStatus === "open";
 
     const initials = getInitials(user);
-    const workerName = getWorkerName(application);
+    const workerName = getWorkerName(application, t("jobApplicationsPanel.unknownWorker"));
     const trades = worker?.trade_categories
-        ?.map(t => t.trade_category?.name)
+        ?.map(tc => tc.trade_category?.name)
         .filter((name): name is string => Boolean(name))
         .join(", ") || null;
 
@@ -266,7 +270,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
                                     <Badge variant="outline" className={`text-xs ${config.color}`}>
                                         <span className="flex items-center gap-1">
                                             {config.icon}
-                                            {config.label}
+                                            {statusLabel}
                                         </span>
                                     </Badge>
                                 </div>
@@ -289,7 +293,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
                                         disabled={isUpdating}
                                     >
                                         <CheckCircle2 className="h-3.5 w-3.5 mr-1"/>
-                                        Accept
+                                        {t("jobApplicationsPanel.accept")}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -299,7 +303,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
                                         disabled={isUpdating}
                                     >
                                         <XCircle className="h-3.5 w-3.5 mr-1"/>
-                                        Reject
+                                        {t("jobApplicationsPanel.reject")}
                                     </Button>
                                 </div>
                             )}
@@ -307,25 +311,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
 
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                             {worker?.years_of_experience !== null && worker?.years_of_experience !== undefined && (
-                                <span>{worker.years_of_experience} years exp.</span>
+                                <span>{t("jobApplicationsPanel.yearsExp", {count: worker.years_of_experience})}</span>
                             )}
                             {worker?.hourly_rate !== null && worker?.hourly_rate !== undefined && (
                                 <span className="flex items-center gap-0.5">
                                     <DollarSign className="h-3 w-3"/>
-                                    {worker.hourly_rate}/hr
+                                    {t("jobApplicationsPanel.perHour", {rate: worker.hourly_rate})}
                                 </span>
                             )}
                             {worker?.service_radius_km !== null && worker?.service_radius_km !== undefined && (
                                 <span className="flex items-center gap-0.5">
                                     <MapPin className="h-3 w-3"/>
-                                    {worker.service_radius_km}km radius
+                                    {t("jobApplicationsPanel.radiusKm", {radius: worker.service_radius_km})}
                                 </span>
                             )}
                         </div>
 
                         {application.message && (
                             <div className="mt-2 text-sm text-muted-foreground bg-muted/50 rounded-md p-2">
-                                <span className="text-xs font-medium text-foreground">Message:</span>
+                                <span className="text-xs font-medium text-foreground">{t("jobApplicationsPanel.message")}</span>
                                 <p className="mt-0.5">{application.message}</p>
                             </div>
                         )}
@@ -338,12 +342,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function getWorkerName(app: JobApplicationRead): string {
+function getWorkerName(app: JobApplicationRead, unknownWorkerLabel: string): string {
     const user = app.worker_profile?.user;
     if (user) {
         return user.name;
     }
-    return "Unknown Worker";
+    return unknownWorkerLabel;
 }
 
 function getInitials(user?: UserPublicRead): string {

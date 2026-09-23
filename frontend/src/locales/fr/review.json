@@ -1,0 +1,40 @@
+{
+  "shared": {
+    "starCount_one": "{{count}} étoile",
+    "starCount_other": "{{count}} étoiles",
+    "reviewCount_one": "{{count}} avis",
+    "reviewCount_other": "{{count}} avis"
+  },
+  "reviewCard": {
+    "submitError": "Échec de l'envoi de l'avis. Veuillez réessayer.",
+    "submitted": "Avis envoyé — merci !",
+    "dismissAriaLabel": "Fermer",
+    "heading": "Laisser un avis",
+    "commentAriaLabel": "Commentaire de l'avis",
+    "commentPlaceholder": "Partagez les détails de votre expérience (facultatif)",
+    "submit": "Envoyer l'avis"
+  },
+  "reviewListItem": {
+    "showMore": "Voir plus",
+    "showLess": "Voir moins"
+  },
+  "reviewsSection": {
+    "loadingAriaLabel": "Chargement des avis",
+    "loadError": "Impossible de charger les avis pour le moment. Veuillez réessayer plus tard.",
+    "heading": "Avis",
+    "ctaPrompt": "Vous avez travaillé avec cette personne ? Laissez un avis",
+    "leaveReviewLink": "Laisser un avis",
+    "loading": "Chargement...",
+    "loadMore": "Charger plus"
+  },
+  "reviewsEmptyState": {
+    "heading": "Aucun avis pour le moment",
+    "subtitle": "Une fois que ce professionnel aura terminé une mission, les avis apparaîtront ici."
+  },
+  "ratingBreakdownChart": {
+    "ariaLabel": "{{starLabel}} : {{percent}} % ({{reviewLabel}})"
+  },
+  "starRating": {
+    "ariaLabel": "Note"
+  }
+}

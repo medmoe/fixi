@@ -80,11 +80,12 @@ describe('NotificationBell', () => {
         vi.mocked(useMarkNotificationRead).mockReturnValue({mutate: markReadMock} as never)
         vi.mocked(useMarkAllNotificationsRead).mockReturnValue({mutate: markAllReadMock, isPending: false} as never)
         // Explicit rather than relying on i18next's browser-locale detection
-        // default -- jsdom's navigator.language ('en-US') now resolves to a
-        // real supported language ('en') since English support was added,
-        // so tests below that don't care about language selection need a
-        // deterministic starting point.
-        await i18n.changeLanguage('fr')
+        // guess -- deterministic starting point for the structural tests
+        // below, which don't care about language and were written assuming
+        // (now-real) English chrome text. The "language-aware content" and
+        // "renders each notification title and body" tests further down
+        // override this per test since they specifically test a language.
+        await i18n.changeLanguage('en')
     })
 
     const mockLists = (options: { unreadCount?: number; notifications?: NotificationRead[]; isLoading?: boolean } = {}) => {
@@ -122,7 +123,7 @@ describe('NotificationBell', () => {
         mockLists({notifications: []})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
         expect(screen.getByText(/no notifications yet/i)).toBeInTheDocument()
     })
@@ -131,16 +132,17 @@ describe('NotificationBell', () => {
         mockLists({isLoading: true})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
         expect(document.querySelector('[data-slot="skeleton"]')).toBeInTheDocument()
     })
 
     it('renders each notification title and body', async () => {
+        await i18n.changeLanguage('fr')
         mockLists({notifications: [buildNotification({title_fr: 'Job démarré', body_fr: 'Votre job a démarré.'})]})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
         expect(screen.getByText('Job démarré')).toBeInTheDocument()
         expect(screen.getByText('Votre job a démarré.')).toBeInTheDocument()
@@ -150,7 +152,7 @@ describe('NotificationBell', () => {
         mockLists({notifications: [buildNotification({id: 5, read_at: null})]})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
         await userEvent.click(screen.getByRole('menuitem'))
 
         expect(markReadMock).toHaveBeenCalledWith(5)
@@ -160,7 +162,7 @@ describe('NotificationBell', () => {
         mockLists({notifications: [buildNotification({id: 5, read_at: '2026-09-21T11:00:00Z'})]})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
         await userEvent.click(screen.getByRole('menuitem'))
 
         expect(markReadMock).not.toHaveBeenCalled()
@@ -170,17 +172,17 @@ describe('NotificationBell', () => {
         mockLists({unreadCount: 0, notifications: [buildNotification({read_at: '2026-09-21T11:00:00Z'})]})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
-        expect(screen.queryByRole('button', {name: /mark all read/i})).not.toBeInTheDocument()
+        expect(screen.queryByTestId('mark-all-read-button')).not.toBeInTheDocument()
     })
 
     it('calls markAllRead when "Mark all read" is clicked', async () => {
         mockLists({unreadCount: 2, notifications: [buildNotification()]})
         render(<NotificationBell/>)
 
-        await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
-        await userEvent.click(screen.getByRole('button', {name: /mark all read/i}))
+        await userEvent.click(screen.getByTestId('notification-bell-trigger'))
+        await userEvent.click(screen.getByTestId('mark-all-read-button'))
 
         expect(markAllReadMock).toHaveBeenCalled()
     })
@@ -191,7 +193,7 @@ describe('NotificationBell', () => {
             mockLists({notifications: [buildNotification()]})
             render(<NotificationBell/>)
 
-            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+            await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
             expect(screen.getByText('عنوان')).toBeInTheDocument()
             expect(screen.getByText('نص')).toBeInTheDocument()
@@ -203,7 +205,7 @@ describe('NotificationBell', () => {
             mockLists({notifications: [buildNotification()]})
             render(<NotificationBell/>)
 
-            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+            await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
             expect(screen.getByText('Job started')).toBeInTheDocument()
             expect(screen.getByText('Your job has started.')).toBeInTheDocument()
@@ -214,7 +216,7 @@ describe('NotificationBell', () => {
             mockLists({notifications: [buildNotification()]})
             render(<NotificationBell/>)
 
-            await userEvent.click(screen.getByRole('button', {name: /notifications/i}))
+            await userEvent.click(screen.getByTestId('notification-bell-trigger'))
 
             expect(screen.getByText('Job démarré')).toBeInTheDocument()
         })
