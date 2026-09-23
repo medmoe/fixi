@@ -209,7 +209,7 @@ export const JobApplicationsPanel: React.FC<JobApplicationsPanelProps> = ({jobId
                         >
                             {isUpdating ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                     {t("shared.updating")}
                                 </>
                             ) : (
@@ -292,7 +292,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
                                         onClick={() => onAction("accepted")}
                                         disabled={isUpdating}
                                     >
-                                        <CheckCircle2 className="h-3.5 w-3.5 mr-1"/>
+                                        <CheckCircle2 className="h-3.5 w-3.5 me-1"/>
                                         {t("jobApplicationsPanel.accept")}
                                     </Button>
                                     <Button
@@ -302,7 +302,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({application, jobStatus
                                         onClick={() => onAction("rejected")}
                                         disabled={isUpdating}
                                     >
-                                        <XCircle className="h-3.5 w-3.5 mr-1"/>
+                                        <XCircle className="h-3.5 w-3.5 me-1"/>
                                         {t("jobApplicationsPanel.reject")}
                                     </Button>
                                 </div>

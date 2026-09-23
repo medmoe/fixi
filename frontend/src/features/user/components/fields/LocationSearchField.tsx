@@ -76,7 +76,7 @@ export const LocationSearchField: React.FC = () => {
                     </FormLabel>
                     <div className="relative">
                         <Search
-                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                            className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                             aria-hidden="true"
                         />
                         {/* FormControl must wrap the input itself — it forwards the id
@@ -89,7 +89,7 @@ export const LocationSearchField: React.FC = () => {
                                 aria-autocomplete="list"
                                 autoComplete="off"
                                 placeholder={t('locationSearchField.placeholder')}
-                                className="pl-9 pr-9"
+                                className="ps-9 pe-9"
                                 value={inputValue}
                                 onChange={(event) => handleQueryChange(event.target.value)}
                                 onFocus={() => setIsOpen(true)}
@@ -102,7 +102,7 @@ export const LocationSearchField: React.FC = () => {
                                 size="icon"
                                 aria-label={t('locationSearchField.clearAriaLabel')}
                                 onClick={handleClear}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-destructive"
+                                className="absolute end-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-destructive"
                             >
                                 <X className="h-4 w-4"/>
                             </Button>
@@ -122,7 +122,7 @@ export const LocationSearchField: React.FC = () => {
                                             role="option"
                                             aria-selected={false}
                                             onClick={() => handleSelect(suggestion)}
-                                            className="w-full text-left px-3 py-2 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
+                                            className="w-full text-start px-3 py-2 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
                                         >
                                             {suggestion.display_name}
                                         </button>

@@ -17,7 +17,7 @@ export const HourlyRateField: React.FC = () => {
           <FormLabel htmlFor="hourly-rate-input">{t('hourlyRateField.label')}</FormLabel>
           <FormControl>
             <div className="relative rounded-md shadow-sm">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                 <span className="text-muted-foreground sm:text-sm">$</span>
               </div>
               <Input
@@ -25,12 +25,12 @@ export const HourlyRateField: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0.01"
-                className="pl-7"
+                className="ps-7"
                 placeholder="0.00"
                 aria-label={t('hourlyRateField.ariaLabel')}
                 {...field}
               />
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3">
                 <span className="text-muted-foreground sm:text-sm">{t('hourlyRateField.perHourSuffix')}</span>
               </div>
             </div>

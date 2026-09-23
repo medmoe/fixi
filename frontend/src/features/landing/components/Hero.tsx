@@ -32,7 +32,7 @@ export const Hero = () => {
                 <Link to="/register?role=customer">
                     <Search className="h-5 w-5" aria-hidden="true" />
                     {t('hero.findProfessional')}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Link>
             </Button>
             <Button
@@ -44,7 +44,7 @@ export const Hero = () => {
                 <Link to="/register?role=worker">
                     <Wrench className="h-5 w-5" aria-hidden="true" />
                     {t('hero.offerServices')}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Link>
             </Button>
         </div>

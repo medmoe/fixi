@@ -57,9 +57,9 @@ export const WorkerDetailPage: React.FC = () => {
 
     return (
         <div className="max-w-2xl mx-auto p-6 space-y-6">
-            <Button asChild variant="ghost" size="sm" className="-ml-2">
+            <Button asChild variant="ghost" size="sm" className="-ms-2">
                 <Link to="/workers/search">
-                    <ArrowLeft className="mr-1 h-4 w-4" />
+                    <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
                     {t("workerDetailPage.backToSearch")}
                 </Link>
             </Button>

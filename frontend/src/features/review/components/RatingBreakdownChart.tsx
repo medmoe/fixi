@@ -33,7 +33,7 @@ export const RatingBreakdownChart: React.FC<RatingBreakdownChartProps> = ({break
                         >
                             <div className="h-full rounded-full bg-yellow-400" style={{width: `${percent}%`}}/>
                         </div>
-                        <span className="w-9 shrink-0 text-right text-muted-foreground">{percent}%</span>
+                        <span className="w-9 shrink-0 text-end text-muted-foreground">{percent}%</span>
                     </div>
                 );
             })}

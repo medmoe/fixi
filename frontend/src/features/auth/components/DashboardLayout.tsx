@@ -138,7 +138,7 @@ export const DashboardLayout: React.FC = () => {
                             onClick={() => navigate('/dashboard/jobs')}
                             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <ArrowLeft className="h-4 w-4"/>
+                            <ArrowLeft className="h-4 w-4 rtl:rotate-180"/>
                             {t('dashboard.backToJobs')}
                         </button>
                     </div>

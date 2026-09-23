@@ -1,7 +1,39 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
-import i18n, {createMissingKeyHandler, createParseMissingKeyHandler} from '../i18n'
+import i18n, {createMissingKeyHandler, createParseMissingKeyHandler, getDirection} from '../i18n'
 
 describe('i18n config', () => {
+    describe('getDirection', () => {
+        it('is rtl for Arabic', () => {
+            expect(getDirection('ar')).toBe('rtl')
+        })
+
+        it('is ltr for French', () => {
+            expect(getDirection('fr')).toBe('ltr')
+        })
+
+        it('is ltr for English', () => {
+            expect(getDirection('en')).toBe('ltr')
+        })
+
+        it('defaults to ltr for an unrecognized language code', () => {
+            expect(getDirection('xx')).toBe('ltr')
+        })
+    })
+
+    describe('document direction on language change', () => {
+        it('sets both dir and lang to rtl/ar when switching to Arabic', async () => {
+            await i18n.changeLanguage('ar')
+            expect(document.documentElement.dir).toBe('rtl')
+            expect(document.documentElement.lang).toBe('ar')
+        })
+
+        it('sets both dir and lang back to ltr/fr when switching to French', async () => {
+            await i18n.changeLanguage('ar')
+            await i18n.changeLanguage('fr')
+            expect(document.documentElement.dir).toBe('ltr')
+            expect(document.documentElement.lang).toBe('fr')
+        })
+    })
     describe('createParseMissingKeyHandler', () => {
         it('returns the raw key in dev -- loud for developers', () => {
             const handler = createParseMissingKeyHandler(true)

@@ -67,7 +67,7 @@ export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTit
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button disabled={disabled} className="w-full">
-                    <Send className="mr-2 h-4 w-4"/>
+                    <Send className="me-2 h-4 w-4"/>
                     {t("applyToJobDialog.applyToThisJob")}
                 </Button>
             </DialogTrigger>
@@ -96,7 +96,7 @@ export const ApplyToJobDialog: React.FC<ApplyToJobDialogProps> = ({jobId, jobTit
                     <Button onClick={handleSubmit} disabled={isPending}>
                         {isPending ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                 {t("applyToJobDialog.submitting")}
                             </>
                         ) : (

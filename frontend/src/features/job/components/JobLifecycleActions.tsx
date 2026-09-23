@@ -70,7 +70,7 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => confirmApplication(myApplication.id)} disabled={isConfirming}>
-                        {isConfirming ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                        {isConfirming ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : null}
                         {t("jobLifecycleActions.confirmAssignment")}
                     </Button>
                     <Button variant="outline" onClick={() => setShowWithdrawDialog(true)} disabled={isWithdrawing}>
@@ -101,7 +101,7 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
             <div className="rounded-lg border p-4 space-y-2">
                 <p className="text-sm font-medium">{t("jobLifecycleActions.assignedHeading")}</p>
                 <Button onClick={() => startJob()} disabled={isStarting}>
-                    {isStarting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                    {isStarting ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : null}
                     {t("jobLifecycleActions.startJob")}
                 </Button>
             </div>
@@ -122,7 +122,7 @@ export const JobLifecycleActions: React.FC<JobLifecycleActionsProps> = ({job}) =
                     <>
                         <p className="text-sm font-medium">{t("jobLifecycleActions.isJobDoneHeading")}</p>
                         <Button onClick={() => completeJob()} disabled={isCompleting}>
-                            {isCompleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                            {isCompleting ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : null}
                             {t("jobLifecycleActions.markAsComplete")}
                         </Button>
                     </>
@@ -177,7 +177,7 @@ const WithdrawApplicationDialog: React.FC<WithdrawApplicationDialogProps> = ({op
                         onClick={() => reason && onConfirm(reason)}
                         disabled={!reason || isPending}
                     >
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                        {isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin"/> : null}
                         {t("jobLifecycleActions.withdraw")}
                     </Button>
                 </DialogFooter>

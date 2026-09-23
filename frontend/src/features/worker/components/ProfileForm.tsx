@@ -133,8 +133,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
                         disabled={!canSubmit}
                     >
                         {isPending
-                            ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> {t('profileForm.saving')}</>
-                            : <><Save className="mr-2 h-4 w-4"/> {t('profileForm.updateProfile')}</>
+                            ? <><Loader2 className="me-2 h-4 w-4 animate-spin"/> {t('profileForm.saving')}</>
+                            : <><Save className="me-2 h-4 w-4"/> {t('profileForm.updateProfile')}</>
                         }
                     </Button>
                 </div>

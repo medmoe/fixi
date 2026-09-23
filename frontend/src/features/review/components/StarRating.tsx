@@ -27,10 +27,17 @@ export const StarRating: React.FC<StarRatingProps> = ({value, onChange, disabled
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
         if (disabled) return;
-        if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+        // Arrow keys should move focus toward the star the key visually
+        // points at, not a fixed logical direction — the row itself is
+        // already mirrored via rtl:flex-row-reverse above, so under RTL the
+        // physical Right key points at a *lower*-valued star, not a higher
+        // one. Only Left/Right swap meaning here; Up/Down stay put since
+        // vertical layout doesn't mirror.
+        const isRtl = document.documentElement.dir === "rtl";
+        if (event.key === "ArrowUp" || (!isRtl && event.key === "ArrowRight") || (isRtl && event.key === "ArrowLeft")) {
             event.preventDefault();
             selectAndFocus(Math.min(5, activeValue + 1));
-        } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+        } else if (event.key === "ArrowDown" || (!isRtl && event.key === "ArrowLeft") || (isRtl && event.key === "ArrowRight")) {
             event.preventDefault();
             selectAndFocus(Math.max(1, activeValue - 1));
         }

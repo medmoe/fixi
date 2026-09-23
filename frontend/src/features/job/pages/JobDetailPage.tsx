@@ -65,7 +65,7 @@ export const JobDetailPage: React.FC = () => {
                     {error instanceof Error ? error.message : t('shared.jobNotFound')}
                 </p>
                 <Button onClick={handleBack} variant="outline">
-                    <ArrowLeft className="mr-2 h-4 w-4"/>
+                    <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180"/>
                     {t('jobDetailPage.back')}
                 </Button>
             </div>
@@ -76,8 +76,8 @@ export const JobDetailPage: React.FC = () => {
 
     return (
         <div className="max-w-3xl mx-auto p-6 space-y-6">
-            <Button onClick={handleBack} variant="ghost" size="sm" className="-ml-2">
-                <ArrowLeft className="mr-2 h-4 w-4"/>
+            <Button onClick={handleBack} variant="ghost" size="sm" className="-ms-2">
+                <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180"/>
                 {t('jobDetailPage.back')}
             </Button>
 
@@ -147,7 +147,7 @@ export const JobDetailPage: React.FC = () => {
                             className="w-full"
                             onClick={() => navigate('/login', {state: {from: location.pathname}})}
                         >
-                            <LogIn className="mr-2 h-4 w-4"/>
+                            <LogIn className="me-2 h-4 w-4"/>
                             {t('jobDetailPage.loginToApply')}
                         </Button>
                     ) : (

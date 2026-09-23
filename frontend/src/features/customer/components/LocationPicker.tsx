@@ -153,12 +153,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({username, onConfi
                 >
                     {isSaving ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true"/>
+                            <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden="true"/>
                             {t('locationPicker.saving')}
                         </>
                     ) : (
                         <>
-                            <MapPin className="mr-2 h-4 w-4" aria-hidden="true"/>
+                            <MapPin className="me-2 h-4 w-4" aria-hidden="true"/>
                             {t('locationPicker.confirmLocation')}
                         </>
                     )}

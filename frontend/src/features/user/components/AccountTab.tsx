@@ -196,7 +196,7 @@ export const AccountTab: React.FC = () => {
                             >
                                 {updateMutation.isPending ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                        <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                         {t('profile.saving')}
                                     </>
                                 ) : (
@@ -273,7 +273,7 @@ export const AccountTab: React.FC = () => {
                             >
                                 {passwordMutation.isPending ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                        <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                         {t('password.changing')}
                                     </>
                                 ) : (
@@ -300,7 +300,7 @@ export const AccountTab: React.FC = () => {
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive">
-                                <Trash2 className="mr-2 h-4 w-4"/>
+                                <Trash2 className="me-2 h-4 w-4"/>
                                 {t('danger.deactivateButton')}
                             </Button>
                         </AlertDialogTrigger>
@@ -322,7 +322,7 @@ export const AccountTab: React.FC = () => {
                                 >
                                     {deactivateMutation.isPending ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                            <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                             {t('danger.deactivating')}
                                         </>
                                     ) : (
