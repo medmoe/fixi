@@ -8,6 +8,7 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
 import {useWorkerProfilePublic} from "@/features/worker";
+import {useLocalizedTradeName} from "@/features/worker/hooks/useLocalizedTradeName";
 import {ReviewsSection} from "@/features/review";
 import {useFormatCurrency, useFormatNumber} from "@/lib/hooks/useFormatters";
 
@@ -21,6 +22,7 @@ const getInitials = (name: string): string =>
 
 export const WorkerDetailPage: React.FC = () => {
     const {t} = useTranslation("worker");
+    const getTradeName = useLocalizedTradeName();
     const { workerId } = useParams<{ workerId: string }>();
     const id = Number(workerId);
 
@@ -111,7 +113,7 @@ export const WorkerDetailPage: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                     {profile.trade_categories.map((wt) => (
                         <Badge key={wt.id} variant="secondary">
-                            {wt.trade_category?.display_name}
+                            {getTradeName(wt.trade_category)}
                         </Badge>
                     ))}
                 </div>

@@ -5,6 +5,7 @@ import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Badge} from '@/components/ui/badge'
 import {useTrades} from '@/features/worker/hooks/useTrades'
+import {useLocalizedTradeName} from '@/features/worker/hooks/useLocalizedTradeName'
 import type {TradeCategoryRead, WorkerTradeNestedRead,} from '@/features/worker'
 
 const MAX_TRADES = 5
@@ -25,6 +26,7 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                                                                             isRemoving,
                                                                         }) => {
     const {t} = useTranslation('worker')
+    const getTradeName = useLocalizedTradeName()
     const {data: availableTrades = [], isLoading} = useTrades()
 
     if (isLoading) {
@@ -80,8 +82,8 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                     </p>
                     {assignedTrades.map((wt) => {
                         const label =
-                            wt.trade_category?.display_name ??
-                            wt.trade_category?.name ??
+                            getTradeName(wt.trade_category) ||
+                            wt.trade_category?.name ||
                             t('tradeCategoryPicker.tradeFallback', {id: wt.trade_category_id})
                         return (
                             <div
@@ -118,14 +120,14 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                             className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200"
                         >
                             <span className="text-sm font-medium text-amber-800">
-                                {trade.display_name ?? trade.name}
+                                {getTradeName(trade) || trade.name}
                             </span>
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleRemovePending(trade.id)}
-                                aria-label={t('tradeCategoryPicker.removeAriaLabel', {name: trade.display_name ?? trade.name})}
+                                aria-label={t('tradeCategoryPicker.removeAriaLabel', {name: getTradeName(trade) || trade.name})}
                                 className="h-8 w-8 text-amber-600 hover:text-destructive"
                             >
                                 <X className="h-4 w-4"/>
@@ -148,7 +150,7 @@ export const TradeCategoryPicker: React.FC<TradeCategoryPickerProps> = ({
                             className="text-xs flex items-center gap-1"
                         >
                             <Plus className="h-3 w-3"/>
-                            {trade.display_name ?? trade.name}
+                            {getTradeName(trade) || trade.name}
                         </Button>
                     ))}
                 </div>
