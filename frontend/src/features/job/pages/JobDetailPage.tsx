@@ -11,6 +11,7 @@ import {jobApi} from '@/lib';
 import {ApplyToJobDialog, JobLifecycleActions, JobRead, JobStatus, useMyJobApplication} from '@/features/job';
 import {useAuth} from '@/features/auth';
 import {useUser} from '@/features/user';
+import {useLocalizedTradeName} from '@/features/worker/hooks/useLocalizedTradeName';
 import {ReviewCard} from '@/features/review';
 
 const statusColors: Record<JobStatus, string> = {
@@ -23,6 +24,7 @@ const statusColors: Record<JobStatus, string> = {
 
 export const JobDetailPage: React.FC = () => {
     const {t} = useTranslation('job');
+    const getTradeName = useLocalizedTradeName();
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
     const location = useLocation();
@@ -96,7 +98,7 @@ export const JobDetailPage: React.FC = () => {
                 {job.trade_category && (
                     <div className="flex items-center gap-2">
                         <Wrench className="h-4 w-4"/>
-                        {job.trade_category.name}
+                        {getTradeName(job.trade_category)}
                     </div>
                 )}
                 {job.display_location && (

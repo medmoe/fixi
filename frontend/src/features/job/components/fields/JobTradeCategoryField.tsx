@@ -5,10 +5,12 @@ import {Plus, X} from 'lucide-react';
 import {FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Button} from '@/components/ui/button';
 import {useTrades} from '@/features/worker/hooks/useTrades';
+import {useLocalizedTradeName} from '@/features/worker/hooks/useLocalizedTradeName';
 import type {TradeCategoryRead} from '@/features/worker';
 
 export const JobTradeCategoryField: React.FC = () => {
     const {t} = useTranslation('job');
+    const getTradeName = useLocalizedTradeName();
     const {control, setValue, watch} = useFormContext();
     const {data: availableTrades = [], isLoading} = useTrades();
     const selectedId: number | undefined = watch('trade_category_id');
@@ -45,14 +47,14 @@ export const JobTradeCategoryField: React.FC = () => {
                     {selectedTrade && (
                         <div className="flex items-center justify-between p-3 bg-accent/40 rounded-lg border border-border mb-2">
                             <span className="text-sm font-medium">
-                                {selectedTrade.display_name ?? selectedTrade.name}
+                                {getTradeName(selectedTrade) || selectedTrade.name}
                             </span>
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleClear}
-                                aria-label={t('jobTradeCategoryField.removeAriaLabel', {name: selectedTrade.display_name ?? selectedTrade.name})}
+                                aria-label={t('jobTradeCategoryField.removeAriaLabel', {name: getTradeName(selectedTrade) || selectedTrade.name})}
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             >
                                 <X className="h-4 w-4"/>
@@ -73,7 +75,7 @@ export const JobTradeCategoryField: React.FC = () => {
                                     className="text-xs flex items-center gap-1"
                                 >
                                     <Plus className="h-3 w-3"/>
-                                    {trade.display_name ?? trade.name}
+                                    {getTradeName(trade) || trade.name}
                                 </Button>
                             ))}
                         </div>

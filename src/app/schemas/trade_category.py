@@ -8,6 +8,8 @@ class TradeCategoryBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
     name: Annotated[str, Field(max_length=50)]
     display_name: Annotated[str, Field(max_length=50)]
+    display_name_ar: Annotated[str | None, Field(max_length=50, default=None)]
+    display_name_fr: Annotated[str | None, Field(max_length=50, default=None)]
     icon_name: Annotated[str | None, Field(max_length=50, default=None)]
     parent_id: Annotated[int | None, Field(default=None)]
 
@@ -20,6 +22,8 @@ class TradeCategoryUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
     name: Annotated[str | None, Field(max_length=50, default=None)]
     display_name: Annotated[str | None, Field(max_length=50, default=None)]
+    display_name_ar: Annotated[str | None, Field(max_length=50, default=None)]
+    display_name_fr: Annotated[str | None, Field(max_length=50, default=None)]
     icon_name: Annotated[str | None, Field(max_length=50, default=None)]
     parent_id: Annotated[int | None, Field(default=None)]
 

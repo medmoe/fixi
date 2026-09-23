@@ -555,9 +555,18 @@ async def other_trade_category(async_session: AsyncSession) -> TradeCategory:
 async def create_test_trade_category(async_session: AsyncSession, **kwargs) -> TradeCategory:
     name = kwargs.get('name', f"{fake.word()}_{uuid.uuid4().hex[:8]}")  # guaranteed unique — name has a unique constraint
     display_name = kwargs.get('display_name', fake.word())
+    display_name_ar = kwargs.get('display_name_ar', fake.word())
+    display_name_fr = kwargs.get('display_name_fr', fake.word())
     icon_name = kwargs.get('icon_name', fake.word())
     parent_id = kwargs.get('parent_id', None)
-    trade_category = TradeCategory(name=name, display_name=display_name, icon_name=icon_name, parent_id=parent_id)
+    trade_category = TradeCategory(
+        name=name,
+        display_name=display_name,
+        display_name_ar=display_name_ar,
+        display_name_fr=display_name_fr,
+        icon_name=icon_name,
+        parent_id=parent_id,
+    )
     async_session.add(trade_category)
     await async_session.commit()
     return trade_category

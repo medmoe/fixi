@@ -37,6 +37,24 @@ class TestTradeCategoryBase:
         schema = TradeCategoryBase(**valid_payload(icon_name=None))
         assert schema.icon_name is None
 
+    def test_display_name_ar_and_fr_default_to_none(self):
+        schema = TradeCategoryBase(**valid_payload())
+        assert schema.display_name_ar is None
+        assert schema.display_name_fr is None
+
+    def test_display_name_ar_and_fr_accept_values(self):
+        schema = TradeCategoryBase(**valid_payload(display_name_ar="سبّاك", display_name_fr="Plombier"))
+        assert schema.display_name_ar == "سبّاك"
+        assert schema.display_name_fr == "Plombier"
+
+    def test_display_name_ar_max_length(self):
+        with pytest.raises(ValidationError):
+            TradeCategoryBase(**valid_payload(display_name_ar="a" * 51))
+
+    def test_display_name_fr_max_length(self):
+        with pytest.raises(ValidationError):
+            TradeCategoryBase(**valid_payload(display_name_fr="a" * 51))
+
     def test_parent_id_defaults_to_none(self):
         schema = TradeCategoryBase(**valid_payload(parent_id=None))
         assert schema.parent_id is None
@@ -105,8 +123,15 @@ class TestTradeCategoryUpdate:
         schema = TradeCategoryUpdate()
         assert schema.name is None
         assert schema.display_name is None
+        assert schema.display_name_ar is None
+        assert schema.display_name_fr is None
         assert schema.icon_name is None
         assert schema.parent_id is None
+
+    def test_partial_update_display_name_ar_only(self):
+        schema = TradeCategoryUpdate(display_name_ar="كهربائي")
+        assert schema.display_name_ar == "كهربائي"
+        assert schema.display_name_fr is None
 
     def test_partial_update_name_only(self):
         schema = TradeCategoryUpdate(name="electrical")

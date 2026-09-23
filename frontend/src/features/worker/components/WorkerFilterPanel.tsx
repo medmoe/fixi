@@ -2,6 +2,7 @@ import React from "react";
 import {useQuery} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {workerApi} from "@/lib";
+import {useLocalizedTradeName} from "@/features/worker/hooks/useLocalizedTradeName";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Switch} from "@/components/ui/switch";
 import {Slider} from "@/components/ui/slider";
@@ -19,6 +20,7 @@ const MAX_RADIUS_KM = 200;
 
 export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
     const {t} = useTranslation("worker");
+    const getTradeName = useLocalizedTradeName();
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useQuery({
         queryKey: ["trade-categories"],
         queryFn: workerApi.getTrades,
@@ -64,7 +66,7 @@ export const WorkerFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange
                                     }
                                 }}
                             >
-                                {category.display_name}
+                                {getTradeName(category)}
                             </Badge>
                         ))}
                     </div>

@@ -53,6 +53,34 @@ class TestTradeCategory:
 
 
     @pytest.mark.asyncio
+    async def test_create_trade_category_with_translations(self, async_session: AsyncSession):
+        """ Test creating a trade category with Arabic and French display names"""
+        trade_category = TradeCategory(
+            name="electrician",
+            display_name="Electrician",
+            display_name_ar="كهربائي",
+            display_name_fr="Électricien",
+            icon_name="bolt",
+        )
+        async_session.add(trade_category)
+        await async_session.commit()
+        await async_session.refresh(trade_category)
+
+        assert trade_category.display_name_ar == "كهربائي"
+        assert trade_category.display_name_fr == "Électricien"
+
+    @pytest.mark.asyncio
+    async def test_translations_default_to_none(self, async_session: AsyncSession):
+        """ display_name_ar/display_name_fr are optional -- a category can exist without a translation yet"""
+        trade_category = TradeCategory(name="plumber", display_name="Plumber", icon_name="wrench")
+        async_session.add(trade_category)
+        await async_session.commit()
+        await async_session.refresh(trade_category)
+
+        assert trade_category.display_name_ar is None
+        assert trade_category.display_name_fr is None
+
+    @pytest.mark.asyncio
     async def test_create_sub_trade_category(self, async_session: AsyncSession):
         trade_category_parent = TradeCategory(name="plumber", display_name="Plumber", icon_name="wrench")
         async_session.add(trade_category_parent)

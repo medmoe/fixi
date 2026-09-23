@@ -57,7 +57,7 @@ describe('JobDetailPage', () => {
         });
 
         expect(screen.getByText('open')).toBeInTheDocument();
-        expect(screen.getByText('plumbing')).toBeInTheDocument();
+        expect(screen.getByText('Plumbing')).toBeInTheDocument();
         expect(screen.getByText('New York, NY')).toBeInTheDocument();
         expect(screen.getByText('$75.00 - $200.00')).toBeInTheDocument();
         expect(screen.getByText(/Kitchen sink has been leaking under the cabinet for two days. Need urgent repair./)).toBeInTheDocument();
