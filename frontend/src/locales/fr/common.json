@@ -26,5 +26,9 @@
     "confirmDescription": "Vous serez déconnecté et redirigé vers la page de connexion.",
     "cancel": "Annuler",
     "loggingOut": "Déconnexion en cours..."
+  },
+  "passwordInput": {
+    "show": "Afficher le mot de passe",
+    "hide": "Masquer le mot de passe"
   }
 }
