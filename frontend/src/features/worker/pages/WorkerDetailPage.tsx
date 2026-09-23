@@ -10,6 +10,7 @@ import {Separator} from "@/components/ui/separator";
 import {useWorkerProfilePublic} from "@/features/worker";
 import {useLocalizedTradeName} from "@/features/worker/hooks/useLocalizedTradeName";
 import {ReviewsSection} from "@/features/review";
+import {useFormatCurrency, useFormatNumber} from "@/lib/hooks/useFormatters";
 
 const getInitials = (name: string): string =>
     name
@@ -26,6 +27,8 @@ export const WorkerDetailPage: React.FC = () => {
     const id = Number(workerId);
 
     const { data: profile, isLoading, isError } = useWorkerProfilePublic(id);
+    const formatCurrency = useFormatCurrency();
+    const formatNumber = useFormatNumber();
 
     if (isLoading) {
         return (
@@ -87,7 +90,7 @@ export const WorkerDetailPage: React.FC = () => {
                         <Star className="h-4 w-4" aria-hidden="true" />
                         <span>
                             {profile.average_rating !== null
-                                ? t("workerDetailPage.reviewCount", {rating: Number(profile.average_rating).toFixed(1), count: profile.review_count})
+                                ? t("workerDetailPage.reviewCount", {rating: formatNumber(Number(profile.average_rating), {minimumFractionDigits: 1, maximumFractionDigits: 1}), count: profile.review_count})
                                 : t("shared.newRating")}
                         </span>
                         {profile.years_of_experience !== null && (
@@ -129,7 +132,7 @@ export const WorkerDetailPage: React.FC = () => {
                 {profile.hourly_rate !== null && (
                     <div>
                         <p className="text-xs text-muted-foreground">{t("workerDetailPage.hourlyRateLabel")}</p>
-                        <p className="font-medium">{t("workerDetailPage.hourlyRateValue", {rate: Number(profile.hourly_rate).toFixed(2)})}</p>
+                        <p className="font-medium">{t("workerDetailPage.hourlyRateValue", {rate: formatCurrency(Number(profile.hourly_rate))})}</p>
                     </div>
                 )}
                 {profile.service_radius_km !== null && (

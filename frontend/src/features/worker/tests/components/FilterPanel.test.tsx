@@ -81,12 +81,12 @@ describe("FilterPanel", () => {
 
     it("renders the hourly rate range label with defaults", () => {
         renderPanel();
-        expect(screen.getByText(/hourly rate: \$0 – \$500/i)).toBeInTheDocument();
+        expect(screen.getByText(/hourly rate: \$0\.00 – \$500\.00/i)).toBeInTheDocument();
     });
 
     it("renders the hourly rate range label with active filter values", () => {
         renderPanel({min_hourly_rate: 50, max_hourly_rate: 200});
-        expect(screen.getByText(/hourly rate: \$50 – \$200/i)).toBeInTheDocument();
+        expect(screen.getByText(/hourly rate: \$50\.00 – \$200\.00/i)).toBeInTheDocument();
     });
 
     // ------------------------------------------------------------------ //

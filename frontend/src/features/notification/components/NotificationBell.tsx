@@ -18,6 +18,7 @@ import {useMarkAllNotificationsRead} from '../hooks/useMarkAllNotificationsRead'
 import {useMarkNotificationRead} from '../hooks/useMarkNotificationRead'
 import {usePushRegistration} from '../hooks/usePushRegistration'
 import {getLocalizedNotificationText} from '../utils/getLocalizedNotificationText'
+import {useFormatDate} from '@/lib/hooks/useFormatters'
 
 const RECENT_NOTIFICATIONS_LIMIT = 10
 
@@ -33,6 +34,7 @@ export const NotificationBell: React.FC = () => {
     // Arabic- or English-reading user saw French notification text no
     // matter what the rest of the app was in.
     const {t, i18n} = useTranslation('notification')
+    const formatDate = useFormatDate()
 
     const {data: unreadData} = useNotifications({unreadOnly: true, itemsPerPage: 1})
     const {data, isLoading} = useNotifications({itemsPerPage: RECENT_NOTIFICATIONS_LIMIT})
@@ -116,7 +118,7 @@ export const NotificationBell: React.FC = () => {
                                 </div>
                                 <span className="text-xs text-muted-foreground">{body}</span>
                                 <span className="text-[10px] text-muted-foreground">
-                                    {new Date(notification.created_at).toLocaleString()}
+                                    {formatDate(notification.created_at, {dateStyle: 'medium', timeStyle: 'short'})}
                                 </span>
                             </DropdownMenuItem>
                         )

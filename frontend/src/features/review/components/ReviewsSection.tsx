@@ -13,6 +13,7 @@ import {
     useWorkerReviewEligibility,
     useWorkerReviews,
 } from "@/features/review";
+import {useFormatNumber} from "@/lib/hooks/useFormatters";
 
 interface ReviewsSectionProps {
     workerProfileId: number;
@@ -20,6 +21,7 @@ interface ReviewsSectionProps {
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({workerProfileId}) => {
     const {t} = useTranslation("review");
+    const formatNumber = useFormatNumber();
     const {isAuthenticated} = useAuth();
     const {reviews, meta, isLoading, isError, hasMore, loadMore, isFetchingNextPage} = useWorkerReviews(workerProfileId);
     // Auth-gated and independent of the query above — the rest of the
@@ -56,7 +58,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({workerProfileId})
                 <div className="flex items-center gap-2">
                     <RatingStars rating={averageRating ?? 0} size="lg"/>
                     <span className="text-2xl font-semibold">
-                        {averageRating !== null ? averageRating.toFixed(1) : "—"}
+                        {averageRating !== null ? formatNumber(averageRating, {minimumFractionDigits: 1, maximumFractionDigits: 1}) : "—"}
                     </span>
                 </div>
                 <span className="text-sm text-muted-foreground">

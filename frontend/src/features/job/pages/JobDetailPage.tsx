@@ -13,6 +13,7 @@ import {useAuth} from '@/features/auth';
 import {useUser} from '@/features/user';
 import {useLocalizedTradeName} from '@/features/worker/hooks/useLocalizedTradeName';
 import {ReviewCard} from '@/features/review';
+import {useFormatCurrency, useFormatDate} from '@/lib/hooks/useFormatters';
 
 const statusColors: Record<JobStatus, string> = {
     open: 'bg-green-100 text-green-800',
@@ -24,6 +25,8 @@ const statusColors: Record<JobStatus, string> = {
 
 export const JobDetailPage: React.FC = () => {
     const {t} = useTranslation('job');
+    const formatCurrency = useFormatCurrency();
+    const formatDate = useFormatDate();
     const getTradeName = useLocalizedTradeName();
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -110,14 +113,14 @@ export const JobDetailPage: React.FC = () => {
                 {(job.budget_min || job.budget_max) && (
                     <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4"/>
-                        {job.budget_min && `$${job.budget_min}`}
+                        {job.budget_min && formatCurrency(Number(job.budget_min))}
                         {job.budget_min && job.budget_max && ' - '}
-                        {job.budget_max && `$${job.budget_max}`}
+                        {job.budget_max && formatCurrency(Number(job.budget_max))}
                     </div>
                 )}
                 <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4"/>
-                    {t('jobDetailPage.postedOn', {date: new Date(job.created_at).toLocaleDateString()})}
+                    {t('jobDetailPage.postedOn', {date: formatDate(job.created_at)})}
                 </div>
                 <div className="flex items-center gap-2">
                     <User className="h-4 w-4"/>

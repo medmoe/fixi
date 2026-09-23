@@ -14,6 +14,7 @@ import {useUser} from '@/features/user';
 import {useDeleteJob} from "@/features/job/hooks/useDeleteJob";
 import {JobApplicationsPanel} from "@/features/job/components/JobApplicationsPanel";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,} from "@/components/ui/alert-dialog";
+import {useFormatCurrency, useFormatDate} from "@/lib/hooks/useFormatters";
 
 const statusColors: Record<JobStatus, string> = {
     open: 'bg-green-100 text-green-800',
@@ -25,6 +26,8 @@ const statusColors: Record<JobStatus, string> = {
 
 export const MyJobsPage: React.FC = () => {
     const {t} = useTranslation('job');
+    const formatCurrency = useFormatCurrency();
+    const formatDate = useFormatDate();
     const navigate = useNavigate();
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser();
     const {mutate: deleteJob, isPending: isDeleting} = useDeleteJob();
@@ -125,10 +128,10 @@ export const MyJobsPage: React.FC = () => {
                                                 {job.status.replace('_', ' ')}
                                             </Badge>
                                             <span>
-                                                {new Date(job.created_at).toLocaleDateString()}
+                                                {formatDate(job.created_at)}
                                             </span>
                                             {job.budget_min && (
-                                                <span>${job.budget_min}</span>
+                                                <span>{formatCurrency(Number(job.budget_min))}</span>
                                             )}
                                         </div>
                                     </div>

@@ -5,6 +5,7 @@ import {useTranslation} from "react-i18next";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {JobRead, JobsFilterPanel, JobStatus, useGetJobs} from "@/features/job";
+import {useFormatCurrency} from "@/lib/hooks/useFormatters";
 
 const statusColors: Record<JobStatus, string> = {
     open: "bg-green-100 text-green-800",
@@ -16,6 +17,7 @@ const statusColors: Record<JobStatus, string> = {
 
 const JobCard: React.FC<{ job: JobRead }> = ({job}) => {
     const {t} = useTranslation("job");
+    const formatCurrency = useFormatCurrency();
 
     return (
     <Link
@@ -36,7 +38,7 @@ const JobCard: React.FC<{ job: JobRead }> = ({job}) => {
             <div className="flex items-center justify-between text-sm pt-2 border-t text-muted-foreground">
                 <span>
                     {job.budget_min && job.budget_max
-                        ? `$${job.budget_min} – $${job.budget_max}`
+                        ? `${formatCurrency(Number(job.budget_min))} – ${formatCurrency(Number(job.budget_max))}`
                         : t("jobsTab.budgetNotSpecified")}
                 </span>
                 {job.display_location && <span>{job.display_location}</span>}
