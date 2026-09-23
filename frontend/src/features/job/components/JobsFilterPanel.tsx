@@ -2,6 +2,7 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 import {JobFilters, JobStatus} from "@/features/job";
 import {useTrades} from "@/features/worker";
+import {useLocalizedTradeName} from "@/features/worker/hooks/useLocalizedTradeName";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -16,6 +17,7 @@ const STATUS_VALUES: JobStatus[] = ["open", "assigned", "in_progress", "complete
 
 export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange}) => {
     const {t} = useTranslation("job");
+    const getTradeName = useLocalizedTradeName();
     const {data: tradeCategories = [], isLoading: categoriesLoading} = useTrades();
 
     const selectedIds = filters.trade_category_id !== undefined ? [filters.trade_category_id] : [];
@@ -88,7 +90,7 @@ export const JobsFilterPanel: React.FC<FilterPanelProps> = ({filters, onChange})
                                     }
                                 }}
                             >
-                                {category.display_name}
+                                {getTradeName(category)}
                             </Badge>
                         ))}
                     </div>

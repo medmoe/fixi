@@ -4,6 +4,7 @@ import {useTranslation} from "react-i18next";
 import {CheckCircle2, MapPin, Star} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {useLocalizedTradeName} from "../hooks/useLocalizedTradeName";
 import type {WorkerProfileWithTradesRead} from "../types";
 
 interface WorkerCardProps {
@@ -21,6 +22,7 @@ const getInitials = (name: string): string =>
 
 export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) => {
     const {t} = useTranslation("worker");
+    const getTradeName = useLocalizedTradeName();
 
     return (
         <Link
@@ -76,7 +78,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) =>
                     <div className="flex flex-wrap gap-1">
                         {profile.trade_categories.map((wt) => (
                             <Badge key={wt.id} variant="secondary" className="text-xs">
-                                {wt.trade_category?.display_name}
+                                {getTradeName(wt.trade_category)}
                             </Badge>
                         ))}
                     </div>

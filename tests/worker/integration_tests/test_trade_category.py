@@ -37,6 +37,8 @@ class TestGetFlatTradeCategories:
         assert "id" in item
         assert "name" in item
         assert "display_name" in item
+        assert "display_name_ar" in item
+        assert "display_name_fr" in item
         assert "icon_name" in item
         assert "parent_id" in item
         assert "created_at" in item
@@ -54,6 +56,43 @@ class TestGetFlatTradeCategories:
         assert item["name"] == db_category.name
         assert item["display_name"] == db_category.display_name
         assert item["parent_id"] is None
+
+    async def test_returns_arabic_and_french_translations(
+        self,
+        async_client: AsyncClient,
+        async_session: AsyncSession,
+    ):
+        """The endpoint returns all three name variants in one response --
+        the frontend picks the right one client-side, rather than the API
+        resolving a single locale-dependent field (this keeps the existing
+        public 1h cache correct for every language at once)."""
+        await create_test_trade_category(
+            async_session,
+            display_name="Electrician",
+            display_name_ar="كهربائي",
+            display_name_fr="Électricien",
+        )
+        response = await async_client.get(ENDPOINT)
+        item = response.json()[0]
+        assert item["display_name"] == "Electrician"
+        assert item["display_name_ar"] == "كهربائي"
+        assert item["display_name_fr"] == "Électricien"
+
+    async def test_translations_can_be_null(
+        self,
+        async_client: AsyncClient,
+        async_session: AsyncSession,
+    ):
+        await create_test_trade_category(
+            async_session,
+            display_name="Electrician",
+            display_name_ar=None,
+            display_name_fr=None,
+        )
+        response = await async_client.get(ENDPOINT)
+        item = response.json()[0]
+        assert item["display_name_ar"] is None
+        assert item["display_name_fr"] is None
 
     async def test_flat_response_includes_subcategories(
         self,
@@ -132,6 +171,8 @@ class TestGetNestedTradeCategories:
         assert "id" in item
         assert "name" in item
         assert "display_name" in item
+        assert "display_name_ar" in item
+        assert "display_name_fr" in item
         assert "parent_id" in item
         assert "children" in item
         assert isinstance(item["children"], list)

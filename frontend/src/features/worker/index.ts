@@ -3,6 +3,7 @@ export {WorkerSearchPage} from './pages/WorkerSearchPage'
 export {WorkerDetailPage} from './pages/WorkerDetailPage'
 export {
     useAvailabilityToggle,
+    useLocalizedTradeName,
     useTrades,
     useUpdateWorkerProfile,
     useUploadAvatar,
