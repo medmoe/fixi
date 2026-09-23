@@ -91,7 +91,7 @@ export const MyJobsPage: React.FC = () => {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{t('myJobsPage.heading')}</h1>
                 <Button onClick={() => navigate('create')}>
-                    <Plus className="mr-2 h-4 w-4"/>
+                    <Plus className="me-2 h-4 w-4"/>
                     {t('myJobsPage.postNewJob')}
                 </Button>
             </div>
@@ -102,7 +102,7 @@ export const MyJobsPage: React.FC = () => {
                     <CardContent className="p-8 text-center text-muted-foreground">
                         <p className="mb-4">{t('myJobsPage.emptyState')}</p>
                         <Button onClick={() => navigate('create')} variant="outline">
-                            <Plus className="mr-2 h-4 w-4"/>
+                            <Plus className="me-2 h-4 w-4"/>
                             {t('myJobsPage.postFirstJob')}
                         </Button>
                     </CardContent>
@@ -197,7 +197,7 @@ export const MyJobsPage: React.FC = () => {
                         >
                             {isDeleting ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    <Loader2 className="me-2 h-4 w-4 animate-spin"/>
                                     {t('myJobsPage.deleting')}
                                 </>
                             ) : (

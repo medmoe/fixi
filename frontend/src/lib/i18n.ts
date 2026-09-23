@@ -40,6 +40,14 @@ import user_en from '@/locales/en/user.json'
 export const SUPPORTED_LANGUAGES = ['fr', 'ar', 'en'] as const
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 
+// Only `ar` reads right-to-left among the languages this app supports.
+// Exported standalone (rather than inlined in the listener below) so the
+// dir-resolution logic is unit-testable without needing a live i18n
+// instance or a DOM.
+const RTL_LANGUAGES: ReadonlySet<string> = new Set(['ar'])
+export const getDirection = (language: string): 'rtl' | 'ltr' =>
+    RTL_LANGUAGES.has(language) ? 'rtl' : 'ltr'
+
 // Namespaces are per-feature (see PHASE_7_I18N_RTL_ISSUES.md Issue 1's
 // "namespaced by feature" task). Add a namespace here (and a matching
 // src/locales/{ar,fr,en}/<name>.json triple) as each feature's strings get
@@ -84,8 +92,10 @@ void i18n
         // "wrong" language.
         fallbackLng: 'fr',
         detection: {
-            // No `htmlTag` here on purpose -- setting `dir` on <html> is
-            // RTL layout switching, which is Issue 3's job, not this one.
+            // No `htmlTag` here on purpose -- the LanguageDetector plugin's
+            // own htmlTag setter only ever writes `lang`, never `dir`. The
+            // `languageChanged` listener below is the single place that
+            // sets both, for every language change regardless of source.
             order: ['localStorage', 'navigator'],
             caches: ['localStorage'],
         },
@@ -98,11 +108,15 @@ void i18n
 
 // Single place that reacts to every language change, regardless of what
 // triggered it (detector's initial guess, useLanguageSync on login,
-// useChangeLanguage from the switcher) -- keeps <html lang> accurate for
-// accessibility/SEO. Deliberately does NOT touch `dir` -- RTL layout
-// switching is Issue 3's job, not this one.
+// useChangeLanguage from the switcher) -- keeps <html lang> AND <html dir>
+// accurate together, so there's never a frame where one updates without
+// the other. `dir` is what actually flips the whole layout: Tailwind's
+// logical-property utilities (ms-/me-/ps-/pe-/start-/end-/text-start/
+// text-end/rounded-s-/rounded-e-) and `rtl:`/`ltr:` variants both key off
+// this attribute on an ancestor.
 i18n.on('languageChanged', (language) => {
     document.documentElement.lang = language
+    document.documentElement.dir = getDirection(language)
 })
 
 export default i18n

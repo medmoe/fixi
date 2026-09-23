@@ -56,7 +56,7 @@ export const NotificationBell: React.FC = () => {
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-[10px] justify-center"
+                            className="absolute -top-1 -end-1 h-4 min-w-4 px-1 rounded-full text-[10px] justify-center"
                             aria-label={t('bell.unreadBadge', {count: unreadCount})}
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}

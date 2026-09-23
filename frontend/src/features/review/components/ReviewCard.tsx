@@ -79,7 +79,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({jobId}) => {
                         maxLength={MAX_COMMENT_LENGTH}
                         className="min-h-24 resize-none"
                     />
-                    <p aria-live="polite" className="text-right text-xs text-muted-foreground">
+                    <p aria-live="polite" className="text-end text-xs text-muted-foreground">
                         {comment.length}/{MAX_COMMENT_LENGTH}
                     </p>
                 </div>

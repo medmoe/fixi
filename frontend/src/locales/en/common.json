@@ -26,5 +26,9 @@
     "confirmDescription": "You will be logged out and redirected to the login page.",
     "cancel": "Cancel",
     "loggingOut": "Logging out..."
+  },
+  "passwordInput": {
+    "show": "Show password",
+    "hide": "Hide password"
   }
 }

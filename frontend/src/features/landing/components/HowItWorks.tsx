@@ -37,7 +37,7 @@ export const HowItWorks = () => {
                         className="relative bg-card border rounded-2xl p-6 shadow-sm flex flex-col gap-4"
                     >
                         <span
-                            className="absolute top-4 right-4 text-5xl font-black text-primary/10 select-none"
+                            className="absolute top-4 end-4 text-5xl font-black text-primary/10 select-none"
                             aria-hidden="true"
                         >
                             {step}
