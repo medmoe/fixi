@@ -1,4 +1,8 @@
 {
+  "role": {
+    "worker": "Professionnel",
+    "customer": "Client"
+  },
   "dashboard": {
     "loading": "Chargement de votre tableau de bord...",
     "errorTitle": "Échec de synchronisation du système",

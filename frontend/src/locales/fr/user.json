@@ -1,0 +1,13 @@
+{
+  "locationSearchField": {
+    "label": "Localisation",
+    "placeholder": "Rechercher une ville ou une adresse",
+    "clearAriaLabel": "Effacer la localisation",
+    "suggestionsAriaLabel": "Suggestions de localisation",
+    "searching": "Recherche de lieux...",
+    "searchError": "Impossible de rechercher des lieux pour le moment. Veuillez réessayer.",
+    "noResults": "Aucun lieu trouvé. Essayez une autre recherche.",
+    "coordinatesLabel": "Coordonnées : {{lat}}, {{lon}}",
+    "unconfirmedHint": "Sélectionnez un lieu dans les suggestions pour l'enregistrer."
+  }
+}

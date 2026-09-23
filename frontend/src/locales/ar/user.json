@@ -1,0 +1,13 @@
+{
+  "locationSearchField": {
+    "label": "الموقع",
+    "placeholder": "ابحث عن مدينة أو عنوان",
+    "clearAriaLabel": "مسح الموقع",
+    "suggestionsAriaLabel": "اقتراحات الموقع",
+    "searching": "جارٍ البحث عن المواقع...",
+    "searchError": "تعذر البحث عن المواقع في الوقت الحالي. يرجى المحاولة مرة أخرى.",
+    "noResults": "لم يتم العثور على مواقع. جرّب بحثًا مختلفًا.",
+    "coordinatesLabel": "الإحداثيات: {{lat}}، {{lon}}",
+    "unconfirmedHint": "اختر موقعًا من الاقتراحات لحفظه."
+  }
+}

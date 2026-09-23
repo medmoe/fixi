@@ -28,6 +28,9 @@ import review_en from '@/locales/en/review.json'
 import customer_ar from '@/locales/ar/customer.json'
 import customer_fr from '@/locales/fr/customer.json'
 import customer_en from '@/locales/en/customer.json'
+import user_ar from '@/locales/ar/user.json'
+import user_fr from '@/locales/fr/user.json'
+import user_en from '@/locales/en/user.json'
 
 // `ar`/`fr` are the languages Phase 7 targets (see
 // documentation/PHASE_7_I18N_RTL_ISSUES.md); `en` was added after, as a
@@ -41,7 +44,7 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
 // "namespaced by feature" task). Add a namespace here (and a matching
 // src/locales/{ar,fr,en}/<name>.json triple) as each feature's strings get
 // extracted (Issue 2).
-export const NAMESPACES = ['common', 'notification', 'landing', 'auth', 'account', 'worker', 'job', 'review', 'customer'] as const
+export const NAMESPACES = ['common', 'notification', 'landing', 'auth', 'account', 'worker', 'job', 'review', 'customer', 'user'] as const
 
 // A missing key must never reach a real user as a raw i18next key (Issue 1
 // acceptance criteria) -- but hiding it in dev would make missing
@@ -66,9 +69,9 @@ void i18n
     .use(initReactI18next)
     .init({
         resources: {
-            fr: {common: common_fr, notification: notification_fr, landing: landing_fr, auth: auth_fr, account: account_fr, worker: worker_fr, job: job_fr, review: review_fr, customer: customer_fr},
-            ar: {common: common_ar, notification: notification_ar, landing: landing_ar, auth: auth_ar, account: account_ar, worker: worker_ar, job: job_ar, review: review_ar, customer: customer_ar},
-            en: {common: common_en, notification: notification_en, landing: landing_en, auth: auth_en, account: account_en, worker: worker_en, job: job_en, review: review_en, customer: customer_en},
+            fr: {common: common_fr, notification: notification_fr, landing: landing_fr, auth: auth_fr, account: account_fr, worker: worker_fr, job: job_fr, review: review_fr, customer: customer_fr, user: user_fr},
+            ar: {common: common_ar, notification: notification_ar, landing: landing_ar, auth: auth_ar, account: account_ar, worker: worker_ar, job: job_ar, review: review_ar, customer: customer_ar, user: user_ar},
+            en: {common: common_en, notification: notification_en, landing: landing_en, auth: auth_en, account: account_en, worker: worker_en, job: job_en, review: review_en, customer: customer_en, user: user_en},
         },
         ns: NAMESPACES,
         defaultNS: 'common',

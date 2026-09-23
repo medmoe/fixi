@@ -76,8 +76,8 @@ export const WorkerDashboardPage: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="font-medium text-sm truncate">{user?.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                                {user?.role_type}
+                            <p className="text-xs text-muted-foreground">
+                                {t(`role.${user?.role_type}`)}
                             </p>
                         </div>
                     </div>

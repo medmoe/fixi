@@ -1,4 +1,8 @@
 {
+  "role": {
+    "worker": "Worker",
+    "customer": "Customer"
+  },
   "dashboard": {
     "loading": "Loading your dashboard...",
     "errorTitle": "System Synchronization Failure",
