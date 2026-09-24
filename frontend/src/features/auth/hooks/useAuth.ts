@@ -1,5 +1,6 @@
 import {useCallback} from 'react'
 import {useNavigate} from 'react-router-dom'
+import {useTranslation} from 'react-i18next'
 import {useMutation, useQueryClient} from '@tanstack/react-query'
 import {authApi} from '@/lib/api/authApi'
 import {toast} from 'sonner'
@@ -8,27 +9,10 @@ import type {LoginPayload, LoginResponse} from '@/features/auth/types/auth.types
 import {clearCredentials, setCredentials} from "@/features/auth/store/authSlice";
 import {useAppDispatch, useAppSelector} from "@/store/hooks"
 import {USER_QUERY_KEY} from "@/features/user/hooks/useUser";
+import {formatApiError} from './formatApiError'
 
-const formatApiError = (error: any): string => {
-    const detail = error?.response?.data?.detail
-
-    if (Array.isArray(detail)) {
-        if (detail.length === 0) {
-            return 'Something went wrong. Please try again.'
-        }
-        return detail
-            .map((err: any) => err.msg)
-            .filter(Boolean)   // ← skip empty/undefined msgs
-            .join('. ')
-    }
-
-    if (typeof detail === 'string' && detail.length > 0) {
-        return detail
-    }
-
-    return 'Something went wrong. Please try again.'
-}
 export const useAuth = () => {
+    const {t} = useTranslation('auth')
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const dispatch = useAppDispatch()
@@ -42,11 +26,11 @@ export const useAuth = () => {
             // Store access token in memory (most secure — not in localStorage/sessionStorage)
             setAccessToken(data.access_token)
             dispatch(setCredentials(data.access_token))
-            toast.success('Welcome back!')
+            toast.success(t('toasts.welcomeBack'))
             navigate('/dashboard')
         },
         onError: (error: any) => {
-            toast.error(formatApiError(error))
+            toast.error(formatApiError(error, t))
         },
     })
 
@@ -65,7 +49,7 @@ export const useAuth = () => {
             navigate('/login')
         },
         onError: () => {
-            toast.error('Logout failed — cleared local session anyway.')
+            toast.error(t('toasts.logoutFailed'))
         },
     })
 
