@@ -6,6 +6,7 @@ import {Menu, Zap} from 'lucide-react'
 import {useTranslation} from 'react-i18next'
 import {Button} from '@/components/ui/button'
 import {Sheet, SheetClose, SheetContent, SheetTrigger,} from '@/components/ui/sheet'
+import {LanguageSwitcher} from '@/features/i18n'
 
 export const Navbar = () => {
     const {t} = useTranslation('landing')
@@ -29,6 +30,7 @@ export const Navbar = () => {
 
                 {/* Desktop nav */}
                 <div className="hidden md:flex items-center gap-3">
+                    <LanguageSwitcher/>
                     <Button variant="ghost" asChild>
                         <Link to="/login">{t('navbar.logIn')}</Link>
                     </Button>
@@ -51,6 +53,9 @@ export const Navbar = () => {
                     </SheetTrigger>
                     <SheetContent side="right" className="w-64">
                         <div className="flex flex-col gap-4 mt-8">
+                            <div className="flex justify-center">
+                                <LanguageSwitcher/>
+                            </div>
                             <SheetClose asChild>
                                 <Button variant="ghost" className="w-full" asChild>
                                     <Link to="/login">{t('navbar.logIn')}</Link>

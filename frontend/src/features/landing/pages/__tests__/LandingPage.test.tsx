@@ -1,15 +1,11 @@
-import {render, screen} from '@testing-library/react';
+import {screen} from '@testing-library/react';
 import {describe, expect, it} from "vitest";
 import {LandingPage} from '@/features/landing';
-import {MemoryRouter} from 'react-router-dom';
+import {renderWithProviders} from '@/test/renderWithProviders';
 
 describe('LandingPage Integration', () => {
     it('renders the layout landmarks correctly', () => {
-        render(
-            <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
-                <LandingPage/>
-            </MemoryRouter>
-        );
+        renderWithProviders(<LandingPage/>);
 
         expect(screen.getAllByRole('navigation')).toHaveLength(2);
         expect(screen.getByRole('navigation', {name: /main navigation/i})).toBeInTheDocument();

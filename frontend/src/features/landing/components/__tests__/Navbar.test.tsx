@@ -1,8 +1,8 @@
 
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { MemoryRouter } from "react-router-dom"
+import { renderWithProviders } from "@/test/renderWithProviders"
 
 import { Navbar } from "../Navbar"
 
@@ -10,10 +10,19 @@ import { Navbar } from "../Navbar"
 // Mocks
 // --------------------
 
-vi.mock("lucide-react", () => ({
-  Menu: () => <svg data-testid="menu-icon" />,
-  Zap: () => <svg data-testid="zap-icon" />,
-}))
+// Partial mock (importOriginal) rather than a full replacement -- Navbar now
+// pulls in LanguageSwitcher, whose dependency chain (useChangeLanguage ->
+// features/user -> features/auth -> features/job) reaches other lucide
+// icons this file doesn't otherwise care about. A full replacement here
+// would throw for any of those instead of just rendering the real icon.
+vi.mock("lucide-react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("lucide-react")>()
+  return {
+    ...actual,
+    Menu: () => <svg data-testid="menu-icon" />,
+    Zap: () => <svg data-testid="zap-icon" />,
+  }
+})
 
 vi.mock("@/components/ui/button", () => ({
   Button: ({ asChild, children, ...props }: any) => {
@@ -38,12 +47,7 @@ vi.mock("@/components/ui/sheet", () => ({
 // Helpers
 // --------------------
 
-const renderNavbar = () =>
-  render(
-    <MemoryRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
-      <Navbar />
-    </MemoryRouter>,
-  )
+const renderNavbar = () => renderWithProviders(<Navbar />)
 
 // --------------------
 // Tests
