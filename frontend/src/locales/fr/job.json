@@ -147,5 +147,28 @@
     "label": "Métier",
     "loading": "Chargement des métiers...",
     "removeAriaLabel": "Supprimer {{name}}"
+  },
+  "toasts": {
+    "applicationSubmitted": "Candidature envoyée !",
+    "applicationSubmitFailed": "Échec de l'envoi de la candidature",
+    "alreadyApplied": "Vous avez déjà postulé à cette mission",
+    "jobCompleted": "Mission terminée !",
+    "jobMarkedComplete": "Marquée comme terminée — en attente de l'autre partie.",
+    "completeJobFailed": "Échec du marquage de la mission comme terminée",
+    "assignmentConfirmed": "Affectation confirmée !",
+    "confirmApplicationFailed": "Échec de la confirmation de l'affectation",
+    "applicationAlreadyAccepted": "Une autre candidature est déjà acceptée pour cette mission",
+    "jobCreated": "Mission créée avec succès",
+    "jobCreateFailed": "Échec de la création de la mission",
+    "tradeCategoryNotFound": "Cette catégorie de métier n'existe pas",
+    "maxActiveJobsReached": "Nombre maximal de missions actives atteint",
+    "jobDeleted": "Mission supprimée avec succès",
+    "jobDeleteFailed": "Échec de la suppression de la mission",
+    "jobStarted": "Mission démarrée !",
+    "jobStartFailed": "Échec du démarrage de la mission",
+    "jobUpdated": "Mission mise à jour avec succès",
+    "jobUpdateFailed": "Échec de la mise à jour de la mission",
+    "applicationWithdrawn": "Candidature retirée",
+    "withdrawApplicationFailed": "Échec du retrait de la candidature"
   }
 }

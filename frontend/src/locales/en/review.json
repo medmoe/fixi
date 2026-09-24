@@ -36,5 +36,12 @@
   },
   "starRating": {
     "ariaLabel": "Rating"
+  },
+  "toasts": {
+    "reviewSubmitted": "Review submitted!",
+    "reviewSubmitFailed": "Failed to submit review",
+    "notAParticipant": "You are not a participant in this job.",
+    "jobNotComplete": "This job is not yet complete.",
+    "alreadyReviewed": "You have already reviewed this job."
   }
 }

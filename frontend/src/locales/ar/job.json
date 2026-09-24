@@ -151,5 +151,28 @@
     "label": "الحرفة",
     "loading": "جارٍ تحميل الحرف...",
     "removeAriaLabel": "إزالة {{name}}"
+  },
+  "toasts": {
+    "applicationSubmitted": "تم إرسال الطلب!",
+    "applicationSubmitFailed": "فشل إرسال طلب التقديم",
+    "alreadyApplied": "لقد تقدمت بالفعل لهذه المهمة",
+    "jobCompleted": "تم إنجاز المهمة!",
+    "jobMarkedComplete": "تم وضع علامة الإنجاز — بانتظار الطرف الآخر.",
+    "completeJobFailed": "فشل وضع علامة الإنجاز على المهمة",
+    "assignmentConfirmed": "تم تأكيد التكليف!",
+    "confirmApplicationFailed": "فشل تأكيد التكليف",
+    "applicationAlreadyAccepted": "تم قبول طلب آخر لهذه المهمة بالفعل",
+    "jobCreated": "تم إنشاء المهمة بنجاح",
+    "jobCreateFailed": "فشل إنشاء المهمة",
+    "tradeCategoryNotFound": "فئة الحرفة غير موجودة",
+    "maxActiveJobsReached": "تم بلوغ الحد الأقصى لعدد المهام النشطة",
+    "jobDeleted": "تم حذف المهمة بنجاح",
+    "jobDeleteFailed": "فشل حذف المهمة",
+    "jobStarted": "تم بدء المهمة!",
+    "jobStartFailed": "فشل بدء المهمة",
+    "jobUpdated": "تم تحديث المهمة بنجاح",
+    "jobUpdateFailed": "فشل تحديث المهمة",
+    "applicationWithdrawn": "تم سحب الطلب",
+    "withdrawApplicationFailed": "فشل سحب الطلب"
   }
 }

@@ -121,5 +121,18 @@
     "experienceLabel": "Experience",
     "yearsSuffix": "{{count}} years",
     "contactWorker": "Contact worker (coming soon)"
+  },
+  "toasts": {
+    "tradesUpdated": "Trades updated successfully",
+    "tradesUpdateFailed": "Failed to update trade categories",
+    "tradeRemoved": "Trade removed successfully",
+    "tradeRemoveFailed": "Failed to remove trade category",
+    "nowAvailable": "You are now available",
+    "nowUnavailable": "You are now unavailable",
+    "availabilityUpdateFailed": "Availability update failed",
+    "profileUpdated": "Profile updated successfully",
+    "profileUpdateFailed": "Failed to update worker profile",
+    "avatarUploaded": "Avatar uploaded successfully",
+    "avatarUploadFailed": "Failed to upload avatar"
   }
 }

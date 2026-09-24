@@ -34,5 +34,13 @@
   "customerProfile": {
     "heading": "Profil client",
     "subtitle": "Bientôt disponible — gérez votre adresse, vos préférences et les détails de votre compte."
+  },
+  "toasts": {
+    "passwordChanged": "Mot de passe modifié avec succès",
+    "passwordChangeFailed": "Échec de la modification du mot de passe",
+    "accountDeactivated": "Compte désactivé",
+    "accountDeactivateFailed": "Échec de la désactivation du compte",
+    "accountUpdated": "Compte mis à jour avec succès",
+    "accountUpdateFailed": "Échec de la mise à jour du compte"
   }
 }

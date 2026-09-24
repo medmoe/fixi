@@ -1,9 +1,11 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useTranslation} from 'react-i18next';
 import {workerApi} from '@/lib/api/workerApi.ts';
 import {UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from "@/features/worker/types/worker.types.ts";
 import {toast} from 'sonner';
 
 export const useUpdateWorkerProfile = () => {
+    const {t} = useTranslation('worker');
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -19,10 +21,10 @@ export const useUpdateWorkerProfile = () => {
                     }
                 }
             )
-            toast.success("Profile updated successfully")
+            toast.success(t("toasts.profileUpdated"))
         },
         onError: () => {
-            toast.error("Failed to update worker profile")
+            toast.error(t("toasts.profileUpdateFailed"))
         }
     })
 }

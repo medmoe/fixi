@@ -1,11 +1,14 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useTranslation} from "react-i18next";
 import {JobRead, JobUpdateRequest} from "@/features/job";
 import {jobApi} from "@/lib";
 import {toast} from "sonner";
 import {AxiosError} from "axios";
+import {formatApiError} from "@/lib/api/formatApiError";
 
 
 export const useUpdateJob = () => {
+    const {t} = useTranslation("job");
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -13,11 +16,10 @@ export const useUpdateJob = () => {
         onSuccess: (updatedJob: JobRead) => {
             queryClient.invalidateQueries({queryKey: ['jobs']})
             queryClient.setQueryData(['job', updatedJob.id], updatedJob);
-            toast.success('Job updated successfully');
+            toast.success(t('toasts.jobUpdated'));
         },
         onError: (error: AxiosError<{ detail: string }>) => {
-            const message = error.response?.data?.detail ?? 'Failed to update job';
-            toast.error(message);
+            toast.error(formatApiError(error, t, {}, 'toasts.jobUpdateFailed'));
         }
     });
 };

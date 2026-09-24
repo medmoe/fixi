@@ -1,9 +1,11 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useTranslation} from "react-i18next";
 import {workerApi} from "@/lib/api/workerApi";
 import {WorkerProfileWithTradesRead} from '@/features/worker'
 import {toast} from 'sonner';
 
 export const useAvailabilityToggle = () => {
+    const {t} = useTranslation("worker");
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -44,12 +46,12 @@ export const useAvailabilityToggle = () => {
 
             toast.success(
                 updatedProfile.is_available
-                    ? "You are now available"
-                    : "You are now unavailable"
+                    ? t("toasts.nowAvailable")
+                    : t("toasts.nowUnavailable")
             );
         },
 
-        onError: (err, newAvailability, context) => {
+        onError: (_err, _newAvailability, context) => {
             if (context?.previousProfile) {
                 queryClient.setQueryData(
                     ['workerProfile'],
@@ -57,9 +59,7 @@ export const useAvailabilityToggle = () => {
                 );
             }
 
-            toast.error("Status update failed", {
-                description: `Failed to update availability, please try again. ${newAvailability}::${err}`,
-            });
+            toast.error(t("toasts.availabilityUpdateFailed"));
         },
     });
 };
