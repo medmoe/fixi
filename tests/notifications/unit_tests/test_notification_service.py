@@ -329,9 +329,17 @@ class TestNotificationServiceInAppDelivery:
 
 @pytest.mark.unit
 class TestNotificationServiceConfigDrivenDefaults:
-    async def test_email_channel_defaults_to_the_noop_provider_when_not_overridden(self, async_session):
+    async def test_email_channel_defaults_to_the_noop_provider_when_not_overridden(self, async_session, monkeypatch):
         """No provider passed in -- resolution falls back to
-        NOTIFICATION_EMAIL_PROVIDER (default: noop), never a concrete SDK."""
+        NOTIFICATION_EMAIL_PROVIDER (default: noop), never a concrete SDK.
+
+        Explicitly pinned to "noop" here rather than relying on the
+        AppSettings default: NOTIFICATION_EMAIL_PROVIDER is read from the
+        real `.env` (not `.env.test`, see core/config.py), so on any machine
+        where `.env` sets it to "mailjet" for manual email testing, this
+        test would otherwise silently pick that up and fail.
+        """
+        monkeypatch.setattr("src.app.services.notifications.service.settings.NOTIFICATION_EMAIL_PROVIDER", "noop")
         service = NotificationService()
 
         event = NotificationEvent(
