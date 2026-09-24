@@ -2,12 +2,16 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { LoginForm } from '@/features/auth'
+import { LanguageSwitcher } from '@/features/i18n'
 
 export const LoginPage: React.FC = () => {
     const {t} = useTranslation('auth')
 
     return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="absolute top-4 end-4">
+            <LanguageSwitcher/>
+        </div>
         <div className="w-full max-w-md space-y-8">
             <div className="text-center">
                 <h1 className="text-3xl font-bold tracking-tight">{t('loginPage.heading')}</h1>
