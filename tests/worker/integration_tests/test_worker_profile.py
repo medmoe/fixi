@@ -8,9 +8,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.crud_workers_trades import crud_worker_trades
-from src.app.models import WorkerProfile, TradeCategory, SkillLevel
+from src.app.models import SkillLevel, TradeCategory, WorkerProfile
 from src.app.schemas.worker_trade import WorkerTradeCreate
-
 
 # ——————————— Factories ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -29,11 +28,11 @@ def worker_profile_payload(**overrides) -> dict:
 
 class TestGetWorkerProfile:
     async def test_public_get_returns_200(self, async_client: AsyncClient, auth_headers: dict, test_worker_profile: WorkerProfile):
-        response = await async_client.get(f"/api/v1/worker-profile", headers=auth_headers)
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 200
 
     async def test_get_includes_trade_categories_field(self, async_client: AsyncClient, auth_headers: dict, test_worker_profile: WorkerProfile):
-        response = await async_client.get(f"/api/v1/worker-profile", headers=auth_headers)
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 200
         assert "trade_categories" in response.json()
         assert isinstance(response.json()["trade_categories"], list)
@@ -43,7 +42,7 @@ class TestGetWorkerProfile:
         assert response.status_code == 404
 
     async def test_response_shape(self, async_client: AsyncClient, auth_headers: dict, test_worker_profile: WorkerProfile):
-        response = await async_client.get(f"/api/v1/worker-profile", headers=auth_headers)
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert "id" in data
@@ -70,7 +69,7 @@ class TestGetWorkerProfile:
             )
         )
 
-        response = await async_client.get(f"/api/v1/worker-profile", headers=auth_headers)
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data["trade_categories"]) == 1
@@ -83,21 +82,21 @@ class TestGetWorkerProfile:
 
 class TestUpdateWorkerProfile:
     async def test_owner_can_update_returns_200(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, ):
-        response = await async_client.patch(f"/api/v1/worker-profile", json={"bio": "Updated bio text."}, headers=auth_headers)
+        response = await async_client.patch("/api/v1/worker-profile", json={"bio": "Updated bio text."}, headers=auth_headers)
         assert response.status_code == 200
         assert response.json()["bio"] == "Updated bio text."
 
     async def test_other_user_returns_404(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, other_auth_headers: dict):
-        response = await async_client.patch(f"/api/v1/worker-profile", json={"bio": "Trying to hijack."}, headers=other_auth_headers, )
+        response = await async_client.patch("/api/v1/worker-profile", json={"bio": "Trying to hijack."}, headers=other_auth_headers, )
         assert response.status_code == 404
 
     async def test_unauthenticated_returns_401(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, ):
-        response = await async_client.patch(f"/api/v1/worker-profile", json={"bio": "No token."}, )
+        response = await async_client.patch("/api/v1/worker-profile", json={"bio": "No token."}, )
         assert response.status_code == 401
 
     async def test_partial_update_only_changes_sent_fields(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, ):
         original_rate = test_worker_profile.hourly_rate
-        response = await async_client.patch(f"/api/v1/worker-profile", json={"bio": "Only bio changed."}, headers=auth_headers, )
+        response = await async_client.patch("/api/v1/worker-profile", json={"bio": "Only bio changed."}, headers=auth_headers, )
         assert response.status_code == 200
         data = response.json()
         print(data)
@@ -118,7 +117,7 @@ class TestUploadAvatar:
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
 
         fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        response = await async_client.post(f"/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
+        response = await async_client.post("/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
         assert response.status_code == 200
         assert "avatar_url" in response.json()
         assert "avatars/" in response.json()["avatar_url"]
@@ -126,25 +125,87 @@ class TestUploadAvatar:
     async def test_non_owner_returns_404(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, other_auth_headers: dict, monkeypatch: pytest.MonkeyPatch, ):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
         fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-        response = await async_client.post(f"/api/v1/worker-profile/avatar", headers=other_auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
+        response = await async_client.post("/api/v1/worker-profile/avatar", headers=other_auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
         assert response.status_code == 404
 
     async def test_invalid_mime_returns_400(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict):
         # send PDF bytes with PDF content type
         fake_pdf = b"%PDF-1.4 fake pdf content"
-        response = await async_client.post(f"/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("document.pdf", fake_pdf, "application/pdf")})
+        response = await async_client.post("/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("document.pdf", fake_pdf, "application/pdf")})
         assert response.status_code == 400
         assert "Invalid file type" in response.json()["detail"]
 
     async def test_response_contains_avatar_url(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
         fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
-        response = await async_client.post(f"/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")}, )
+        response = await async_client.post("/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")}, )
         assert response.status_code == 200
         url = response.json()["avatar_url"]
         assert url.startswith("http")
         assert "avatars/" in url
         assert str(test_worker_profile.user_id) in url  # _upload_image_file keys the file by user_id, not profile id
+
+
+# ─── TestUploadCniDocument ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+class TestUploadCniDocument:
+    async def test_owner_can_upload_returns_200(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.ensure_private_bucket_exists", MagicMock(return_value=None))
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
+
+        fake_pdf = b"%PDF-1.4 fake cni content"
+        response = await async_client.post("/api/v1/worker-profile/cni-document", headers=auth_headers, files={"file": ("cni.pdf", fake_pdf, "application/pdf")})
+
+        assert response.status_code == 200
+
+    async def test_accepts_images_too(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.ensure_private_bucket_exists", MagicMock(return_value=None))
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
+
+        fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        response = await async_client.post("/api/v1/worker-profile/cni-document", headers=auth_headers, files={"file": ("cni.png", fake_image, "image/png")})
+
+        assert response.status_code == 200
+
+    async def test_non_owner_returns_404(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, other_auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.ensure_private_bucket_exists", MagicMock(return_value=None))
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
+
+        fake_pdf = b"%PDF-1.4 fake cni content"
+        response = await async_client.post("/api/v1/worker-profile/cni-document", headers=other_auth_headers, files={"file": ("cni.pdf", fake_pdf, "application/pdf")})
+
+        assert response.status_code == 404
+
+    async def test_invalid_mime_returns_400(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict):
+        fake_text = b"just some text, not a real document"
+        response = await async_client.post("/api/v1/worker-profile/cni-document", headers=auth_headers, files={"file": ("notes.txt", fake_text, "text/plain")})
+
+        assert response.status_code == 400
+        assert "Invalid file type" in response.json()["detail"]
+
+    async def test_unauthenticated_returns_401(self, async_client: AsyncClient, test_worker_profile: WorkerProfile):
+        fake_pdf = b"%PDF-1.4 fake cni content"
+        response = await async_client.post("/api/v1/worker-profile/cni-document", files={"file": ("cni.pdf", fake_pdf, "application/pdf")})
+
+        assert response.status_code == 401
+
+    async def test_uploads_to_the_private_verification_bucket(self, async_client: AsyncClient, async_session: AsyncSession, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        from src.app.core.config import settings
+
+        upload_mock = MagicMock(return_value=None)
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.ensure_private_bucket_exists", MagicMock(return_value=None))
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", upload_mock)
+
+        fake_pdf = b"%PDF-1.4 fake cni content"
+        response = await async_client.post("/api/v1/worker-profile/cni-document", headers=auth_headers, files={"file": ("cni.pdf", fake_pdf, "application/pdf")})
+
+        assert response.status_code == 200
+        upload_mock.assert_called_once()
+        assert upload_mock.call_args.kwargs["bucket"] == settings.APP_S3_BUCKET_VERIFICATION
+        assert f"cni/{test_worker_profile.user_id}" in upload_mock.call_args.kwargs["key"]
+
+        await async_session.refresh(test_worker_profile)
+        assert test_worker_profile.cni_document_key is not None
 
 
 class TestGetWorkerProfilePublic:

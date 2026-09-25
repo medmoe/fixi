@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from .admin_users import router as admin_users_router
+from .admin_worker_verifications import router as admin_worker_verifications_router
 from .auth import router as auth_v2_router
 from .files import router as files_router
 from .jobs import router as jobs_router
@@ -22,3 +23,4 @@ router.include_router(jobs_router)
 router.include_router(notifications_router)
 router.include_router(worker_billing_router)
 router.include_router(admin_users_router)
+router.include_router(admin_worker_verifications_router)

@@ -97,6 +97,12 @@ class MinIOSettings(BaseSettings):
     APP_S3_ACCESS_KEY: str = config("APP_S3_ACCESS_KEY", default="minioadmin")
     APP_S3_SECRET_KEY: str = config("APP_S3_SECRET_KEY", default="minioadmin")
     APP_S3_BUCKET_UPLOADS: str = config("APP_S3_BUCKET_UPLOADS", default="app-bucket")
+    # Separate from APP_S3_BUCKET_UPLOADS deliberately -- that bucket gets a
+    # public-read policy applied on creation (see MinioClient), which CNI
+    # documents must never have (Issue 5 acceptance criteria). This bucket
+    # is created private (MinioClient.ensure_private_bucket_exists) and only
+    # ever read back through a short-lived presigned URL.
+    APP_S3_BUCKET_VERIFICATION: str = config("APP_S3_BUCKET_VERIFICATION", default="verification-documents")
 
 
 class ClientSideCacheSettings(BaseSettings):

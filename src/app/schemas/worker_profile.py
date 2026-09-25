@@ -36,6 +36,15 @@ class WorkerProfileRead(WorkerProfileBase):
     average_rating: Annotated[Decimal | None, Field(default=None)] = None
     review_count: Annotated[int, Field(default=0)] = 0
     no_show_count: Annotated[int, Field(default=0)] = 0
+    # exclude=True, not just omitted -- FastCRUD's update(..., return_as_model=True)
+    # always RETURNINGs every model column regardless of schema_to_select
+    # (see execute_update_and_return_response), so schema_to_select must
+    # declare every model column or construction itself raises
+    # extra_forbidden. exclude=True keeps this off every serialized
+    # response (public search results included) while still satisfying
+    # that construction -- the raw key is only ever read through
+    # get_verification_document_url's presigned URL.
+    cni_document_key: Annotated[str | None, Field(default=None, exclude=True)] = None
 
 
 class WorkerProfileCreate(WorkerProfileBase):
@@ -67,6 +76,7 @@ class WorkerProfileUpdateInternal(BaseModel):
     is_verified: Annotated[bool | None, Field(default=False)] = None
     is_available: Annotated[bool | None, Field(default=False)] = None
     available_since: Annotated[datetime | None, Field(default=None)] = None
+    cni_document_key: Annotated[str | None, Field(default=None)] = None
 
 
 class WorkerProfileDelete(BaseModel):
@@ -172,3 +182,29 @@ class WorkerProfileFilter(BaseModel):
     def is_geo_search(self) -> bool:
         """True when the caller supplied coordinates and wants a geo-filtered search."""
         return self.latitude is not None and self.longitude is not None
+
+
+#
+# -------------------------------------------------------------------------
+# Admin CNI verification queue (Phase 8 Issue 5)
+# -------------------------------------------------------------------------
+#
+
+class WorkerVerificationQueueRead(BaseModel):
+    """One row in the admin verification queue -- deliberately never
+    includes the raw cni_document_key (see MinioClient.generate_presigned_get_url,
+    fetched through a separate endpoint instead)."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    name: str
+    email: str
+    bio: str | None = None
+    years_of_experience: int | None = None
+
+
+class WorkerVerificationRejectRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: Annotated[str, Field(min_length=1, max_length=1000)]
