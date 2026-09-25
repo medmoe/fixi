@@ -23,9 +23,23 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --------- Final Stage ---------
 FROM python:3.11-slim-bookworm
 
-# Install OS-level library for python-magic
+# Install OS-level library for python-magic, plus WeasyPrint's runtime
+# deps (Pango/Cairo/GDK-Pixbuf do the actual HTML->PDF rendering; weasyprint
+# itself is just cffi bindings onto them) and fonts for invoice PDFs --
+# DejaVu for Latin/French, Amiri for correctly-shaped Arabic Naskh text.
 RUN apt-get update && \
-    apt-get install -y libmagic1 && \
+    apt-get install -y \
+        libmagic1 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libffi8 \
+        libharfbuzz-subset0 \
+        shared-mime-info \
+        fonts-dejavu-core \
+        fonts-hosny-amiri && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user for security

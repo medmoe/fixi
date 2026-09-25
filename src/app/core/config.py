@@ -169,6 +169,14 @@ class WorkerBillingSettings(BaseSettings):
     WORKER_COMMISSION_DUE_DAYS: int = config("WORKER_COMMISSION_DUE_DAYS", default=14)
 
 
+class InvoiceSettings(BaseSettings):
+    # The app has no other currency-denominated text anywhere else (job
+    # budgets, payments, commissions are all plain Decimals with no unit) --
+    # this is a display-only label for the generated PDF, a guess pending an
+    # actual decision, not a signal that amounts are stored/converted in it.
+    INVOICE_CURRENCY_CODE: str = config("INVOICE_CURRENCY_CODE", default="DZD")
+
+
 class OtpSettings(BaseSettings):
     """Policy knobs for phone OTP (Issue 5) -- deliberately separate from
     SMS transport config above since these tune auth behavior, not the
@@ -297,6 +305,7 @@ class Settings(
     DevSettings,
     EnvironmentSettings,
     FirstUserSettings,
+    InvoiceSettings,
     JobLifecycleSettings,
     MinIOSettings,
     NotificationSettings,

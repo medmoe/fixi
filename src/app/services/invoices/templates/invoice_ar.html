@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>فاتورة $invoice_number</title>
+<style>
+    @page { size: A4; margin: 2.5cm; }
+    body { font-family: 'Amiri', 'DejaVu Sans', sans-serif; color: #111827; font-size: 13px; direction: rtl; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111827; padding-bottom: 16px; margin-bottom: 24px; }
+    .brand { font-size: 22px; font-weight: bold; }
+    .invoice-meta { text-align: left; font-size: 12px; color: #374151; }
+    .invoice-meta .number { font-size: 16px; font-weight: bold; color: #111827; }
+    .parties { margin-bottom: 24px; }
+    .parties p { margin: 2px 0; }
+    table.lines { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    table.lines th, table.lines td { border: 1px solid #d1d5db; padding: 10px 12px; text-align: right; }
+    table.lines th { background-color: #f9fafb; }
+    .totals { width: 100%; margin-bottom: 24px; }
+    .totals td { padding: 4px 12px; }
+    .totals .label { text-align: left; color: #6b7280; }
+    .totals .value { text-align: left; width: 140px; font-weight: bold; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; background-color: #f3f4f6; }
+    .payment-info { margin-top: 16px; padding: 12px 16px; background-color: #f9fafb; border-right: 3px solid #111827; }
+    .footer { margin-top: 40px; font-size: 10px; color: #9ca3af; }
+</style>
+</head>
+<body>
+<div class="header">
+<div class="brand">Fixi</div>
+<div class="invoice-meta">
+<div class="number">فاتورة $invoice_number</div>
+<div>تاريخ الإصدار: $issue_date</div>
+</div>
+</div>
+
+<div class="parties">
+<p><strong>المحترف:</strong> $worker_name</p>
+<p><strong>المهمة:</strong> $job_title</p>
+</div>
+
+<table class="lines">
+<tr><th>الوصف</th><th>تاريخ الاستحقاق</th><th>الحالة</th></tr>
+<tr>
+<td>عمولة منصة Fixi عن مهمة «$job_title»</td>
+<td>$due_date</td>
+<td><span class="status">$status_label</span></td>
+</tr>
+</table>
+
+<table class="totals">
+<tr><td class="label">المبلغ المستحق:</td><td class="value">$amount_owed $currency</td></tr>
+<tr><td class="label">المبلغ المدفوع:</td><td class="value">$amount_paid $currency</td></tr>
+</table>
+
+$payment_info_html
+
+<div class="footer">
+Fixi — تم إنشاء هذه الفاتورة تلقائياً وهي تعكس دفعة نقدية تم تسجيلها على المنصة.
+</div>
+</body>
+</html>
