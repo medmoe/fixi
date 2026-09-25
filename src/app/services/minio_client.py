@@ -1,4 +1,5 @@
 import json
+from typing import cast
 
 import boto3
 from botocore.client import Config
@@ -68,6 +69,11 @@ class MinioClient:
             Body=data,
             **extra_args
         )
+
+    def download_file(self, bucket: str, key: str) -> bytes:
+        """ Fetch an object's raw bytes """
+        response = self.client.get_object(Bucket=bucket, Key=key)
+        return cast(bytes, response["Body"].read())
 
     def delete_file(self, bucket: str, key: str):
         """ Delete a file from the bucket """

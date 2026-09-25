@@ -17,6 +17,7 @@ class WorkerBillingBase(BaseModel):
     amount_paid: Decimal = Decimal("0.00")
     status: WorkerBillingStatus = WorkerBillingStatus.PENDING
     payment_id: int | None = None
+    invoice_key: str | None = None
 
 
 class WorkerBillingCreateInternal(WorkerBillingBase):
@@ -29,6 +30,7 @@ class WorkerBillingUpdateInternal(BaseModel):
     amount_paid: Decimal | None = None
     status: WorkerBillingStatus | None = None
     payment_id: int | None = None
+    invoice_key: str | None = None
 
 
 class WorkerBillingRead(TimestampSchema, WorkerBillingBase):

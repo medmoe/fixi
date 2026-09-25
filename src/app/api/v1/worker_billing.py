@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_superuser, get_current_user
@@ -10,6 +10,7 @@ from ...crud.crud_worker_billing import crud_worker_billing
 from ...crud.crud_worker_profiles import crud_worker_profiles
 from ...schemas.worker_billing import WorkerBillingRead
 from ...schemas.worker_profile import WorkerProfileRead
+from ...services.invoice_service import get_invoice_pdf
 from ...services.worker_billing_service import mark_worker_billing_paid
 
 router = APIRouter(tags=["worker-billing"], prefix="/worker-billing")
@@ -69,3 +70,21 @@ async def mark_paid(
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> WorkerBillingRead:
     return await mark_worker_billing_paid(db, worker_billing_id, recorded_by=admin["id"])
+
+
+# ─── GET /worker-billing/{id}/invoice ────────────────────────────────────────
+@router.get("/{worker_billing_id}/invoice", status_code=200)
+async def download_invoice(
+        worker_billing_id: int,
+        current_user: Annotated[dict, Depends(get_current_user)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> Response:
+    """Streams the PDF invoice for this billing row (generating it on first
+    request). Accessible to the worker it belongs to, or an admin -- see
+    invoice_service.get_invoice_pdf for the access check."""
+    pdf_bytes = await get_invoice_pdf(db, worker_billing_id, current_user)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="invoice-{worker_billing_id}.pdf"'},
+    )

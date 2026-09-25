@@ -46,3 +46,10 @@ class WorkerBilling(Base, TimestampMixin):
     # Set once an admin marks this paid -- the Payment row that recorded it
     # (see PaymentService.record_payment(subscription_id=...)).
     payment_id: Mapped[int | None] = mapped_column(ForeignKey("payments.id", ondelete="SET NULL"), nullable=True, default=None)
+
+    # The storage key of this row's generated invoice PDF (see
+    # services/invoices/) -- set the first time it's requested, not
+    # eagerly at row creation, so a commission nobody ever looks at never
+    # generates a PDF. Once set, later requests are served from storage
+    # instead of regenerating (Issue 6's "retrievable at any time" bar).
+    invoice_key: Mapped[str | None] = mapped_column(nullable=True, default=None)
