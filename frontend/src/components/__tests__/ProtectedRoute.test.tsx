@@ -41,6 +41,15 @@ const mockCustomerUser = {
     role_type: 'customer',
 }
 
+const mockAdminUser = {
+    id: 3,
+    name: 'Admin User',
+    username: 'admin_user',
+    email: 'admin@example.com',
+    role_type: 'customer',
+    is_superuser: true,
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const TestChild = () => <div data-testid="protected-content">Protected Content</div>
@@ -49,11 +58,13 @@ const renderWithRouter = (
     {
         initialRoute = '/dashboard',
         allowedRoles,
+        requireSuperuser,
         authState = {isLoading: false, isAuthenticated: true},
         userState = {data: mockWorkerUser, isLoading: false, error: null},
     }: {
         initialRoute?: string
         allowedRoles?: Array<'customer' | 'worker'>
+        requireSuperuser?: boolean
         authState?: { isLoading: boolean; isAuthenticated: boolean }
         userState?: { data: any; isLoading: boolean; error: any }
     } = {}
@@ -67,7 +78,7 @@ const renderWithRouter = (
                 <Route
                     path="/dashboard"
                     element={
-                        <ProtectedRoute allowedRoles={allowedRoles}>
+                        <ProtectedRoute allowedRoles={allowedRoles} requireSuperuser={requireSuperuser}>
                             <TestChild/>
                         </ProtectedRoute>
                     }
@@ -207,6 +218,34 @@ describe('ProtectedRoute', () => {
                 userState: {data: mockCustomerUser, isLoading: false, error: null},
             })
             expect(screen.getByTestId('landing-page')).toBeInTheDocument()
+        })
+    })
+
+    // ─── Superuser-only routes ────────────────────────────────────────────────────
+
+    describe('superuser-only routes', () => {
+        it('renders content when user is a superuser', () => {
+            renderWithRouter({
+                requireSuperuser: true,
+                userState: {data: mockAdminUser, isLoading: false, error: null},
+            })
+            expect(screen.getByTestId('protected-content')).toBeInTheDocument()
+        })
+
+        it('redirects a non-superuser to landing', () => {
+            renderWithRouter({
+                requireSuperuser: true,
+                userState: {data: mockWorkerUser, isLoading: false, error: null},
+            })
+            expect(screen.getByTestId('landing-page')).toBeInTheDocument()
+            expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument()
+        })
+
+        it('renders content for any authenticated user when requireSuperuser is not set', () => {
+            renderWithRouter({
+                userState: {data: mockWorkerUser, isLoading: false, error: null},
+            })
+            expect(screen.getByTestId('protected-content')).toBeInTheDocument()
         })
     })
 

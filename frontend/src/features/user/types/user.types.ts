@@ -11,6 +11,7 @@ export interface UserRead {
     role_type: RoleType,
     is_deleted: boolean,
     is_superuser: boolean,
+    is_suspended: boolean,
     tier_id: number,
     location: string | null,          // WKT point, read-only — derived from the coordinates
     display_location: string | null,

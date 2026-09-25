@@ -1,0 +1,66 @@
+{
+  "role": {
+    "worker": "Worker",
+    "customer": "Customer"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended"
+  },
+  "filterBar": {
+    "ariaLabel": "Filter users",
+    "searchAriaLabel": "Search users",
+    "searchPlaceholder": "Search by name, username, or email",
+    "roleAriaLabel": "Filter by role",
+    "allRoles": "All roles",
+    "statusAriaLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "clearFilters": "Clear filters"
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "view": "View"
+  },
+  "usersPage": {
+    "title": "User management",
+    "loading": "Loading...",
+    "usersFoundCount_one": "{{count}} user found",
+    "usersFoundCount_other": "{{count}} users found",
+    "loadError": "Something went wrong loading users. Please try again.",
+    "emptyState": "No users match these filters.",
+    "loadMore": "Load more"
+  },
+  "detail": {
+    "loading": "Loading user...",
+    "loadError": "Something went wrong loading this user. Please try again.",
+    "backToUsers": "Back to users",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "suspendButton": "Suspend account",
+    "reactivateButton": "Reactivate account",
+    "suspendConfirmTitle": "Suspend this account?",
+    "suspendConfirmDescription": "The user will be immediately signed out and won't be able to log in until reactivated.",
+    "reactivateConfirmTitle": "Reactivate this account?",
+    "reactivateConfirmDescription": "The user will be able to log in again.",
+    "reasonAriaLabel": "Reason (optional)",
+    "reasonPlaceholder": "Reason (optional)",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "auditLogTitle": "Audit log",
+    "noAuditLogEntries": "No actions recorded yet."
+  },
+  "auditActions": {
+    "suspend_user": "Account suspended",
+    "reactivate_user": "Account reactivated"
+  },
+  "toasts": {
+    "userSuspended": "Account suspended",
+    "suspendFailed": "Failed to suspend account",
+    "userReactivated": "Account reactivated",
+    "reactivateFailed": "Failed to reactivate account"
+  }
+}

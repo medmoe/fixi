@@ -33,6 +33,7 @@ const mockUser: UserRead = {
     role_type: 'worker',
     is_deleted: false,
     is_superuser: false,
+    is_suspended: false,
     tier_id: 1,
     created_at: '2023-01-01T00:00:00Z',
     deleted_at: null,

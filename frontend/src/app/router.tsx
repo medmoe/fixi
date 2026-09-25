@@ -6,6 +6,7 @@ import {JobCreateForm, JobDetailPage, JobEditForm, JobsTab} from '@/features/job
 import {WorkerDetailPage, WorkerSearchPage} from '@/features/worker'
 import {RoleBasedDashboard} from '@/features/auth/components/RoleBasedDashboard.tsx'
 import {CustomerAccountPage, CustomerJobsPage, CustomerProfilePage} from "@/features/customer";
+import {AdminUserDetailPage, AdminUsersPage} from '@/features/admin'
 
 export const routes: RouteObject[] = [
     {
@@ -53,6 +54,24 @@ export const routes: RouteObject[] = [
             {
                 path: '/workers/:workerId',
                 element: <WorkerDetailPage/>
+            },
+
+            // ═══ Admin panel — is_superuser gated, not a role_type ═══════
+            {
+                path: '/admin/users',
+                element: (
+                    <ProtectedRoute requireSuperuser>
+                        <AdminUsersPage/>
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: '/admin/users/:userId',
+                element: (
+                    <ProtectedRoute requireSuperuser>
+                        <AdminUserDetailPage/>
+                    </ProtectedRoute>
+                )
             },
 
             // ═══ Redirect old standalone customer routes ═════════════════

@@ -9,7 +9,8 @@
     "errorDescription": "Nous avons rencontré un problème lors du chargement de vos données de compte. Veuillez réessayer plus tard.",
     "navProfile": "Profil",
     "navAccount": "Compte",
-    "navJobs": "Missions"
+    "navJobs": "Missions",
+    "navAdmin": "Panneau d'administration"
   },
   "availability": {
     "availableForWork": "Disponible pour travailler",
