@@ -150,6 +150,15 @@ class NotificationSettings(BaseSettings):
     SMS_GATEWAY_TIMEOUT_SECONDS: float = config("SMS_GATEWAY_TIMEOUT_SECONDS", default=10.0)
 
 
+class PaymentSettings(BaseSettings):
+    # Provider selection is config-driven -- mirrors NOTIFICATION_*_PROVIDER
+    # above. "cash" is the only real implementation right now; "chargily"
+    # is a valid, discoverable value whose provider raises until that
+    # integration is built (Phase 8, deferred -- see
+    # documentation/PHASE_8_PAYMENTS_ADMIN_ISSUES.md).
+    PAYMENT_PROVIDER: str = config("PAYMENT_PROVIDER", default="cash")
+
+
 class OtpSettings(BaseSettings):
     """Policy knobs for phone OTP (Issue 5) -- deliberately separate from
     SMS transport config above since these tune auth behavior, not the
@@ -282,6 +291,7 @@ class Settings(
     MinIOSettings,
     NotificationSettings,
     OtpSettings,
+    PaymentSettings,
     PostgresSettings,
     ProdSettings,
     RedisCacheSettings,

@@ -354,6 +354,22 @@ async def create_test_user(async_session, **kwargs):
     return user
 
 
+async def create_test_payment(async_session, payer, **kwargs):
+    from src.app.models import Payment, PaymentMethod, PaymentStatus
+
+    defaults = {
+        "amount": Decimal("50.00"),
+        "method": PaymentMethod.CASH,
+        "status": PaymentStatus.COMPLETED,
+    }
+    defaults.update(kwargs)
+    payment = Payment(payer_id=payer.id, **defaults)
+    async_session.add(payment)
+    await async_session.commit()
+    await async_session.refresh(payment)
+    return payment
+
+
 async def create_test_worker_profile(
         async_session,
         user=None,
