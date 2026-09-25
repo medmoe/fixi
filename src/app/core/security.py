@@ -44,10 +44,15 @@ class TokenType(str, Enum):
 
 
 async def get_db_user(db: AsyncSession, username_or_email: str) -> User | None:
+    """The single lookup both login (authenticate_user) and every
+    authenticated request (verify_token) go through -- gating on
+    is_suspended here, not just is_deleted, means a suspended user can't
+    log in AND any live token they're already holding stops verifying on
+    their very next request, with no separate token_version bump needed."""
     if "@" in username_or_email:
-        result = await db.execute(select(User).where(User.email == username_or_email, User.is_deleted.is_(False)))
+        result = await db.execute(select(User).where(User.email == username_or_email, User.is_deleted.is_(False), User.is_suspended.is_(False)))
     else:
-        result = await db.execute(select(User).where(User.username == username_or_email, User.is_deleted.is_(False)))
+        result = await db.execute(select(User).where(User.username == username_or_email, User.is_deleted.is_(False), User.is_suspended.is_(False)))
     return result.scalar_one_or_none()
 
 

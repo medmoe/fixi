@@ -51,6 +51,12 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    # Admin-driven and reversible (see admin_user_service.suspend_user/
+    # reactivate_user) -- distinct from is_deleted, which is a user's own
+    # (effectively permanent) account deletion. A suspended user can't log
+    # in and any live token stops verifying immediately (see
+    # core.security.get_db_user).
+    is_suspended: Mapped[bool] = mapped_column(default=False, index=True)
     role_type: Mapped[UserRole] = mapped_column(SAEnum(UserRole, values_callable=lambda v: [e.value for e in v]), nullable=False, default=UserRole.CUSTOMER)
     token_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 

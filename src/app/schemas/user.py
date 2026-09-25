@@ -106,6 +106,7 @@ class UserRead(UserBase, UUIDSchema):
     updated_at: datetime | None = None
     created_at: datetime | None = None
     is_superuser: bool | None = None
+    is_suspended: bool | None = None
     tier_id: int | None = None
 
     @field_validator("profile_image_url", mode="before")
@@ -202,6 +203,7 @@ class UserUpdateInternal(UserUpdate):
     hashed_password: str | None = None
     is_deleted: bool | None = None
     deleted_at: datetime | None = None
+    is_suspended: bool | None = None
     location: Location = None
     latitude: Annotated[float | None, Field(default=None, exclude=True)] = None
     longitude: Annotated[float | None, Field(default=None, exclude=True)] = None
@@ -272,6 +274,22 @@ class UserAdminUpdate(BaseModel):
     role_type: UserRole | None = None
     is_superuser: bool | None = None
     tier_id: Annotated[int | None, Field(gt=0)] = None
+
+
+class UserAdminFilter(BaseModel):
+    """Query params for GET /admin/users (Phase 8 Issue 4) -- all optional.
+    No extra="forbid" -- mirrors WorkerProfileFilter, the other Depends()-
+    bound query filter schema in this codebase."""
+
+    search: str | None = Field(default=None, description="Matches name, username, or email (case-insensitive, partial)")
+    role_type: UserRole | None = None
+    is_suspended: bool | None = None
+
+
+class UserSuspendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str | None = None
 
 
 #
