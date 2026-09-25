@@ -1,9 +1,12 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query'
+import {useTranslation} from 'react-i18next'
 import {workerApi} from '@/lib/api/workerApi'
 import {toast} from 'sonner'
+import {formatApiError} from '@/lib/api/formatApiError'
 import type {WorkerTradeNestedRead} from '@/features/worker/types/tradeCategory.types'
 
 export const useAssignTrades = () => {
+    const {t} = useTranslation('worker')
     const queryClient = useQueryClient()
 
     const assignTrades = useMutation<WorkerTradeNestedRead[], Error, number[]>({
@@ -20,13 +23,10 @@ export const useAssignTrades = () => {
                     }
                 }
             )
-            toast.success('Trades updated successfully')
+            toast.success(t('toasts.tradesUpdated'))
         },
         onError: (error: any) => {
-            const message =
-                error?.response?.data?.detail ??
-                'Failed to update trade categories'
-            toast.error(message)
+            toast.error(formatApiError(error, t, {}, 'toasts.tradesUpdateFailed'))
         },
     })
 
@@ -44,10 +44,10 @@ export const useAssignTrades = () => {
                     }
                 }
             )
-            toast.success('Trade removed successfully')
+            toast.success(t('toasts.tradeRemoved'))
         },
         onError: () => {
-            toast.error('Failed to remove trade category')
+            toast.error(t('toasts.tradeRemoveFailed'))
         },
     })
 

@@ -121,5 +121,18 @@
     "experienceLabel": "Expérience",
     "yearsSuffix": "{{count}} ans",
     "contactWorker": "Contacter le professionnel (bientôt disponible)"
+  },
+  "toasts": {
+    "tradesUpdated": "Métiers mis à jour avec succès",
+    "tradesUpdateFailed": "Échec de la mise à jour des catégories de métiers",
+    "tradeRemoved": "Métier supprimé avec succès",
+    "tradeRemoveFailed": "Échec de la suppression du métier",
+    "nowAvailable": "Vous êtes maintenant disponible",
+    "nowUnavailable": "Vous êtes maintenant indisponible",
+    "availabilityUpdateFailed": "Échec de la mise à jour de la disponibilité",
+    "profileUpdated": "Profil mis à jour avec succès",
+    "profileUpdateFailed": "Échec de la mise à jour du profil professionnel",
+    "avatarUploaded": "Avatar téléversé avec succès",
+    "avatarUploadFailed": "Échec du téléversement de l'avatar"
   }
 }

@@ -1,8 +1,10 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useTranslation} from 'react-i18next';
 import {workerApi} from "@/lib/api/workerApi";
 import {toast} from 'sonner';
 
 export const useUploadAvatar = () => {
+    const {t} = useTranslation('worker');
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -18,10 +20,10 @@ export const useUploadAvatar = () => {
                     }
                 }
             )
-            toast.success("Avatar uploaded successfully");
+            toast.success(t("toasts.avatarUploaded"));
         },
         onError: () => {
-            toast.error("Failed to upload avatar")
+            toast.error(t("toasts.avatarUploadFailed"))
         }
     })
 }

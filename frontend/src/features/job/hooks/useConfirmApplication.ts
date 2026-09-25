@@ -1,9 +1,16 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {AxiosError} from "axios";
+import {useTranslation} from "react-i18next";
 import {toast} from "sonner";
 import {jobApi} from "@/lib";
+import {formatApiError} from "@/lib/api/formatApiError";
+
+const KNOWN_ERRORS: Record<string, string> = {
+    "Another application is already accepted for this job": "toasts.applicationAlreadyAccepted",
+};
 
 export const useConfirmApplication = (jobId: number) => {
+    const {t} = useTranslation("job");
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -12,10 +19,10 @@ export const useConfirmApplication = (jobId: number) => {
             queryClient.invalidateQueries({queryKey: ["my-job-application", jobId]});
             queryClient.invalidateQueries({queryKey: ["job", jobId]});
             queryClient.invalidateQueries({queryKey: ["jobs"]});
-            toast.success("Assignment confirmed!");
+            toast.success(t("toasts.assignmentConfirmed"));
         },
         onError: (error: AxiosError<{ detail: string }>) => {
-            toast.error(error.response?.data?.detail ?? "Failed to confirm assignment");
+            toast.error(formatApiError(error, t, KNOWN_ERRORS, "toasts.confirmApplicationFailed"));
         },
     });
 };

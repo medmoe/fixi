@@ -1,4 +1,5 @@
 
+import React from "react"
 import { describe, expect, it, vi } from "vitest"
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -24,14 +25,18 @@ vi.mock("lucide-react", async (importOriginal) => {
   }
 })
 
+// Forwards its ref (via React.forwardRef) rather than dropping it, same as
+// the real Button -- LanguageSwitcher's (unmocked) Radix DropdownMenuTrigger
+// wraps a Button with `asChild` and needs a real ref on it, or React warns
+// "Function components cannot be given refs."
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ asChild, children, ...props }: any) => {
+  Button: React.forwardRef<HTMLButtonElement, any>(({ asChild, children, ...props }, ref) => {
     if (asChild) {
       return children
     }
 
-    return <button {...props}>{children}</button>
-  },
+    return <button ref={ref} {...props}>{children}</button>
+  }),
 }))
 
 vi.mock("@/components/ui/sheet", () => ({

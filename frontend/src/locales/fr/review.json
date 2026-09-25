@@ -36,5 +36,12 @@
   },
   "starRating": {
     "ariaLabel": "Note"
+  },
+  "toasts": {
+    "reviewSubmitted": "Avis envoyé !",
+    "reviewSubmitFailed": "Échec de l'envoi de l'avis",
+    "notAParticipant": "Vous n'êtes pas un participant à cette mission.",
+    "jobNotComplete": "Cette mission n'est pas encore terminée.",
+    "alreadyReviewed": "Vous avez déjà évalué cette mission."
   }
 }

@@ -147,5 +147,28 @@
     "label": "Trade Category",
     "loading": "Loading trade categories...",
     "removeAriaLabel": "Remove {{name}}"
+  },
+  "toasts": {
+    "applicationSubmitted": "Application submitted!",
+    "applicationSubmitFailed": "Failed to submit application",
+    "alreadyApplied": "You have already applied to this job",
+    "jobCompleted": "Job completed!",
+    "jobMarkedComplete": "Marked as complete — waiting on the other party.",
+    "completeJobFailed": "Failed to mark job complete",
+    "assignmentConfirmed": "Assignment confirmed!",
+    "confirmApplicationFailed": "Failed to confirm assignment",
+    "applicationAlreadyAccepted": "Another application is already accepted for this job",
+    "jobCreated": "Job created successfully",
+    "jobCreateFailed": "Failed to create job",
+    "tradeCategoryNotFound": "Trade category does not exist",
+    "maxActiveJobsReached": "Maximum number of active jobs reached",
+    "jobDeleted": "Job deleted successfully",
+    "jobDeleteFailed": "Failed to delete job",
+    "jobStarted": "Job started!",
+    "jobStartFailed": "Failed to start job",
+    "jobUpdated": "Job updated successfully",
+    "jobUpdateFailed": "Failed to update job",
+    "applicationWithdrawn": "Application withdrawn",
+    "withdrawApplicationFailed": "Failed to withdraw application"
   }
 }

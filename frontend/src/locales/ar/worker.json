@@ -129,5 +129,18 @@
     "experienceLabel": "الخبرة",
     "yearsSuffix": "{{count}} سنوات",
     "contactWorker": "التواصل مع المحترف (قريبًا)"
+  },
+  "toasts": {
+    "tradesUpdated": "تم تحديث الحرف بنجاح",
+    "tradesUpdateFailed": "فشل تحديث فئات الحرف",
+    "tradeRemoved": "تمت إزالة الحرفة بنجاح",
+    "tradeRemoveFailed": "فشل إزالة الحرفة",
+    "nowAvailable": "أنت الآن متاح",
+    "nowUnavailable": "أنت الآن غير متاح",
+    "availabilityUpdateFailed": "فشل تحديث حالة التوفر",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "profileUpdateFailed": "فشل تحديث الملف المهني",
+    "avatarUploaded": "تم رفع الصورة الشخصية بنجاح",
+    "avatarUploadFailed": "فشل رفع الصورة الشخصية"
   }
 }

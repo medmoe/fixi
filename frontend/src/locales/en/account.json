@@ -34,5 +34,13 @@
   "customerProfile": {
     "heading": "Customer Profile",
     "subtitle": "Coming soon — manage your address, preferences, and account details."
+  },
+  "toasts": {
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Failed to change password",
+    "accountDeactivated": "Account deactivated",
+    "accountDeactivateFailed": "Failed to deactivate account",
+    "accountUpdated": "Account updated successfully",
+    "accountUpdateFailed": "Failed to update account"
   }
 }

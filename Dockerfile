@@ -37,6 +37,12 @@ COPY --from=builder --chown=app:app /app/.venv /app/.venv
 
 # Copy the application
 COPY --from=builder --chown=app:app /app/src /app/src
+
+# Copy the entrypoint that applies pending Alembic migrations before the
+# app starts (see the script's own comment for why this exists).
+COPY --chown=app:app docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Ensure the virtual environment is in the PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
@@ -45,6 +51,8 @@ USER app
 
 # Set the working directory
 WORKDIR /app/src
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # -------- replace with comment to run with gunicorn --------
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -34,5 +34,13 @@
   "customerProfile": {
     "heading": "الملف الشخصي للعميل",
     "subtitle": "قريبًا — إدارة عنوانك وتفضيلاتك وتفاصيل حسابك."
+  },
+  "toasts": {
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+    "passwordChangeFailed": "فشل تغيير كلمة المرور",
+    "accountDeactivated": "تم تعطيل الحساب",
+    "accountDeactivateFailed": "فشل تعطيل الحساب",
+    "accountUpdated": "تم تحديث الحساب بنجاح",
+    "accountUpdateFailed": "فشل تحديث الحساب"
   }
 }

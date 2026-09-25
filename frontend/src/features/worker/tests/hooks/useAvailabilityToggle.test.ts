@@ -305,12 +305,7 @@ describe('useAvailabilityToggle', () => {
 
             await waitFor(() => expect(result.current.isError).toBe(true))
 
-            expect(toast.error).toHaveBeenCalledWith(
-                'Status update failed',
-                expect.objectContaining({
-                    description: expect.stringContaining('Failed to update availability'),
-                }),
-            )
+            expect(toast.error).toHaveBeenCalledWith('Availability update failed')
         })
 
         it('does not revert if no previous profile in context', async () => {

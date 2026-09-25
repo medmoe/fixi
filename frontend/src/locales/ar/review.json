@@ -44,5 +44,12 @@
   },
   "starRating": {
     "ariaLabel": "التقييم"
+  },
+  "toasts": {
+    "reviewSubmitted": "تم إرسال التقييم!",
+    "reviewSubmitFailed": "فشل إرسال التقييم",
+    "notAParticipant": "أنت لست طرفًا في هذه المهمة.",
+    "jobNotComplete": "لم تُنجز هذه المهمة بعد.",
+    "alreadyReviewed": "لقد قيّمت هذه المهمة بالفعل."
   }
 }
