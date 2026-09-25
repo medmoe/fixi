@@ -3,14 +3,16 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from fastcrud import FastCRUD
+from fastcrud import FastCRUD, PaginatedListResponse
 from fastcrud.exceptions.http_exceptions import NotFoundException
+from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.exceptions.http_exceptions import DuplicateValueException
 from ..core.security import get_password_hash, verify_password
 from ..models import User
 from ..schemas.user import (
+    UserAdminFilter,
     UserCreateInternal,
     UserDeleteInternal,
     UserPasswordUpdate,
@@ -168,6 +170,74 @@ class CRUDUser(FastCRUD[
                 updated_at=datetime.now(UTC).replace(tzinfo=None),
             ),
             username=username,
+        )
+
+    async def suspend(
+            self,
+            db: AsyncSession,
+            user_id: int,
+    ) -> None:
+        """Admin action -- distinct from deactivate (self-service, effectively
+        permanent soft delete). Reversible via reactivate."""
+        user = await self.exists(db=db, id=user_id, is_deleted=False)
+        if not user:
+            raise NotFoundException("User not found.")
+
+        await super().update(
+            db=db,
+            object=UserUpdateInternal(is_suspended=True, updated_at=datetime.now(UTC).replace(tzinfo=None)),
+            id=user_id,
+        )
+
+    async def reactivate(
+            self,
+            db: AsyncSession,
+            user_id: int,
+    ) -> None:
+        """Reverses suspend."""
+        user = await self.exists(db=db, id=user_id, is_deleted=False)
+        if not user:
+            raise NotFoundException("User not found.")
+
+        await super().update(
+            db=db,
+            object=UserUpdateInternal(is_suspended=False, updated_at=datetime.now(UTC).replace(tzinfo=None)),
+            id=user_id,
+        )
+
+    async def search_users(
+            self,
+            db: AsyncSession,
+            filters: UserAdminFilter,
+            offset: int = 0,
+            limit: int = 20,
+    ) -> PaginatedListResponse[UserRead]:
+        """Admin search across customers and workers -- Phase 8 Issue 4
+        (Admin panel: user management). Mirrors CRUDWorker.search_workers'
+        raw-query approach (a free-text OR across name/username/email isn't
+        expressible through FastCRUD's generic kwargs filtering)."""
+        where_clauses: list[ColumnElement[bool]] = [User.is_deleted.is_(False)]
+        if filters.search:
+            term = f"%{filters.search}%"
+            where_clauses.append(or_(User.name.ilike(term), User.username.ilike(term), User.email.ilike(term)))
+        if filters.role_type is not None:
+            where_clauses.append(User.role_type == filters.role_type)
+        if filters.is_suspended is not None:
+            where_clauses.append(User.is_suspended.is_(filters.is_suspended))
+
+        count_stmt = select(func.count(User.id)).select_from(User).where(and_(*where_clauses))
+        total_count = (await db.execute(count_stmt)).scalar() or 0
+
+        stmt = select(User).where(and_(*where_clauses)).order_by(User.id.asc()).offset(offset).limit(limit)
+        result = await db.execute(stmt)
+        users = result.scalars().all()
+
+        data = [UserRead.model_validate(u) for u in users]
+        return PaginatedListResponse(
+            data=data,
+            total_count=total_count,
+            has_more=(offset + len(data)) < total_count,
+            items_per_page=limit,
         )
 
     async def hard_delete(

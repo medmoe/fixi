@@ -4,7 +4,8 @@ import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
-import {AlertCircle, Briefcase, Loader2, UserCircle, Search} from 'lucide-react'
+import {AlertCircle, Briefcase, Loader2, Shield, UserCircle, Search} from 'lucide-react'
+import {useNavigate} from 'react-router-dom'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
 import {AvailabilityToggle} from "@/features/worker/components/AvailabilityToggle";
@@ -14,6 +15,7 @@ type Tab = 'profile' | 'account' | 'jobs'
 
 export const WorkerDashboardPage: React.FC = () => {
     const {t} = useTranslation('worker')
+    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState<Tab>('profile')
 
     const {data: user, isLoading: isLoadingUser, error: userError} = useUser()
@@ -106,8 +108,17 @@ export const WorkerDashboardPage: React.FC = () => {
                     ))}
                 </nav>
 
-                {/* Sidebar Footer: Logout */}
-                <div className="p-4 border-t">
+                {/* Sidebar Footer: Admin link (superusers only) + Logout */}
+                <div className="p-4 border-t space-y-2">
+                    {user?.is_superuser && (
+                        <button
+                            onClick={() => navigate('/admin/users')}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                        >
+                            <Shield className="h-4 w-4"/>
+                            {t('dashboard.navAdmin')}
+                        </button>
+                    )}
                     <LogoutButton/>
                 </div>
             </aside>

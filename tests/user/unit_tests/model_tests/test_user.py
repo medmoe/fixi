@@ -1,13 +1,12 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from geoalchemy2.functions import ST_MakePoint, ST_SetSRID
 from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.ext.asyncio import AsyncSession
-from geoalchemy2.functions import ST_SetSRID, ST_MakePoint
 
-from src.app.models import User, UserRole, Tier
-
+from src.app.models import Tier, User, UserRole
 
 # ————— helpers —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -66,6 +65,7 @@ class TestUserModel:
             assert user.deleted_at is None
             assert user.is_deleted is False
             assert user.is_superuser is False
+            assert user.is_suspended is False
             assert user.role_type == UserRole.CUSTOMER
             assert user.token_version == 1
             assert user.tier_id is None

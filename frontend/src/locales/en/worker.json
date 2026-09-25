@@ -9,7 +9,8 @@
     "errorDescription": "We ran into trouble loading your account data. Please try again later.",
     "navProfile": "Profile",
     "navAccount": "Account",
-    "navJobs": "Jobs"
+    "navJobs": "Jobs",
+    "navAdmin": "Admin panel"
   },
   "availability": {
     "availableForWork": "Available for Work",

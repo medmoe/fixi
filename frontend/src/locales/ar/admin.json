@@ -1,0 +1,70 @@
+{
+  "role": {
+    "worker": "محترف",
+    "customer": "عميل"
+  },
+  "status": {
+    "active": "نشط",
+    "suspended": "موقوف"
+  },
+  "filterBar": {
+    "ariaLabel": "تصفية المستخدمين",
+    "searchAriaLabel": "البحث عن مستخدمين",
+    "searchPlaceholder": "ابحث بالاسم أو اسم المستخدم أو البريد الإلكتروني",
+    "roleAriaLabel": "التصفية حسب الدور",
+    "allRoles": "جميع الأدوار",
+    "statusAriaLabel": "التصفية حسب الحالة",
+    "allStatuses": "جميع الحالات",
+    "clearFilters": "مسح عوامل التصفية"
+  },
+  "table": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "status": "الحالة",
+    "view": "عرض"
+  },
+  "usersPage": {
+    "title": "إدارة المستخدمين",
+    "loading": "جارٍ التحميل...",
+    "usersFoundCount_zero": "لا يوجد مستخدمون",
+    "usersFoundCount_one": "مستخدم واحد",
+    "usersFoundCount_two": "مستخدمان",
+    "usersFoundCount_few": "{{count}} مستخدمين",
+    "usersFoundCount_many": "{{count}} مستخدمًا",
+    "usersFoundCount_other": "{{count}} مستخدم",
+    "loadError": "حدث خطأ أثناء تحميل المستخدمين. يرجى المحاولة مرة أخرى.",
+    "emptyState": "لا يوجد مستخدمون يطابقون عوامل التصفية هذه.",
+    "loadMore": "تحميل المزيد"
+  },
+  "detail": {
+    "loading": "جارٍ تحميل المستخدم...",
+    "loadError": "حدث خطأ أثناء تحميل هذا المستخدم. يرجى المحاولة مرة أخرى.",
+    "backToUsers": "العودة إلى المستخدمين",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "suspendButton": "إيقاف الحساب",
+    "reactivateButton": "إعادة تفعيل الحساب",
+    "suspendConfirmTitle": "هل تريد إيقاف هذا الحساب؟",
+    "suspendConfirmDescription": "سيتم تسجيل خروج المستخدم فورًا ولن يتمكن من تسجيل الدخول حتى تتم إعادة تفعيل الحساب.",
+    "reactivateConfirmTitle": "هل تريد إعادة تفعيل هذا الحساب؟",
+    "reactivateConfirmDescription": "سيتمكن المستخدم من تسجيل الدخول مرة أخرى.",
+    "reasonAriaLabel": "السبب (اختياري)",
+    "reasonPlaceholder": "السبب (اختياري)",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ...",
+    "auditLogTitle": "سجل التدقيق",
+    "noAuditLogEntries": "لا توجد إجراءات مسجلة بعد."
+  },
+  "auditActions": {
+    "suspend_user": "تم إيقاف الحساب",
+    "reactivate_user": "تمت إعادة تفعيل الحساب"
+  },
+  "toasts": {
+    "userSuspended": "تم إيقاف الحساب",
+    "suspendFailed": "فشل إيقاف الحساب",
+    "userReactivated": "تمت إعادة تفعيل الحساب",
+    "reactivateFailed": "فشلت إعادة تفعيل الحساب"
+  }
+}

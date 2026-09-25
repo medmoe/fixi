@@ -1,3 +1,4 @@
+from .admin_action_log import AdminActionLog
 from .customer_profile import CustomerProfile
 from .device_token import DevicePlatform, DeviceToken
 from .files import File

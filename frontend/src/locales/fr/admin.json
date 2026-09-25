@@ -1,0 +1,66 @@
+{
+  "role": {
+    "worker": "Professionnel",
+    "customer": "Client"
+  },
+  "status": {
+    "active": "Actif",
+    "suspended": "Suspendu"
+  },
+  "filterBar": {
+    "ariaLabel": "Filtrer les utilisateurs",
+    "searchAriaLabel": "Rechercher des utilisateurs",
+    "searchPlaceholder": "Rechercher par nom, nom d'utilisateur ou email",
+    "roleAriaLabel": "Filtrer par rôle",
+    "allRoles": "Tous les rôles",
+    "statusAriaLabel": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "clearFilters": "Effacer les filtres"
+  },
+  "table": {
+    "name": "Nom",
+    "email": "Email",
+    "role": "Rôle",
+    "status": "Statut",
+    "view": "Voir"
+  },
+  "usersPage": {
+    "title": "Gestion des utilisateurs",
+    "loading": "Chargement...",
+    "usersFoundCount_one": "{{count}} utilisateur trouvé",
+    "usersFoundCount_other": "{{count}} utilisateurs trouvés",
+    "loadError": "Une erreur est survenue lors du chargement des utilisateurs. Veuillez réessayer.",
+    "emptyState": "Aucun utilisateur ne correspond à ces filtres.",
+    "loadMore": "Charger plus"
+  },
+  "detail": {
+    "loading": "Chargement de l'utilisateur...",
+    "loadError": "Une erreur est survenue lors du chargement de cet utilisateur. Veuillez réessayer.",
+    "backToUsers": "Retour aux utilisateurs",
+    "username": "Nom d'utilisateur",
+    "email": "Email",
+    "role": "Rôle",
+    "suspendButton": "Suspendre le compte",
+    "reactivateButton": "Réactiver le compte",
+    "suspendConfirmTitle": "Suspendre ce compte ?",
+    "suspendConfirmDescription": "L'utilisateur sera immédiatement déconnecté et ne pourra plus se connecter tant que le compte n'est pas réactivé.",
+    "reactivateConfirmTitle": "Réactiver ce compte ?",
+    "reactivateConfirmDescription": "L'utilisateur pourra à nouveau se connecter.",
+    "reasonAriaLabel": "Motif (facultatif)",
+    "reasonPlaceholder": "Motif (facultatif)",
+    "cancel": "Annuler",
+    "saving": "Enregistrement...",
+    "auditLogTitle": "Journal d'audit",
+    "noAuditLogEntries": "Aucune action enregistrée pour le moment."
+  },
+  "auditActions": {
+    "suspend_user": "Compte suspendu",
+    "reactivate_user": "Compte réactivé"
+  },
+  "toasts": {
+    "userSuspended": "Compte suspendu",
+    "suspendFailed": "Échec de la suspension du compte",
+    "userReactivated": "Compte réactivé",
+    "reactivateFailed": "Échec de la réactivation du compte"
+  }
+}

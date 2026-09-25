@@ -16,6 +16,10 @@ vi.mock('@/features/worker', () => ({
     WorkerSearchPage: () => <div>Worker Search Page</div>,
     WorkerDetailPage: () => <div>Worker Detail Page</div>
 }))
+vi.mock('@/features/admin', () => ({
+    AdminUsersPage: () => <div>Admin Users Page</div>,
+    AdminUserDetailPage: () => <div>Admin User Detail Page</div>,
+}))
 
 // RoleBasedDashboard calls useUser() which needs QueryClientProvider.
 // The router test only cares about routing structure, so mock it.
@@ -60,5 +64,19 @@ describe('App Router', () => {
         renderWithRouter(['/workers/search'])
 
         expect(screen.getByText('Worker Search Page')).toBeInTheDocument()
+    })
+
+    it('wraps AdminUsersPage inside ProtectedRoute at "/admin/users"', () => {
+        renderWithRouter(['/admin/users'])
+
+        expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByText('Admin Users Page')).toBeInTheDocument()
+    })
+
+    it('wraps AdminUserDetailPage inside ProtectedRoute at "/admin/users/:userId"', () => {
+        renderWithRouter(['/admin/users/1'])
+
+        expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByText('Admin User Detail Page')).toBeInTheDocument()
     })
 })

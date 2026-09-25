@@ -7,6 +7,7 @@ import {Loader2} from 'lucide-react'
 interface ProtectedRouteProps {
     children: React.ReactNode
     allowedRoles?: Array<'customer' | 'worker'>
+    requireSuperuser?: boolean
     fallback?: React.ReactNode // Optional custom fallback while loading
 }
 
@@ -28,6 +29,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                                                                   children,
                                                                   allowedRoles,
+                                                                  requireSuperuser,
                                                               }) => {
     const {isLoading: authLoading, isAuthenticated} = useAuth()
     const {data: user, isLoading: userLoading, error: userError} = useUser()
@@ -85,6 +87,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             return <Navigate to="/dashboard" replace/>
         }
         // Customer dashboard doesn't exist yet — redirect to landing
+        return <Navigate to="/" replace/>
+    }
+
+    // ─── Superuser-only routes ──────────────────────────────────────────────
+    // Client-side UX only — the real enforcement is server-side
+    // (get_current_superuser on every admin endpoint). is_superuser is a
+    // flag on top of a normal customer/worker account, not a role_type, so
+    // this is a separate check from allowedRoles above.
+    if (requireSuperuser && !user.is_superuser) {
         return <Navigate to="/" replace/>
     }
 
