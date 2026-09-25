@@ -6,6 +6,7 @@ from .job_application import ApplicationDeclineReason, ApplicationStatus, JobApp
 from .notification import Notification
 from .notification_log import NotificationChannel, NotificationLog, NotificationLogStatus
 from .notification_preference import NotificationPreference
+from .payment import Payment, PaymentMethod, PaymentStatus
 from .portfolio_image import PortfolioImage
 from .rate_limit import RateLimit
 from .review import Review
