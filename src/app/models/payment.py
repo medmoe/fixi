@@ -48,9 +48,15 @@ class Payment(Base, TimestampMixin):
     # layer rather than a DB constraint since both are legitimately
     # nullable on their own (a payment isn't required to reference a job).
     job_id: Mapped[int | None] = mapped_column(ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True, default=None, index=True)
-    # No FK yet -- `worker_billing` (Issue 2, Phase 8) doesn't exist yet.
-    # Gains a real ForeignKey("worker_billing.id") once that table lands.
-    subscription_id: Mapped[int | None] = mapped_column(nullable=True, default=None, index=True)
+    # use_alter=True: worker_billing.payment_id references payments.id right
+    # back (set once an admin marks a billing record paid), so these two
+    # tables have a genuine FK cycle. This tells SQLAlchemy's DDL generator
+    # to create this constraint in a separate ALTER TABLE after both tables
+    # exist, instead of failing to topologically sort them.
+    subscription_id: Mapped[int | None] = mapped_column(
+        ForeignKey("worker_billing.id", ondelete="SET NULL", use_alter=True, name="payments_subscription_id_fkey"),
+        nullable=True, default=None, index=True,
+    )
 
     # Null means the platform itself (e.g. a worker's commission payment
     # has no User payee) rather than a specific recipient user.

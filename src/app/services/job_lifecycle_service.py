@@ -1,15 +1,18 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from ..core.config import settings
 from ..core.exceptions.http_exceptions import BadRequestException, ForbiddenException
+from ..crud.crud_worker_billing import crud_worker_billing
 from ..models import ApplicationDeclineReason, ApplicationStatus, Job, JobApplication, JobStatus, WorkerProfile
 from ..schemas.job import JobRead
 from ..schemas.job_application import JobApplicationRead
+from ..schemas.worker_billing import WorkerBillingCreateInternal
 from .notifications import notify_user
-from .review_eligibility_service import get_accepted_worker_user_id
+from .review_eligibility_service import get_accepted_worker_profile_id, get_accepted_worker_user_id
 
 
 async def _get_job_with_relations(db: AsyncSession, job_id: int) -> Job:
@@ -206,6 +209,20 @@ async def mark_job_complete(db: AsyncSession, job: Job, user_id: int) -> JobRead
     await db.commit()
 
     if job.status == JobStatus.COMPLETED:
+        # Flat commission per completed job -- Phase 8 Issue 2's launch
+        # billing model (see WorkerBilling's docstring). One row per job.
+        accepted_worker_profile_id = await get_accepted_worker_profile_id(db, job.id)
+        assert accepted_worker_profile_id is not None  # same guarantee as accepted_worker_user_id above
+        await crud_worker_billing.create(
+            db=db,
+            object=WorkerBillingCreateInternal(
+                worker_profile_id=accepted_worker_profile_id,
+                job_id=job.id,
+                amount_owed=settings.WORKER_COMMISSION_AMOUNT,
+                due_date=datetime.now(UTC) + timedelta(days=settings.WORKER_COMMISSION_DUE_DAYS),
+            ),
+        )
+
         for participant_user_id in (job.user_id, accepted_worker_user_id):
             await notify_user(
                 db,

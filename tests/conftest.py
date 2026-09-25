@@ -370,6 +370,25 @@ async def create_test_payment(async_session, payer, **kwargs):
     return payment
 
 
+async def create_test_worker_billing(async_session, worker_profile, job, **kwargs):
+    from datetime import timedelta
+
+    from src.app.models import WorkerBilling, WorkerBillingStatus
+
+    defaults = {
+        "amount_owed": Decimal("5.00"),
+        "due_date": datetime.now(UTC) + timedelta(days=14),
+        "amount_paid": Decimal("0.00"),
+        "status": WorkerBillingStatus.PENDING,
+    }
+    defaults.update(kwargs)
+    billing = WorkerBilling(worker_profile_id=worker_profile.id, job_id=job.id, **defaults)
+    async_session.add(billing)
+    await async_session.commit()
+    await async_session.refresh(billing)
+    return billing
+
+
 async def create_test_worker_profile(
         async_session,
         user=None,
