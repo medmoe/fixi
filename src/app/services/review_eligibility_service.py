@@ -16,6 +16,17 @@ async def get_accepted_worker_user_id(db: AsyncSession, job_id: int) -> int | No
     return worker_user_id
 
 
+async def get_accepted_worker_profile_id(db: AsyncSession, job_id: int) -> int | None:
+    """The worker_profiles.id (not users.id) of the worker with an ACCEPTED
+    application for this job, if any -- what worker_billing rows reference."""
+    worker_profile_id: int | None = await db.scalar(
+        select(JobApplication.worker_profile_id)
+        .where(JobApplication.job_id == job_id, JobApplication.status == ApplicationStatus.ACCEPTED)
+        .limit(1)
+    )
+    return worker_profile_id
+
+
 async def check_review_eligibility(db: AsyncSession, job: Job, user_id: int) -> ReviewEligibility:
     """
     The three guards a review submission must pass, read-only -- shared by

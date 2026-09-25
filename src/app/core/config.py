@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 from enum import Enum
 
 from pydantic import SecretStr
@@ -159,6 +160,15 @@ class PaymentSettings(BaseSettings):
     PAYMENT_PROVIDER: str = config("PAYMENT_PROVIDER", default="cash")
 
 
+class WorkerBillingSettings(BaseSettings):
+    # Flat per-completed-job commission -- the launch model Phase 8 Issue 2
+    # picked (a recurring subscription was the alternative; deferred). This
+    # amount and the grace period below are starting guesses, not measured/
+    # negotiated business numbers -- same caveat as JOB_LIFECYCLE_TIMEOUT_HOURS.
+    WORKER_COMMISSION_AMOUNT: Decimal = config("WORKER_COMMISSION_AMOUNT", default=Decimal("5.00"), cast=Decimal)
+    WORKER_COMMISSION_DUE_DAYS: int = config("WORKER_COMMISSION_DUE_DAYS", default=14)
+
+
 class OtpSettings(BaseSettings):
     """Policy knobs for phone OTP (Issue 5) -- deliberately separate from
     SMS transport config above since these tune auth behavior, not the
@@ -300,6 +310,7 @@ class Settings(
     SQLiteSettings,
     StagingSettings,
     TestSettings,
+    WorkerBillingSettings,
 ):
     pass
 
