@@ -1,9 +1,11 @@
 """Schema tests for the CNI verification queue schemas."""
 
+from decimal import Decimal
+
 import pytest
 from pydantic import ValidationError
 
-from src.app.schemas.worker_profile import WorkerVerificationQueueRead, WorkerVerificationRejectRequest
+from src.app.schemas.worker_profile import WorkerProfileRead, WorkerVerificationQueueRead, WorkerVerificationRejectRequest
 
 
 class TestWorkerVerificationQueueRead:
@@ -35,6 +37,30 @@ class TestWorkerVerificationQueueRead:
 
         schema = WorkerVerificationQueueRead.model_validate(FakeRow())
         assert schema.id == 1
+
+
+class TestWorkerProfileReadHasCniDocument:
+    def read_payload(self, **overrides) -> dict:
+        defaults = {
+            "id": 1, "user_id": 2, "is_verified": False, "is_available": True,
+            "bio": None, "years_of_experience": None, "hourly_rate": Decimal("50.00"),
+            "service_radius_km": None, "avatar_url": None, "cni_document_key": None,
+        }
+        return {**defaults, **overrides}
+
+    def test_false_when_no_document_uploaded(self):
+        schema = WorkerProfileRead(**self.read_payload())
+        assert schema.has_cni_document is False
+
+    def test_true_when_a_document_is_uploaded(self):
+        schema = WorkerProfileRead(**self.read_payload(cni_document_key="cni/1.pdf"))
+        assert schema.has_cni_document is True
+
+    def test_cni_document_key_never_appears_in_serialized_output(self):
+        schema = WorkerProfileRead(**self.read_payload(cni_document_key="cni/1.pdf"))
+        dumped = schema.model_dump()
+        assert "cni_document_key" not in dumped
+        assert dumped["has_cni_document"] is True
 
 
 class TestWorkerVerificationRejectRequest:

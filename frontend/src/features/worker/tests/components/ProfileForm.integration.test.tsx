@@ -10,9 +10,14 @@ vi.mock("@/features/worker/hooks/useUpdateWorkerProfile")
 vi.mock("@/features/worker/hooks/useAssignTrades")
 vi.mock("@/features/worker/hooks/useTrades")
 vi.mock("@/features/worker/hooks/useUploadAvatar")
+vi.mock("@/features/worker/hooks/useUploadCniDocument")
 
 vi.mock("@/features/worker/components/fields/AvatarUploadField", () => ({
     AvatarUploadField: () => <div data-testid="avatar-upload-field"/>
+}))
+
+vi.mock("@/features/worker/components/fields/CniVerificationField", () => ({
+    CniVerificationField: () => <div data-testid="cni-verification-field"/>
 }))
 
 vi.mock("@/features/worker", async () => {

@@ -13,6 +13,7 @@ export const mockProfile: WorkerProfileWithTradesRead = {
     service_radius_km: 20,
     is_available: false,
     is_verified: true,
+    has_cni_document: false,
     available_since: null,
     average_rating: null,
     review_count: 0,

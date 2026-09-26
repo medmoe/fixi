@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Annotated
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from .trade_category import TradeCategoryRead
 from .user import UserPublicRead
@@ -45,6 +45,13 @@ class WorkerProfileRead(WorkerProfileBase):
     # that construction -- the raw key is only ever read through
     # get_verification_document_url's presigned URL.
     cni_document_key: Annotated[str | None, Field(default=None, exclude=True)] = None
+
+    @computed_field
+    def has_cni_document(self) -> bool:
+        """Safe to expose (unlike cni_document_key itself) -- lets the
+        worker's own dashboard distinguish "never uploaded" from "uploaded,
+        awaiting review" while is_verified alone can't."""
+        return self.cni_document_key is not None
 
 
 class WorkerProfileCreate(WorkerProfileBase):

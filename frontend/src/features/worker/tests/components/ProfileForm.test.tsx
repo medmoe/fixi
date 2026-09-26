@@ -29,6 +29,9 @@ vi.mock('@/features/worker/components/fields/ServiceRadiusField', () => ({
 vi.mock('@/features/worker/components/fields/AvatarUploadField', () => ({
     AvatarUploadField: () => <div data-testid="avatar-upload-field"/>,
 }))
+vi.mock('@/features/worker/components/fields/CniVerificationField', () => ({
+    CniVerificationField: () => <div data-testid="cni-verification-field"/>,
+}))
 vi.mock('@/features/worker/components/trades/TradeCategoryPicker', () => ({
     TradeCategoryPicker: () => <div data-testid="trades-picker"/>,
 }))
@@ -43,6 +46,7 @@ const mockProfile: WorkerProfileWithTradesRead = {
     service_radius_km: 20,
     is_available: true,
     is_verified: false,
+    has_cni_document: false,
     available_since: null,
     average_rating: null,
     review_count: 0,

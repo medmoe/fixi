@@ -41,6 +41,32 @@ class TestGetWorkerProfile:
         response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 404
 
+    async def test_has_cni_document_false_when_none_uploaded(self, async_client: AsyncClient, auth_headers: dict, test_worker_profile: WorkerProfile):
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
+        assert response.status_code == 200
+        assert response.json()["has_cni_document"] is False
+
+    async def test_has_cni_document_true_after_upload(
+            self, async_client: AsyncClient, async_session: AsyncSession, auth_headers: dict, test_worker_profile: WorkerProfile
+    ):
+        test_worker_profile.cni_document_key = "cni/1.pdf"
+        await async_session.commit()
+
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
+
+        assert response.status_code == 200
+        assert response.json()["has_cni_document"] is True
+
+    async def test_cni_document_key_never_appears_in_the_response(
+            self, async_client: AsyncClient, async_session: AsyncSession, auth_headers: dict, test_worker_profile: WorkerProfile
+    ):
+        test_worker_profile.cni_document_key = "cni/1.pdf"
+        await async_session.commit()
+
+        response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
+
+        assert "cni_document_key" not in response.json()
+
     async def test_response_shape(self, async_client: AsyncClient, auth_headers: dict, test_worker_profile: WorkerProfile):
         response = await async_client.get("/api/v1/worker-profile", headers=auth_headers)
         assert response.status_code == 200

@@ -84,7 +84,15 @@ async def get_worker_profile(
     nested_trades = [WorkerTradeNestedRead.model_validate(wt) for wt in worker_trades]
 
     return WorkerProfileWithTradesRead(
-        **worker_profile.model_dump(),
+        # has_cni_document is a computed field, not a constructor kwarg --
+        # excluded here so it isn't passed twice. cni_document_key itself
+        # is also exclude=True on the *dump* (never serialized to JSON),
+        # so it's missing from this dict entirely and must be re-added
+        # explicitly from the live attribute, or the rebuilt model would
+        # silently derive has_cni_document as False regardless of the
+        # actual upload state.
+        **worker_profile.model_dump(exclude={"has_cni_document"}),
+        cni_document_key=worker_profile.cni_document_key,
         trade_categories=nested_trades
     )
 

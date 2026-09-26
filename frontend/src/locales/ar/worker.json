@@ -10,7 +10,8 @@
     "navProfile": "الملف الشخصي",
     "navAccount": "الحساب",
     "navJobs": "المهام",
-    "navAdmin": "لوحة الإدارة"
+    "navAdmin": "لوحة الإدارة",
+    "navVerificationQueue": "قائمة انتظار التحقق"
   },
   "availability": {
     "availableForWork": "متاح للعمل",
@@ -84,6 +85,15 @@
     "uploadAriaLabel": "رفع ملف صورة شخصية",
     "chooseImage": "اختيار صورة"
   },
+  "cniVerificationField": {
+    "heading": "التحقق من الهوية",
+    "helperText": "قم برفع بطاقة التعريف الوطنية (CNI) الخاصة بك حتى يتمكن فريقنا من التحقق من ملفك الشخصي. مرئي لك ولفريق الإدارة فقط.",
+    "statusVerified": "موثّق",
+    "statusPending": "قيد المراجعة",
+    "statusUnverified": "غير موثّق",
+    "upload": "رفع الوثيقة",
+    "reupload": "رفع وثيقة جديدة"
+  },
   "bioField": {
     "label": "النبذة المهنية",
     "ariaLabel": "النبذة",
@@ -142,6 +152,8 @@
     "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
     "profileUpdateFailed": "فشل تحديث الملف المهني",
     "avatarUploaded": "تم رفع الصورة الشخصية بنجاح",
-    "avatarUploadFailed": "فشل رفع الصورة الشخصية"
+    "avatarUploadFailed": "فشل رفع الصورة الشخصية",
+    "cniUploaded": "تم رفع الوثيقة — بانتظار المراجعة",
+    "cniUploadFailed": "فشل رفع الوثيقة"
   }
 }

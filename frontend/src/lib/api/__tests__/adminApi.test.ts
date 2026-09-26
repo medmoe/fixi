@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {adminApi} from '../adminApi'
 import apiClient from '../apiClient'
 import type {UserRead} from '@/features/user'
-import type {AdminActionLogRead} from '@/features/admin'
+import type {AdminActionLogRead, WorkerVerificationQueueRead} from '@/features/admin'
 import type {PaginatedListResponse} from '@/features/types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -55,6 +55,10 @@ const mockAuditLog: AdminActionLogRead[] = [
         created_at: '2023-01-02T00:00:00Z',
         updated_at: null,
     },
+]
+
+const mockVerificationQueue: WorkerVerificationQueueRead[] = [
+    {id: 1, user_id: 1, name: 'Ali', email: 'ali@example.com', bio: 'Plumber', years_of_experience: 5},
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -179,6 +183,62 @@ describe('adminApi', () => {
             const result = await adminApi.reactivateUser(1)
 
             expect(result.is_suspended).toBe(false)
+        })
+    })
+
+    describe('listWorkerVerifications', () => {
+        it('calls GET /admin/worker-verifications', async () => {
+            mockGet.mockResolvedValueOnce({data: mockVerificationQueue})
+
+            await adminApi.listWorkerVerifications()
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/worker-verifications')
+        })
+
+        it('returns the queue', async () => {
+            mockGet.mockResolvedValueOnce({data: mockVerificationQueue})
+
+            const result = await adminApi.listWorkerVerifications()
+
+            expect(result).toEqual(mockVerificationQueue)
+        })
+    })
+
+    describe('getVerificationDocumentUrl', () => {
+        it('calls GET /admin/worker-verifications/:id/document-url', async () => {
+            mockGet.mockResolvedValueOnce({data: {url: 'https://signed.example.com/cni.pdf'}})
+
+            await adminApi.getVerificationDocumentUrl(1)
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/worker-verifications/1/document-url')
+        })
+
+        it('returns the url', async () => {
+            mockGet.mockResolvedValueOnce({data: {url: 'https://signed.example.com/cni.pdf'}})
+
+            const result = await adminApi.getVerificationDocumentUrl(1)
+
+            expect(result).toBe('https://signed.example.com/cni.pdf')
+        })
+    })
+
+    describe('approveWorkerVerification', () => {
+        it('calls POST /admin/worker-verifications/:id/approve', async () => {
+            mockPost.mockResolvedValueOnce({data: {...mockUser, is_verified: true}})
+
+            await adminApi.approveWorkerVerification(1)
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/worker-verifications/1/approve')
+        })
+    })
+
+    describe('rejectWorkerVerification', () => {
+        it('calls POST /admin/worker-verifications/:id/reject with the reason', async () => {
+            mockPost.mockResolvedValueOnce({data: {...mockUser, is_verified: false}})
+
+            await adminApi.rejectWorkerVerification(1, 'Document is blurry')
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/worker-verifications/1/reject', {reason: 'Document is blurry'})
         })
     })
 })

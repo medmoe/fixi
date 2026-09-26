@@ -32,6 +32,12 @@ export const workerApi = {
         const {data} = await apiClient.post<WorkerProfileRead>(`/worker-profile/avatar`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
     },
+    uploadCniDocument: async (file: File): Promise<WorkerProfileRead> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const {data} = await apiClient.post<WorkerProfileRead>(`/worker-profile/cni-document`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
+        return data;
+    },
     getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {
         const {data} = await apiClient.get<TradeCategoryRead[] | TradeCategoryWithChildren[]>(`/trade-categories`)
         return data;
