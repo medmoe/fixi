@@ -21,8 +21,10 @@ const getInitials = (name: string): string =>
         .join("")
         .toUpperCase();
 
-export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km}) => {
+export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km: distanceOverride}) => {
     const {t} = useTranslation("worker");
+    // Geo searches return distance_km on the profile itself; the prop still wins if a caller passes one.
+    const distance_km = distanceOverride ?? profile.distance_km ?? undefined;
     const formatCurrency = useFormatCurrency();
     const formatNumber = useFormatNumber();
     const getTradeName = useLocalizedTradeName();

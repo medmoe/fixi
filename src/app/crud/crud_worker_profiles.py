@@ -145,11 +145,12 @@ class CRUDWorker(FastCRUD[
                     WorkerProfile.service_radius_km * 1000,
                 )
             )
-            # distance in km, used both for sort_by=distance and available for
-            # future response inclusion if the frontend wants to display it
+            # distance in km, used for sort_by=distance and returned as
+            # distance_km on each result
             distance_expr = (
                     ST_Distance(User.location.cast(Geography), customer_point.cast(Geography)) / 1000
             )
+            stmt = stmt.add_columns(distance_expr.label("distance_km"))
 
         if where_clauses:
             stmt = stmt.where(and_(*where_clauses))
@@ -206,9 +207,14 @@ class CRUDWorker(FastCRUD[
 
         stmt = stmt.offset(offset).limit(limit)
         result = await db.execute(stmt)
-        workers = result.scalars().unique().all()
-
-        data = [WorkerProfileWithTradesRead.model_validate(w) for w in workers]
+        if distance_expr is not None:
+            rows = result.unique().all()
+            data = [
+                WorkerProfileWithTradesRead.model_validate(worker).model_copy(update={"distance_km": round(distance_km, 2)})
+                for worker, distance_km in rows
+            ]
+        else:
+            data = [WorkerProfileWithTradesRead.model_validate(w) for w in result.scalars().unique().all()]
 
         return PaginatedListResponse(
             data=data,

@@ -155,6 +155,21 @@ describe("WorkerCard", () => {
             renderCard({profile: mockWorker(1), distance_km: 0});
             expect(screen.getByText("0.0 km away")).toBeInTheDocument();
         });
+
+        it("uses the distance_km returned on the profile by geo searches", () => {
+            renderCard({profile: mockWorker(1, {distance_km: 4.26})});
+            expect(screen.getByText("4.3 km away")).toBeInTheDocument();
+        });
+
+        it("hides distance when the profile's distance_km is null (non-geo search)", () => {
+            renderCard({profile: mockWorker(1, {distance_km: null})});
+            expect(screen.queryByText(/km away/i)).not.toBeInTheDocument();
+        });
+
+        it("prefers an explicit distance_km prop over the profile's", () => {
+            renderCard({profile: mockWorker(1, {distance_km: 9}), distance_km: 1.5});
+            expect(screen.getByText("1.5 km away")).toBeInTheDocument();
+        });
     });
 
     // ------------------------------------------------------------------ //

@@ -170,5 +170,15 @@
     "jobUpdateFailed": "Failed to update job",
     "applicationWithdrawn": "Application withdrawn",
     "withdrawApplicationFailed": "Failed to withdraw application"
+  },
+  "suggestedWorkers": {
+    "heading": "Suggested workers near you",
+    "subheading_one": "{{count}} available worker nearby",
+    "subheading_other": "{{count}} available workers nearby",
+    "noLocation": "Add a location to see workers near you.",
+    "addLocation": "Add location",
+    "loadError": "Couldn't load suggested workers. Please try again later.",
+    "emptyState": "No available workers cover this area right now. You'll still get applications from workers who find your job.",
+    "loadMore": "Show more workers"
   }
 }

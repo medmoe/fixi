@@ -36,7 +36,8 @@ export const JobCreateForm: React.FC = () => {
 
     const onSubmit = (data: JobCreateFormValues) => {
         createJob(data, {
-            onSuccess: () => navigate("/dashboard/jobs")
+            // Land on the new job so the owner immediately sees suggested nearby workers.
+            onSuccess: (createdJob) => navigate(`/dashboard/jobs/${createdJob.id}`)
         });
     };
 

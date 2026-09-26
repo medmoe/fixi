@@ -97,6 +97,9 @@ class TestGetNearbyWorkersEndpoint:
         )
         ids = [w["id"] for w in response.json()["data"]]
         assert ids.index(worker_near_job.id) < ids.index(worker_mid_distance_from_job.id)
+        distances = [w["distance_km"] for w in response.json()["data"]]
+        assert all(d is not None for d in distances)
+        assert distances == sorted(distances)
 
     # ------------------------------------------------------------------ #
     #  Trade category filtering                                            #
