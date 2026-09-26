@@ -11,7 +11,8 @@
     "navAccount": "الحساب",
     "navJobs": "المهام",
     "navAdmin": "لوحة الإدارة",
-    "navVerificationQueue": "قائمة انتظار التحقق"
+    "navVerificationQueue": "قائمة انتظار التحقق",
+    "navBillingDashboard": "لوحة العمولات"
   },
   "availability": {
     "availableForWork": "متاح للعمل",

@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {adminApi} from '../adminApi'
 import apiClient from '../apiClient'
 import type {UserRead} from '@/features/user'
-import type {AdminActionLogRead, WorkerVerificationQueueRead} from '@/features/admin'
+import type {AdminActionLogRead, WorkerBillingAdminRead, WorkerVerificationQueueRead} from '@/features/admin'
 import type {PaginatedListResponse} from '@/features/types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -11,6 +11,7 @@ vi.mock('../apiClient', () => ({
     default: {
         get: vi.fn(),
         post: vi.fn(),
+        patch: vi.fn(),
     },
 }))
 
@@ -61,10 +62,19 @@ const mockVerificationQueue: WorkerVerificationQueueRead[] = [
     {id: 1, user_id: 1, name: 'Ali', email: 'ali@example.com', bio: 'Plumber', years_of_experience: 5},
 ]
 
+const mockBillingRecords: WorkerBillingAdminRead[] = [
+    {
+        id: 1, worker_profile_id: 1, worker_name: 'Ali', worker_email: 'ali@example.com', job_id: 1,
+        amount_owed: '5.00', amount_paid: '0.00', due_date: '2026-10-01T00:00:00Z',
+        status: 'pending', is_overdue: false, payment_id: null, created_at: '2026-09-01T00:00:00Z',
+    },
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const mockGet = vi.mocked(apiClient.get)
 const mockPost = vi.mocked(apiClient.post)
+const mockPatch = vi.mocked(apiClient.patch)
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -239,6 +249,52 @@ describe('adminApi', () => {
             await adminApi.rejectWorkerVerification(1, 'Document is blurry')
 
             expect(mockPost).toHaveBeenCalledWith('/admin/worker-verifications/1/reject', {reason: 'Document is blurry'})
+        })
+    })
+
+    describe('listWorkerBilling', () => {
+        it('calls GET /worker-billing with the given filters', async () => {
+            mockGet.mockResolvedValueOnce({data: mockBillingRecords})
+
+            await adminApi.listWorkerBilling({status: 'paid'})
+
+            expect(mockGet).toHaveBeenCalledWith('/worker-billing', {params: {status: 'paid'}})
+        })
+
+        it('returns the records', async () => {
+            mockGet.mockResolvedValueOnce({data: mockBillingRecords})
+
+            const result = await adminApi.listWorkerBilling({})
+
+            expect(result).toEqual(mockBillingRecords)
+        })
+    })
+
+    describe('exportWorkerBillingCsv', () => {
+        it('calls GET /worker-billing/export with filters and blob response type', async () => {
+            const blob = new Blob(['csv'])
+            mockGet.mockResolvedValueOnce({data: blob})
+
+            const result = await adminApi.exportWorkerBillingCsv({status: 'paid'})
+
+            expect(mockGet).toHaveBeenCalledWith('/worker-billing/export', {params: {status: 'paid'}, responseType: 'blob'})
+            expect(result).toBe(blob)
+        })
+    })
+
+    describe('markWorkerBillingPaid', () => {
+        it('calls PATCH /worker-billing/:id/mark-paid', async () => {
+            mockPatch.mockResolvedValueOnce({data: {}})
+
+            await adminApi.markWorkerBillingPaid(1)
+
+            expect(mockPatch).toHaveBeenCalledWith('/worker-billing/1/mark-paid')
+        })
+
+        it('propagates errors from apiClient', async () => {
+            mockPatch.mockRejectedValueOnce(new Error('Already paid'))
+
+            await expect(adminApi.markWorkerBillingPaid(1)).rejects.toThrow('Already paid')
         })
     })
 })
