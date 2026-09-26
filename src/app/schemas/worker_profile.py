@@ -128,6 +128,8 @@ class WorkerProfileWithTradesRead(WorkerProfileRead):
     # Only set by geo searches (worker search with lat/lng, a job's nearby
     # workers) -- not a model column, so never part of an UPDATE RETURNING.
     distance_km: float | None = None
+    # Only set by searches: the worker's first portfolio photo, for result cards.
+    cover_image_url: str | None = None
 
 
 class AvailabilityToggleRequest(BaseModel):

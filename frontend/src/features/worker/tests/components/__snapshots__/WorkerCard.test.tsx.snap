@@ -66,7 +66,7 @@ exports[`WorkerCard > snapshot > matches snapshot for skeleton loading state 1`]
 exports[`WorkerCard > snapshot > matches snapshot with full profile data 1`] = `
 <div>
   <a
-    class="block rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    class="block overflow-hidden rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     href="/workers/1"
   >
     <article

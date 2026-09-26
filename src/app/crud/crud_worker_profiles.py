@@ -10,7 +10,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from ..models import User, WorkerProfile, WorkerTrade
+from ..models import PortfolioImage, User, WorkerProfile, WorkerTrade
 from ..schemas.worker_profile import WorkerProfileCreate, WorkerProfileDelete, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerSortBy
 
 
@@ -97,8 +97,17 @@ class CRUDWorker(FastCRUD[
         determinism, and hourly_rate/experience sort_by values still work
         without coordinates.
         """
+        # First portfolio photo as a search-card cover, fetched in the same
+        # query (a correlated subquery) rather than one request per card.
+        cover_image_url = (
+            select(PortfolioImage.image_url)
+            .where(PortfolioImage.worker_profile_id == WorkerProfile.id)
+            .order_by(PortfolioImage.created_at.asc(), PortfolioImage.id.asc())
+            .limit(1)
+            .scalar_subquery()
+        )
         stmt = (
-            select(WorkerProfile)
+            select(WorkerProfile, cover_image_url.label("cover_image_url"))
             .options(
                 joinedload(WorkerProfile.user),
                 selectinload(WorkerProfile.worker_trades).selectinload(WorkerTrade.trade_category),
@@ -207,14 +216,12 @@ class CRUDWorker(FastCRUD[
 
         stmt = stmt.offset(offset).limit(limit)
         result = await db.execute(stmt)
-        if distance_expr is not None:
-            rows = result.unique().all()
-            data = [
-                WorkerProfileWithTradesRead.model_validate(worker).model_copy(update={"distance_km": round(distance_km, 2)})
-                for worker, distance_km in rows
-            ]
-        else:
-            data = [WorkerProfileWithTradesRead.model_validate(w) for w in result.scalars().unique().all()]
+        data = []
+        for row in result.unique().all():
+            extras = {"cover_image_url": row.cover_image_url}
+            if distance_expr is not None:
+                extras["distance_km"] = round(row.distance_km, 2)
+            data.append(WorkerProfileWithTradesRead.model_validate(row.WorkerProfile).model_copy(update=extras))
 
         return PaginatedListResponse(
             data=data,

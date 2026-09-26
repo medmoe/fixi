@@ -154,7 +154,13 @@
     "avatarUploadFailed": "فشل رفع الصورة الشخصية",
     "cniUploaded": "تم رفع الوثيقة — بانتظار المراجعة",
     "cniUploadFailed": "فشل رفع الوثيقة",
-    "invoiceDownloadFailed": "تعذّر تنزيل الفاتورة. يرجى المحاولة مرة أخرى."
+    "invoiceDownloadFailed": "تعذّر تنزيل الفاتورة. يرجى المحاولة مرة أخرى.",
+    "portfolioImageUploaded": "تمت إضافة الصورة إلى أعمالك",
+    "portfolioImageUploadFailed": "تعذّر رفع الصورة. يرجى المحاولة مرة أخرى.",
+    "portfolioLimitReached": "لقد بلغت الحد الأقصى لعدد الصور.",
+    "portfolioInvalidImage": "هذا الملف ليس صورة مدعومة. استخدم صورة JPEG أو PNG أو WebP.",
+    "portfolioImageDeleted": "تم حذف الصورة",
+    "portfolioImageDeleteFailed": "تعذّر حذف الصورة. يرجى المحاولة مرة أخرى."
   },
   "billingTab": {
     "outstandingTitle": "العمولة المستحقة",
@@ -182,5 +188,26 @@
       "paid": "مدفوع",
       "overdue": "متأخر"
     }
+  },
+  "portfolio": {
+    "managerTitle": "أعمالي",
+    "managerDescription": "صور للأعمال التي أنجزتها. يراها العملاء في ملفك العام — وهي أفضل وسيلة لكسب ثقتهم.",
+    "counter": "{{count}}/{{max}} صور",
+    "emptyState": "لا توجد صور بعد. أضف صور قبل/بعد لأفضل أعمالك.",
+    "addPhoto": "إضافة صورة",
+    "uploading": "جارٍ الرفع...",
+    "limitReached": "لقد بلغت الحد الأقصى وهو {{max}} صور. احذف صورة لإضافة أخرى.",
+    "deleteImage": "حذف الصورة {{number}}",
+    "openImage": "عرض الصورة {{number}}",
+    "deleteConfirmTitle": "هل تريد حذف هذه الصورة؟",
+    "deleteConfirmDescription": "ستتم إزالتها من ملفك العام.",
+    "deleteConfirm": "حذف",
+    "cancel": "إلغاء",
+    "publicHeading": "أعمال سابقة",
+    "lightboxTitle": "صورة من الأعمال",
+    "imageAlt": "صورة الأعمال {{number}}",
+    "position": "{{current}} من {{total}}",
+    "previous": "الصورة السابقة",
+    "next": "الصورة التالية"
   }
 }

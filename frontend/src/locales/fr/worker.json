@@ -146,7 +146,13 @@
     "avatarUploadFailed": "Échec du téléversement de l'avatar",
     "cniUploaded": "Document téléversé — en attente de vérification",
     "cniUploadFailed": "Échec du téléversement du document",
-    "invoiceDownloadFailed": "Impossible de télécharger la facture. Veuillez réessayer."
+    "invoiceDownloadFailed": "Impossible de télécharger la facture. Veuillez réessayer.",
+    "portfolioImageUploaded": "Photo ajoutée à vos réalisations",
+    "portfolioImageUploadFailed": "Impossible de téléverser la photo. Veuillez réessayer.",
+    "portfolioLimitReached": "Vous avez atteint le nombre maximal de photos.",
+    "portfolioInvalidImage": "Ce fichier n'est pas une image prise en charge. Utilisez une photo JPEG, PNG ou WebP.",
+    "portfolioImageDeleted": "Photo supprimée",
+    "portfolioImageDeleteFailed": "Impossible de supprimer la photo. Veuillez réessayer."
   },
   "billingTab": {
     "outstandingTitle": "Commission due",
@@ -170,5 +176,26 @@
       "paid": "Payé",
       "overdue": "En retard"
     }
+  },
+  "portfolio": {
+    "managerTitle": "Mes réalisations",
+    "managerDescription": "Des photos de vos travaux. Les clients les voient sur votre profil public — c'est le meilleur moyen de gagner leur confiance.",
+    "counter": "{{count}}/{{max}} photos",
+    "emptyState": "Aucune photo pour le moment. Ajoutez des photos avant/après de vos meilleurs travaux.",
+    "addPhoto": "Ajouter une photo",
+    "uploading": "Téléversement...",
+    "limitReached": "Vous avez atteint la limite de {{max}} photos. Supprimez-en une pour en ajouter une autre.",
+    "deleteImage": "Supprimer la photo {{number}}",
+    "openImage": "Voir la photo {{number}}",
+    "deleteConfirmTitle": "Supprimer cette photo ?",
+    "deleteConfirmDescription": "Elle sera retirée de votre profil public.",
+    "deleteConfirm": "Supprimer",
+    "cancel": "Annuler",
+    "publicHeading": "Réalisations",
+    "lightboxTitle": "Photo de réalisation",
+    "imageAlt": "Photo de réalisation {{number}}",
+    "position": "{{current}} sur {{total}}",
+    "previous": "Photo précédente",
+    "next": "Photo suivante"
   }
 }

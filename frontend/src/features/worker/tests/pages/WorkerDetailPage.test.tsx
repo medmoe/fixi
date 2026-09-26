@@ -35,6 +35,9 @@ vi.mock('@/features/worker/hooks/useWorkerProfile', async () => {
 // This page mounts <ReviewsSection>, which fetches reviews on its own —
 // mocked here so this file stays a pure WorkerDetailPage test, not an
 // integration test that hits the network.
+vi.mock('@/features/worker/components/PortfolioGallery', () => ({
+    PortfolioGallery: ({workerProfileId}: { workerProfileId: number }) => <div data-testid="portfolio-gallery">{workerProfileId}</div>,
+}))
 vi.mock('@/features/review/hooks/useWorkerReviews')
 vi.mock('@/features/review/hooks/useWorkerReviewEligibility')
 
@@ -234,6 +237,15 @@ describe('WorkerDetailPage', () => {
                 isLoading: false,
                 isError: false,
             } as any)
+        })
+
+        it('renders the worker\'s public portfolio gallery', () => {
+            render(
+                <WorkerDetailPage/>,
+                {wrapper: createWrapper(queryClient)}
+            )
+
+            expect(screen.getByTestId('portfolio-gallery')).toBeInTheDocument()
         })
 
         it('renders worker name', () => {

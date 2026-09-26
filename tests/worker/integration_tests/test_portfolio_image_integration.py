@@ -154,3 +154,41 @@ class TestPortfolioImageIntegration:
         assert res.status_code == 204
         response = await async_client.get(f"/api/v1/worker-profile/{test_worker_profile.id}/portfolio-images/{image_to_delete}", headers=auth_headers)
         assert response.status_code == 404
+
+    @pytest.mark.integration
+    async def test_delete_removes_the_stored_object(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        # Upload first so the image_url points at our bucket, then delete it.
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
+        delete_file = MagicMock(return_value=None)
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.delete_file", delete_file)
+        uploaded = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("a.png", _real_png(), "image/png")})
+        assert uploaded.status_code == 201
+
+        res = await async_client.delete(f"/api/v1/worker-profile/portfolio-images/{uploaded.json()['id']}", headers=auth_headers)
+
+        assert res.status_code == 204
+        key = delete_file.call_args.kwargs["key"]
+        assert key.startswith(f"portfolio_images/{test_worker_profile.user_id}/")
+        assert uploaded.json()["image_url"].endswith(key)
+
+    @pytest.mark.integration
+    async def test_delete_still_succeeds_when_storage_cleanup_fails(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.delete_file", MagicMock(side_effect=RuntimeError("minio down")))
+        uploaded = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("a.png", _real_png(), "image/png")})
+
+        res = await async_client.delete(f"/api/v1/worker-profile/portfolio-images/{uploaded.json()['id']}", headers=auth_headers)
+
+        assert res.status_code == 204
+
+    @pytest.mark.integration
+    async def test_delete_skips_storage_for_foreign_urls(self, async_client: AsyncClient, test_portfolio_images: list[PortfolioImage], auth_headers: dict, test_worker_profile: WorkerProfile, monkeypatch: pytest.MonkeyPatch):
+        # Seeded rows point at arbitrary URLs we never uploaded -- nothing to delete in our bucket.
+        delete_file = MagicMock(return_value=None)
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.delete_file", delete_file)
+        own = next(i for i in test_portfolio_images if i.worker_profile_id == test_worker_profile.id)
+
+        res = await async_client.delete(f"/api/v1/worker-profile/portfolio-images/{own.id}", headers=auth_headers)
+
+        assert res.status_code == 204
+        delete_file.assert_not_called()

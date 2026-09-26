@@ -135,6 +135,18 @@ describe("WorkerCard", () => {
     //  Distance                                                             //
     // ------------------------------------------------------------------ //
 
+    describe("cover image", () => {
+        it("shows the first portfolio photo as a cover when search returned one", () => {
+            renderCard({profile: mockWorker(1, {cover_image_url: "https://cdn.example.com/work.jpg"})});
+            expect(screen.getByTestId("worker-card-cover")).toHaveAttribute("src", "https://cdn.example.com/work.jpg");
+        });
+
+        it("has no cover when the worker has no portfolio photos", () => {
+            renderCard({profile: mockWorker(1, {cover_image_url: null})});
+            expect(screen.queryByTestId("worker-card-cover")).not.toBeInTheDocument();
+        });
+    });
+
     describe("distance", () => {
         it("shows distance when provided", () => {
             renderCard({profile: mockWorker(1), distance_km: 2.3});

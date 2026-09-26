@@ -16,6 +16,9 @@ vi.mock('@/features/worker', () => ({
 vi.mock('@/features/worker/components/ProfileForm', () => ({
     ProfileForm: () => <div data-testid="profile-form">ProfileForm</div>,
 }))
+vi.mock('@/features/worker/components/PortfolioManager', () => ({
+    PortfolioManager: ({workerProfileId}: { workerProfileId: number }) => <div data-testid="portfolio-manager">{workerProfileId}</div>,
+}))
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -137,6 +140,16 @@ describe('ProfileTab', () => {
             } as any)
             renderComponent()
             expect(screen.getByTestId('profile-form')).toBeInTheDocument()
+        })
+        it('renders the portfolio manager for the worker\'s own profile', () => {
+            vi.mocked(useWorkerProfile).mockReturnValue({
+                data: mockProfile,
+                isLoading: false,
+                isError: false,
+                error: null,
+            } as any)
+            renderComponent()
+            expect(screen.getByTestId('portfolio-manager')).toHaveTextContent(String(mockProfile.id))
         })
         it('renders page header with title', () => {
             vi.mocked(useWorkerProfile).mockReturnValue({

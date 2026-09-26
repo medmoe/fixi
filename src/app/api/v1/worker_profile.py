@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 from datetime import UTC, datetime
@@ -28,6 +29,8 @@ from ...services.image_processing import sanitize_image
 from ...services.minio_client import minio_client
 from ...services.review_eligibility_service import check_worker_review_eligibility
 from ...services.worker_verification_service import approve_worker_verification
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["workers"], prefix="/worker-profile")
 
@@ -73,6 +76,12 @@ async def _upload_image_file(
     # build CDN URL — same pattern as FileRead.file_url
     cdn_url = f"{settings.APP_S3_ENDPOINT.rstrip('/')}/{minio_client.bucket_uploads}/{key}"
     return cdn_url
+
+
+def _object_key_from_url(url: str) -> str | None:
+    """Inverse of the CDN URL built by _upload_image_file. None for URLs we didn't produce (e.g. seeded data)."""
+    prefix = f"{settings.APP_S3_ENDPOINT.rstrip('/')}/{minio_client.bucket_uploads}/"
+    return url[len(prefix):] if url.startswith(prefix) else None
 
 
 # ————— GET /worker-profile ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -317,7 +326,9 @@ async def get_portfolio_images(
         db=db,
         worker_profile_id=worker_profile_id,
         schema_to_select=PortfolioImageRead,
-        return_as_model=True
+        return_as_model=True,
+        sort_columns="created_at",
+        sort_orders="asc",
     )
     return result["data"]
 
@@ -331,10 +342,25 @@ async def delete_portfolio_image(
         current_user: Annotated[dict, Depends(get_current_user)],
 ) -> None:
     worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
+    portfolio_image = await crud_portfolio_images.get(
+        db=db, id=portfolio_image_id, worker_profile_id=worker_profile.id, schema_to_select=PortfolioImageRead, return_as_model=True
+    )
+    if portfolio_image is None:
+        raise NotFoundException("Portfolio image not found")
     try:
         await crud_portfolio_images.delete(db=db, id=portfolio_image_id, worker_profile_id=worker_profile.id)
     except NoResultFound:
         raise NotFoundException("Portfolio image not found")
+
+    # The bucket is public-read: a deleted photo must stop being reachable,
+    # not just disappear from the gallery. Best-effort -- the row is already
+    # gone, so a storage hiccup shouldn't turn into a 500 for the user.
+    key = _object_key_from_url(portfolio_image.image_url)
+    if key is not None:
+        try:
+            minio_client.delete_file(bucket=minio_client.bucket_uploads, key=key)
+        except Exception:
+            logger.exception("Failed to delete portfolio image object %s", key)
 
 
 # ————— GET /worker-profile/search ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
