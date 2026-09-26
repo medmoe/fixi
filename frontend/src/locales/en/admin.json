@@ -157,5 +157,14 @@
     "billingMarkedPaid": "Marked as paid",
     "markPaidFailed": "Failed to mark as paid",
     "exportFailed": "Failed to export CSV"
+  },
+  "layout": {
+    "title": "Admin panel",
+    "roleLabel": "Administrator",
+    "navUsers": "Users",
+    "navVerifications": "Verification queue",
+    "navBilling": "Commission dashboard",
+    "navAnalytics": "Platform analytics",
+    "navAccount": "Account"
   }
 }

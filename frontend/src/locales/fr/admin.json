@@ -157,5 +157,14 @@
     "billingMarkedPaid": "Marqué comme payé",
     "markPaidFailed": "Échec du marquage comme payé",
     "exportFailed": "Échec de l'exportation CSV"
+  },
+  "layout": {
+    "title": "Panneau d'administration",
+    "roleLabel": "Administrateur",
+    "navUsers": "Utilisateurs",
+    "navVerifications": "File de vérification",
+    "navBilling": "Tableau de bord des commissions",
+    "navAnalytics": "Statistiques de la plateforme",
+    "navAccount": "Compte"
   }
 }

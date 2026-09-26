@@ -14,7 +14,7 @@ One JSON file per locale per feature namespace: `src/locales/{ar,fr,en}/<feature
 
 ## Auth model
 
-`is_superuser` is a boolean flag on any customer/worker account, not a separate `role_type` (which is only ever `'customer' | 'worker'`). Gate admin-only routes with `<ProtectedRoute requireSuperuser>`, not `allowedRoles`. There's no separate admin shell/layout — admins reach admin pages via a conditional nav link in the existing dashboard sidebars (`DashboardLayout.tsx` for customers, `WorkerDashboardPage.tsx` for workers), and each admin page is a flat route under `/admin/...`.
+`is_superuser` is a boolean flag on any customer/worker account, not a separate `role_type` (which is only ever `'customer' | 'worker'`). Gate admin-only routes with `<ProtectedRoute requireSuperuser>`, not `allowedRoles`. Superuser accounts are admin-only (`documentation/decisions/004-admin-accounts-are-admin-only.md`): `RoleBasedDashboard` sends them from any `/dashboard/*` URL to `/admin/users`, and every admin page is a child route of `/admin`, rendered inside `AdminLayout` (`features/admin/components/`). A new admin page needs both a child route in `router.tsx` and an entry in `AdminLayout`'s `navItems`. Admins are created with `src/scripts/create_first_superuser.py`, never by promoting a customer/worker.
 
 ## Testing conventions
 

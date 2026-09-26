@@ -25,6 +25,22 @@ class TestListUsers:
         assert len(body["data"]) == 1
         assert body["data"][0]["id"] == target.id
 
+    async def test_excludes_admin_accounts(self, async_client: AsyncClient, admin_auth_headers, test_admin_user, test_user: User):
+        response = await async_client.get("/api/v1/admin/users", params={"limit": 100}, headers=admin_auth_headers)
+
+        assert response.status_code == 200
+        body = response.json()
+        ids = {u["id"] for u in body["data"]}
+        assert test_admin_user.id not in ids
+        assert test_user.id in ids
+        assert all(not u["is_superuser"] for u in body["data"])
+
+    async def test_search_never_matches_admin_accounts(self, async_client: AsyncClient, admin_auth_headers, test_admin_user):
+        response = await async_client.get("/api/v1/admin/users", params={"search": test_admin_user.username}, headers=admin_auth_headers)
+
+        assert response.status_code == 200
+        assert response.json()["data"] == []
+
     async def test_non_admin_forbidden(self, async_client: AsyncClient, auth_headers):
         response = await async_client.get("/api/v1/admin/users", headers=auth_headers)
         assert response.status_code == 403

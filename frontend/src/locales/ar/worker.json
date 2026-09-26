@@ -9,11 +9,7 @@
     "errorDescription": "واجهنا مشكلة أثناء تحميل بيانات حسابك. يرجى المحاولة مرة أخرى لاحقًا.",
     "navProfile": "الملف الشخصي",
     "navAccount": "الحساب",
-    "navJobs": "المهام",
-    "navAdmin": "لوحة الإدارة",
-    "navVerificationQueue": "قائمة انتظار التحقق",
-    "navBillingDashboard": "لوحة العمولات",
-    "navAnalytics": "إحصاءات المنصة"
+    "navJobs": "المهام"
   },
   "availability": {
     "availableForWork": "متاح للعمل",

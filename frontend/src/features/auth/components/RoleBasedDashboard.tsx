@@ -9,6 +9,10 @@
 // a worker navigating directly to e.g. /dashboard/jobs will still just see
 // WorkerDashboardPage — the matched child route is never displayed, since
 // there's no Outlet in that render tree to display it in.
+//
+// Superuser: admin accounts are admin-only, so they never see a
+// customer/worker dashboard — any /dashboard/* URL sends them to the
+// admin panel instead, regardless of their (inert) role_type.
 import { useUser } from '@/features/user'
 import { WorkerDashboardPage } from '@/features/worker/pages/WorkerDashboardPage'
 import { DashboardLayout } from '@/features/auth'
@@ -18,6 +22,8 @@ export const RoleBasedDashboard: React.FC = () => {
     const { data: user } = useUser()
 
     if (!user) return <Navigate to="/login" replace />
+
+    if (user.is_superuser) return <Navigate to="/admin/users" replace />
 
     switch (user.role_type) {
         case 'worker':

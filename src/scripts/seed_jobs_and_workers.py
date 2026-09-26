@@ -121,7 +121,7 @@ async def get_or_create_user(db: AsyncSession, username: str, name: str, role: U
     user = User(
         name=name,
         username=username,
-        email=f"{username}@seed.local",
+        email=f"{username}@seed.example.com",
         hashed_password=get_password_hash(SEED_PASSWORD),
         role_type=role,
         is_superuser=False,

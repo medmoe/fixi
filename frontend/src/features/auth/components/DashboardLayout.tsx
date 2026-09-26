@@ -5,7 +5,7 @@ import {useUser} from '@/features/user'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
 import {LogoutButton} from '@/components/LogoutButton'
-import {AlertCircle, ArrowLeft, Banknote, BarChart3, FileCheck, Home, Loader2, Search, Shield, UserCircle} from 'lucide-react'
+import {AlertCircle, ArrowLeft, Home, Loader2, Search, UserCircle} from 'lucide-react'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 
 type Tab = 'profile' | 'account' | 'jobs'
@@ -86,38 +86,6 @@ export const DashboardLayout: React.FC = () => {
                 </nav>
 
                 <div className="p-4 border-t space-y-2">
-                    {user.is_superuser && (
-                        <>
-                            <button
-                                onClick={() => navigate('/admin/users')}
-                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
-                            >
-                                <Shield className="h-4 w-4"/>
-                                {t('dashboard.navAdmin')}
-                            </button>
-                            <button
-                                onClick={() => navigate('/admin/worker-verifications')}
-                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
-                            >
-                                <FileCheck className="h-4 w-4"/>
-                                {t('dashboard.navVerificationQueue')}
-                            </button>
-                            <button
-                                onClick={() => navigate('/admin/worker-billing')}
-                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
-                            >
-                                <Banknote className="h-4 w-4"/>
-                                {t('dashboard.navBillingDashboard')}
-                            </button>
-                            <button
-                                onClick={() => navigate('/admin/analytics')}
-                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
-                            >
-                                <BarChart3 className="h-4 w-4"/>
-                                {t('dashboard.navAnalytics')}
-                            </button>
-                        </>
-                    )}
                     <LogoutButton/>
                 </div>
             </aside>
