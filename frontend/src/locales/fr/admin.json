@@ -162,7 +162,9 @@
     "reviewKept": "Avis conservé — signalements rejetés",
     "keepReviewFailed": "Impossible de rejeter les signalements. Veuillez réessayer.",
     "reviewRemoved": "Avis supprimé",
-    "removeReviewFailed": "Impossible de supprimer l'avis. Veuillez réessayer."
+    "removeReviewFailed": "Impossible de supprimer l'avis. Veuillez réessayer.",
+    "userDeleted": "Compte définitivement supprimé",
+    "deleteUserFailed": "Impossible de supprimer le compte. Veuillez réessayer."
   },
   "layout": {
     "title": "Panneau d'administration",
@@ -192,5 +194,21 @@
     "removeConfirmDescription": "L'avis sera masqué du profil du professionnel et sa note sera recalculée.",
     "cancel": "Annuler",
     "saving": "Enregistrement..."
+  },
+  "permanentDelete": {
+    "dangerZoneTitle": "Zone de danger",
+    "dangerZoneDescription": "Supprimer définitivement ce compte, par ex. suite à une demande de suppression des données. Action irréversible.",
+    "button": "Supprimer définitivement",
+    "confirmTitle": "Supprimer définitivement ce compte ?",
+    "confirmDescription": "Cette action est irréversible. Seront supprimés :",
+    "consequenceAccount": "Le compte, le profil, les photos et la pièce d'identité",
+    "consequenceJobs": "Ses missions, candidatures et avis (donnés et reçus)",
+    "consequenceBilling": "Les commissions et paiements liés à ses missions ou à son profil professionnel",
+    "typeToConfirm": "Tapez {{username}} pour confirmer",
+    "reasonAriaLabel": "Motif",
+    "reasonPlaceholder": "Motif (ex. référence de la demande de suppression) — enregistré dans le journal d'audit",
+    "cancel": "Annuler",
+    "confirmButton": "Supprimer définitivement",
+    "deleting": "Suppression..."
   }
 }

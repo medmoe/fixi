@@ -178,7 +178,9 @@
     "reviewKept": "تم إبقاء التقييم ورفض البلاغات",
     "keepReviewFailed": "تعذّر رفض البلاغات. يرجى المحاولة مرة أخرى.",
     "reviewRemoved": "تم حذف التقييم",
-    "removeReviewFailed": "تعذّر حذف التقييم. يرجى المحاولة مرة أخرى."
+    "removeReviewFailed": "تعذّر حذف التقييم. يرجى المحاولة مرة أخرى.",
+    "userDeleted": "تم حذف الحساب نهائيًا",
+    "deleteUserFailed": "تعذّر حذف الحساب. يرجى المحاولة مرة أخرى."
   },
   "layout": {
     "title": "لوحة الإدارة",
@@ -216,5 +218,21 @@
     "removeConfirmDescription": "سيتم إخفاء التقييم من ملف المحترف وإعادة حساب تقييمه.",
     "cancel": "إلغاء",
     "saving": "جارٍ الحفظ..."
+  },
+  "permanentDelete": {
+    "dangerZoneTitle": "منطقة الخطر",
+    "dangerZoneDescription": "حذف هذا الحساب نهائيًا، مثلًا تلبيةً لطلب حذف البيانات. لا يمكن التراجع عن ذلك.",
+    "button": "حذف نهائي",
+    "confirmTitle": "هل تريد حذف هذا الحساب نهائيًا؟",
+    "confirmDescription": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف:",
+    "consequenceAccount": "الحساب والملف الشخصي والصور ووثيقة الهوية",
+    "consequenceJobs": "مهامه وطلباته والتقييمات (المقدَّمة والمستلمة)",
+    "consequenceBilling": "سجلات العمولات والمدفوعات المرتبطة بمهامه أو بملفه المهني",
+    "typeToConfirm": "اكتب {{username}} للتأكيد",
+    "reasonAriaLabel": "السبب",
+    "reasonPlaceholder": "السبب (مثل مرجع طلب الحذف) — يُسجَّل في سجل التدقيق",
+    "cancel": "إلغاء",
+    "confirmButton": "حذف نهائي",
+    "deleting": "جارٍ الحذف..."
   }
 }

@@ -162,7 +162,9 @@
     "reviewKept": "Review kept — reports dismissed",
     "keepReviewFailed": "Couldn't dismiss the reports. Please try again.",
     "reviewRemoved": "Review removed",
-    "removeReviewFailed": "Couldn't remove the review. Please try again."
+    "removeReviewFailed": "Couldn't remove the review. Please try again.",
+    "userDeleted": "Account permanently deleted",
+    "deleteUserFailed": "Couldn't delete the account. Please try again."
   },
   "layout": {
     "title": "Admin panel",
@@ -192,5 +194,21 @@
     "removeConfirmDescription": "The review will be hidden from the worker's profile and their rating recalculated.",
     "cancel": "Cancel",
     "saving": "Saving..."
+  },
+  "permanentDelete": {
+    "dangerZoneTitle": "Danger zone",
+    "dangerZoneDescription": "Permanently delete this account, e.g. for a data-deletion request. This cannot be undone.",
+    "button": "Delete permanently",
+    "confirmTitle": "Permanently delete this account?",
+    "confirmDescription": "This cannot be undone. It will delete:",
+    "consequenceAccount": "The account, profile, photos and ID document",
+    "consequenceJobs": "Their jobs, applications and reviews (given and received)",
+    "consequenceBilling": "Commission and payment records tied to their jobs or worker profile",
+    "typeToConfirm": "Type {{username}} to confirm",
+    "reasonAriaLabel": "Reason",
+    "reasonPlaceholder": "Reason (e.g. deletion request reference) — recorded in the audit log",
+    "cancel": "Cancel",
+    "confirmButton": "Delete permanently",
+    "deleting": "Deleting..."
   }
 }

@@ -82,6 +82,17 @@ class MinioClient:
             Key=key
         )
 
+    def delete_prefix(self, bucket: str, prefix: str) -> int:
+        """Delete every object whose key starts with `prefix`; returns how many were deleted."""
+        deleted = 0
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+            keys = [{"Key": obj["Key"]} for obj in page.get("Contents", [])]
+            if keys:
+                self.client.delete_objects(Bucket=bucket, Delete={"Objects": keys})
+                deleted += len(keys)
+        return deleted
+
     def ensure_private_bucket_exists(self, bucket: str) -> None:
         """Create `bucket` if it doesn't exist, with no bucket policy --
         buckets are private by default. For content (CNI verification

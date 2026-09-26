@@ -1,11 +1,13 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {MemoryRouter} from "react-router-dom";
 
 import {AdminUserDetailPage} from "../AdminUserDetailPage";
 import {useAdminUserDetail} from "../../hooks/useAdminUserDetail";
 import {useSuspendUser} from "../../hooks/useSuspendUser";
 import {useReactivateUser} from "../../hooks/useReactivateUser";
+import {usePermanentlyDeleteUser} from "../../hooks/usePermanentlyDeleteUser";
 
 vi.mock("react-router-dom", async (importOriginal) => {
     const actual = await importOriginal<typeof import("react-router-dom")>();
@@ -18,6 +20,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
 vi.mock("../../hooks/useAdminUserDetail", () => ({useAdminUserDetail: vi.fn()}));
 vi.mock("../../hooks/useSuspendUser", () => ({useSuspendUser: vi.fn()}));
 vi.mock("../../hooks/useReactivateUser", () => ({useReactivateUser: vi.fn()}));
+vi.mock("../../hooks/usePermanentlyDeleteUser", () => ({usePermanentlyDeleteUser: vi.fn()}));
+vi.mock("../../components/PermanentDeleteUserDialog", () => ({
+    PermanentDeleteUserDialog: vi.fn(({username, onConfirm}: any) => (
+        <button type="button" onClick={() => onConfirm("GDPR #1")}>Delete {username}</button>
+    )),
+}));
 
 vi.mock("../../components/UserStatusBadge", () => ({
     UserStatusBadge: vi.fn(({isSuspended}: any) => <span data-testid="status-badge">{isSuspended ? "Suspended" : "Active"}</span>),
@@ -57,10 +65,13 @@ const mockUser = {
 const renderPage = () => render(<AdminUserDetailPage/>, {wrapper: MemoryRouter});
 
 describe("AdminUserDetailPage", () => {
+    const mockDelete = vi.fn();
+
     beforeEach(() => {
         vi.clearAllMocks();
         mockUseSuspendUser.mockReturnValue({mutate: vi.fn(), isPending: false} as any);
         mockUseReactivateUser.mockReturnValue({mutate: vi.fn(), isPending: false} as any);
+        vi.mocked(usePermanentlyDeleteUser).mockReturnValue({mutate: mockDelete, isPending: false} as any);
     });
 
     it("shows a loading state", () => {
@@ -113,5 +124,21 @@ describe("AdminUserDetailPage", () => {
         } as any);
         renderPage();
         expect(screen.getByTestId("audit-log")).toHaveTextContent("2 entries");
+    });
+
+    it("offers permanent deletion in a danger zone and wires it to the mutation", async () => {
+        mockUseAdminUserDetail.mockReturnValue({user: mockUser, isLoading: false, error: null, auditLog: []} as any);
+        renderPage();
+
+        expect(screen.getByText("Danger zone")).toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", {name: "Delete john_doe"}));
+        expect(mockDelete).toHaveBeenCalledWith("GDPR #1");
+    });
+
+    it("does not offer permanent deletion for admin accounts", () => {
+        mockUseAdminUserDetail.mockReturnValue({user: {...mockUser, is_superuser: true}, isLoading: false, error: null, auditLog: []} as any);
+        renderPage();
+
+        expect(screen.queryByText("Danger zone")).not.toBeInTheDocument();
     });
 });

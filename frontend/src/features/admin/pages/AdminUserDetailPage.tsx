@@ -9,6 +9,8 @@ import {useReactivateUser} from "../hooks/useReactivateUser";
 import {UserStatusBadge} from "../components/UserStatusBadge";
 import {SuspendUserDialog} from "../components/SuspendUserDialog";
 import {AdminAuditLogList} from "../components/AdminAuditLogList";
+import {PermanentDeleteUserDialog} from "../components/PermanentDeleteUserDialog";
+import {usePermanentlyDeleteUser} from "../hooks/usePermanentlyDeleteUser";
 
 export const AdminUserDetailPage: React.FC = () => {
     const {t} = useTranslation("admin");
@@ -18,6 +20,7 @@ export const AdminUserDetailPage: React.FC = () => {
     const {user, isLoading, error, auditLog} = useAdminUserDetail(id);
     const suspendMutation = useSuspendUser(id);
     const reactivateMutation = useReactivateUser(id);
+    const deleteMutation = usePermanentlyDeleteUser(id);
 
     if (isLoading) {
         return (
@@ -82,6 +85,23 @@ export const AdminUserDetailPage: React.FC = () => {
                     <AdminAuditLogList entries={auditLog}/>
                 </CardContent>
             </Card>
+
+            {/* The backend refuses to delete admins -- don't offer it. */}
+            {!user.is_superuser && (
+                <Card className="border-destructive/50">
+                    <CardHeader>
+                        <CardTitle className="text-base text-destructive">{t("permanentDelete.dangerZoneTitle")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <p className="text-sm text-muted-foreground">{t("permanentDelete.dangerZoneDescription")}</p>
+                        <PermanentDeleteUserDialog
+                            username={user.username}
+                            isPending={deleteMutation.isPending}
+                            onConfirm={(reason) => deleteMutation.mutate(reason)}
+                        />
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 };
