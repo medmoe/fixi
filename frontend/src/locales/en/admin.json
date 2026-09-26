@@ -156,7 +156,11 @@
     "documentUrlFailed": "Failed to open document",
     "billingMarkedPaid": "Marked as paid",
     "markPaidFailed": "Failed to mark as paid",
-    "exportFailed": "Failed to export CSV"
+    "exportFailed": "Failed to export CSV",
+    "reviewKept": "Review kept — reports dismissed",
+    "keepReviewFailed": "Couldn't dismiss the reports. Please try again.",
+    "reviewRemoved": "Review removed",
+    "removeReviewFailed": "Couldn't remove the review. Please try again."
   },
   "layout": {
     "title": "Admin panel",
@@ -165,6 +169,26 @@
     "navVerifications": "Verification queue",
     "navBilling": "Commission dashboard",
     "navAnalytics": "Platform analytics",
-    "navAccount": "Account"
+    "navAccount": "Account",
+    "navFlaggedReviews": "Flagged reviews"
+  },
+  "flaggedReviews": {
+    "title": "Flagged reviews",
+    "loading": "Loading...",
+    "pendingCount_one": "{{count}} review awaiting moderation",
+    "pendingCount_other": "{{count}} reviews awaiting moderation",
+    "loadError": "Something went wrong loading flagged reviews. Please try again.",
+    "emptyState": "No reviews awaiting moderation.",
+    "reportCount_one": "{{count}} report",
+    "reportCount_other": "{{count}} reports",
+    "ratingLabel": "Rated {{rating}} out of 5",
+    "noComment": "No comment",
+    "byline": "{{reviewer}} → {{reviewee}} · {{date}}",
+    "keepButton": "Keep",
+    "removeButton": "Remove",
+    "removeConfirmTitle": "Remove this review?",
+    "removeConfirmDescription": "The review will be hidden from the worker's profile and their rating recalculated.",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }

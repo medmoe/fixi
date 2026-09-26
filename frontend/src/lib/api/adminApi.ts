@@ -6,6 +6,7 @@ import type {
     AdminUserFilters,
     AnalyticsDateRangeFilters,
     ConversionFunnelRead,
+    FlaggedReviewRead,
     PlatformBreakdownRead,
     PlatformOverviewRead,
     WorkerBillingAdminFilters,
@@ -51,6 +52,16 @@ export const adminApi = {
     rejectWorkerVerification: async (workerProfileId: number, reason: string): Promise<WorkerProfileRead> => {
         const {data} = await apiClient.post<WorkerProfileRead>(`/admin/worker-verifications/${workerProfileId}/reject`, {reason})
         return data
+    },
+    listFlaggedReviews: async (): Promise<FlaggedReviewRead[]> => {
+        const {data} = await apiClient.get<FlaggedReviewRead[]>('/admin/flagged-reviews')
+        return data
+    },
+    approveFlaggedReview: async (reviewId: number): Promise<void> => {
+        await apiClient.post(`/admin/flagged-reviews/${reviewId}/approve`)
+    },
+    removeFlaggedReview: async (reviewId: number): Promise<void> => {
+        await apiClient.post(`/admin/flagged-reviews/${reviewId}/remove`)
     },
     listWorkerBilling: async (filters: WorkerBillingAdminFilters): Promise<WorkerBillingAdminRead[]> => {
         const {data} = await apiClient.get<WorkerBillingAdminRead[]>('/worker-billing', {params: filters})

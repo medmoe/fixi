@@ -66,7 +66,7 @@ describe("AdminLayout", () => {
         renderAt("/admin/users");
 
         const nav = within(sidebarNav());
-        for (const label of ["Users", "Verification queue", "Commission dashboard", "Platform analytics", "Account"]) {
+        for (const label of ["Users", "Verification queue", "Flagged reviews", "Commission dashboard", "Platform analytics", "Account"]) {
             expect(nav.getByRole("button", {name: label})).toBeInTheDocument();
         }
     });

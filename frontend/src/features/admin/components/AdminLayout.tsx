@@ -6,7 +6,7 @@
 import React from 'react'
 import {useTranslation} from 'react-i18next'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
-import {Banknote, BarChart3, FileCheck, Shield, UserCircle, Users} from 'lucide-react'
+import {Banknote, BarChart3, FileCheck, Flag, Shield, UserCircle, Users} from 'lucide-react'
 import {useUser} from '@/features/user'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
@@ -21,6 +21,7 @@ export const AdminLayout: React.FC = () => {
     const navItems = [
         {path: '/admin/users', label: t('layout.navUsers'), icon: <Users className="h-4 w-4"/>},
         {path: '/admin/worker-verifications', label: t('layout.navVerifications'), icon: <FileCheck className="h-4 w-4"/>},
+        {path: '/admin/flagged-reviews', label: t('layout.navFlaggedReviews'), icon: <Flag className="h-4 w-4"/>},
         {path: '/admin/worker-billing', label: t('layout.navBilling'), icon: <Banknote className="h-4 w-4"/>},
         {path: '/admin/analytics', label: t('layout.navAnalytics'), icon: <BarChart3 className="h-4 w-4"/>},
         {path: '/admin/account', label: t('layout.navAccount'), icon: <UserCircle className="h-4 w-4"/>},

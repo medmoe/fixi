@@ -172,7 +172,11 @@
     "documentUrlFailed": "فشل فتح الوثيقة",
     "billingMarkedPaid": "تم وضع علامة كمدفوع",
     "markPaidFailed": "فشل وضع علامة كمدفوع",
-    "exportFailed": "فشل تصدير CSV"
+    "exportFailed": "فشل تصدير CSV",
+    "reviewKept": "تم إبقاء التقييم ورفض البلاغات",
+    "keepReviewFailed": "تعذّر رفض البلاغات. يرجى المحاولة مرة أخرى.",
+    "reviewRemoved": "تم حذف التقييم",
+    "removeReviewFailed": "تعذّر حذف التقييم. يرجى المحاولة مرة أخرى."
   },
   "layout": {
     "title": "لوحة الإدارة",
@@ -181,6 +185,34 @@
     "navVerifications": "قائمة انتظار التحقق",
     "navBilling": "لوحة العمولات",
     "navAnalytics": "إحصاءات المنصة",
-    "navAccount": "الحساب"
+    "navAccount": "الحساب",
+    "navFlaggedReviews": "التقييمات المُبلَّغ عنها"
+  },
+  "flaggedReviews": {
+    "title": "التقييمات المُبلَّغ عنها",
+    "loading": "جارٍ التحميل...",
+    "pendingCount_zero": "لا توجد تقييمات بانتظار الإشراف",
+    "pendingCount_one": "تقييم واحد بانتظار الإشراف",
+    "pendingCount_two": "تقييمان بانتظار الإشراف",
+    "pendingCount_few": "{{count}} تقييمات بانتظار الإشراف",
+    "pendingCount_many": "{{count}} تقييمًا بانتظار الإشراف",
+    "pendingCount_other": "{{count}} تقييم بانتظار الإشراف",
+    "loadError": "حدث خطأ أثناء تحميل التقييمات المُبلَّغ عنها. يرجى المحاولة مرة أخرى.",
+    "emptyState": "لا توجد تقييمات بانتظار الإشراف.",
+    "reportCount_zero": "لا توجد بلاغات",
+    "reportCount_one": "بلاغ واحد",
+    "reportCount_two": "بلاغان",
+    "reportCount_few": "{{count}} بلاغات",
+    "reportCount_many": "{{count}} بلاغًا",
+    "reportCount_other": "{{count}} بلاغ",
+    "ratingLabel": "التقييم: {{rating}} من 5",
+    "noComment": "بدون تعليق",
+    "byline": "{{reviewer}} ← {{reviewee}} · {{date}}",
+    "keepButton": "إبقاء",
+    "removeButton": "حذف",
+    "removeConfirmTitle": "هل تريد حذف هذا التقييم؟",
+    "removeConfirmDescription": "سيتم إخفاء التقييم من ملف المحترف وإعادة حساب تقييمه.",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ..."
   }
 }
