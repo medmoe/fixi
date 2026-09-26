@@ -109,7 +109,9 @@
     "amountPaid": "المبلغ المدفوع",
     "dueDate": "تاريخ الاستحقاق",
     "status": "الحالة",
-    "markPaidButton": "وضع علامة كمدفوع"
+    "markPaidButton": "وضع علامة كمدفوع",
+    "invoiceButton": "الفاتورة",
+    "downloadInvoiceAriaLabel": "تنزيل فاتورة {{name}}، المهمة رقم {{id}}"
   },
   "billingDashboard": {
     "title": "لوحة العمولات",

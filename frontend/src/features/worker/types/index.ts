@@ -13,3 +13,4 @@ export type {
     TradeCategoryWithChildren,
     SkillLevel
 } from './tradeCategory.types'
+export type {WorkerBillingRead, WorkerBillingStatus} from './workerBilling.types'

@@ -1,7 +1,7 @@
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button";
-import {Loader2} from "lucide-react";
+import {Download, Loader2} from "lucide-react";
 import type {WorkerBillingAdminRead} from "../types/workerBilling.types";
 import {WorkerBillingStatusBadge} from "./WorkerBillingStatusBadge";
 
@@ -9,9 +9,11 @@ interface WorkerBillingTableProps {
     records: WorkerBillingAdminRead[];
     onMarkPaid: (id: number) => void;
     markingPaidId?: number;
+    onDownloadInvoice: (id: number) => void;
+    downloadingInvoiceId?: number;
 }
 
-export const WorkerBillingTable: React.FC<WorkerBillingTableProps> = ({records, onMarkPaid, markingPaidId}) => {
+export const WorkerBillingTable: React.FC<WorkerBillingTableProps> = ({records, onMarkPaid, markingPaidId, onDownloadInvoice, downloadingInvoiceId}) => {
     const {t} = useTranslation("admin");
 
     return (
@@ -39,7 +41,18 @@ export const WorkerBillingTable: React.FC<WorkerBillingTableProps> = ({records, 
                     <td className="py-2 pe-4">
                         <WorkerBillingStatusBadge status={record.status} isOverdue={record.is_overdue}/>
                     </td>
-                    <td className="py-2 pe-4 text-end">
+                    <td className="py-2 pe-4 text-end space-x-2 rtl:space-x-reverse whitespace-nowrap">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onDownloadInvoice(record.id)}
+                            disabled={downloadingInvoiceId === record.id}
+                            aria-label={t("billingTable.downloadInvoiceAriaLabel", {name: record.worker_name, id: record.job_id})}
+                        >
+                            {downloadingInvoiceId === record.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Download className="h-4 w-4"/>}
+                            <span className="ms-1">{t("billingTable.invoiceButton")}</span>
+                        </Button>
                         {record.status !== "paid" && (
                             <Button
                                 type="button"

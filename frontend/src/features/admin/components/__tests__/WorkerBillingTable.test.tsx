@@ -19,26 +19,26 @@ const records: WorkerBillingAdminRead[] = [
 
 describe("WorkerBillingTable", () => {
     it("renders a row per record", () => {
-        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()}/>);
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()}/>);
         expect(screen.getAllByTestId("worker-billing-row")).toHaveLength(2);
     });
 
     it("shows each worker's name and email", () => {
-        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()}/>);
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()}/>);
         expect(screen.getByText("Ali")).toBeInTheDocument();
         expect(screen.getByText("ali@example.com")).toBeInTheDocument();
         expect(screen.getByText("Sara")).toBeInTheDocument();
     });
 
     it("shows a mark-paid button for non-paid records only", () => {
-        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()}/>);
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()}/>);
         expect(screen.getAllByRole("button", {name: /mark as paid/i})).toHaveLength(1);
     });
 
     it("calls onMarkPaid with the record id", async () => {
         const user = userEvent.setup();
         const onMarkPaid = vi.fn();
-        render(<WorkerBillingTable records={records} onMarkPaid={onMarkPaid}/>);
+        render(<WorkerBillingTable records={records} onMarkPaid={onMarkPaid} onDownloadInvoice={vi.fn()}/>);
 
         await user.click(screen.getByRole("button", {name: /mark as paid/i}));
 
@@ -46,7 +46,28 @@ describe("WorkerBillingTable", () => {
     });
 
     it("disables the mark-paid button for the record currently being marked", () => {
-        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} markingPaidId={1}/>);
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()} markingPaidId={1}/>);
         expect(screen.getByRole("button", {name: /mark as paid/i})).toBeDisabled();
+    });
+
+    it("shows an invoice download button for every record, paid or not", () => {
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()}/>);
+        expect(screen.getAllByRole("button", {name: /download invoice/i})).toHaveLength(2);
+    });
+
+    it("calls onDownloadInvoice with the record id", async () => {
+        const user = userEvent.setup();
+        const onDownloadInvoice = vi.fn();
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={onDownloadInvoice}/>);
+
+        await user.click(screen.getByRole("button", {name: "Download invoice for Sara, job #2"}));
+
+        expect(onDownloadInvoice).toHaveBeenCalledWith(2);
+    });
+
+    it("disables only the invoice button currently downloading", () => {
+        render(<WorkerBillingTable records={records} onMarkPaid={vi.fn()} onDownloadInvoice={vi.fn()} downloadingInvoiceId={1}/>);
+        expect(screen.getByRole("button", {name: "Download invoice for Ali, job #1"})).toBeDisabled();
+        expect(screen.getByRole("button", {name: "Download invoice for Sara, job #2"})).toBeEnabled();
     });
 });

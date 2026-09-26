@@ -97,7 +97,9 @@
     "amountPaid": "Amount paid",
     "dueDate": "Due date",
     "status": "Status",
-    "markPaidButton": "Mark as paid"
+    "markPaidButton": "Mark as paid",
+    "invoiceButton": "Invoice",
+    "downloadInvoiceAriaLabel": "Download invoice for {{name}}, job #{{id}}"
   },
   "billingDashboard": {
     "title": "Commission dashboard",

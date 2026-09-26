@@ -163,7 +163,10 @@ const getSubmitButton = () => screen.getByRole('button', {name: /update profile/
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('ProfileForm — Trade Assignment Integration', () => {
+// These drive the real TradeCategoryPicker with userEvent; the first test
+// takes ~2.5s alone and blows past vitest's 5s default under full-suite load,
+// after which the timed-out test's leftovers make the rest of the file fail.
+describe('ProfileForm — Trade Assignment Integration', {timeout: 20_000}, () => {
     beforeEach(() => {
         vi.clearAllMocks()
         setupMocks()

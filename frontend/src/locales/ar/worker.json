@@ -9,7 +9,8 @@
     "errorDescription": "واجهنا مشكلة أثناء تحميل بيانات حسابك. يرجى المحاولة مرة أخرى لاحقًا.",
     "navProfile": "الملف الشخصي",
     "navAccount": "الحساب",
-    "navJobs": "المهام"
+    "navJobs": "المهام",
+    "navBilling": "الفوترة"
   },
   "availability": {
     "availableForWork": "متاح للعمل",
@@ -152,6 +153,34 @@
     "avatarUploaded": "تم رفع الصورة الشخصية بنجاح",
     "avatarUploadFailed": "فشل رفع الصورة الشخصية",
     "cniUploaded": "تم رفع الوثيقة — بانتظار المراجعة",
-    "cniUploadFailed": "فشل رفع الوثيقة"
+    "cniUploadFailed": "فشل رفع الوثيقة",
+    "invoiceDownloadFailed": "تعذّر تنزيل الفاتورة. يرجى المحاولة مرة أخرى."
+  },
+  "billingTab": {
+    "outstandingTitle": "العمولة المستحقة",
+    "outstandingDescription": "العمولة على المهام المكتملة، تُدفع نقدًا لدى وكيل Fixi.",
+    "overdueCount_zero": "لا توجد دفعات متأخرة",
+    "overdueCount_one": "دفعة واحدة متأخرة",
+    "overdueCount_two": "دفعتان متأخرتان",
+    "overdueCount_few": "{{count}} دفعات متأخرة",
+    "overdueCount_many": "{{count}} دفعة متأخرة",
+    "overdueCount_other": "{{count}} دفعة متأخرة",
+    "emptyState": "لا توجد عمولات بعد. تُسجَّل العمولة عند إكمالك لمهمة.",
+    "loadError": "تعذّر تحميل سجل الفوترة. يرجى المحاولة لاحقًا.",
+    "columns": {
+      "job": "المهمة",
+      "amountOwed": "المبلغ",
+      "dueDate": "تاريخ الاستحقاق",
+      "status": "الحالة",
+      "invoice": "الفاتورة"
+    },
+    "jobLink": "المهمة رقم {{id}}",
+    "invoice": "الفاتورة",
+    "downloadInvoiceAriaLabel": "تنزيل فاتورة المهمة رقم {{id}}",
+    "status": {
+      "pending": "معلّق",
+      "paid": "مدفوع",
+      "overdue": "متأخر"
+    }
   }
 }
