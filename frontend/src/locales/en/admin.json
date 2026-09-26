@@ -192,5 +192,31 @@
     "removeConfirmDescription": "The review will be hidden from the worker's profile and their rating recalculated.",
     "cancel": "Cancel",
     "saving": "Saving..."
+  },
+  "notificationDelivery": {
+    "heading": "Notification delivery",
+    "description": "Failure rate per channel and provider. Rows above {{threshold}} are highlighted.",
+    "windowAriaLabel": "Time window",
+    "window24h": "Last 24 hours",
+    "window7d": "Last 7 days",
+    "loading": "Loading...",
+    "loadError": "Couldn't load notification delivery stats.",
+    "emptyState": "No notifications were sent in this window.",
+    "noData": "No data",
+    "alertAriaLabel": "High failure rate",
+    "columns": {
+      "channel": "Channel",
+      "provider": "Provider",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped",
+      "failureRate": "Failure rate"
+    },
+    "channels": {
+      "in_app": "In-app",
+      "push": "Push",
+      "email": "Email",
+      "sms": "SMS"
+    }
   }
 }

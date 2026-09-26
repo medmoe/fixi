@@ -370,4 +370,13 @@ describe('adminApi', () => {
             expect(mockPost).toHaveBeenCalledWith('/admin/flagged-reviews/7/remove')
         })
     })
+    describe('getNotificationStats', () => {
+        it('calls GET /notifications/stats with since_hours', async () => {
+            mockGet.mockResolvedValue({data: []})
+
+            await adminApi.getNotificationStats(24)
+
+            expect(mockGet).toHaveBeenCalledWith('/notifications/stats', {params: {since_hours: 24}})
+        })
+    })
 })

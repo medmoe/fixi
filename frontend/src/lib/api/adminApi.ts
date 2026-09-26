@@ -7,6 +7,7 @@ import type {
     AnalyticsDateRangeFilters,
     ConversionFunnelRead,
     FlaggedReviewRead,
+    NotificationFailureRateRead,
     PlatformBreakdownRead,
     PlatformOverviewRead,
     WorkerBillingAdminFilters,
@@ -84,6 +85,10 @@ export const adminApi = {
     },
     getAnalyticsFunnel: async (filters: AnalyticsDateRangeFilters): Promise<ConversionFunnelRead> => {
         const {data} = await apiClient.get<ConversionFunnelRead>('/admin/analytics/funnel', {params: filters})
+        return data
+    },
+    getNotificationStats: async (sinceHours: number): Promise<NotificationFailureRateRead[]> => {
+        const {data} = await apiClient.get<NotificationFailureRateRead[]>('/notifications/stats', {params: {since_hours: sinceHours}})
         return data
     },
 }

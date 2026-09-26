@@ -7,6 +7,7 @@ import {AnalyticsOverviewCards} from "../components/AnalyticsOverviewCards";
 import {DailyTrendChart} from "../components/DailyTrendChart";
 import {AnalyticsBreakdownList} from "../components/AnalyticsBreakdownList";
 import {ConversionFunnelChart} from "../components/ConversionFunnelChart";
+import {NotificationDeliveryCard} from "../components/NotificationDeliveryCard";
 
 export const AdminAnalyticsPage: React.FC = () => {
     const {t} = useTranslation("admin");
@@ -67,6 +68,9 @@ export const AdminAnalyticsPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Independent of the date filters above -- it has its own trailing window. */}
+            <NotificationDeliveryCard/>
         </div>
     );
 };
