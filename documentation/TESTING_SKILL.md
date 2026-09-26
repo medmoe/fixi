@@ -3,9 +3,9 @@
 ### Backend (pytest)
 
 **DO:**
-- Use `drop_all` + `create_all` in `async_session` fixture for isolation between tests
+- Create the schema ONCE per test session (`_test_db_schema`, `scope="session", loop_scope="session"`) — not per test. Each test gets isolation from a *function*-scoped `async_session` fixture that opens an outer transaction and uses `join_transaction_mode="create_savepoint"`, so any `commit()` a test or the app code makes only releases a SAVEPOINT; the outer transaction is rolled back at teardown and nothing persists. This replaced a per-test `drop_all`/`create_all` approach that was the dominant cost across ~1000+ tests — don't reintroduce it.
+- A session-scoped fixture IS safe with asyncpg as long as it only sets up shared, read-only state once (schema creation) and never holds a live per-test `AsyncSession` across tests — the isolation boundary is the per-test SAVEPOINT, not fixture scope.
 - Use `NullPool` on `test_engine` — prevents asyncpg connections crossing event loops
-- Use `function` scope for all async fixtures — never `session` or `class` scope with asyncpg
 - Flush Redis **before** each test in `async_client_with_redis` — not after
 - Override `async_get_db` (not `get_test_db`) in `dependency_overrides`
 - Override `rate_limiter_dependency` to `lambda: None` in `async_client` for all non-rate-limit tests
@@ -22,9 +22,8 @@
 - Don't mock the DB layer — use real `AsyncSession`
 - Don't use `session.get()` with non-primary-key columns — use `select().where()`
 - Don't trust `result.current.data` from mutations — check `queryClient.getQueryData()` instead
-- Don't let `async_session` fixture drop/create schema while `class_async_session` is active — event loop conflict
 - Don't use `commit()` inside fixtures that use `async with db.begin()` — it auto-commits on exit
-- Don't use `scope="session"` or `scope="class"` for async fixtures with asyncpg connections
+- Don't give a per-test `AsyncSession` fixture `scope="session"` or `scope="class"` — only the one-time schema-setup fixture is safe at that scope
 - Don't put `test` config in both `vite.config.ts` and `vitest.config.ts` — vitest only
 - Don't import `defineConfig` from `vitest/config` in `vite.config.ts` — use `vite`
 - Don't forget `await` on `crud_users.get()` and similar async calls — returns coroutine not result
