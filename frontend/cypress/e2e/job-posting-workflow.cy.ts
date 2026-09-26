@@ -10,6 +10,7 @@ import {
     mockWorkerProfile,
     mockWorkerUser,
 } from '../fixtures/jobs'
+import {mockSearchResponse, mockWorker} from '../fixtures/workers'
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 // Intercept the silent token refresh so tests can cy.visit() any URL without
@@ -58,18 +59,15 @@ describe('Job Posting Workflow - POM Style', () => {
     // ─── 1. Customer posts a job (full login → create journey) ────────────────
 
     describe('Customer — posts a job', () => {
-        it('navigates from login through to a newly created job, redirecting to the customer dashboard jobs list (not the public jobs page)', () => {
-            const newJob = mockJob({id: 11, title: 'Rewire living room lights'})
+        it('navigates from login through to a newly created job, landing on its dashboard page with suggested nearby workers (not the public jobs page)', () => {
+            const newJob = mockJob({id: 11, title: 'Rewire living room lights', coordinates: {latitude: 51.5074, longitude: -0.1278}})
 
-            // The dashboard jobs list is fetched once before creation (empty) and
-            // again after creation (now including the new job) — the create
-            // mutation invalidates the `jobs` query, and the redirect lands back
-            // on this same list, so this is what proves the fix end-to-end.
-            let myJobsCallCount = 0
-            cy.intercept('GET', '**/api/v1/jobs/my', (req) => {
-                myJobsCallCount += 1
-                req.reply({statusCode: 200, body: mockJobsResponse(myJobsCallCount === 1 ? [] : [newJob])})
-            }).as('myJobs')
+            cy.intercept('GET', '**/api/v1/jobs/my', {statusCode: 200, body: mockJobsResponse([])}).as('myJobs')
+            cy.intercept('GET', '**/api/v1/jobs/11', {statusCode: 200, body: newJob}).as('jobDetail')
+            cy.intercept('GET', '**/api/v1/jobs/11/nearby-workers*', {
+                statusCode: 200,
+                body: mockSearchResponse([mockWorker({id: 5, distance_km: 2.4, user: {id: 7, name: 'Javier Hensley'}})]),
+            }).as('nearbyWorkers')
 
             cy.intercept('POST', '**/api/v1/auth/login', {
                 statusCode: 200,
@@ -119,12 +117,15 @@ describe('Job Posting Workflow - POM Style', () => {
 
             cy.wait('@createJob')
 
-            // Redirected to the customer's own dashboard jobs list, not the public /jobs browse page.
-            cy.location('pathname').should('eq', '/dashboard/jobs')
+            // Lands on the new job inside the customer's dashboard, not the public /jobs browse page.
+            cy.location('pathname').should('eq', '/dashboard/jobs/11')
+            cy.contains('h1', 'Rewire living room lights').should('be.visible')
 
-            // The dashboard list refetches after the redirect and now shows the newly created job.
-            cy.wait('@myJobs')
-            cy.contains('Rewire living room lights').should('be.visible')
+            // The owner immediately sees nearby workers to reach out to.
+            cy.wait('@nearbyWorkers')
+            cy.contains('h2', 'Suggested workers near you').should('be.visible')
+            cy.contains('Javier Hensley').should('be.visible')
+            cy.contains('2.4 km away').should('be.visible')
         })
     })
 
