@@ -11,7 +11,8 @@
     "navAccount": "Compte",
     "navJobs": "Missions",
     "navAdmin": "Panneau d'administration",
-    "navVerificationQueue": "File de vérification"
+    "navVerificationQueue": "File de vérification",
+    "navBillingDashboard": "Tableau de bord des commissions"
   },
   "availability": {
     "availableForWork": "Disponible pour travailler",

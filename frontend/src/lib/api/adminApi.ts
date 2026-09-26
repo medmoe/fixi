@@ -1,7 +1,7 @@
 import apiClient from '@/lib/api/apiClient'
 import type {PaginatedListResponse} from '@/features/types'
 import type {UserRead} from '@/features/user'
-import type {AdminActionLogRead, AdminUserFilters, WorkerVerificationQueueRead} from '@/features/admin'
+import type {AdminActionLogRead, AdminUserFilters, WorkerBillingAdminFilters, WorkerBillingAdminRead, WorkerVerificationQueueRead} from '@/features/admin'
 import type {WorkerProfileRead} from '@/features/worker'
 
 export const adminApi = {
@@ -41,5 +41,16 @@ export const adminApi = {
     rejectWorkerVerification: async (workerProfileId: number, reason: string): Promise<WorkerProfileRead> => {
         const {data} = await apiClient.post<WorkerProfileRead>(`/admin/worker-verifications/${workerProfileId}/reject`, {reason})
         return data
+    },
+    listWorkerBilling: async (filters: WorkerBillingAdminFilters): Promise<WorkerBillingAdminRead[]> => {
+        const {data} = await apiClient.get<WorkerBillingAdminRead[]>('/worker-billing', {params: filters})
+        return data
+    },
+    exportWorkerBillingCsv: async (filters: WorkerBillingAdminFilters): Promise<Blob> => {
+        const {data} = await apiClient.get('/worker-billing/export', {params: filters, responseType: 'blob'})
+        return data
+    },
+    markWorkerBillingPaid: async (workerBillingId: number): Promise<void> => {
+        await apiClient.patch(`/worker-billing/${workerBillingId}/mark-paid`)
     },
 }

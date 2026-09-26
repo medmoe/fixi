@@ -11,7 +11,8 @@
     "navAccount": "Account",
     "navJobs": "Jobs",
     "navAdmin": "Admin panel",
-    "navVerificationQueue": "Verification queue"
+    "navVerificationQueue": "Verification queue",
+    "navBillingDashboard": "Commission dashboard"
   },
   "availability": {
     "availableForWork": "Available for Work",

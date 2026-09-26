@@ -5,7 +5,7 @@ import {useUser} from '@/features/user'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
 import {LogoutButton} from '@/components/LogoutButton'
-import {AlertCircle, ArrowLeft, FileCheck, Home, Loader2, Search, Shield, UserCircle} from 'lucide-react'
+import {AlertCircle, ArrowLeft, Banknote, FileCheck, Home, Loader2, Search, Shield, UserCircle} from 'lucide-react'
 import {Outlet, useLocation, useNavigate} from 'react-router-dom'
 
 type Tab = 'profile' | 'account' | 'jobs'
@@ -101,6 +101,13 @@ export const DashboardLayout: React.FC = () => {
                             >
                                 <FileCheck className="h-4 w-4"/>
                                 {t('dashboard.navVerificationQueue')}
+                            </button>
+                            <button
+                                onClick={() => navigate('/admin/worker-billing')}
+                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                                <Banknote className="h-4 w-4"/>
+                                {t('dashboard.navBillingDashboard')}
                             </button>
                         </>
                     )}

@@ -78,6 +78,36 @@
     "cancel": "Annuler",
     "saving": "Enregistrement..."
   },
+  "billingStatus": {
+    "pending": "En attente",
+    "paid": "Payé",
+    "overdue": "En retard"
+  },
+  "billingFilterBar": {
+    "ariaLabel": "Filtrer les commissions",
+    "statusAriaLabel": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "dueDateFromAriaLabel": "Date d'échéance à partir de",
+    "dueDateToAriaLabel": "Date d'échéance jusqu'à",
+    "clearFilters": "Effacer les filtres"
+  },
+  "billingTable": {
+    "worker": "Professionnel",
+    "amountOwed": "Montant dû",
+    "amountPaid": "Montant payé",
+    "dueDate": "Date d'échéance",
+    "status": "Statut",
+    "markPaidButton": "Marquer comme payé"
+  },
+  "billingDashboard": {
+    "title": "Tableau de bord des commissions",
+    "loading": "Chargement...",
+    "recordsFoundCount_one": "{{count}} enregistrement trouvé",
+    "recordsFoundCount_other": "{{count}} enregistrements trouvés",
+    "loadError": "Une erreur est survenue lors du chargement des commissions. Veuillez réessayer.",
+    "emptyState": "Aucun enregistrement ne correspond à ces filtres.",
+    "exportButton": "Exporter en CSV"
+  },
   "toasts": {
     "userSuspended": "Compte suspendu",
     "suspendFailed": "Échec de la suspension du compte",
@@ -87,6 +117,9 @@
     "approveFailed": "Échec de l'approbation de la vérification",
     "verificationRejected": "Vérification rejetée",
     "rejectFailed": "Échec du rejet de la vérification",
-    "documentUrlFailed": "Échec de l'ouverture du document"
+    "documentUrlFailed": "Échec de l'ouverture du document",
+    "billingMarkedPaid": "Marqué comme payé",
+    "markPaidFailed": "Échec du marquage comme payé",
+    "exportFailed": "Échec de l'exportation CSV"
   }
 }

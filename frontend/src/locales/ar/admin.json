@@ -90,6 +90,40 @@
     "cancel": "إلغاء",
     "saving": "جارٍ الحفظ..."
   },
+  "billingStatus": {
+    "pending": "معلّق",
+    "paid": "مدفوع",
+    "overdue": "متأخر"
+  },
+  "billingFilterBar": {
+    "ariaLabel": "تصفية سجلات العمولات",
+    "statusAriaLabel": "التصفية حسب الحالة",
+    "allStatuses": "جميع الحالات",
+    "dueDateFromAriaLabel": "تاريخ الاستحقاق من",
+    "dueDateToAriaLabel": "تاريخ الاستحقاق إلى",
+    "clearFilters": "مسح عوامل التصفية"
+  },
+  "billingTable": {
+    "worker": "المحترف",
+    "amountOwed": "المبلغ المستحق",
+    "amountPaid": "المبلغ المدفوع",
+    "dueDate": "تاريخ الاستحقاق",
+    "status": "الحالة",
+    "markPaidButton": "وضع علامة كمدفوع"
+  },
+  "billingDashboard": {
+    "title": "لوحة العمولات",
+    "loading": "جارٍ التحميل...",
+    "recordsFoundCount_zero": "لا توجد سجلات",
+    "recordsFoundCount_one": "سجل واحد",
+    "recordsFoundCount_two": "سجلان",
+    "recordsFoundCount_few": "{{count}} سجلات",
+    "recordsFoundCount_many": "{{count}} سجلًا",
+    "recordsFoundCount_other": "{{count}} سجل",
+    "loadError": "حدث خطأ أثناء تحميل سجلات العمولات. يرجى المحاولة مرة أخرى.",
+    "emptyState": "لا توجد سجلات تطابق عوامل التصفية هذه.",
+    "exportButton": "تصدير CSV"
+  },
   "toasts": {
     "userSuspended": "تم إيقاف الحساب",
     "suspendFailed": "فشل إيقاف الحساب",
@@ -99,6 +133,9 @@
     "approveFailed": "فشلت الموافقة على التحقق",
     "verificationRejected": "تم رفض التحقق",
     "rejectFailed": "فشل رفض التحقق",
-    "documentUrlFailed": "فشل فتح الوثيقة"
+    "documentUrlFailed": "فشل فتح الوثيقة",
+    "billingMarkedPaid": "تم وضع علامة كمدفوع",
+    "markPaidFailed": "فشل وضع علامة كمدفوع",
+    "exportFailed": "فشل تصدير CSV"
   }
 }

@@ -8,7 +8,14 @@ import pytest
 from pydantic import ValidationError
 
 from src.app.models.worker_billing import WorkerBillingStatus
-from src.app.schemas.worker_billing import WorkerBillingCreateInternal, WorkerBillingRead, WorkerBillingUpdateInternal
+from src.app.schemas.worker_billing import (
+    WorkerBillingAdminFilter,
+    WorkerBillingAdminRead,
+    WorkerBillingCreateInternal,
+    WorkerBillingDisplayStatus,
+    WorkerBillingRead,
+    WorkerBillingUpdateInternal,
+)
 
 
 def valid_payload(**overrides) -> dict:
@@ -153,3 +160,71 @@ class TestWorkerBillingRead:
             status=WorkerBillingStatus.OVERDUE, due_date=datetime.now(UTC) - timedelta(days=1),
         ))
         assert schema.is_overdue is False
+
+
+class TestWorkerBillingAdminRead:
+    def admin_payload(self, **overrides) -> dict:
+        defaults = {
+            "id": 1,
+            "worker_profile_id": 1,
+            "worker_name": "Ali",
+            "worker_email": "ali@example.com",
+            "job_id": 1,
+            "amount_owed": Decimal("5.00"),
+            "amount_paid": Decimal("0.00"),
+            "due_date": datetime.now(UTC) + timedelta(days=14),
+            "status": WorkerBillingStatus.PENDING,
+            "created_at": datetime.now(UTC),
+        }
+        return {**defaults, **overrides}
+
+    def test_valid(self):
+        schema = WorkerBillingAdminRead(**self.admin_payload())
+        assert schema.worker_name == "Ali"
+        assert schema.worker_email == "ali@example.com"
+
+    def test_is_overdue_true_when_pending_and_past_due(self):
+        schema = WorkerBillingAdminRead(**self.admin_payload(
+            status=WorkerBillingStatus.PENDING, due_date=datetime.now(UTC) - timedelta(days=1),
+        ))
+        assert schema.is_overdue is True
+
+    def test_is_overdue_false_when_paid(self):
+        schema = WorkerBillingAdminRead(**self.admin_payload(
+            status=WorkerBillingStatus.PAID, due_date=datetime.now(UTC) - timedelta(days=1),
+        ))
+        assert schema.is_overdue is False
+
+    def test_from_orm_like_row(self):
+        class FakeRow:
+            id = 1
+            worker_profile_id = 1
+            worker_name = "Ali"
+            worker_email = "ali@example.com"
+            job_id = 1
+            amount_owed = Decimal("5.00")
+            amount_paid = Decimal("0.00")
+            due_date = datetime.now(UTC) + timedelta(days=14)
+            status = WorkerBillingStatus.PENDING
+            payment_id = None
+            created_at = datetime.now(UTC)
+
+        schema = WorkerBillingAdminRead.model_validate(FakeRow())
+        assert schema.worker_name == "Ali"
+
+
+class TestWorkerBillingAdminFilter:
+    def test_all_fields_optional(self):
+        schema = WorkerBillingAdminFilter()
+        assert schema.worker_profile_id is None
+        assert schema.status is None
+        assert schema.due_date_from is None
+        assert schema.due_date_to is None
+
+    def test_accepts_a_valid_display_status(self):
+        schema = WorkerBillingAdminFilter(status=WorkerBillingDisplayStatus.overdue)
+        assert schema.status == WorkerBillingDisplayStatus.overdue
+
+    def test_rejects_an_unknown_status(self):
+        with pytest.raises(ValidationError):
+            WorkerBillingAdminFilter(status="cancelled")

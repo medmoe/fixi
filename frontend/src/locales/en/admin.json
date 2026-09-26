@@ -78,6 +78,36 @@
     "cancel": "Cancel",
     "saving": "Saving..."
   },
+  "billingStatus": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "overdue": "Overdue"
+  },
+  "billingFilterBar": {
+    "ariaLabel": "Filter commission records",
+    "statusAriaLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "dueDateFromAriaLabel": "Due date from",
+    "dueDateToAriaLabel": "Due date to",
+    "clearFilters": "Clear filters"
+  },
+  "billingTable": {
+    "worker": "Worker",
+    "amountOwed": "Amount owed",
+    "amountPaid": "Amount paid",
+    "dueDate": "Due date",
+    "status": "Status",
+    "markPaidButton": "Mark as paid"
+  },
+  "billingDashboard": {
+    "title": "Commission dashboard",
+    "loading": "Loading...",
+    "recordsFoundCount_one": "{{count}} record found",
+    "recordsFoundCount_other": "{{count}} records found",
+    "loadError": "Something went wrong loading commission records. Please try again.",
+    "emptyState": "No commission records match these filters.",
+    "exportButton": "Export CSV"
+  },
   "toasts": {
     "userSuspended": "Account suspended",
     "suspendFailed": "Failed to suspend account",
@@ -87,6 +117,9 @@
     "approveFailed": "Failed to approve verification",
     "verificationRejected": "Verification rejected",
     "rejectFailed": "Failed to reject verification",
-    "documentUrlFailed": "Failed to open document"
+    "documentUrlFailed": "Failed to open document",
+    "billingMarkedPaid": "Marked as paid",
+    "markPaidFailed": "Failed to mark as paid",
+    "exportFailed": "Failed to export CSV"
   }
 }
