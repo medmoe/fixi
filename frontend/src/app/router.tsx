@@ -6,7 +6,7 @@ import {JobCreateForm, JobDetailPage, JobEditForm, JobsTab} from '@/features/job
 import {WorkerDetailPage, WorkerSearchPage} from '@/features/worker'
 import {RoleBasedDashboard} from '@/features/auth/components/RoleBasedDashboard.tsx'
 import {CustomerAccountPage, CustomerJobsPage, CustomerProfilePage} from "@/features/customer";
-import {AdminBillingDashboardPage, AdminUserDetailPage, AdminUsersPage, AdminWorkerVerificationsPage} from '@/features/admin'
+import {AdminAnalyticsPage, AdminBillingDashboardPage, AdminUserDetailPage, AdminUsersPage, AdminWorkerVerificationsPage} from '@/features/admin'
 
 export const routes: RouteObject[] = [
     {
@@ -86,6 +86,14 @@ export const routes: RouteObject[] = [
                 element: (
                     <ProtectedRoute requireSuperuser>
                         <AdminBillingDashboardPage/>
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: '/admin/analytics',
+                element: (
+                    <ProtectedRoute requireSuperuser>
+                        <AdminAnalyticsPage/>
                     </ProtectedRoute>
                 )
             },

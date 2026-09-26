@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from .admin_analytics import router as admin_analytics_router
 from .admin_flagged_reviews import router as admin_flagged_reviews_router
 from .admin_users import router as admin_users_router
 from .admin_worker_verifications import router as admin_worker_verifications_router
@@ -28,3 +29,4 @@ router.include_router(reviews_router)
 router.include_router(admin_users_router)
 router.include_router(admin_worker_verifications_router)
 router.include_router(admin_flagged_reviews_router)
+router.include_router(admin_analytics_router)

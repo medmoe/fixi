@@ -2,6 +2,7 @@ export {AdminUsersPage} from './pages/AdminUsersPage'
 export {AdminUserDetailPage} from './pages/AdminUserDetailPage'
 export {AdminWorkerVerificationsPage} from './pages/AdminWorkerVerificationsPage'
 export {AdminBillingDashboardPage} from './pages/AdminBillingDashboardPage'
+export {AdminAnalyticsPage} from './pages/AdminAnalyticsPage'
 export {useAdminUsers} from './hooks/useAdminUsers'
 export {useAdminUserDetail} from './hooks/useAdminUserDetail'
 export {useSuspendUser} from './hooks/useSuspendUser'
@@ -13,6 +14,7 @@ export {useVerificationDocumentUrl} from './hooks/useVerificationDocumentUrl'
 export {useWorkerBillingDashboard, WORKER_BILLING_KEY} from './hooks/useWorkerBillingDashboard'
 export {useMarkWorkerBillingPaid} from './hooks/useMarkWorkerBillingPaid'
 export {useExportWorkerBillingCsv} from './hooks/useExportWorkerBillingCsv'
+export {useAnalyticsDashboard, ANALYTICS_KEY} from './hooks/useAnalyticsDashboard'
 export {AdminUserFilterBar} from './components/AdminUserFilterBar'
 export {AdminUserTable} from './components/AdminUserTable'
 export {UserStatusBadge} from './components/UserStatusBadge'
@@ -23,6 +25,20 @@ export {RejectVerificationDialog} from './components/RejectVerificationDialog'
 export {WorkerBillingFilterBar} from './components/WorkerBillingFilterBar'
 export {WorkerBillingTable} from './components/WorkerBillingTable'
 export {WorkerBillingStatusBadge} from './components/WorkerBillingStatusBadge'
+export {AnalyticsFilterBar} from './components/AnalyticsFilterBar'
+export {AnalyticsOverviewCards} from './components/AnalyticsOverviewCards'
+export {DailyTrendChart} from './components/DailyTrendChart'
+export {AnalyticsBreakdownList} from './components/AnalyticsBreakdownList'
+export {ConversionFunnelChart} from './components/ConversionFunnelChart'
 export type {AdminUserFilters, AdminActionLogRead, UserSuspendPayload} from './types/adminUser.types'
 export type {WorkerVerificationQueueRead} from './types/workerVerification.types'
 export type {WorkerBillingAdminFilters, WorkerBillingAdminRead, WorkerBillingDisplayStatus} from './types/workerBilling.types'
+export type {
+    AnalyticsDateRangeFilters,
+    DailyMetricPoint,
+    PlatformOverviewRead,
+    TradeCategoryBreakdownItem,
+    LocationBreakdownItem,
+    PlatformBreakdownRead,
+    ConversionFunnelRead,
+} from './types/analytics.types'

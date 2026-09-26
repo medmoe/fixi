@@ -27,7 +27,10 @@ class Job(Base, TimestampMixin, SoftDeleteMixin, UUIDMixin):
     __tablename__ = "jobs"
     __table_args__ = (
         CheckConstraint("budget_max IS NULL OR budget_min IS NULL OR budget_max >= budget_min", name="check_budget_range"),
-        Index('idx_jobs_location_gist', 'location', postgresql_using='gist')
+        Index('idx_jobs_location_gist', 'location', postgresql_using='gist'),
+        # Powers analytics date-range filtering (Phase 8 Issue 8) --
+        # created_at isn't indexed by TimestampMixin itself.
+        Index('ix_jobs_created_at', 'created_at'),
     )
 
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True, init=False)

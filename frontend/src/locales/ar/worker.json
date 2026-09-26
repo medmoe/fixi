@@ -12,7 +12,8 @@
     "navJobs": "المهام",
     "navAdmin": "لوحة الإدارة",
     "navVerificationQueue": "قائمة انتظار التحقق",
-    "navBillingDashboard": "لوحة العمولات"
+    "navBillingDashboard": "لوحة العمولات",
+    "navAnalytics": "إحصاءات المنصة"
   },
   "availability": {
     "availableForWork": "متاح للعمل",

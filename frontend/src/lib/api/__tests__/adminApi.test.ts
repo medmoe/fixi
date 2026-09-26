@@ -2,7 +2,14 @@ import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {adminApi} from '../adminApi'
 import apiClient from '../apiClient'
 import type {UserRead} from '@/features/user'
-import type {AdminActionLogRead, WorkerBillingAdminRead, WorkerVerificationQueueRead} from '@/features/admin'
+import type {
+    AdminActionLogRead,
+    ConversionFunnelRead,
+    PlatformBreakdownRead,
+    PlatformOverviewRead,
+    WorkerBillingAdminRead,
+    WorkerVerificationQueueRead,
+} from '@/features/admin'
 import type {PaginatedListResponse} from '@/features/types'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -295,6 +302,45 @@ describe('adminApi', () => {
             mockPatch.mockRejectedValueOnce(new Error('Already paid'))
 
             await expect(adminApi.markWorkerBillingPaid(1)).rejects.toThrow('Already paid')
+        })
+    })
+
+    describe('getAnalyticsOverview', () => {
+        it('calls GET /admin/analytics/overview with filters', async () => {
+            const overview: PlatformOverviewRead = {
+                jobs_posted: 1, applications_submitted: 1, applications_accepted: 0, jobs_completed: 0,
+                acceptance_rate: 0, completion_rate: 0, daily: [],
+            }
+            mockGet.mockResolvedValueOnce({data: overview})
+
+            const result = await adminApi.getAnalyticsOverview({date_from: '2026-01-01T00:00:00Z'})
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/analytics/overview', {params: {date_from: '2026-01-01T00:00:00Z'}})
+            expect(result).toEqual(overview)
+        })
+    })
+
+    describe('getAnalyticsBreakdown', () => {
+        it('calls GET /admin/analytics/breakdown with filters', async () => {
+            const breakdown: PlatformBreakdownRead = {by_trade_category: [], by_location: []}
+            mockGet.mockResolvedValueOnce({data: breakdown})
+
+            const result = await adminApi.getAnalyticsBreakdown({})
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/analytics/breakdown', {params: {}})
+            expect(result).toEqual(breakdown)
+        })
+    })
+
+    describe('getAnalyticsFunnel', () => {
+        it('calls GET /admin/analytics/funnel with filters', async () => {
+            const funnel: ConversionFunnelRead = {posted: 1, applied: 1, accepted: 0, completed: 0}
+            mockGet.mockResolvedValueOnce({data: funnel})
+
+            const result = await adminApi.getAnalyticsFunnel({})
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/analytics/funnel', {params: {}})
+            expect(result).toEqual(funnel)
         })
     })
 })

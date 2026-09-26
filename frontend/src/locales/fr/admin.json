@@ -108,6 +108,42 @@
     "emptyState": "Aucun enregistrement ne correspond à ces filtres.",
     "exportButton": "Exporter en CSV"
   },
+  "analyticsPage": {
+    "title": "Statistiques de la plateforme",
+    "loading": "Chargement...",
+    "loadError": "Une erreur est survenue lors du chargement des statistiques. Veuillez réessayer."
+  },
+  "analyticsFilterBar": {
+    "ariaLabel": "Filtrer les statistiques par période",
+    "dateFromAriaLabel": "Date de début",
+    "dateToAriaLabel": "Date de fin",
+    "clearFilters": "Effacer les filtres"
+  },
+  "analyticsOverview": {
+    "jobsPosted": "Missions publiées",
+    "applicationsSubmitted": "Candidatures soumises",
+    "acceptanceRate": "Taux d'acceptation",
+    "completionRate": "Taux d'achèvement",
+    "dailyTrendHeading": "Missions publiées par jour (30 derniers jours)",
+    "dailyChartAriaLabel": "Graphique des missions publiées par jour",
+    "dailyBarAriaLabel": "{{date}} : {{count}} missions publiées",
+    "noDailyData": "Aucune activité au cours des 30 derniers jours."
+  },
+  "analyticsFunnel": {
+    "heading": "Entonnoir de conversion",
+    "posted": "Publiées",
+    "applied": "Candidatures",
+    "accepted": "Acceptées",
+    "completed": "Terminées",
+    "stageAriaLabel": "{{label}} : {{count}} ({{percent}} %)"
+  },
+  "analyticsBreakdown": {
+    "byTradeCategoryHeading": "Missions par corps de métier",
+    "byLocationHeading": "Missions par localisation",
+    "uncategorized": "Non catégorisé",
+    "emptyState": "Aucune donnée pour cette période.",
+    "rowAriaLabel": "{{label}} : {{count}}"
+  },
   "toasts": {
     "userSuspended": "Compte suspendu",
     "suspendFailed": "Échec de la suspension du compte",

@@ -108,6 +108,42 @@
     "emptyState": "No commission records match these filters.",
     "exportButton": "Export CSV"
   },
+  "analyticsPage": {
+    "title": "Platform analytics",
+    "loading": "Loading...",
+    "loadError": "Something went wrong loading analytics. Please try again."
+  },
+  "analyticsFilterBar": {
+    "ariaLabel": "Filter analytics by date range",
+    "dateFromAriaLabel": "Date from",
+    "dateToAriaLabel": "Date to",
+    "clearFilters": "Clear filters"
+  },
+  "analyticsOverview": {
+    "jobsPosted": "Jobs posted",
+    "applicationsSubmitted": "Applications submitted",
+    "acceptanceRate": "Acceptance rate",
+    "completionRate": "Completion rate",
+    "dailyTrendHeading": "Jobs posted per day (last 30 days)",
+    "dailyChartAriaLabel": "Jobs posted per day chart",
+    "dailyBarAriaLabel": "{{date}}: {{count}} jobs posted",
+    "noDailyData": "No activity in the last 30 days."
+  },
+  "analyticsFunnel": {
+    "heading": "Conversion funnel",
+    "posted": "Posted",
+    "applied": "Applied",
+    "accepted": "Accepted",
+    "completed": "Completed",
+    "stageAriaLabel": "{{label}}: {{count}} ({{percent}}%)"
+  },
+  "analyticsBreakdown": {
+    "byTradeCategoryHeading": "Jobs by trade category",
+    "byLocationHeading": "Jobs by location",
+    "uncategorized": "Uncategorized",
+    "emptyState": "No data for this range.",
+    "rowAriaLabel": "{{label}}: {{count}}"
+  },
   "toasts": {
     "userSuspended": "Account suspended",
     "suspendFailed": "Failed to suspend account",

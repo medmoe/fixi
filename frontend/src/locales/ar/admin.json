@@ -124,6 +124,42 @@
     "emptyState": "لا توجد سجلات تطابق عوامل التصفية هذه.",
     "exportButton": "تصدير CSV"
   },
+  "analyticsPage": {
+    "title": "إحصاءات المنصة",
+    "loading": "جارٍ التحميل...",
+    "loadError": "حدث خطأ أثناء تحميل الإحصاءات. يرجى المحاولة مرة أخرى."
+  },
+  "analyticsFilterBar": {
+    "ariaLabel": "تصفية الإحصاءات حسب الفترة الزمنية",
+    "dateFromAriaLabel": "من تاريخ",
+    "dateToAriaLabel": "إلى تاريخ",
+    "clearFilters": "مسح عوامل التصفية"
+  },
+  "analyticsOverview": {
+    "jobsPosted": "المهام المنشورة",
+    "applicationsSubmitted": "الطلبات المقدمة",
+    "acceptanceRate": "معدل القبول",
+    "completionRate": "معدل الإنجاز",
+    "dailyTrendHeading": "المهام المنشورة يوميًا (آخر 30 يومًا)",
+    "dailyChartAriaLabel": "رسم بياني للمهام المنشورة يوميًا",
+    "dailyBarAriaLabel": "{{date}}: {{count}} مهمة منشورة",
+    "noDailyData": "لا يوجد نشاط خلال آخر 30 يومًا."
+  },
+  "analyticsFunnel": {
+    "heading": "قمع التحويل",
+    "posted": "منشورة",
+    "applied": "تم التقديم",
+    "accepted": "مقبولة",
+    "completed": "منجزة",
+    "stageAriaLabel": "{{label}}: {{count}} ({{percent}}٪)"
+  },
+  "analyticsBreakdown": {
+    "byTradeCategoryHeading": "المهام حسب المهنة",
+    "byLocationHeading": "المهام حسب الموقع",
+    "uncategorized": "غير مصنف",
+    "emptyState": "لا توجد بيانات لهذه الفترة.",
+    "rowAriaLabel": "{{label}}: {{count}}"
+  },
   "toasts": {
     "userSuspended": "تم إيقاف الحساب",
     "suspendFailed": "فشل إيقاف الحساب",

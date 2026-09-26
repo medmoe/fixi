@@ -12,7 +12,8 @@
     "navJobs": "Missions",
     "navAdmin": "Panneau d'administration",
     "navVerificationQueue": "File de vérification",
-    "navBillingDashboard": "Tableau de bord des commissions"
+    "navBillingDashboard": "Tableau de bord des commissions",
+    "navAnalytics": "Statistiques de la plateforme"
   },
   "availability": {
     "availableForWork": "Disponible pour travailler",
