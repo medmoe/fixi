@@ -23,6 +23,7 @@ vi.mock('@/features/admin', () => ({
     AdminBillingDashboardPage: () => <div>Admin Billing Dashboard Page</div>,
     AdminAnalyticsPage: () => <div>Admin Analytics Page</div>,
     AdminAccountPage: () => <div>Admin Account Page</div>,
+    AdminFlaggedReviewsPage: () => <div>Admin Flagged Reviews Page</div>,
     AdminLayout: () => <div data-testid="admin-layout"><Outlet/></div>,
 }))
 
@@ -117,6 +118,14 @@ describe('App Router', () => {
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
         expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin Account Page')).toBeInTheDocument()
+    })
+
+    it('wraps AdminFlaggedReviewsPage inside ProtectedRoute + AdminLayout at "/admin/flagged-reviews"', () => {
+        renderWithRouter(['/admin/flagged-reviews'])
+
+        expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
+        expect(screen.getByText('Admin Flagged Reviews Page')).toBeInTheDocument()
     })
 
     it('redirects bare "/admin" to the users page', () => {

@@ -343,4 +343,31 @@ describe('adminApi', () => {
             expect(result).toEqual(funnel)
         })
     })
+    describe('flagged reviews', () => {
+        it('listFlaggedReviews calls GET /admin/flagged-reviews', async () => {
+            const reviews = [{id: 1, rating: 1, comment: 'bad', reviewer_name: 'A', reviewee_name: 'B', report_count: 2, created_at: '2026-01-01T00:00:00Z'}]
+            mockGet.mockResolvedValue({data: reviews})
+
+            const result = await adminApi.listFlaggedReviews()
+
+            expect(mockGet).toHaveBeenCalledWith('/admin/flagged-reviews')
+            expect(result).toEqual(reviews)
+        })
+
+        it('approveFlaggedReview calls POST /admin/flagged-reviews/:id/approve', async () => {
+            mockPost.mockResolvedValue({data: undefined})
+
+            await adminApi.approveFlaggedReview(7)
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/flagged-reviews/7/approve')
+        })
+
+        it('removeFlaggedReview calls POST /admin/flagged-reviews/:id/remove', async () => {
+            mockPost.mockResolvedValue({data: undefined})
+
+            await adminApi.removeFlaggedReview(7)
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/flagged-reviews/7/remove')
+        })
+    })
 })

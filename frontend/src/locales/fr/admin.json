@@ -156,7 +156,11 @@
     "documentUrlFailed": "Échec de l'ouverture du document",
     "billingMarkedPaid": "Marqué comme payé",
     "markPaidFailed": "Échec du marquage comme payé",
-    "exportFailed": "Échec de l'exportation CSV"
+    "exportFailed": "Échec de l'exportation CSV",
+    "reviewKept": "Avis conservé — signalements rejetés",
+    "keepReviewFailed": "Impossible de rejeter les signalements. Veuillez réessayer.",
+    "reviewRemoved": "Avis supprimé",
+    "removeReviewFailed": "Impossible de supprimer l'avis. Veuillez réessayer."
   },
   "layout": {
     "title": "Panneau d'administration",
@@ -165,6 +169,26 @@
     "navVerifications": "File de vérification",
     "navBilling": "Tableau de bord des commissions",
     "navAnalytics": "Statistiques de la plateforme",
-    "navAccount": "Compte"
+    "navAccount": "Compte",
+    "navFlaggedReviews": "Avis signalés"
+  },
+  "flaggedReviews": {
+    "title": "Avis signalés",
+    "loading": "Chargement...",
+    "pendingCount_one": "{{count}} avis en attente de modération",
+    "pendingCount_other": "{{count}} avis en attente de modération",
+    "loadError": "Une erreur est survenue lors du chargement des avis signalés. Veuillez réessayer.",
+    "emptyState": "Aucun avis en attente de modération.",
+    "reportCount_one": "{{count}} signalement",
+    "reportCount_other": "{{count}} signalements",
+    "ratingLabel": "Note : {{rating}} sur 5",
+    "noComment": "Aucun commentaire",
+    "byline": "{{reviewer}} → {{reviewee}} · {{date}}",
+    "keepButton": "Conserver",
+    "removeButton": "Supprimer",
+    "removeConfirmTitle": "Supprimer cet avis ?",
+    "removeConfirmDescription": "L'avis sera masqué du profil du professionnel et sa note sera recalculée.",
+    "cancel": "Annuler",
+    "saving": "Enregistrement..."
   }
 }
