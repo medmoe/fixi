@@ -24,8 +24,8 @@ from ...schemas.review import ReviewSortBy, WorkerReviewEligibility, WorkerRevie
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
 from ...services.minio_client import minio_client
-from ...services.notifications import notify_user
 from ...services.review_eligibility_service import check_worker_review_eligibility
+from ...services.worker_verification_service import approve_worker_verification
 
 router = APIRouter(tags=["workers"], prefix="/worker-profile")
 
@@ -84,7 +84,15 @@ async def get_worker_profile(
     nested_trades = [WorkerTradeNestedRead.model_validate(wt) for wt in worker_trades]
 
     return WorkerProfileWithTradesRead(
-        **worker_profile.model_dump(),
+        # has_cni_document is a computed field, not a constructor kwarg --
+        # excluded here so it isn't passed twice. cni_document_key itself
+        # is also exclude=True on the *dump* (never serialized to JSON),
+        # so it's missing from this dict entirely and must be re-added
+        # explicitly from the live attribute, or the rebuilt model would
+        # silently derive has_cni_document as False regardless of the
+        # actual upload state.
+        **worker_profile.model_dump(exclude={"has_cni_document"}),
+        cni_document_key=worker_profile.cni_document_key,
         trade_categories=nested_trades
     )
 
@@ -166,6 +174,41 @@ async def upload_worker_avatar(
         id=worker_profile.id,
         schema_to_select=WorkerProfileRead,
         return_as_model=True
+    )
+    return updated_worker_profile
+
+
+# ————— POST /worker-profile/cni-document ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+@router.post("/cni-document", response_model=WorkerProfileRead)
+async def upload_cni_document(
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+        current_user: Annotated[dict, Depends(get_current_user)],
+        file: UploadFile = File(...),
+) -> Any:
+    """Upload the worker's CNI (Carte Nationale d'Identité) for admin
+    verification -- owner only. Stored in a private bucket, never a public
+    URL, unlike avatar_url/portfolio images (see MinioClient's
+    ensure_private_bucket_exists and Issue 5's acceptance criteria)."""
+    worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
+
+    contents = await file.read()
+    mime_type = file.content_type or ""
+    if mime_type not in {"image/jpeg", "image/png", "application/pdf"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid file type '{mime_type}'. Only JPEG, PNG, or PDF are allowed.")
+
+    ext = os.path.splitext(file.filename or "cni")[1].lstrip(".") or "jpg"
+    key = f"cni/{worker_profile.user_id}.{ext}"
+
+    minio_client.ensure_private_bucket_exists(settings.APP_S3_BUCKET_VERIFICATION)
+    minio_client.upload_file(bucket=settings.APP_S3_BUCKET_VERIFICATION, key=key, data=contents, content_type=mime_type)
+
+    updated_worker_profile = await crud_worker_profiles.update(
+        db=db,
+        object=WorkerProfileUpdateInternal(cni_document_key=key),
+        user_id=worker_profile.user_id,
+        schema_to_select=WorkerProfileRead,
+        return_as_model=True,
     )
     return updated_worker_profile
 
@@ -383,36 +426,11 @@ async def verify_worker_profile(
 ) -> Any:
     """Admin-only. Marks a worker profile as verified -- there's no automatic
     path to this today (ID/credential review happens out of band by staff),
-    so this is a deliberate manual action, not a side effect of anything else."""
-    worker_profile = await db.get(WorkerProfile, worker_profile_id)
-    if worker_profile is None:
-        raise NotFoundException(f"Worker profile with id {worker_profile_id} not found")
-
-    if worker_profile.is_verified:
-        return await _get_worker_profile_or_404(db=db, user_id=worker_profile.user_id)
-
-    updated = await crud_worker_profiles.update(
-        db=db,
-        object=WorkerProfileUpdateInternal(is_verified=True),
-        user_id=worker_profile.user_id,
-        schema_to_select=WorkerProfileRead,
-        return_as_model=True,
-    )
-
-    await notify_user(
-        db,
-        event_type="worker_verification_approved",
-        user_id=worker_profile.user_id,
-        title_ar="تم التحقق من ملفك الشخصي",
-        title_fr="Votre profil a été vérifié",
-        title_en="Your profile has been verified",
-        body_ar="تم التحقق من ملفك المهني من قبل فريقنا.",
-        body_fr="Votre profil professionnel a été vérifié par notre équipe.",
-        body_en="Your professional profile has been verified by our team.",
-        email_payload={"app_url": f"{settings.FRONTEND_BASE_URL}/dashboard"},
-    )
-
-    return updated
+    so this is a deliberate manual action, not a side effect of anything else.
+    Superseded by the CNI verification queue's approve action (Phase 8
+    Issue 5) for the normal flow, but kept as a direct escape hatch --
+    both go through the same worker_verification_service function."""
+    return await approve_worker_verification(db, worker_profile_id)
 
 
 # ————— GET /worker-profile/{worker_profile_id} —————————————————————————

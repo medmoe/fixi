@@ -10,7 +10,8 @@
     "navProfile": "Profile",
     "navAccount": "Account",
     "navJobs": "Jobs",
-    "navAdmin": "Admin panel"
+    "navAdmin": "Admin panel",
+    "navVerificationQueue": "Verification queue"
   },
   "availability": {
     "availableForWork": "Available for Work",
@@ -84,6 +85,15 @@
     "uploadAriaLabel": "Upload avatar image file",
     "chooseImage": "Choose Image"
   },
+  "cniVerificationField": {
+    "heading": "ID verification",
+    "helperText": "Upload your CNI (Carte Nationale d'Identité) so our team can verify your profile. Only visible to you and our admin team.",
+    "statusVerified": "Verified",
+    "statusPending": "Pending review",
+    "statusUnverified": "Not verified",
+    "upload": "Upload document",
+    "reupload": "Re-upload document"
+  },
   "bioField": {
     "label": "Professional Bio",
     "ariaLabel": "Bio",
@@ -134,6 +144,8 @@
     "profileUpdated": "Profile updated successfully",
     "profileUpdateFailed": "Failed to update worker profile",
     "avatarUploaded": "Avatar uploaded successfully",
-    "avatarUploadFailed": "Failed to upload avatar"
+    "avatarUploadFailed": "Failed to upload avatar",
+    "cniUploaded": "Document uploaded — awaiting review",
+    "cniUploadFailed": "Failed to upload document"
   }
 }

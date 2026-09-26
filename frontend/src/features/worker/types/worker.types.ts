@@ -12,6 +12,7 @@ export interface WorkerProfileRead {
     avatar_url: string | null;
     is_available: boolean;
     is_verified: boolean;
+    has_cni_document: boolean;
     available_since: string | null;
     average_rating: string | null;
     review_count: number;

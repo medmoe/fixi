@@ -9,7 +9,7 @@ import {type WorkerProfileFormValues, workerProfileSchema} from '../schemas/work
 import {useAssignTrades} from '@/features/worker/hooks/useAssignTrades'
 import {useUpdateWorkerProfile} from '@/features/worker/hooks/useUpdateWorkerProfile'
 
-import {AvatarUploadField, BioField, HourlyRateField, ServiceRadiusField, TradeCategoryPicker, UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from '@/features/worker'
+import {AvatarUploadField, BioField, CniVerificationField, HourlyRateField, ServiceRadiusField, TradeCategoryPicker, UpdateWorkerProfilePayload, WorkerProfileWithTradesRead} from '@/features/worker'
 
 interface ProfileFormProps {
     profile: WorkerProfileWithTradesRead
@@ -106,6 +106,9 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({profile}) => {
             >
                 {/* Avatar */}
                 <AvatarUploadField currentAvatarUrl={profile.avatar_url}/>
+
+                {/* CNI verification */}
+                <CniVerificationField isVerified={profile.is_verified} hasCniDocument={profile.has_cni_document}/>
 
                 {/* Profile fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

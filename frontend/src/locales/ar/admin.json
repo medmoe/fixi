@@ -59,12 +59,46 @@
   },
   "auditActions": {
     "suspend_user": "تم إيقاف الحساب",
-    "reactivate_user": "تمت إعادة تفعيل الحساب"
+    "reactivate_user": "تمت إعادة تفعيل الحساب",
+    "approve_worker_verification": "تمت الموافقة على توثيق المحترف",
+    "reject_worker_verification": "تم رفض توثيق المحترف"
+  },
+  "verificationQueue": {
+    "title": "قائمة انتظار التحقق من بطاقة التعريف",
+    "loading": "جارٍ التحميل...",
+    "pendingCount_zero": "لا يوجد محترفون بانتظار المراجعة",
+    "pendingCount_one": "محترف واحد بانتظار المراجعة",
+    "pendingCount_two": "محترفان بانتظار المراجعة",
+    "pendingCount_few": "{{count}} محترفين بانتظار المراجعة",
+    "pendingCount_many": "{{count}} محترفًا بانتظار المراجعة",
+    "pendingCount_other": "{{count}} محترف بانتظار المراجعة",
+    "loadError": "حدث خطأ أثناء تحميل قائمة الانتظار. يرجى المحاولة مرة أخرى.",
+    "emptyState": "لا يوجد محترفون بانتظار التحقق من بطاقة التعريف.",
+    "yearsOfExperience_zero": "بدون خبرة",
+    "yearsOfExperience_one": "سنة واحدة من الخبرة",
+    "yearsOfExperience_two": "سنتان من الخبرة",
+    "yearsOfExperience_few": "{{count}} سنوات خبرة",
+    "yearsOfExperience_many": "{{count}} سنة خبرة",
+    "yearsOfExperience_other": "{{count}} سنة خبرة",
+    "viewDocument": "عرض الوثيقة",
+    "approveButton": "موافقة",
+    "rejectButton": "رفض",
+    "rejectConfirmTitle": "هل تريد رفض هذا التحقق؟",
+    "rejectConfirmDescription": "سيتم إشعار المحترف وسيحتاج إلى رفع وثيقة جديدة قبل إعادة المراجعة.",
+    "reasonAriaLabel": "سبب الرفض",
+    "reasonPlaceholder": "اشرح سبب رفض هذه الوثيقة",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ..."
   },
   "toasts": {
     "userSuspended": "تم إيقاف الحساب",
     "suspendFailed": "فشل إيقاف الحساب",
     "userReactivated": "تمت إعادة تفعيل الحساب",
-    "reactivateFailed": "فشلت إعادة تفعيل الحساب"
+    "reactivateFailed": "فشلت إعادة تفعيل الحساب",
+    "verificationApproved": "تمت الموافقة على التحقق",
+    "approveFailed": "فشلت الموافقة على التحقق",
+    "verificationRejected": "تم رفض التحقق",
+    "rejectFailed": "فشل رفض التحقق",
+    "documentUrlFailed": "فشل فتح الوثيقة"
   }
 }

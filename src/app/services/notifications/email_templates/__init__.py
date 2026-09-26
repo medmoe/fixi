@@ -10,6 +10,9 @@ _SUBJECTS: dict[tuple[str, str], str] = {
     ("worker_verification_approved", "ar"): "تم التحقق من ملفك الشخصي",
     ("worker_verification_approved", "fr"): "Votre profil a été vérifié",
     ("worker_verification_approved", "en"): "Your profile has been verified",
+    ("worker_verification_rejected", "ar"): "تعذّر التحقق من ملفك الشخصي",
+    ("worker_verification_rejected", "fr"): "Votre profil n'a pas pu être vérifié",
+    ("worker_verification_rejected", "en"): "Your profile could not be verified",
 }
 
 

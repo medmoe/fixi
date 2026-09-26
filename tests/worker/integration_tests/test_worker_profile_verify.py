@@ -9,7 +9,7 @@ from src.app.models import WorkerProfile
 class TestVerifyWorkerProfile:
     """PATCH /api/v1/worker-profile/{worker_profile_id}/verify"""
 
-    @patch("src.app.api.v1.worker_profile.notify_user", new_callable=AsyncMock)
+    @patch("src.app.services.worker_verification_service.notify_user", new_callable=AsyncMock)
     async def test_admin_can_verify_a_worker_profile(
             self, mock_notify, async_client: AsyncClient, async_session: AsyncSession, admin_auth_headers, test_worker_profile: WorkerProfile
     ):
@@ -24,7 +24,7 @@ class TestVerifyWorkerProfile:
         await async_session.refresh(test_worker_profile)
         assert test_worker_profile.is_verified is True
 
-    @patch("src.app.api.v1.worker_profile.notify_user", new_callable=AsyncMock)
+    @patch("src.app.services.worker_verification_service.notify_user", new_callable=AsyncMock)
     async def test_notifies_the_worker(
             self, mock_notify, async_client: AsyncClient, admin_auth_headers, test_worker_profile: WorkerProfile
     ):
@@ -36,7 +36,7 @@ class TestVerifyWorkerProfile:
         assert kwargs["user_id"] == test_worker_profile.user_id
         assert "email_payload" in kwargs
 
-    @patch("src.app.api.v1.worker_profile.notify_user", new_callable=AsyncMock)
+    @patch("src.app.services.worker_verification_service.notify_user", new_callable=AsyncMock)
     async def test_verifying_an_already_verified_profile_does_not_notify_again(
             self, mock_notify, async_client: AsyncClient, async_session: AsyncSession, admin_auth_headers, test_worker_profile: WorkerProfile
     ):

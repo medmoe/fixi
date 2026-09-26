@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from src.app.models import WorkerProfile, User
+from src.app.models import User, WorkerProfile
 
 
 class TestWorkerModel:
@@ -39,6 +39,7 @@ class TestWorkerModel:
         assert worker.years_of_experience == 10
         assert worker.bio == "Experienced plumber"
         assert worker.is_verified is False
+        assert worker.cni_document_key is None
 
     @pytest.mark.unit
     async def test_create_worker_with_minimum_fields(self, async_session):
@@ -98,8 +99,9 @@ class TestWorkerModel:
     @pytest.mark.unit
     async def test_worker_cascade_delete(self, async_session):
         """Test that deleting a user deletes their worker profile."""
-        from src.app.models.user import User
         from sqlalchemy import select
+
+        from src.app.models.user import User
 
         user = User(
             name="Test User",

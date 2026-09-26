@@ -48,6 +48,7 @@ const mockWorkersWithTradeReads: WorkerProfileWithTradesRead = {
     avatar_url: null,
     is_available: true,
     is_verified: false,
+    has_cni_document: false,
     available_since: null,
     average_rating: null,
     review_count: 0,

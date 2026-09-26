@@ -138,6 +138,6 @@ frontend/node_modules/
 frontend/coverage
 frontend/cypress/screenshots
 
-documentation/DOCKER_NOTES.md
+documentation/archive/DOCKER_NOTES.md
 documentation/PHASE_6_NOTIFICATIONS_ISSUES.md
 documentation/create_phase6_issues.sh

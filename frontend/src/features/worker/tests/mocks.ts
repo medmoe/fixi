@@ -20,6 +20,7 @@ export const mockWorker = (id: number, overrides: Partial<WorkerProfileWithTrade
     service_radius_km: 20,
     is_available: false,
     is_verified: false,
+    has_cni_document: false,
     trade_categories: [{
         id: 1,
         trade_category_id: 1,

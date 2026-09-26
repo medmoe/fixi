@@ -31,6 +31,12 @@ class WorkerProfile(Base):
     is_available: Mapped[bool] = mapped_column(default=True)
     available_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     is_verified: Mapped[bool] = mapped_column(default=False)
+    # The raw S3 key in the private verification bucket, not a URL -- never
+    # exposed to clients directly (see schemas.worker_profile's
+    # WorkerVerificationQueueRead, which only surfaces has_cni_document).
+    # Cleared on rejection so a resubmission is required before the profile
+    # reappears in the admin queue.
+    cni_document_key: Mapped[str | None] = mapped_column(String(255), default=None)
 
     # relationships
     user: Mapped["User"] = relationship("User", lazy="raise", init=False)

@@ -55,12 +55,38 @@
   },
   "auditActions": {
     "suspend_user": "Compte suspendu",
-    "reactivate_user": "Compte réactivé"
+    "reactivate_user": "Compte réactivé",
+    "approve_worker_verification": "Vérification du professionnel approuvée",
+    "reject_worker_verification": "Vérification du professionnel rejetée"
+  },
+  "verificationQueue": {
+    "title": "File de vérification CNI",
+    "loading": "Chargement...",
+    "pendingCount_one": "{{count}} professionnel en attente d'examen",
+    "pendingCount_other": "{{count}} professionnels en attente d'examen",
+    "loadError": "Une erreur est survenue lors du chargement de la file de vérification. Veuillez réessayer.",
+    "emptyState": "Aucun professionnel n'est en attente de vérification CNI.",
+    "yearsOfExperience_one": "{{count}} an d'expérience",
+    "yearsOfExperience_other": "{{count}} ans d'expérience",
+    "viewDocument": "Voir le document",
+    "approveButton": "Approuver",
+    "rejectButton": "Rejeter",
+    "rejectConfirmTitle": "Rejeter cette vérification ?",
+    "rejectConfirmDescription": "Le professionnel sera notifié et devra téléverser un nouveau document avant d'être examiné à nouveau.",
+    "reasonAriaLabel": "Motif du rejet",
+    "reasonPlaceholder": "Expliquez pourquoi ce document a été rejeté",
+    "cancel": "Annuler",
+    "saving": "Enregistrement..."
   },
   "toasts": {
     "userSuspended": "Compte suspendu",
     "suspendFailed": "Échec de la suspension du compte",
     "userReactivated": "Compte réactivé",
-    "reactivateFailed": "Échec de la réactivation du compte"
+    "reactivateFailed": "Échec de la réactivation du compte",
+    "verificationApproved": "Vérification approuvée",
+    "approveFailed": "Échec de l'approbation de la vérification",
+    "verificationRejected": "Vérification rejetée",
+    "rejectFailed": "Échec du rejet de la vérification",
+    "documentUrlFailed": "Échec de l'ouverture du document"
   }
 }

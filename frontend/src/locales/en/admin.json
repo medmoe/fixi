@@ -55,12 +55,38 @@
   },
   "auditActions": {
     "suspend_user": "Account suspended",
-    "reactivate_user": "Account reactivated"
+    "reactivate_user": "Account reactivated",
+    "approve_worker_verification": "Worker verification approved",
+    "reject_worker_verification": "Worker verification rejected"
+  },
+  "verificationQueue": {
+    "title": "CNI verification queue",
+    "loading": "Loading...",
+    "pendingCount_one": "{{count}} worker awaiting review",
+    "pendingCount_other": "{{count}} workers awaiting review",
+    "loadError": "Something went wrong loading the verification queue. Please try again.",
+    "emptyState": "No workers are waiting on CNI review.",
+    "yearsOfExperience_one": "{{count}} year of experience",
+    "yearsOfExperience_other": "{{count}} years of experience",
+    "viewDocument": "View document",
+    "approveButton": "Approve",
+    "rejectButton": "Reject",
+    "rejectConfirmTitle": "Reject this verification?",
+    "rejectConfirmDescription": "The worker will be notified and will need to upload a new document before being reviewed again.",
+    "reasonAriaLabel": "Rejection reason",
+    "reasonPlaceholder": "Explain why this document was rejected",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   },
   "toasts": {
     "userSuspended": "Account suspended",
     "suspendFailed": "Failed to suspend account",
     "userReactivated": "Account reactivated",
-    "reactivateFailed": "Failed to reactivate account"
+    "reactivateFailed": "Failed to reactivate account",
+    "verificationApproved": "Verification approved",
+    "approveFailed": "Failed to approve verification",
+    "verificationRejected": "Verification rejected",
+    "rejectFailed": "Failed to reject verification",
+    "documentUrlFailed": "Failed to open document"
   }
 }

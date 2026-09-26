@@ -10,7 +10,8 @@
     "navProfile": "Profil",
     "navAccount": "Compte",
     "navJobs": "Missions",
-    "navAdmin": "Panneau d'administration"
+    "navAdmin": "Panneau d'administration",
+    "navVerificationQueue": "File de vérification"
   },
   "availability": {
     "availableForWork": "Disponible pour travailler",
@@ -84,6 +85,15 @@
     "uploadAriaLabel": "Téléverser un fichier image d'avatar",
     "chooseImage": "Choisir une image"
   },
+  "cniVerificationField": {
+    "heading": "Vérification d'identité",
+    "helperText": "Téléversez votre CNI (Carte Nationale d'Identité) pour que notre équipe puisse vérifier votre profil. Visible uniquement par vous et notre équipe d'administration.",
+    "statusVerified": "Vérifié",
+    "statusPending": "En attente de vérification",
+    "statusUnverified": "Non vérifié",
+    "upload": "Téléverser le document",
+    "reupload": "Téléverser un nouveau document"
+  },
   "bioField": {
     "label": "Bio professionnelle",
     "ariaLabel": "Bio",
@@ -134,6 +144,8 @@
     "profileUpdated": "Profil mis à jour avec succès",
     "profileUpdateFailed": "Échec de la mise à jour du profil professionnel",
     "avatarUploaded": "Avatar téléversé avec succès",
-    "avatarUploadFailed": "Échec du téléversement de l'avatar"
+    "avatarUploadFailed": "Échec du téléversement de l'avatar",
+    "cniUploaded": "Document téléversé — en attente de vérification",
+    "cniUploadFailed": "Échec du téléversement du document"
   }
 }

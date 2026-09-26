@@ -82,5 +82,24 @@ class MinioClient:
             Key=key
         )
 
+    def ensure_private_bucket_exists(self, bucket: str) -> None:
+        """Create `bucket` if it doesn't exist, with no bucket policy --
+        buckets are private by default. For content (CNI verification
+        documents) that must never be reachable via a direct,
+        unauthenticated URL, unlike bucket_uploads' public-read policy."""
+        try:
+            self.client.head_bucket(Bucket=bucket)
+        except Exception:
+            self.client.create_bucket(Bucket=bucket)
+
+    def generate_presigned_get_url(self, bucket: str, key: str, expires_in: int = 300) -> str:
+        """A time-limited signed URL for a private object -- how an admin
+        views a CNI document instead of it ever having a public link."""
+        return cast(str, self.client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=expires_in,
+        ))
+
 
 minio_client = MinioClient()
