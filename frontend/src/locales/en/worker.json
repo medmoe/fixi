@@ -146,7 +146,13 @@
     "avatarUploadFailed": "Failed to upload avatar",
     "cniUploaded": "Document uploaded — awaiting review",
     "cniUploadFailed": "Failed to upload document",
-    "invoiceDownloadFailed": "Couldn't download the invoice. Please try again."
+    "invoiceDownloadFailed": "Couldn't download the invoice. Please try again.",
+    "portfolioImageUploaded": "Photo added to your portfolio",
+    "portfolioImageUploadFailed": "Couldn't upload the photo. Please try again.",
+    "portfolioLimitReached": "You've reached the maximum number of portfolio photos.",
+    "portfolioInvalidImage": "That file isn't a supported image. Use a JPEG, PNG or WebP photo.",
+    "portfolioImageDeleted": "Photo deleted",
+    "portfolioImageDeleteFailed": "Couldn't delete the photo. Please try again."
   },
   "billingTab": {
     "outstandingTitle": "Outstanding commission",
@@ -170,5 +176,26 @@
       "paid": "Paid",
       "overdue": "Overdue"
     }
+  },
+  "portfolio": {
+    "managerTitle": "My work",
+    "managerDescription": "Photos of jobs you've done. Customers see them on your public profile — they're the best way to win their trust.",
+    "counter": "{{count}}/{{max}} photos",
+    "emptyState": "No photos yet. Add before/after shots of your best work.",
+    "addPhoto": "Add photo",
+    "uploading": "Uploading...",
+    "limitReached": "You've reached the limit of {{max}} photos. Delete one to add another.",
+    "deleteImage": "Delete photo {{number}}",
+    "openImage": "View photo {{number}}",
+    "deleteConfirmTitle": "Delete this photo?",
+    "deleteConfirmDescription": "It will be removed from your public profile.",
+    "deleteConfirm": "Delete",
+    "cancel": "Cancel",
+    "publicHeading": "Previous work",
+    "lightboxTitle": "Portfolio photo",
+    "imageAlt": "Portfolio photo {{number}}",
+    "position": "{{current}} of {{total}}",
+    "previous": "Previous photo",
+    "next": "Next photo"
   }
 }

@@ -2,6 +2,7 @@ import React from 'react'
 import {useTranslation} from 'react-i18next'
 import {useWorkerProfile} from '@/features/worker'
 import {ProfileForm} from './ProfileForm'
+import {PortfolioManager} from './PortfolioManager'
 import {AlertCircle, Briefcase, Loader2} from 'lucide-react'
 
 /**
@@ -82,6 +83,7 @@ export const ProfileTab: React.FC = () => {
             </header>
 
             <ProfileForm profile={profile}/>
+            <PortfolioManager workerProfileId={profile.id}/>
         </div>
     )
 }

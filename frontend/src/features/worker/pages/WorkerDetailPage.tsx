@@ -10,6 +10,7 @@ import {Separator} from "@/components/ui/separator";
 import {useWorkerProfilePublic} from "@/features/worker";
 import {useLocalizedTradeName} from "@/features/worker/hooks/useLocalizedTradeName";
 import {ReviewsSection} from "@/features/review";
+import {PortfolioGallery} from "../components/PortfolioGallery";
 import {useFormatCurrency, useFormatNumber} from "@/lib/hooks/useFormatters";
 
 const getInitials = (name: string): string =>
@@ -159,6 +160,8 @@ export const WorkerDetailPage: React.FC = () => {
                     {t("workerDetailPage.contactWorker")}
                 </Button>
             </div>
+
+            <PortfolioGallery workerProfileId={profile.id} />
 
             <Separator />
             <ReviewsSection workerProfileId={profile.id} />

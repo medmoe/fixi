@@ -1,4 +1,5 @@
 import {TradeCategoryRead, TradeCategoryWithChildren, UpdateWorkerProfilePayload, WorkerProfileRead, WorkerProfileWithTradesRead, WorkerSearchFilters, WorkerTradeNestedRead} from "@/features/worker";
+import type {PortfolioImageRead} from "@/features/worker";
 import apiClient from "@/lib/api/apiClient";
 import {PaginatedListResponse} from "@/features/types";
 
@@ -37,6 +38,19 @@ export const workerApi = {
         formData.append('file', file);
         const {data} = await apiClient.post<WorkerProfileRead>(`/worker-profile/cni-document`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
         return data;
+    },
+    getPortfolioImages: async (workerProfileId: number): Promise<PortfolioImageRead[]> => {
+        const {data} = await apiClient.get<PortfolioImageRead[]>(`/worker-profile/${workerProfileId}/portfolio-images`);
+        return data;
+    },
+    uploadPortfolioImage: async (file: File): Promise<PortfolioImageRead> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const {data} = await apiClient.post<PortfolioImageRead>(`/worker-profile/portfolio-images`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
+        return data;
+    },
+    deletePortfolioImage: async (portfolioImageId: number): Promise<void> => {
+        await apiClient.delete(`/worker-profile/portfolio-images/${portfolioImageId}`);
     },
     getTrades: async (): Promise<TradeCategoryRead[] | TradeCategoryWithChildren[]> => {
         const {data} = await apiClient.get<TradeCategoryRead[] | TradeCategoryWithChildren[]>(`/trade-categories`)

@@ -14,3 +14,6 @@ export {WorkerCard, WorkerSearchEmptyState} from './WorkerCard';
 export {WorkerCardSkeleton, WorkerCardSkeletonGrid} from './WorkerCardSkeleton';
 
 export {BillingTab} from './BillingTab';
+export {PortfolioManager} from './PortfolioManager';
+export {PortfolioGallery} from './PortfolioGallery';
+export {PortfolioLightbox} from './PortfolioLightbox';

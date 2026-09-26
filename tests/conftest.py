@@ -443,18 +443,21 @@ async def create_bulk_test_worker_profiles(async_session: AsyncSession, paramete
     size = len(parameters)
 
     # create users
+    # uuid-based, like create_test_user: faker's user_name()/email() repeat
+    # often enough to intermittently trip the unique indexes in CI.
+    suffixes = [uuid.uuid4().hex[:10] for _ in range(size)]
     user_rows = [
         {
             "name": fake.name(),
-            "username": fake.user_name(),
-            "email": fake.email(),
+            "username": f"user_{suffix}",
+            "email": f"{suffix}@example.com",
             "hashed_password": get_password_hash(TEST_PASSWORD),
             "is_superuser": False,
             "uuid": uuid7(),
             "created_at": datetime.now(UTC),
             "role_type": UserRole.WORKER,
         }
-        for _ in range(size)
+        for suffix in suffixes
     ]
     await async_session.execute(insert(User), user_rows)
     await async_session.flush()  # flush so IDs are assigned, no commit yet

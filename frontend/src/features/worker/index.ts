@@ -14,7 +14,10 @@ export {
     useWorkerProfilePublic,
     useMyBilling,
     MY_BILLING_KEY,
-    useDownloadInvoice
+    useDownloadInvoice,
+    usePortfolioImages,
+    useUploadPortfolioImage,
+    useDeletePortfolioImage
 } from './hooks'
 export {
     AvailabilityToggle,
@@ -33,7 +36,9 @@ export {
     WorkerCardSkeleton,
     WorkerCardSkeletonGrid,
     WorkerSearchEmptyState,
-    BillingTab
+    BillingTab,
+    PortfolioManager,
+    PortfolioGallery
 } from './components'
 export type {
     WorkerProfileRead,
@@ -48,5 +53,6 @@ export type {
     WorkerSearchFilters,
     WorkerSortBy,
     WorkerBillingRead,
-    WorkerBillingStatus
+    WorkerBillingStatus,
+    PortfolioImageRead
 } from './types'
