@@ -48,13 +48,6 @@ class WorkerTradeRead(BaseModel):
     trade_category: TradeCategoryRead | None = None
 
 
-class WorkerTradeAssignmentRequest(BaseModel):
-    """ POST body for assigning a trade to a worker."""
-    model_config = ConfigDict(extra="forbid")
-    trade_category_id: Annotated[int, Field(gt=0)]
-    skill_level: Annotated[SkillLevel, Field(default=SkillLevel.junior)]
-
-
 class TradeAssignRequest(BaseModel):
     """Body for bulk trade assignment."""
     model_config = ConfigDict(extra="forbid")

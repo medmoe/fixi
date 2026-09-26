@@ -22,7 +22,7 @@ from ...models import WorkerProfile, WorkerTrade
 from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
 from ...schemas.review import ReviewSortBy, WorkerReviewEligibility, WorkerReviewsResponse
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
-from ...schemas.worker_trade import TradeAssignRequest, WorkerTradeAssignmentRequest
+from ...schemas.worker_trade import TradeAssignRequest
 from ...services.minio_client import minio_client
 from ...services.review_eligibility_service import check_worker_review_eligibility
 from ...services.worker_verification_service import approve_worker_verification
@@ -211,26 +211,6 @@ async def upload_cni_document(
         return_as_model=True,
     )
     return updated_worker_profile
-
-
-# ————— POST /worker-profile/trades ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-@router.post("/trade-categories", response_model=list[WorkerTradeNestedRead])
-async def assign_trade_to_worker(
-        body: WorkerTradeAssignmentRequest,
-        db: Annotated[AsyncSession, Depends(async_get_db)],
-        current_user: Annotated[dict, Depends(get_current_user)]
-) -> list[WorkerTradeNestedRead]:
-    """ Assign a trade to a worker profile — owner only."""
-    worker_profile = await _get_worker_profile_or_404(db=db, user_id=current_user["id"])
-
-    updated_trades = await crud_worker_trades.assign_trade(
-        db=db,
-        worker_profile_id=worker_profile.id,
-        trade_category_id=body.trade_category_id,
-        skill_level=body.skill_level
-    )
-    return [WorkerTradeNestedRead.model_validate(wt) for wt in updated_trades]
 
 
 # ————— POST /worker-profile/trade-categories/assign ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
