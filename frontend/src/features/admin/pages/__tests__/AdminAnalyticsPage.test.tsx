@@ -4,6 +4,7 @@ import {render, screen} from "@testing-library/react";
 import {AdminAnalyticsPage} from "../AdminAnalyticsPage";
 import {useAnalyticsDashboard} from "../../hooks/useAnalyticsDashboard";
 
+vi.mock("../../components/NotificationDeliveryCard", () => ({NotificationDeliveryCard: () => <div data-testid="notification-delivery-card"/>}));
 vi.mock("../../hooks/useAnalyticsDashboard", () => ({useAnalyticsDashboard: vi.fn()}));
 vi.mock("@/features/worker/hooks/useLocalizedTradeName", () => ({
     useLocalizedTradeName: () => (trade: any) => trade?.display_name ?? "",
@@ -44,6 +45,12 @@ describe("AdminAnalyticsPage", () => {
         mockUseDashboard.mockReturnValue({filters: {}, updateFilters: vi.fn(), overview: undefined, breakdown: undefined, funnel: undefined, isLoading: false, isError: true} as any);
         render(<AdminAnalyticsPage/>);
         expect(screen.getByText("Something went wrong loading analytics. Please try again.")).toBeInTheDocument();
+    });
+
+    it("always shows the notification delivery card, even while analytics are loading or failing", () => {
+        mockUseDashboard.mockReturnValue({filters: {}, updateFilters: vi.fn(), overview: undefined, breakdown: undefined, funnel: undefined, isLoading: false, isError: true} as any);
+        render(<AdminAnalyticsPage/>);
+        expect(screen.getByTestId("notification-delivery-card")).toBeInTheDocument();
     });
 
     it("renders the overview cards and daily trend once loaded", () => {

@@ -192,5 +192,31 @@
     "removeConfirmDescription": "L'avis sera masqué du profil du professionnel et sa note sera recalculée.",
     "cancel": "Annuler",
     "saving": "Enregistrement..."
+  },
+  "notificationDelivery": {
+    "heading": "Distribution des notifications",
+    "description": "Taux d'échec par canal et fournisseur. Les lignes au-dessus de {{threshold}} sont mises en évidence.",
+    "windowAriaLabel": "Période",
+    "window24h": "Dernières 24 heures",
+    "window7d": "7 derniers jours",
+    "loading": "Chargement...",
+    "loadError": "Impossible de charger les statistiques de distribution.",
+    "emptyState": "Aucune notification envoyée sur cette période.",
+    "noData": "Aucune donnée",
+    "alertAriaLabel": "Taux d'échec élevé",
+    "columns": {
+      "channel": "Canal",
+      "provider": "Fournisseur",
+      "sent": "Envoyées",
+      "failed": "Échouées",
+      "skipped": "Ignorées",
+      "failureRate": "Taux d'échec"
+    },
+    "channels": {
+      "in_app": "Dans l'application",
+      "push": "Push",
+      "email": "E-mail",
+      "sms": "SMS"
+    }
   }
 }
