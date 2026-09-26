@@ -683,6 +683,30 @@ class TestSearchWorkersRanking:
         assert response.status_code == 200
         assert all(w["distance_km"] is None for w in response.json()["data"])
 
+    async def test_search_returns_first_portfolio_image_as_cover(
+        self,
+        async_client: AsyncClient,
+        async_session,
+        worker_near_customer,
+        worker_far_distance,
+    ):
+        from src.app.models import PortfolioImage
+
+        async_session.add_all([
+            PortfolioImage(worker_profile_id=worker_near_customer.id, image_url="https://cdn.example.com/first.jpg"),
+        ])
+        await async_session.flush()
+        async_session.add(PortfolioImage(worker_profile_id=worker_near_customer.id, image_url="https://cdn.example.com/second.jpg"))
+        await async_session.commit()
+
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        by_id = {w["id"]: w for w in response.json()["data"]}
+        assert by_id[worker_near_customer.id]["cover_image_url"] == "https://cdn.example.com/first.jpg"
+        assert by_id[worker_far_distance.id]["cover_image_url"] is None
+
     async def test_explicit_sort_by_distance_matches_default(
         self,
         async_client: AsyncClient,

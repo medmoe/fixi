@@ -32,8 +32,18 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({profile, distance_km: dis
     return (
         <Link
             to={`/workers/${profile.id}`}
-            className="block rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="block overflow-hidden rounded-lg border hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
+            {/* Cover — the worker's first portfolio photo, when search returned one */}
+            {profile.cover_image_url && (
+                <img
+                    src={profile.cover_image_url}
+                    alt=""
+                    loading="lazy"
+                    data-testid="worker-card-cover"
+                    className="h-32 w-full object-cover"
+                />
+            )}
             <article
                 aria-label={t("workerCard.profileAriaLabel", {name: profile.user.name})}
                 className="p-4 space-y-3 h-full flex flex-col"
