@@ -1,8 +1,10 @@
 import React, {useState} from "react";
 import {useTranslation} from "react-i18next";
 import {cn} from "@/lib/utils";
+import {useUser} from "@/features/user";
 import {RatingStars} from "./RatingStars";
 import {useFormatRelativeDate} from "../hooks/useFormatRelativeDate";
+import {useReportReview} from "../hooks/useReportReview";
 import type {ReviewPublicRead} from "../types";
 
 // jsdom doesn't compute real layout (scrollHeight/clientHeight are always 0),
@@ -18,8 +20,15 @@ interface ReviewListItemProps {
 export const ReviewListItem: React.FC<ReviewListItemProps> = ({review}) => {
     const {t} = useTranslation("review");
     const [expanded, setExpanded] = useState(false);
+    const [reported, setReported] = useState(false);
     const formatRelativeDate = useFormatRelativeDate();
+    const {data: user} = useUser();
+    const reportMutation = useReportReview();
     const isLong = (review.comment?.length ?? 0) > LIKELY_OVERFLOW_THRESHOLD;
+
+    const handleReport = () => {
+        reportMutation.mutate(review.id, {onSuccess: () => setReported(true)});
+    };
 
     return (
         <article className="space-y-1.5 border-b pb-4 last:border-b-0 last:pb-0">
@@ -45,6 +54,17 @@ export const ReviewListItem: React.FC<ReviewListItemProps> = ({review}) => {
                         </button>
                     )}
                 </div>
+            )}
+
+            {user && (
+                <button
+                    type="button"
+                    onClick={handleReport}
+                    disabled={reported || reportMutation.isPending}
+                    className="text-xs text-muted-foreground hover:text-destructive hover:underline disabled:no-underline disabled:hover:text-muted-foreground"
+                >
+                    {reported ? t("reviewListItem.reportedLabel") : t("reviewListItem.reportButton")}
+                </button>
             )}
         </article>
     );

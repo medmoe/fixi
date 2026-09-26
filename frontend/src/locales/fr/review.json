@@ -16,7 +16,9 @@
   },
   "reviewListItem": {
     "showMore": "Voir plus",
-    "showLess": "Voir moins"
+    "showLess": "Voir moins",
+    "reportButton": "Signaler",
+    "reportedLabel": "Signalé"
   },
   "reviewsSection": {
     "loadingAriaLabel": "Chargement des avis",
@@ -42,6 +44,9 @@
     "reviewSubmitFailed": "Échec de l'envoi de l'avis",
     "notAParticipant": "Vous n'êtes pas un participant à cette mission.",
     "jobNotComplete": "Cette mission n'est pas encore terminée.",
-    "alreadyReviewed": "Vous avez déjà évalué cette mission."
+    "alreadyReviewed": "Vous avez déjà évalué cette mission.",
+    "reviewReported": "Avis signalé. Notre équipe va l'examiner.",
+    "reviewReportFailed": "Échec du signalement de l'avis",
+    "alreadyReported": "Vous avez déjà signalé cet avis"
   }
 }

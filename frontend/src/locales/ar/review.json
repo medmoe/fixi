@@ -24,7 +24,9 @@
   },
   "reviewListItem": {
     "showMore": "عرض المزيد",
-    "showLess": "عرض أقل"
+    "showLess": "عرض أقل",
+    "reportButton": "إبلاغ",
+    "reportedLabel": "تم الإبلاغ"
   },
   "reviewsSection": {
     "loadingAriaLabel": "جارٍ تحميل التقييمات",
@@ -50,6 +52,9 @@
     "reviewSubmitFailed": "فشل إرسال التقييم",
     "notAParticipant": "أنت لست طرفًا في هذه المهمة.",
     "jobNotComplete": "لم تُنجز هذه المهمة بعد.",
-    "alreadyReviewed": "لقد قيّمت هذه المهمة بالفعل."
+    "alreadyReviewed": "لقد قيّمت هذه المهمة بالفعل.",
+    "reviewReported": "تم الإبلاغ عن التقييم. سيقوم فريقنا بمراجعته.",
+    "reviewReportFailed": "فشل الإبلاغ عن التقييم",
+    "alreadyReported": "لقد أبلغت عن هذا التقييم بالفعل"
   }
 }

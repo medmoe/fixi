@@ -11,6 +11,7 @@ from .payment import Payment, PaymentMethod, PaymentStatus
 from .portfolio_image import PortfolioImage
 from .rate_limit import RateLimit
 from .review import Review
+from .review_report import ReviewReport
 from .tier import Tier
 from .trade_category import TradeCategory
 from .user import PreferredLanguage, User, UserRole

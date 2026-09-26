@@ -1,9 +1,17 @@
-import {describe, expect, it} from "vitest";
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import {render, screen} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {act} from "react";
 import {ReviewListItem} from "@/features/review";
 import type {ReviewPublicRead} from "@/features/review";
+import {useUser} from "@/features/user";
+import {useReportReview} from "@/features/review/hooks/useReportReview";
+
+vi.mock("@/features/user", () => ({useUser: vi.fn()}));
+vi.mock("@/features/review/hooks/useReportReview", () => ({useReportReview: vi.fn()}));
+
+const mockUseUser = vi.mocked(useUser);
+const mockUseReportReview = vi.mocked(useReportReview);
 
 const baseReview: ReviewPublicRead = {
     id: 1,
@@ -14,6 +22,14 @@ const baseReview: ReviewPublicRead = {
 };
 
 describe("ReviewListItem", () => {
+    const mockReport = vi.fn();
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockUseUser.mockReturnValue({data: undefined} as any);
+        mockUseReportReview.mockReturnValue({mutate: mockReport, isPending: false} as any);
+    });
+
     it("renders the reviewer display name and a relative date", () => {
         render(<ReviewListItem review={baseReview}/>);
         expect(screen.getByText("Kristin G.")).toBeInTheDocument();
@@ -48,5 +64,40 @@ describe("ReviewListItem", () => {
         });
 
         expect(screen.getByRole("button", {name: /show less/i})).toBeInTheDocument();
+    });
+
+    it("does not show a report button for a logged-out visitor", () => {
+        render(<ReviewListItem review={baseReview}/>);
+        expect(screen.queryByRole("button", {name: /report/i})).not.toBeInTheDocument();
+    });
+
+    it("shows a report button for a logged-in user", () => {
+        mockUseUser.mockReturnValue({data: {id: 1, name: "Ali"}} as any);
+        render(<ReviewListItem review={baseReview}/>);
+        expect(screen.getByRole("button", {name: "Report"})).toBeInTheDocument();
+    });
+
+    it("calls the report mutation with the review id", async () => {
+        mockUseUser.mockReturnValue({data: {id: 1, name: "Ali"}} as any);
+        render(<ReviewListItem review={baseReview}/>);
+
+        await act(async () => {
+            await userEvent.click(screen.getByRole("button", {name: "Report"}));
+        });
+
+        expect(mockReport).toHaveBeenCalledWith(1, expect.anything());
+    });
+
+    it("shows 'Reported' and disables the button after a successful report", async () => {
+        mockUseUser.mockReturnValue({data: {id: 1, name: "Ali"}} as any);
+        mockReport.mockImplementation((_id, options) => options?.onSuccess?.());
+        render(<ReviewListItem review={baseReview}/>);
+
+        await act(async () => {
+            await userEvent.click(screen.getByRole("button", {name: "Report"}));
+        });
+
+        const button = screen.getByRole("button", {name: "Reported"});
+        expect(button).toBeDisabled();
     });
 });

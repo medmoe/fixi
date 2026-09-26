@@ -21,4 +21,7 @@ export const reviewApi = {
         const {data} = await apiClient.get<WorkerReviewEligibility>(`/worker-profile/${workerProfileId}/review-eligibility`);
         return data;
     },
+    reportReview: async (reviewId: number, reason?: string): Promise<void> => {
+        await apiClient.post(`/reviews/${reviewId}/report`, {reason: reason ?? null});
+    },
 };
