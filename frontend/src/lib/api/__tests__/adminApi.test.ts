@@ -370,4 +370,21 @@ describe('adminApi', () => {
             expect(mockPost).toHaveBeenCalledWith('/admin/flagged-reviews/7/remove')
         })
     })
+    describe('permanentlyDeleteUser', () => {
+        it('calls POST /admin/users/:id/delete-permanently with the reason', async () => {
+            mockPost.mockResolvedValue({data: undefined})
+
+            await adminApi.permanentlyDeleteUser(3, 'GDPR #1')
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/users/3/delete-permanently', {reason: 'GDPR #1'})
+        })
+
+        it('sends a null reason when none is given', async () => {
+            mockPost.mockResolvedValue({data: undefined})
+
+            await adminApi.permanentlyDeleteUser(3)
+
+            expect(mockPost).toHaveBeenCalledWith('/admin/users/3/delete-permanently', {reason: null})
+        })
+    })
 })

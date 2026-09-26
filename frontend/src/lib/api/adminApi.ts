@@ -37,6 +37,10 @@ export const adminApi = {
         const {data} = await apiClient.post<UserRead>(`/admin/users/${userId}/reactivate`, {reason: reason ?? null})
         return data
     },
+    /** Irreversible. The backend refuses self-deletion and other admins. */
+    permanentlyDeleteUser: async (userId: number, reason?: string): Promise<void> => {
+        await apiClient.post(`/admin/users/${userId}/delete-permanently`, {reason: reason ?? null})
+    },
     listWorkerVerifications: async (): Promise<WorkerVerificationQueueRead[]> => {
         const {data} = await apiClient.get<WorkerVerificationQueueRead[]>('/admin/worker-verifications')
         return data

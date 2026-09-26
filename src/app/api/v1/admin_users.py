@@ -8,7 +8,7 @@ from ...api.dependencies import get_current_superuser
 from ...core.db.database import async_get_db
 from ...schemas.admin_action_log import AdminActionLogRead
 from ...schemas.user import UserAdminFilter, UserRead, UserSuspendRequest
-from ...services.admin_user_service import get_user_audit_log, get_user_detail, list_users, reactivate_user, suspend_user
+from ...services.admin_user_service import get_user_audit_log, get_user_detail, list_users, permanently_delete_user, reactivate_user, suspend_user
 
 router = APIRouter(tags=["admin"], prefix="/admin/users", dependencies=[Depends(get_current_superuser)])
 
@@ -66,3 +66,16 @@ async def reactivate_user_endpoint(
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> UserRead:
     return await reactivate_user(db, user_id, admin, reason=payload.reason)
+
+
+# ─── POST /admin/users/{user_id}/delete-permanently ───────────────────────────
+@router.post("/{user_id}/delete-permanently", status_code=204)
+async def permanently_delete_user_endpoint(
+        user_id: int,
+        payload: UserSuspendRequest,
+        admin: Annotated[dict, Depends(get_current_superuser)],
+        db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> None:
+    """Irreversible -- for data-deletion requests. Audited; can't target
+    yourself or another admin."""
+    await permanently_delete_user(db, user_id, admin, reason=payload.reason)

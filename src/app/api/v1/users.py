@@ -11,6 +11,7 @@ from ...core.exceptions.http_exceptions import ForbiddenException, NotFoundExcep
 from ...core.security import blacklist_token, oauth2_scheme
 from ...crud.crud_users import crud_users
 from ...schemas.user import UserPasswordUpdate, UserRead, UserUpdate
+from ...services.admin_user_service import permanently_delete_user
 
 router = APIRouter(tags=["users"])
 
@@ -106,11 +107,16 @@ async def deactivate_user(
 
 # ─── DELETE /user/{username}/hard — hard delete (superuser only) ──────────────
 
-@router.delete("/user/{username}/hard", status_code=200, dependencies=[Depends(get_current_superuser)])
+@router.delete("/user/{username}/hard", status_code=200)
 async def hard_delete_user(
         username: str,
+        admin: Annotated[dict, Depends(get_current_superuser)],
         db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
-    """Permanently delete user — GDPR, superuser only."""
-    await crud_users.hard_delete(db=db, username=username)
+    """Permanently delete user — GDPR, superuser only. Same guarded, audited
+    path as POST /admin/users/{user_id}/delete-permanently."""
+    user = await crud_users.get(db=db, username=username, schema_to_select=UserRead, return_as_model=True)
+    if user is None:
+        raise NotFoundException("User not found.")
+    await permanently_delete_user(db, user.id, admin)
     return {"message": "User permanently deleted."}

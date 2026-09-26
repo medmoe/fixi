@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.core.db.crud_token_blacklist import crud_token_blacklist
 from src.app.crud.crud_users import crud_users
 from src.app.models import User
 
@@ -31,7 +30,7 @@ def password_payload(**overrides) -> dict:
 class TestGetUser:
     @pytest.mark.integration
     async def test_successful_user_retrieval(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
-        response = await async_client.get(f"/api/v1/user/me", headers=worker_profile_auth_headers)
+        response = await async_client.get("/api/v1/user/me", headers=worker_profile_auth_headers)
         assert response.status_code == 200
         data = response.json()
         for key in ("id", "name", "username", "email", "profile_image_url", "role_type", "created_at"):
@@ -93,7 +92,7 @@ class TestPatchUser:
     @pytest.mark.integration
     async def test_failed_user_update_of_nonexistent_user(self, async_client: AsyncClient, test_user: User):
         response = await async_client.patch(
-            f"/api/v1/user/nonexistent_user",
+            "/api/v1/user/nonexistent_user",
             json={"name": "Updated Name"},
         )
         assert response.status_code == 401
@@ -209,7 +208,7 @@ class TestPatchPassword:
     @pytest.mark.integration
     async def test_failed_password_update_of_non_existed_user(self, async_client: AsyncClient, test_user: User, worker_profile_auth_headers: dict):
         response = await async_client.patch(
-            f"/api/v1/user/doesNotExist/password",
+            "/api/v1/user/doesNotExist/password",
             json=password_payload(),
             headers=worker_profile_auth_headers
         )
@@ -242,7 +241,7 @@ class TestSoftDeleteUser:
 
     @pytest.mark.integration
     async def test_failed_soft_delete_of_unexisted_user(self, async_client: AsyncClient, test_user: User):
-        response = await async_client.delete(f"/api/v1/user/doesNotExist")
+        response = await async_client.delete("/api/v1/user/doesNotExist")
         assert response.status_code == 401
 
     @pytest.mark.integration
@@ -260,6 +259,13 @@ class TestHardDeleteUser:
         assert response.status_code == 200
         deleted_user = await crud_users.get(db=async_session, username=test_user.username)
         assert deleted_user is None
+
+    @pytest.mark.integration
+    async def test_hard_delete_goes_through_the_guarded_admin_path(self, async_client: AsyncClient, test_admin_user, admin_auth_headers: dict, async_session: AsyncSession):
+        # Same guards as POST /admin/users/{id}/delete-permanently: no deleting yourself.
+        response = await async_client.delete(f"/api/v1/user/{test_admin_user.username}/hard", headers=admin_auth_headers)
+        assert response.status_code == 400
+        assert await crud_users.get(db=async_session, username=test_admin_user.username) is not None
 
     @pytest.mark.integration
     async def test_non_admin_cannot_hard_delete(
