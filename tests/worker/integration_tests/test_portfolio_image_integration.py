@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+from io import BytesIO
 from unittest.mock import MagicMock
 
 import pytest
 from httpx import AsyncClient
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.models import WorkerProfile, PortfolioImage
+from src.app.models import PortfolioImage, WorkerProfile
+
+
+def _real_png() -> bytes:
+    """A decodable PNG -- uploads are re-encoded by sanitize_image, so fake header-only bytes are rejected."""
+    buffer = BytesIO()
+    Image.new("RGB", (10, 10), color="red").save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 class TestPortfolioImageIntegration:
@@ -14,8 +23,8 @@ class TestPortfolioImageIntegration:
     @pytest.mark.integration
     async def test_upload_portfolio_image_success_as_owner(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_portfolio_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        response = await async_client.post(f"/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
+        fake_portfolio_image = _real_png()
+        response = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
         print(response.json())
         assert response.status_code == 201
         data = response.json()
@@ -26,30 +35,63 @@ class TestPortfolioImageIntegration:
     @pytest.mark.integration
     async def test_upload_portfolio_image_for_non_owner_returns_404(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, other_auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_portfolio_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        response = await async_client.post(f"/api/v1/worker-profile/portfolio-images", headers=other_auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
+        fake_portfolio_image = _real_png()
+        response = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=other_auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
         assert response.status_code == 404
 
     @pytest.mark.integration
     async def test_upload_portfolio_image_unauthorized_if_not_logged_in(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_portfolio_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        response = await async_client.post(f"/api/v1/worker-profile/portfolio-images", files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
+        fake_portfolio_image = _real_png()
+        response = await async_client.post("/api/v1/worker-profile/portfolio-images", files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
         assert response.status_code == 401
 
     @pytest.mark.integration
     async def test_upload_portfolio_image_returns_404_for_nonexistent_profile(self, async_client: AsyncClient, monkeypatch: pytest.MonkeyPatch, auth_headers: dict):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_portfolio_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        response = await async_client.post(f"/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
+        fake_portfolio_image = _real_png()
+        response = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
         assert response.status_code == 404
 
     @pytest.mark.integration
     async def test_upload_fails_when_max_portfolio_images_reached(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, monkeypatch: pytest.MonkeyPatch, test_portfolio_images: list[PortfolioImage], auth_headers: dict):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_portfolio_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
-        res = await async_client.post(f"/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
+        fake_portfolio_image = _real_png()
+        res = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("portfolio.png", fake_portfolio_image, "image/png")})
         assert res.status_code == 400
+
+    @pytest.mark.integration
+    async def test_uploaded_image_is_stored_without_gps_exif(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        upload = MagicMock(return_value=None)
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", upload)
+        photo = Image.new("RGB", (20, 20), color="green")
+        exif = Image.Exif()
+        exif[0x8825] = {1: "N", 2: (36.0, 45.0, 10.0), 3: "E", 4: (3.0, 3.0, 30.0)}  # GPS IFD
+        buffer = BytesIO()
+        photo.save(buffer, format="JPEG", exif=exif.tobytes())
+
+        res = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("site.jpg", buffer.getvalue(), "image/jpeg")})
+
+        assert res.status_code == 201
+        stored = upload.call_args.kwargs
+        assert stored["content_type"] == "image/jpeg"
+        with Image.open(BytesIO(stored["data"])) as img:
+            assert len(img.getexif()) == 0
+
+    @pytest.mark.integration
+    async def test_each_upload_gets_its_own_object_key(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
+        # Regression: keys used to be portfolio_images/{user_id}.{ext}, so every upload overwrote the last.
+        upload = MagicMock(return_value=None)
+        monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", upload)
+
+        first = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("a.png", _real_png(), "image/png")})
+        second = await async_client.post("/api/v1/worker-profile/portfolio-images", headers=auth_headers, files={"file": ("a.png", _real_png(), "image/png")})
+
+        assert first.status_code == second.status_code == 201
+        keys = [call.kwargs["key"] for call in upload.call_args_list]
+        assert len(set(keys)) == 2
+        assert first.json()["image_url"] != second.json()["image_url"]
+        assert all(k.startswith(f"portfolio_images/{test_worker_profile.user_id}/") for k in keys)
 
     # ─────────── Test Get Portfolio Image ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     @pytest.mark.integration
@@ -87,7 +129,7 @@ class TestPortfolioImageIntegration:
     @pytest.mark.integration
     async def test_get_portfolio_images_returns_404_if_worker_profile_does_not_exist(self, async_client: AsyncClient, async_session: AsyncSession, test_worker_profile, auth_headers: dict):
         """Happy Path: Returns an empty list `[]` with a 200 status code if the profile has no images yet."""
-        response = await async_client.get(f"/api/v1/worker-profile/99999/portfolio-images", headers=auth_headers)
+        response = await async_client.get("/api/v1/worker-profile/99999/portfolio-images", headers=auth_headers)
         assert response.status_code == 404
 
     # ───────────── Test Delete Portfolio Image ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

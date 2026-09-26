@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
@@ -23,6 +24,7 @@ from ...schemas.portfolio_image import PortfolioImageCreate, PortfolioImageRead
 from ...schemas.review import ReviewSortBy, WorkerReviewEligibility, WorkerReviewsResponse
 from ...schemas.worker_profile import AvailabilityToggleRequest, WorkerProfileFilter, WorkerProfileRead, WorkerProfileUpdate, WorkerProfileUpdateInternal, WorkerProfileWithTradesRead, WorkerTradeNestedRead
 from ...schemas.worker_trade import TradeAssignRequest
+from ...services.image_processing import sanitize_image
 from ...services.minio_client import minio_client
 from ...services.review_eligibility_service import check_worker_review_eligibility
 from ...services.worker_verification_service import approve_worker_verification
@@ -58,13 +60,15 @@ async def _upload_image_file(
     if not mime_type.startswith("image/"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid file type '{mime_type}'. Only images are allowed.")
 
-    # generate unique key
-    ext = os.path.splitext(file.filename or placeholder)[1].lstrip(".")
-    ext = ext if ext else "jpg"
-    key = f"{placeholder}s/{worker_profile.user_id}.{ext}"
+    # Strip EXIF/GPS and normalize before anything is stored (the bucket is public-read).
+    image = sanitize_image(contents)
+
+    # Unique key per upload: a fixed per-user key made every portfolio image
+    # overwrite the previous one, and kept serving a stale cached avatar.
+    key = f"{placeholder}s/{worker_profile.user_id}/{uuid.uuid4().hex}.{image.extension}"
 
     # upload to MinIo/S3
-    minio_client.upload_file(bucket=minio_client.bucket_uploads, key=key, data=contents, content_type=mime_type)
+    minio_client.upload_file(bucket=minio_client.bucket_uploads, key=key, data=image.data, content_type=image.content_type)
 
     # build CDN URL — same pattern as FileRead.file_url
     cdn_url = f"{settings.APP_S3_ENDPOINT.rstrip('/')}/{minio_client.bucket_uploads}/{key}"

@@ -1,15 +1,25 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from io import BytesIO
 from unittest.mock import MagicMock
 
 import pytest
 from httpx import AsyncClient
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.crud.crud_workers_trades import crud_worker_trades
 from src.app.models import SkillLevel, TradeCategory, WorkerProfile
 from src.app.schemas.worker_trade import WorkerTradeCreate
+
+
+def _real_png() -> bytes:
+    """A decodable PNG -- uploads are re-encoded by sanitize_image, so fake header-only bytes are rejected."""
+    buffer = BytesIO()
+    Image.new("RGB", (10, 10), color="red").save(buffer, format="PNG")
+    return buffer.getvalue()
+
 
 # ——————————— Factories ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -142,7 +152,7 @@ class TestUploadAvatar:
         # stub minio upload — prevents MinIO dependency in tests
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
 
-        fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100  # fake PNG bytes
+        fake_image = _real_png()
         response = await async_client.post("/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
         assert response.status_code == 200
         assert "avatar_url" in response.json()
@@ -150,7 +160,7 @@ class TestUploadAvatar:
 
     async def test_non_owner_returns_404(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, other_auth_headers: dict, monkeypatch: pytest.MonkeyPatch, ):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        fake_image = _real_png()
         response = await async_client.post("/api/v1/worker-profile/avatar", headers=other_auth_headers, files={"file": ("avatar.png", fake_image, "image/png")})
         assert response.status_code == 404
 
@@ -163,13 +173,13 @@ class TestUploadAvatar:
 
     async def test_response_contains_avatar_url(self, async_client: AsyncClient, test_worker_profile: WorkerProfile, auth_headers: dict, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("src.app.services.minio_client.minio_client.upload_file", MagicMock(return_value=None))
-        fake_image = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        fake_image = _real_png()
         response = await async_client.post("/api/v1/worker-profile/avatar", headers=auth_headers, files={"file": ("avatar.png", fake_image, "image/png")}, )
         assert response.status_code == 200
         url = response.json()["avatar_url"]
         assert url.startswith("http")
         assert "avatars/" in url
-        assert str(test_worker_profile.user_id) in url  # _upload_image_file keys the file by user_id, not profile id
+        assert f"avatars/{test_worker_profile.user_id}/" in url  # _upload_image_file keys the file by user_id, not profile id
 
 
 # ─── TestUploadCniDocument ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
