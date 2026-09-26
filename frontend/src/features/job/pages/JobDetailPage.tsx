@@ -8,7 +8,7 @@ import {Badge} from '@/components/ui/badge';
 import {Separator} from '@/components/ui/separator';
 import {Skeleton} from '@/components/ui/skeleton';
 import {jobApi} from '@/lib';
-import {ApplyToJobDialog, JobLifecycleActions, JobRead, JobStatus, useMyJobApplication} from '@/features/job';
+import {ApplyToJobDialog, JobLifecycleActions, JobRead, JobStatus, SuggestedWorkersPanel, useMyJobApplication} from '@/features/job';
 import {useAuth} from '@/features/auth';
 import {useUser} from '@/features/user';
 import {useLocalizedTradeName} from '@/features/worker/hooks/useLocalizedTradeName';
@@ -78,6 +78,7 @@ export const JobDetailPage: React.FC = () => {
     }
 
     const isOpen = job.status === 'open';
+    const isOwner = !!user && user.id === job.user_id;
 
     return (
         <div className="max-w-3xl mx-auto p-6 space-y-6">
@@ -138,6 +139,15 @@ export const JobDetailPage: React.FC = () => {
                             {job.description}
                         </p>
                     </div>
+                </>
+            )}
+
+            {/* Suggested workers — only the owner of an open job, who is the
+                only one the backend will answer for anyway. */}
+            {isAuthenticated && isOwner && isOpen && (
+                <>
+                    <Separator/>
+                    <SuggestedWorkersPanel job={job}/>
                 </>
             )}
 

@@ -282,7 +282,7 @@ describe('JobCreateForm', () => {
     // ------------------------------------------------------------------ //
 
     describe('post-submit navigation', () => {
-        it('redirects to the customer dashboard jobs list (not the public jobs route) after a successful submit', async () => {
+        it('redirects to the new job in the customer dashboard (not the public jobs route) after a successful submit', async () => {
             vi.mocked(useLocationSearch).mockReturnValue({
                 suggestions: mockSuggestions,
                 isFetching: false,
@@ -302,7 +302,7 @@ describe('JobCreateForm', () => {
                     <QueryClientProvider client={queryClient}>
                         <Routes>
                             <Route path="/dashboard/jobs/create" element={<JobCreateForm/>}/>
-                            <Route path="/dashboard/jobs" element={<div>Dashboard Jobs Page</div>}/>
+                            <Route path="/dashboard/jobs/:id" element={<div>Dashboard Job Detail Page</div>}/>
                             <Route path="/jobs" element={<div>Public Jobs Page</div>}/>
                         </Routes>
                     </QueryClientProvider>
@@ -330,10 +330,10 @@ describe('JobCreateForm', () => {
             // Simulate the mutation succeeding, as useCreateJob is mocked.
             const onSuccess = mutateMock.mock.calls[0][1].onSuccess;
             await act(async () => {
-                onSuccess();
+                onSuccess({id: 42});
             });
 
-            expect(screen.getByText('Dashboard Jobs Page')).toBeInTheDocument();
+            expect(screen.getByText('Dashboard Job Detail Page')).toBeInTheDocument();
             expect(screen.queryByText('Public Jobs Page')).not.toBeInTheDocument();
         });
     });

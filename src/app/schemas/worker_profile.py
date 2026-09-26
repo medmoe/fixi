@@ -125,6 +125,9 @@ class WorkerProfileWithTradesRead(WorkerProfileRead):
     """Profile response with embedded trades list."""
     trade_categories: list[WorkerTradeNestedRead] = Field(default_factory=list, validation_alias="worker_trades")
     user: UserPublicRead | None = None
+    # Only set by geo searches (worker search with lat/lng, a job's nearby
+    # workers) -- not a model column, so never part of an UPDATE RETURNING.
+    distance_km: float | None = None
 
 
 class AvailabilityToggleRequest(BaseModel):

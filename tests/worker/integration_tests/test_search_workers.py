@@ -662,6 +662,27 @@ class TestSearchWorkersRanking:
         assert ids.index(worker_near_customer.id) < ids.index(worker_mid_distance.id)
         assert ids.index(worker_mid_distance.id) < ids.index(worker_far_distance.id)
 
+    async def test_geo_search_returns_distance_km_per_worker(
+        self,
+        async_client: AsyncClient,
+        worker_near_customer,   # ~2km away
+        worker_far_distance,    # ~15km away
+    ):
+        response = await async_client.get(
+            "/api/v1/worker-profile/search",
+            params={"latitude": 36.7538, "longitude": 3.0588},
+        )
+        by_id = {w["id"]: w for w in response.json()["data"]}
+        near = by_id[worker_near_customer.id]["distance_km"]
+        far = by_id[worker_far_distance.id]["distance_km"]
+        assert 0 < near < far
+        assert near < 5 and 10 < far < 20
+
+    async def test_non_geo_search_has_no_distance(self, async_client: AsyncClient, worker_in_algiers):
+        response = await async_client.get("/api/v1/worker-profile/search")
+        assert response.status_code == 200
+        assert all(w["distance_km"] is None for w in response.json()["data"])
+
     async def test_explicit_sort_by_distance_matches_default(
         self,
         async_client: AsyncClient,

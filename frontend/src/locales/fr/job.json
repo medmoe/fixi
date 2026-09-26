@@ -170,5 +170,15 @@
     "jobUpdateFailed": "Échec de la mise à jour de la mission",
     "applicationWithdrawn": "Candidature retirée",
     "withdrawApplicationFailed": "Échec du retrait de la candidature"
+  },
+  "suggestedWorkers": {
+    "heading": "Professionnels suggérés près de chez vous",
+    "subheading_one": "{{count}} professionnel disponible à proximité",
+    "subheading_other": "{{count}} professionnels disponibles à proximité",
+    "noLocation": "Ajoutez une localisation pour voir les professionnels près de chez vous.",
+    "addLocation": "Ajouter une localisation",
+    "loadError": "Impossible de charger les professionnels suggérés. Veuillez réessayer plus tard.",
+    "emptyState": "Aucun professionnel disponible ne couvre cette zone pour le moment. Vous recevrez tout de même des candidatures des professionnels qui trouveront votre mission.",
+    "loadMore": "Voir plus de professionnels"
   }
 }

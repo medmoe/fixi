@@ -20,6 +20,8 @@ export interface WorkerProfileRead {
 
 export interface WorkerProfileWithTradesRead extends WorkerProfileRead {
     trade_categories: WorkerTradeNestedRead[];
+    /** Only set by geo searches (search with lat/lng, a job's nearby workers). */
+    distance_km?: number | null;
 }
 
 export type WorkerSortBy = "distance" | "hourly_rate" | "experience" | "rating";

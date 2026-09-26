@@ -1,5 +1,6 @@
 import {JobCreateRequest, JobFilters, JobRead, JobUpdateRequest, JobApplicationCreate, JobApplicationRead, JobApplicationUpdate, JobApplicationWithdrawRequest} from "@/features/job";
 import {PaginatedListResponse} from "@/features/types";
+import type {WorkerProfileWithTradesRead} from "@/features/worker";
 import apiClient from "./apiClient";
 
 export const jobApi = {
@@ -59,6 +60,10 @@ export const jobApi = {
     },
     completeJob: async (jobId: number): Promise<JobRead> => {
         const {data} = await apiClient.post<JobRead>(`/jobs/${jobId}/complete`);
+        return data;
+    },
+    getNearbyWorkers: async (jobId: number, offset: number, limit: number): Promise<PaginatedListResponse<WorkerProfileWithTradesRead>> => {
+        const {data} = await apiClient.get<PaginatedListResponse<WorkerProfileWithTradesRead>>(`/jobs/${jobId}/nearby-workers`, {params: {offset, limit}});
         return data;
     },
 }
