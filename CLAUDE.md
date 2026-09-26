@@ -73,4 +73,11 @@ Email/SMS copy uses plain `string.Template` `$var` substitution (`Template(...).
 
 ## Commit policy
 
-Don't commit or push unless explicitly asked in the current conversation — a standing "don't commit yet" stays in force until the user lifts it, even across otherwise-unrelated requests in the same session. The user may commit/push independently in parallel; if repo state looks unexpectedly different from what you left it, check `git log`/`git status` broadly before assuming work was lost.
+Default workflow for finished work (issues, fixes, requested changes) — no need to ask each time:
+
+1. Branch from an up-to-date `main`, named `<issue-number>-short-slug` (or just `short-slug` with no issue).
+2. Once verified (relevant tests green, `npm run build` for frontend changes, `ruff` on touched files), commit with a clear message, push, and open a PR against `main` (reference the issue with `Closes #N`).
+3. Watch CI; once **every** check is green, merge with a merge commit (`gh pr merge --merge --delete-branch`), then delete the local branch and pull `main`.
+4. If CI fails, fix it on the branch and repeat — never merge red, never force-push `main`.
+
+Exceptions: if the user says "don't commit yet" (or similar), that stays in force until they lift it, even across otherwise-unrelated requests in the same session. The user may commit/push/merge independently in parallel; if repo state looks unexpectedly different from what you left it, check `git log`/`git status` broadly before assuming work was lost.
