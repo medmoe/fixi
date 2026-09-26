@@ -16,7 +16,9 @@
   },
   "reviewListItem": {
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "reportButton": "Report",
+    "reportedLabel": "Reported"
   },
   "reviewsSection": {
     "loadingAriaLabel": "Loading reviews",
@@ -42,6 +44,9 @@
     "reviewSubmitFailed": "Failed to submit review",
     "notAParticipant": "You are not a participant in this job.",
     "jobNotComplete": "This job is not yet complete.",
-    "alreadyReviewed": "You have already reviewed this job."
+    "alreadyReviewed": "You have already reviewed this job.",
+    "reviewReported": "Review reported. Our team will take a look.",
+    "reviewReportFailed": "Failed to report review",
+    "alreadyReported": "You have already reported this review"
   }
 }

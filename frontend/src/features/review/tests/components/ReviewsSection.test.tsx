@@ -8,7 +8,9 @@ import {useAuth} from "@/features/auth";
 
 vi.mock("../../hooks/useWorkerReviews");
 vi.mock("../../hooks/useWorkerReviewEligibility");
+vi.mock("../../hooks/useReportReview", () => ({useReportReview: vi.fn(() => ({mutate: vi.fn(), isPending: false}))}));
 vi.mock("@/features/auth", () => ({useAuth: vi.fn()}));
+vi.mock("@/features/user", () => ({useUser: vi.fn(() => ({data: undefined}))}));
 
 const loadMoreMock = vi.fn();
 

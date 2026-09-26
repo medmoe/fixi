@@ -76,3 +76,29 @@ class WorkerReviewEligibility(BaseModel):
     model_config = ConfigDict(extra="forbid")
     can_review: bool
     job_id: int | None = None
+
+
+#
+# -------------------------------------------------------------------------
+# Flagged review moderation (Phase 8 Issue 7)
+# -------------------------------------------------------------------------
+#
+
+class ReviewReportCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    reason: Annotated[str | None, Field(max_length=500, default=None)] = None
+
+
+class FlaggedReviewRead(BaseModel):
+    """One row in the admin moderation queue -- only reviews with at least
+    one pending report and not yet removed show up here (see
+    review_moderation_service.list_flagged_reviews)."""
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+
+    id: int
+    rating: int
+    comment: str | None
+    reviewer_name: str
+    reviewee_name: str
+    report_count: int
+    created_at: datetime
