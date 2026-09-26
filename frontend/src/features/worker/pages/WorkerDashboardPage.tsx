@@ -4,7 +4,7 @@ import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
-import {AlertCircle, Banknote, Briefcase, FileCheck, Loader2, Shield, UserCircle, Search} from 'lucide-react'
+import {AlertCircle, Banknote, BarChart3, Briefcase, FileCheck, Loader2, Shield, UserCircle, Search} from 'lucide-react'
 import {useNavigate} from 'react-router-dom'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
@@ -132,6 +132,13 @@ export const WorkerDashboardPage: React.FC = () => {
                             >
                                 <Banknote className="h-4 w-4"/>
                                 {t('dashboard.navBillingDashboard')}
+                            </button>
+                            <button
+                                onClick={() => navigate('/admin/analytics')}
+                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                                <BarChart3 className="h-4 w-4"/>
+                                {t('dashboard.navAnalytics')}
                             </button>
                         </>
                     )}

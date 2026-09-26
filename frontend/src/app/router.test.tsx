@@ -21,6 +21,7 @@ vi.mock('@/features/admin', () => ({
     AdminUserDetailPage: () => <div>Admin User Detail Page</div>,
     AdminWorkerVerificationsPage: () => <div>Admin Worker Verifications Page</div>,
     AdminBillingDashboardPage: () => <div>Admin Billing Dashboard Page</div>,
+    AdminAnalyticsPage: () => <div>Admin Analytics Page</div>,
 }))
 
 // RoleBasedDashboard calls useUser() which needs QueryClientProvider.
@@ -94,5 +95,12 @@ describe('App Router', () => {
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
         expect(screen.getByText('Admin Billing Dashboard Page')).toBeInTheDocument()
+    })
+
+    it('wraps AdminAnalyticsPage inside ProtectedRoute at "/admin/analytics"', () => {
+        renderWithRouter(['/admin/analytics'])
+
+        expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByText('Admin Analytics Page')).toBeInTheDocument()
     })
 })

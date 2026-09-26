@@ -1,7 +1,17 @@
 import apiClient from '@/lib/api/apiClient'
 import type {PaginatedListResponse} from '@/features/types'
 import type {UserRead} from '@/features/user'
-import type {AdminActionLogRead, AdminUserFilters, WorkerBillingAdminFilters, WorkerBillingAdminRead, WorkerVerificationQueueRead} from '@/features/admin'
+import type {
+    AdminActionLogRead,
+    AdminUserFilters,
+    AnalyticsDateRangeFilters,
+    ConversionFunnelRead,
+    PlatformBreakdownRead,
+    PlatformOverviewRead,
+    WorkerBillingAdminFilters,
+    WorkerBillingAdminRead,
+    WorkerVerificationQueueRead,
+} from '@/features/admin'
 import type {WorkerProfileRead} from '@/features/worker'
 
 export const adminApi = {
@@ -52,5 +62,17 @@ export const adminApi = {
     },
     markWorkerBillingPaid: async (workerBillingId: number): Promise<void> => {
         await apiClient.patch(`/worker-billing/${workerBillingId}/mark-paid`)
+    },
+    getAnalyticsOverview: async (filters: AnalyticsDateRangeFilters): Promise<PlatformOverviewRead> => {
+        const {data} = await apiClient.get<PlatformOverviewRead>('/admin/analytics/overview', {params: filters})
+        return data
+    },
+    getAnalyticsBreakdown: async (filters: AnalyticsDateRangeFilters): Promise<PlatformBreakdownRead> => {
+        const {data} = await apiClient.get<PlatformBreakdownRead>('/admin/analytics/breakdown', {params: filters})
+        return data
+    },
+    getAnalyticsFunnel: async (filters: AnalyticsDateRangeFilters): Promise<ConversionFunnelRead> => {
+        const {data} = await apiClient.get<ConversionFunnelRead>('/admin/analytics/funnel', {params: filters})
+        return data
     },
 }
