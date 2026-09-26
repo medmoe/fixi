@@ -6,7 +6,7 @@ import {JobCreateForm, JobDetailPage, JobEditForm, JobsTab} from '@/features/job
 import {WorkerDetailPage, WorkerSearchPage} from '@/features/worker'
 import {RoleBasedDashboard} from '@/features/auth/components/RoleBasedDashboard.tsx'
 import {CustomerAccountPage, CustomerJobsPage, CustomerProfilePage} from "@/features/customer";
-import {AdminAnalyticsPage, AdminBillingDashboardPage, AdminUserDetailPage, AdminUsersPage, AdminWorkerVerificationsPage} from '@/features/admin'
+import {AdminAccountPage, AdminAnalyticsPage, AdminBillingDashboardPage, AdminLayout, AdminUserDetailPage, AdminUsersPage, AdminWorkerVerificationsPage} from '@/features/admin'
 
 export const routes: RouteObject[] = [
     {
@@ -57,45 +57,25 @@ export const routes: RouteObject[] = [
             },
 
             // ═══ Admin panel — is_superuser gated, not a role_type ═══════
+            // Admin accounts are admin-only: AdminLayout is their whole
+            // shell (RoleBasedDashboard sends superusers here from
+            // /dashboard), so every admin page is a child of it.
             {
-                path: '/admin/users',
+                path: '/admin',
                 element: (
                     <ProtectedRoute requireSuperuser>
-                        <AdminUsersPage/>
+                        <AdminLayout/>
                     </ProtectedRoute>
-                )
-            },
-            {
-                path: '/admin/users/:userId',
-                element: (
-                    <ProtectedRoute requireSuperuser>
-                        <AdminUserDetailPage/>
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: '/admin/worker-verifications',
-                element: (
-                    <ProtectedRoute requireSuperuser>
-                        <AdminWorkerVerificationsPage/>
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: '/admin/worker-billing',
-                element: (
-                    <ProtectedRoute requireSuperuser>
-                        <AdminBillingDashboardPage/>
-                    </ProtectedRoute>
-                )
-            },
-            {
-                path: '/admin/analytics',
-                element: (
-                    <ProtectedRoute requireSuperuser>
-                        <AdminAnalyticsPage/>
-                    </ProtectedRoute>
-                )
+                ),
+                children: [
+                    {index: true, element: <Navigate to="/admin/users" replace/>},
+                    {path: 'users', element: <AdminUsersPage/>},
+                    {path: 'users/:userId', element: <AdminUserDetailPage/>},
+                    {path: 'worker-verifications', element: <AdminWorkerVerificationsPage/>},
+                    {path: 'worker-billing', element: <AdminBillingDashboardPage/>},
+                    {path: 'analytics', element: <AdminAnalyticsPage/>},
+                    {path: 'account', element: <AdminAccountPage/>},
+                ]
             },
 
             // ═══ Redirect old standalone customer routes ═════════════════

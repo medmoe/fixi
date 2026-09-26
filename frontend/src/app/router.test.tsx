@@ -22,6 +22,8 @@ vi.mock('@/features/admin', () => ({
     AdminWorkerVerificationsPage: () => <div>Admin Worker Verifications Page</div>,
     AdminBillingDashboardPage: () => <div>Admin Billing Dashboard Page</div>,
     AdminAnalyticsPage: () => <div>Admin Analytics Page</div>,
+    AdminAccountPage: () => <div>Admin Account Page</div>,
+    AdminLayout: () => <div data-testid="admin-layout"><Outlet/></div>,
 }))
 
 // RoleBasedDashboard calls useUser() which needs QueryClientProvider.
@@ -69,38 +71,57 @@ describe('App Router', () => {
         expect(screen.getByText('Worker Search Page')).toBeInTheDocument()
     })
 
-    it('wraps AdminUsersPage inside ProtectedRoute at "/admin/users"', () => {
+    it('wraps AdminUsersPage inside ProtectedRoute + AdminLayout at "/admin/users"', () => {
         renderWithRouter(['/admin/users'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin Users Page')).toBeInTheDocument()
     })
 
-    it('wraps AdminUserDetailPage inside ProtectedRoute at "/admin/users/:userId"', () => {
+    it('wraps AdminUserDetailPage inside ProtectedRoute + AdminLayout at "/admin/users/:userId"', () => {
         renderWithRouter(['/admin/users/1'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin User Detail Page')).toBeInTheDocument()
     })
 
-    it('wraps AdminWorkerVerificationsPage inside ProtectedRoute at "/admin/worker-verifications"', () => {
+    it('wraps AdminWorkerVerificationsPage inside ProtectedRoute + AdminLayout at "/admin/worker-verifications"', () => {
         renderWithRouter(['/admin/worker-verifications'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin Worker Verifications Page')).toBeInTheDocument()
     })
 
-    it('wraps AdminBillingDashboardPage inside ProtectedRoute at "/admin/worker-billing"', () => {
+    it('wraps AdminBillingDashboardPage inside ProtectedRoute + AdminLayout at "/admin/worker-billing"', () => {
         renderWithRouter(['/admin/worker-billing'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin Billing Dashboard Page')).toBeInTheDocument()
     })
 
-    it('wraps AdminAnalyticsPage inside ProtectedRoute at "/admin/analytics"', () => {
+    it('wraps AdminAnalyticsPage inside ProtectedRoute + AdminLayout at "/admin/analytics"', () => {
         renderWithRouter(['/admin/analytics'])
 
         expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
         expect(screen.getByText('Admin Analytics Page')).toBeInTheDocument()
+    })
+
+    it('wraps AdminAccountPage inside ProtectedRoute + AdminLayout at "/admin/account"', () => {
+        renderWithRouter(['/admin/account'])
+
+        expect(screen.getByTestId('protected-route')).toBeInTheDocument()
+        expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
+        expect(screen.getByText('Admin Account Page')).toBeInTheDocument()
+    })
+
+    it('redirects bare "/admin" to the users page', () => {
+        renderWithRouter(['/admin'])
+
+        expect(screen.getByText('Admin Users Page')).toBeInTheDocument()
     })
 })

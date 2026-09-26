@@ -173,5 +173,14 @@
     "billingMarkedPaid": "تم وضع علامة كمدفوع",
     "markPaidFailed": "فشل وضع علامة كمدفوع",
     "exportFailed": "فشل تصدير CSV"
+  },
+  "layout": {
+    "title": "لوحة الإدارة",
+    "roleLabel": "مسؤول",
+    "navUsers": "المستخدمون",
+    "navVerifications": "قائمة انتظار التحقق",
+    "navBilling": "لوحة العمولات",
+    "navAnalytics": "إحصاءات المنصة",
+    "navAccount": "الحساب"
   }
 }

@@ -216,7 +216,9 @@ class CRUDUser(FastCRUD[
         (Admin panel: user management). Mirrors CRUDWorker.search_workers'
         raw-query approach (a free-text OR across name/username/email isn't
         expressible through FastCRUD's generic kwargs filtering)."""
-        where_clauses: list[ColumnElement[bool]] = [User.is_deleted.is_(False)]
+        # Admin accounts are admin-only (decision 004) -- they aren't
+        # customers/workers to manage, so they're left out of this list.
+        where_clauses: list[ColumnElement[bool]] = [User.is_deleted.is_(False), User.is_superuser.is_(False)]
         if filters.search:
             term = f"%{filters.search}%"
             where_clauses.append(or_(User.name.ilike(term), User.username.ilike(term), User.email.ilike(term)))
