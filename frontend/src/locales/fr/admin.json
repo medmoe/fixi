@@ -97,7 +97,9 @@
     "amountPaid": "Montant payé",
     "dueDate": "Date d'échéance",
     "status": "Statut",
-    "markPaidButton": "Marquer comme payé"
+    "markPaidButton": "Marquer comme payé",
+    "invoiceButton": "Facture",
+    "downloadInvoiceAriaLabel": "Télécharger la facture de {{name}}, mission n° {{id}}"
   },
   "billingDashboard": {
     "title": "Tableau de bord des commissions",

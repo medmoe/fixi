@@ -4,13 +4,14 @@ import {AccountTab, useUser} from '@/features/user'
 import {LogoutButton} from '@/components/LogoutButton'
 import {NotificationBell} from '@/features/notification'
 import {LanguageSwitcher} from '@/features/i18n'
-import {AlertCircle, Briefcase, Loader2, UserCircle, Search} from 'lucide-react'
+import {AlertCircle, Briefcase, Loader2, Receipt, UserCircle, Search} from 'lucide-react'
 import {useWorkerProfile} from "@/features/worker/hooks/useWorkerProfile"
 import {ProfileTab} from "@/features/worker/components/ProfileTab"
+import {BillingTab} from "@/features/worker/components/BillingTab"
 import {AvailabilityToggle} from "@/features/worker/components/AvailabilityToggle";
 import {JobsTab} from "@/features/job";
 
-type Tab = 'profile' | 'account' | 'jobs'
+type Tab = 'profile' | 'account' | 'jobs' | 'billing'
 
 export const WorkerDashboardPage: React.FC = () => {
     const {t} = useTranslation('worker')
@@ -61,6 +62,11 @@ export const WorkerDashboardPage: React.FC = () => {
             id: 'jobs',
             label: t('dashboard.navJobs'),
             icon: <Search className="h-4 w-4"/>,
+        },
+        {
+            id: 'billing',
+            label: t('dashboard.navBilling'),
+            icon: <Receipt className="h-4 w-4"/>,
         }
     ]
 
@@ -163,6 +169,7 @@ export const WorkerDashboardPage: React.FC = () => {
                     {activeTab === 'profile' && <ProfileTab/>}
                     {activeTab === 'account' && <AccountTab/>}
                     {activeTab === 'jobs' && <JobsTab/>}
+                    {activeTab === 'billing' && <BillingTab/>}
                 </main>
             </div>
         </div>

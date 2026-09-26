@@ -9,7 +9,8 @@
     "errorDescription": "We ran into trouble loading your account data. Please try again later.",
     "navProfile": "Profile",
     "navAccount": "Account",
-    "navJobs": "Jobs"
+    "navJobs": "Jobs",
+    "navBilling": "Billing"
   },
   "availability": {
     "availableForWork": "Available for Work",
@@ -144,6 +145,30 @@
     "avatarUploaded": "Avatar uploaded successfully",
     "avatarUploadFailed": "Failed to upload avatar",
     "cniUploaded": "Document uploaded — awaiting review",
-    "cniUploadFailed": "Failed to upload document"
+    "cniUploadFailed": "Failed to upload document",
+    "invoiceDownloadFailed": "Couldn't download the invoice. Please try again."
+  },
+  "billingTab": {
+    "outstandingTitle": "Outstanding commission",
+    "outstandingDescription": "Commission on completed jobs, paid in cash to a Fixi agent.",
+    "overdueCount_one": "{{count}} payment overdue",
+    "overdueCount_other": "{{count}} payments overdue",
+    "emptyState": "No commission yet. Commission is recorded when you complete a job.",
+    "loadError": "Couldn't load your billing history. Please try again later.",
+    "columns": {
+      "job": "Job",
+      "amountOwed": "Amount",
+      "dueDate": "Due date",
+      "status": "Status",
+      "invoice": "Invoice"
+    },
+    "jobLink": "Job #{{id}}",
+    "invoice": "Invoice",
+    "downloadInvoiceAriaLabel": "Download invoice for job #{{id}}",
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "overdue": "Overdue"
+    }
   }
 }

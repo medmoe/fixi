@@ -17,6 +17,9 @@ vi.mock("@/features/worker/hooks/useWorkerProfile")
 vi.mock("@/features/worker/components/ProfileTab", () => ({
     ProfileTab: () => <div data-testid="profile-tab">ProfileTab</div>
 }))
+vi.mock("@/features/worker/components/BillingTab", () => ({
+    BillingTab: () => <div data-testid="billing-tab">BillingTab</div>
+}))
 
 
 vi.mock('@/components/LogoutButton', () => ({
@@ -301,6 +304,14 @@ describe('WorkerDashboardPage', () => {
             const accountButton = screen.getAllByRole('button', {name: /account/i})[0]
             await act(async () => await userEvent.click(accountButton))
             expect(screen.getByTestId('account-tab')).toBeInTheDocument()
+            expect(screen.queryByTestId('profile-tab')).not.toBeInTheDocument()
+        })
+
+        it('switches to Billing tab when clicked', async () => {
+            render(<WorkerDashboardPage/>, {wrapper: createWrapper(queryClient)})
+            const billingButton = screen.getAllByRole('button', {name: /billing/i})[0]
+            await act(async () => await userEvent.click(billingButton))
+            expect(screen.getByTestId('billing-tab')).toBeInTheDocument()
             expect(screen.queryByTestId('profile-tab')).not.toBeInTheDocument()
         })
 

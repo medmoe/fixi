@@ -3,18 +3,8 @@ import {useTranslation} from 'react-i18next'
 import {toast} from 'sonner'
 import {adminApi} from '@/lib/api/adminApi'
 import {formatApiError} from '@/lib/api/formatApiError'
+import {downloadBlob} from '@/lib/downloadBlob'
 import type {WorkerBillingAdminFilters} from '../types/workerBilling.types'
-
-const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-}
 
 export const useExportWorkerBillingCsv = () => {
     const {t} = useTranslation('admin')

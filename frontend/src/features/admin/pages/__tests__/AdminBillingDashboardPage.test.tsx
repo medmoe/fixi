@@ -10,6 +10,7 @@ import {useExportWorkerBillingCsv} from "../../hooks/useExportWorkerBillingCsv";
 vi.mock("../../hooks/useWorkerBillingDashboard", () => ({useWorkerBillingDashboard: vi.fn()}));
 vi.mock("../../hooks/useMarkWorkerBillingPaid", () => ({useMarkWorkerBillingPaid: vi.fn()}));
 vi.mock("../../hooks/useExportWorkerBillingCsv", () => ({useExportWorkerBillingCsv: vi.fn()}));
+vi.mock("@/features/worker", () => ({useDownloadInvoice: () => ({mutate: vi.fn(), isPending: false, variables: undefined})}));
 
 vi.mock("../../components/WorkerBillingFilterBar", () => ({
     WorkerBillingFilterBar: () => <div data-testid="filter-bar"/>,

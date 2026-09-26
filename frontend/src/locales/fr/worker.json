@@ -9,7 +9,8 @@
     "errorDescription": "Nous avons rencontré un problème lors du chargement de vos données de compte. Veuillez réessayer plus tard.",
     "navProfile": "Profil",
     "navAccount": "Compte",
-    "navJobs": "Missions"
+    "navJobs": "Missions",
+    "navBilling": "Facturation"
   },
   "availability": {
     "availableForWork": "Disponible pour travailler",
@@ -144,6 +145,30 @@
     "avatarUploaded": "Avatar téléversé avec succès",
     "avatarUploadFailed": "Échec du téléversement de l'avatar",
     "cniUploaded": "Document téléversé — en attente de vérification",
-    "cniUploadFailed": "Échec du téléversement du document"
+    "cniUploadFailed": "Échec du téléversement du document",
+    "invoiceDownloadFailed": "Impossible de télécharger la facture. Veuillez réessayer."
+  },
+  "billingTab": {
+    "outstandingTitle": "Commission due",
+    "outstandingDescription": "Commission sur les missions terminées, réglée en espèces auprès d'un agent Fixi.",
+    "overdueCount_one": "{{count}} paiement en retard",
+    "overdueCount_other": "{{count}} paiements en retard",
+    "emptyState": "Aucune commission pour le moment. Une commission est enregistrée lorsque vous terminez une mission.",
+    "loadError": "Impossible de charger votre historique de facturation. Veuillez réessayer plus tard.",
+    "columns": {
+      "job": "Mission",
+      "amountOwed": "Montant",
+      "dueDate": "Échéance",
+      "status": "Statut",
+      "invoice": "Facture"
+    },
+    "jobLink": "Mission n° {{id}}",
+    "invoice": "Facture",
+    "downloadInvoiceAriaLabel": "Télécharger la facture de la mission n° {{id}}",
+    "status": {
+      "pending": "En attente",
+      "paid": "Payé",
+      "overdue": "En retard"
+    }
   }
 }

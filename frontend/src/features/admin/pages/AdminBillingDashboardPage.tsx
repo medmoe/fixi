@@ -7,11 +7,13 @@ import {useMarkWorkerBillingPaid} from "../hooks/useMarkWorkerBillingPaid";
 import {useExportWorkerBillingCsv} from "../hooks/useExportWorkerBillingCsv";
 import {WorkerBillingFilterBar} from "../components/WorkerBillingFilterBar";
 import {WorkerBillingTable} from "../components/WorkerBillingTable";
+import {useDownloadInvoice} from "@/features/worker";
 
 export const AdminBillingDashboardPage: React.FC = () => {
     const {t} = useTranslation("admin");
     const {filters, updateFilters, records, isLoading, isError} = useWorkerBillingDashboard();
     const markPaidMutation = useMarkWorkerBillingPaid();
+    const downloadInvoice = useDownloadInvoice();
     const exportMutation = useExportWorkerBillingCsv();
 
     return (
@@ -49,6 +51,8 @@ export const AdminBillingDashboardPage: React.FC = () => {
                     records={records}
                     onMarkPaid={(id) => markPaidMutation.mutate(id)}
                     markingPaidId={markPaidMutation.isPending ? markPaidMutation.variables : undefined}
+                    onDownloadInvoice={(id) => downloadInvoice.mutate(id)}
+                    downloadingInvoiceId={downloadInvoice.isPending ? downloadInvoice.variables : undefined}
                 />
             )}
         </div>

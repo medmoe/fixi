@@ -13,3 +13,4 @@ export {WorkerFilterPanel} from './WorkerFilterPanel.tsx';
 export {WorkerCard, WorkerSearchEmptyState} from './WorkerCard';
 export {WorkerCardSkeleton, WorkerCardSkeletonGrid} from './WorkerCardSkeleton';
 
+export {BillingTab} from './BillingTab';

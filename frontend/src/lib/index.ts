@@ -7,3 +7,4 @@ export {userApi} from './api/userApi';
 export {workerApi} from './api/workerApi';
 export {reviewApi} from './api/reviewApi';
 export {notificationApi} from './api/notificationApi';
+export {workerBillingApi} from './api/workerBillingApi';
